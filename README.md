@@ -1,3 +1,14 @@
+
+
+# CMU-VLN-Challenge Progress
+
+**Finished Basic setup**
+
+<img src="videos/basic_system_setup.jpeg" alt="Basic Setup of System Simulation" width="600" height="350">
+
+-----------------------
+
+
 # CMU-VLN-Challenge
 
 ## Table of Contents
