@@ -1,3 +1,32 @@
 .vscode
 
 .DS_Store
+# data / artifacts — never commit
+*.bag
+*.db3
+*.mcap
+bags/
+*.ply
+*.onnx
+*.engine
+*.pt
+*.pth
+*.safetensors
+models/
+outputs/
+runs/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# secrets
+.env
+*_token*
+*api_key*
+
+# editor/os
+.vscode/
+.idea/
+.DS_Store
