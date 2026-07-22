@@ -46,10 +46,67 @@ Rules for keeping this fork submission-ready: never modify upstream files (READM
 - Numerical: /1 (exact Int32) · Object reference: /2 (bbox overlap) · Instruction following: /6 (trajectory constraint order + penalties)
 - 10 min/question incl. exploration. System relaunches per question — no memory carries over. Early finish = tiebreaker bonus.
 
-## Architecture (one line per module)
-Sensors → **M2 Perception** (SAM 3 + SigLIP 2 + lidar lifting) → **M3 Scene graph** (SORT3D-style relations) → **M4 Reasoner** (LLM tool-calling over graph) → answers; **M1 Exploration** (frontier + reobserve) closes the loop by sending waypoints to the provided base autonomy. **M6 Harness** measures everything.
+## Architecture
+
+```mermaid
+flowchart TB
+  Q(["/challenge_question<br/>(String, 1 Hz)"]) --> M4
+
+  subgraph SIM["Simulator + base autonomy (provided)"]
+    direction TB
+    U["Unity scene + robot<br/>SLAM · terrain analysis · waypoint nav"]
+  end
+
+  SIM -- "/camera/image (360°, 10 Hz)<br/>/registered_scan (5 Hz)<br/>/state_estimation (100–200 Hz)" --> M2
+  SIM -- "/terrain_map_ext (5 Hz)" --> M1
+
+  subgraph AIMOD["AI module (ours)"]
+    direction TB
+    M2["M2 · Perception<br/>SAM 3 + lidar lifting + re-ID"] -- "3D instances<br/>(label · box · color · caption)" --> M3
+    M3["M3 · Scene graph<br/>VLA-3D relations · regions"] -- "queryable graph" --> M4
+    M4["M4 · Reasoner<br/>LLM over graph + decision gate"] -- "explore / reobserve" --> M1
+    M4 -- "ordered constraints" --> M5
+    M1["M1 · Exploration<br/>frontier + coverage"]
+    M5["M5 · Instruction planner<br/>costmap + dense waypoints"]
+  end
+
+  M1 -- "/way_point_with_heading" --> SIM
+  M5 -- "/way_point_with_heading" --> SIM
+
+  M4 --> A1(["/numerical_response<br/>Int32 — count"])
+  M4 --> A2(["/selected_object_marker<br/>Marker — 3D bbox"])
+  M5 --> A3(["executed trajectory<br/>scored vs constraints"])
+```
+
+**Simulator + base autonomy (provided)** — we never touch this.
+- In: `Pose2D` waypoints. Out: 360° camera, registered lidar (map frame), terrain maps, odometry.
+- Handles SLAM, obstacle avoidance, low-level path following.
+
+**M1 · Exploration** — see every object fast.
+- In: `/terrain_map_ext`, odometry, requests from M4. Out: waypoints to base autonomy.
+- Frontier-based coverage sweep; doorway detection for multi-room; `reobserve(id)` viewpoints on demand; early stop when M4 is confident (time bonus).
+
+**M2 · Perception** — pixels + points → labeled 3D object instances.
+- In: 360° images, registered scans, odometry. Out: instance stream (label, 3D box, color, caption, embedding).
+- SAM 3 text-prompted masks + track IDs → project lidar through masks → depth-cluster → box; SigLIP 2 re-ID merges revisited objects (dedup = correct counts); Qwen2.5-VL captions per instance.
+
+**M3 · Scene graph** — instances → queryable spatial facts.
+- In: instance stream. Out: query API (`filter(label, color, relation, anchor)`).
+- VLA-3D's exact 8 relation heuristics (Above/Below/Closest/Farthest/Between/Near/In/On) — the same functions that generated the questions; regions from object clusters.
+
+**M4 · Reasoner** — owns the question from parse to answer.
+- In: `/challenge_question`, graph queries. Out: `Int32` count / `Marker` bbox / constraint spec to M5; explore-reobserve requests to M1.
+- LLM parses question → symbolic graph queries; decision gate (confident? explore more? T-30s fallback → always answer something).
+
+**M5 · Instruction planner** — "go near X, avoid Y, stop at Z" → trajectory.
+- In: ordered constraints (grounded objects) from M4, terrain map. Out: dense waypoint sequence.
+- Costmap with attraction/avoid zones; waypoints every ~1 m so the base planner can't shortcut through forbidden areas; monitors execution, replans on violation.
+
+**M6 · Eval bench** (offline, `scripts/eval/`) — runs all 15 scenes × 5 questions, scores like the challenge; every change is measured before merge.
 
 ## Component docs
+
+**Start here → [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — end-to-end baseline, per-component proposals (baseline → top candidate), diagrams, weekly plan, risks.
 | Doc | Component | Owner | Status |
 |---|---|---|---|
 | [docs/M0_infra.md](docs/M0_infra.md) | Docker, sim, ROS I/O, visualization | | 🟡 in progress |

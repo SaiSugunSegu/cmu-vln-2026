@@ -17,8 +17,9 @@
 | Upgrade | Region/room inference (doorway detection + object clusters → "kitchen", "living room"); incremental relation cache; support-surface logic for "on" |
 | Stretch | View-on-Graph-style multi-layer graph with stored viewpoints per node (lets a VLM traverse and verify) |
 
-## Relation vocabulary (from challenge question style)
-`near`, `between(A, B)`, `closest_to(anchor)` / `farthest_from(anchor)`, `on(surface)`, `next_to`, `in(region)`, `left/right of (from viewpoint)`. Calibrate thresholds (what distance = "near"?) on the 75 training questions — the question set defines the semantics, not our intuition.
+## Relation vocabulary — REUSE VLA-3D's EXACT DEFINITIONS
+The challenge questions follow VLA-3D's template generation, built on exactly 8 **view-independent** relations with published heuristics: `Above, Below, Closest, Farthest, Between, Near, In, On` (see VLA-3D `scene_graph/` code). Do NOT invent thresholds — port their functions verbatim: what generated the questions defines the answer key. Their relations also filter out significantly-overlapping/enclosed bbox pairs — replicate that too. Same for colors: use their 15-color LAB/CSS3 mapping (`3d_data_preprocess/utils/dominant_colors_new_lab.py`) so "blue" matches the question generator's blue.
+Validation for free: run our ported relations over VLA-3D GT objects and diff against their shipped `_scene_graph.json` per scene — exact-match expected.
 
 ## Metrics (via M6)
 - Relation accuracy on training-question anchors (does "closest to the fridge" pick the GT object?)

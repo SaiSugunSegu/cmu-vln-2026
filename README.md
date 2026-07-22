@@ -1,3 +1,70 @@
+## CMU-VLN-Challenge Architecture
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                 SIMULATOR + BASE AUTONOMY  (provided)                 │
+│         Unity scene · SLAM · terrain analysis · waypoint nav          │
+└───────────────────────────────────────────────────────────────────────┘
+   │ /camera/image (360°, 10 Hz)                                ▲
+   │ /registered_scan (5 Hz)            /way_point_with_heading │
+   │ /state_estimation (100–200 Hz)      ┌─────────────────────┴┐
+   │ /terrain_map_ext (5 Hz) ───────────▶│   M1 EXPLORATION     │
+   ▼                                     │ frontier · coverage  │
+┌──────────────────────────┐             │ · reobserve poses    │
+│      M2 PERCEPTION       │             └──────────────────────┘
+│ SAM 3 masks + track IDs  │                        ▲
+│ lidar lifting → 3D box   │                        │ explore /
+│ SigLIP 2 re-ID · caption │                        │ reobserve
+└──────────────────────────┘                        │
+   │ 3D instances                                   │
+   │ (label · box · color · caption)                │
+   ▼                                                │
+┌──────────────────────────┐  queryable  ┌──────────┴───────────┐
+│     M3 SCENE GRAPH       │    graph    │     M4 REASONER      │◀── /challenge_question
+│ VLA-3D 8 relations       │────────────▶│ LLM over graph       │        (String, 1 Hz)
+│ regions · attributes     │             │ + decision gate      │
+└──────────────────────────┘             └──────────────────────┘
+                              ┌────────────────┼──────────────────┐
+                              ▼                ▼                  ▼
+                    /numerical_response  /selected_object  ┌──────────────────────┐
+                    (Int32 — count)      _marker           │  M5 INSTR. PLANNER   │
+                                         (Marker — 3D box) │ costmap · ordered    │
+                                                           │ dense waypoints      │
+                                                           └──────────────────────┘
+                                                                      │
+                                                          /way_point_with_heading
+                                                          (→ back to base autonomy)
+```
+
+**Simulator + base autonomy (provided)** — untouched by us
+- In: `Pose2D` waypoints · Out: 360° camera, registered lidar (map frame), terrain maps, odometry
+- Handles SLAM, obstacle avoidance, low-level path following
+
+**M1 · Exploration** — see every object fast
+- In: terrain map, odometry, requests from M4 · Out: waypoints
+- Frontier coverage sweep, doorway detection, `reobserve(id)` viewpoints, early stop for time bonus
+
+**M2 · Perception** — pixels + points → labeled 3D instances
+- In: 360° images, lidar scans, odometry · Out: instances (label, 3D box, color, caption)
+- SAM 3 text-prompted masks + tracking → lidar projected through masks → 3D box; SigLIP 2 re-ID for dedup (correct counts); Qwen2.5-VL captions
+
+**M3 · Scene graph** — instances → queryable spatial facts
+- In: instance stream · Out: `filter(label, color, relation, anchor)` query API
+- VLA-3D's exact 8 relation heuristics (Above/Below/Closest/Farthest/Between/Near/In/On) — same functions that generated the questions
+
+**M4 · Reasoner** — owns the question from parse to answer
+- In: question, graph · Out: `Int32` count / `Marker` bbox / constraints to M5 / explore requests to M1
+- LLM → symbolic graph queries; decision gate; T-30s fallback (always answer)
+
+**M5 · Instruction planner** — "go near X, avoid Y, stop at Z" → trajectory
+- In: ordered grounded constraints, terrain map · Out: dense waypoint sequence
+- Costmap with avoid zones, ~1 m waypoint spacing so base planner can't shortcut, replan on violation
+
+**M6 · Eval bench** (`scripts/eval/`) — 15 scenes × 5 questions, challenge-style scoring; every change measured
+
+Full plan: [TEAM_PLAN.md](TEAM_PLAN.md) · deep dives: [docs/](docs/)
+
+-----------------------
 
 
 # CMU-VLN-Challenge Progress
@@ -5,6 +72,7 @@
 **Finished Basic setup**
 
 <img src="videos/basic_system_setup.jpeg" alt="Basic Setup of System Simulation" width="600" height="350">
+
 
 -----------------------
 

@@ -1,0 +1,19 @@
+{
+  "_README": "Curated ground truth. Fill from: questions/<scene>.pdf (answer images), VLA-3D per-scene object lists (boxes), provided .ply target trajectories. Units: meters, map frame. One entry per question, same order as questions.json.",
+  "_schema": {
+    "numerical": [{"q": "question text", "answer": 3}],
+    "object_reference": [{"q": "…", "target": {"label": "pillow", "center": [0, 0, 0], "size": [0.4, 0.4, 0.2]}}],
+    "instruction_following": [{"q": "…", "pass_near": [{"label": "stool", "center": [0, 0], "radius": 1.5}], "avoid": [{"polygon": [[0, 0], [1, 0], [1, 1], [0, 1]]}], "goal": {"label": "table", "center": [0, 0], "radius": 1.5}, "ply": "path/to/target_traj.ply"}]
+  },
+  "hotel_room_1": {
+    "numerical": [{"q": "How many pillows are on the bed?", "answer": null}],
+    "object_reference": [
+      {"q": "Find the bedside table farthest from the window.", "target": null},
+      {"q": "Find the picture above the suitcase furthest from the floor.", "target": null}
+    ],
+    "instruction_following": [
+      {"q": "Go to the bedside table closest to the window and stop at the chair closest to the TV.", "pass_near": null, "avoid": [], "goal": null, "ply": null},
+      {"q": "First, go near the bedside table closest to the bench, then take the path between the TV and the bed to the picture closest to the TV.", "pass_near": null, "avoid": [], "goal": null, "ply": null}
+    ]
+  }
+}

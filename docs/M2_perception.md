@@ -38,7 +38,7 @@ Run on Unity renders from 3–4 training scenes, score vs VLA-3D object lists:
 - Bleed-through rejection: inside-mask points clustered by depth; keep nearest cluster consistent with box size.
 - Identical furniture (6 same chairs) is the association stress test — gate by 3D distance first, features second.
 - Defer box finalization until obs_count ≥ 2 when time allows; ghosts (1 obs, low conf) culled.
-- Color words needed: at least {black, white, gray, red, orange, yellow, green, blue, brown, teal}; sample interior 70% of mask.
+- Color words: use VLA-3D's exact 15-color LAB/CSS3 mapping (`3d_data_preprocess/utils/dominant_colors_new_lab.py`) — the questions' color vocabulary comes from it; sample interior 70% of mask. Note VLA-3D was extended/filtered as IRef-VLA — download data from there.
 
 ## Progress checklist
 - [ ] Equirect→pinhole remap LUTs; visual sanity check
