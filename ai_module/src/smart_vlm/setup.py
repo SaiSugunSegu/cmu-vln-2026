@@ -15,8 +15,8 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Sugun Segu',
-    maintainer_email='snaimesha@gmail.com',
+    maintainer='CMU-VLN Team',
+    maintainer_email='team@example.com',
     description='Team AI module: supervisor + exploration + reasoning.',
     license='MIT',
     entry_points={

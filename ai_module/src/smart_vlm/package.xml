@@ -3,7 +3,7 @@
   <name>smart_vlm</name>
   <version>0.1.0</version>
   <description>Team AI module: supervisor + (vendored) exploration + reasoning. Replaces dummy_vlm.</description>
-  <maintainer email="snaimesha@gmail.com">Sugun Segu</maintainer>
+  <maintainer email="team@example.com">CMU-VLN Team</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>
