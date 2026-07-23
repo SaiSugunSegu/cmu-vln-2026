@@ -1,5 +1,4 @@
-# Common ops — run from the challenge code repo's docker/ folder unless noted.
-# Usage: make -f ../cmu-vln-2026-team/scripts/Makefile <target>  (or copy next to compose files)
+# Common ops — run from the repo's docker/ folder:  make -f ../scripts/Makefile <target>
 
 up:            ## build + start both containers (GPU)
 	docker compose -f compose_gpu.yml up --build -d

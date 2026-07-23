@@ -27,6 +27,7 @@ Score based on: constraints achieved, in correct order, penalties for forbidden 
 - Constraint-order correctness %
 
 ## Design notes
+- **Waypoints must be CLOSE to the vehicle** — organizer's README: far waypoints can wedge the local planner in dead ends. Chop every path into ≤2–3 m hops; for distant goals consider vendoring FAR planner (visibility-graph global planning, already in the organizer's extended stack). `waypoint_example` node shows the canonical publish pattern (waypoint + boundary + speed).
 - Base autonomy adjusts out-of-traversable waypoints — dense waypoints keep the executed path under OUR control, not the planner's.
 - "Path near the window" = the waypoint band along the window's traversable side; sample 2–3 waypoints there, not 1.
 - Avoid regions from "between the two tables": construct the polygon between anchor boxes, inflate by robot radius.

@@ -20,15 +20,11 @@ scene | q_id | type | answer | gt | score | time_s | coverage% | notes
 Plus module metrics: perception recall/precision/dupes, grounding acc (live + GT-objects mode), API cost.
 
 ## Progress checklist
-- [x] Bench v0 written: `scripts/eval/{run_bench.py, qa_recorder.py, score.py, gt/gt.json}` (Jul 21 — untested, see verification list in scripts/eval/README.md)
-- [ ] questions.json parsed; GT answers/boxes/.ply organized per scene — **mostly SCRIPTABLE, not manual**: scene downloads ship `object_list.txt` + `Dimensions.csv`; VLA-3D ships `_object_result.csv` (oriented boxes, labels, color names) + `_scene_graph.json` (precomputed relations). Object-ref target boxes = parse CSVs; numerical answers = execute question filter against GT scene graph; PDFs only to spot-check. Write `gt_builder.py` for this
-- [ ] Bench verified end-to-end with dummy model (floor score recorded)
-- [ ] Scene-swap mechanism confirmed (host mount vs docker cp)
-- [ ] Headless runner for one question end-to-end
-- [ ] Numerical + object-ref scorers
-- [ ] Trajectory scorer validated against provided GT examples
-- [ ] Full 75-question run < some manageable wall time; results table auto-generated
-- [ ] Timing instrumentation (time-to-answer distribution — tiebreaker data)
+- [x] Bench v0 written: `scripts/eval/{run_bench.py, qa_recorder.py, score.py, gt/gt.json}` (Jul 21 — untested, verification list in scripts/eval/README.md)
+- [ ] `gt_builder.py`: GT is mostly **scriptable** — scene downloads ship `object_list.txt` + `Dimensions.csv`; VLA-3D ships `_object_result.csv` (boxes, labels, colors) + `_scene_graph.json` (relations). Boxes = parse CSVs; numerical answers = execute question filter against GT graph; PDFs = spot-check only
+- [ ] Bench verified end-to-end with dummy model (floor score recorded); scene-swap mechanism confirmed (host mount vs docker cp)
+- [ ] Trajectory scorer validated against provided .ply GT examples
+- [ ] Full 75-question run; results table auto-generated; time-to-answer distribution logged
 
 ## Suggestions
 - Score the DUMMY model first — establishes the floor and proves the harness before any real model exists.

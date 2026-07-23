@@ -51,6 +51,7 @@ Run on Unity renders from 3–4 training scenes, score vs VLA-3D object lists:
 - [ ] Latency measured on L4 box; within budget at 1–2 Hz with headroom
 
 ## Suggestions
+- **Read the organizer's panorama+lidar→RGB-D bridge first**: [Navigation-Physical-Experiment](https://github.com/Yuxin916/Navigation-Physical-Experiment) converts pano images + lidar into registered RGB-D (Habitat-style) — a working reference for our image↔lidar projection plumbing; clone and study `src/` before writing our own. Dev tip: `without_360_camera` env variant renders faster for non-perception work.
 - **Instrument with Rerun from line one:** `rr.log()` crops, masks, projected points, 3D boxes, instance merges at every pipeline stage. Time-scrubbing replays make association bugs (double-counting) visible in seconds; `.rrd` recordings are shareable with teammates who have no ROS installed.
 - SAM 3's built-in cross-frame tracking may replace most association logic — test tracking IDs across viewpoint jumps before writing a custom tracker.
 - Keep a per-instance "best crop" (largest, most frontal) — M4 uses it for VLM verification of borderline attributes.

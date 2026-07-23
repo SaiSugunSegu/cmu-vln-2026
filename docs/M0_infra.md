@@ -91,6 +91,16 @@ RViz should open with the scene. To change scenes: drop scene files into
 `autonomy_stack_mecanum_wheel_platform/src/base_autonomy/vehicle_simulator/mesh/unity/`
 (training scenes download: link in repo README).
 
+### 3.5 Daily dev loop (smart_vlm — current AI module)
+```bash
+# after every git pull: rebuild our workspace inside the ai container
+docker exec -it iros2026_ai_module bash -c "cd <ai_module path> && colcon build --symlink-install"
+# run it:
+docker exec -it iros2026_ai_module bash -c "source install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+```
+`smart_vlm.launch` = supervisor (mission clock, question intake, topic health) + dummy_vlm answer heads + TARE (once vendored — see launch file comments). Watch the supervisor heartbeat: it logs per-topic rates and warns on dead topics.
+Eval-realistic mode: `scripts/challenge_simulation.sh` runs the sim in ROS domain 42 with a domain-bridge firewall passing only the 6 allowed inputs + question in and 3 answers out; launch the AI side with `ROS_DOMAIN_ID=0`. Needs `ros-jazzy-domain-bridge` in the system container (add to Dockerfile once validated).
+
 ### 4. Launch dummy VLM + send test questions
 ```bash
 docker exec -it iros2026_ai_module bash
@@ -162,8 +172,8 @@ Tips: best-effort QoS + decay for `/registered_scan`; Image panel for `/camera/i
 - [x] Decide sim host: **L4 box, single-box setup** (Jul 21, see decision log)
 - [x] Containers build and start (Jul 21)
 - [x] Sim launches, RViz shows scene + robot; teleop verified, sensor data visible (Jul 21)
-- [ ] Dummy VLM responds to all 3 question types
-- [ ] All 5 input topics verified at expected rates (fill table below)
+- [x] Dummy VLM responds to all 3 question types (Jul 22 — behaves as documented, numerical is random as expected)
+- [x] All 6 input topics verified (Jul 22 — see table; camera at 5 Hz not 10)
 - [ ] Camera stream visualized; image size/format confirmed
 - [ ] Camera↔lidar extrinsics located in repo and noted here
 - [ ] Bag recorded and replayable (`ros2 bag play`)
@@ -173,15 +183,17 @@ Tips: best-effort QoS + decay for `/registered_scan`; Image panel for `/camera/i
 - [ ] amd64 image pinned via buildx; clean-machine rebuild tested
 - [ ] (Optional) Foxglove bridge up; laptop connects; shared layout saved
 
-### Topic verification table (fill in)
+### Topic verification table (measured Jul 22)
 | Topic | Type | Expected | Measured | Notes |
 |---|---|---|---|---|
-| /camera/image | Image | 10 Hz, 1920×640 | | |
-| /registered_scan | PointCloud2 | 5 Hz, map frame | | |
-| /sensor_scan | PointCloud2 | 5 Hz | | |
-| /terrain_map | PointCloud2 | 5 Hz, 5 m | | |
-| /terrain_map_ext | PointCloud2 | 5 Hz, 20 m | | |
-| /state_estimation | Odometry | 100–200 Hz | | |
+| /camera/image | Image | 10 Hz, 1920×640 | **5 Hz** | ⚠️ below README's 10 Hz — likely render-rate-bound; fine for 1–2 Hz perception, but confirm resolution + whether eval machine differs |
+| /registered_scan | PointCloud2 | 5 Hz, map frame | 5 Hz | ✓ |
+| /sensor_scan | PointCloud2 | 5 Hz | 5 Hz | ✓ |
+| /terrain_map | PointCloud2 | 5 Hz, 5 m | 5 Hz | ✓ |
+| /terrain_map_ext | PointCloud2 | 5 Hz, 20 m | 5 Hz | ✓ |
+| /state_estimation | Odometry | 100–200 Hz | ~200 Hz | ✓ |
+
+Many extra topics also publish (e.g. /overall_map, camera/semantic_image/*) — dev-only, firewalled at eval-mimic time by `scripts/challenge_simulation.sh` (domain bridge, only the 6+question in / 3 answers out).
 
 ---
 

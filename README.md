@@ -64,6 +64,30 @@
 
 Full plan: [TEAM_PLAN.md](TEAM_PLAN.md) · deep dives: [docs/](docs/)
 
+## Team quickstart
+
+### 1 · Setup — repo + containers ([troubleshooting → docs/M0_infra.md](docs/M0_infra.md))
+```bash
+git clone --recurse-submodules git@github.com:SaiSugunSegu/cmu-vln-2026.git && cd cmu-vln-2026
+# existing clone:  git pull && git submodule update --init --recursive
+cd docker && xhost +local: && docker compose -f compose_gpu.yml up --build -d
+docker exec -it iros2026_ai_module bash -c "cd <ai_module path> && colcon build --symlink-install"
+```
+
+### 2 · Dev run — sim + smart_vlm ([details → docs/M0_infra.md](docs/M0_infra.md))
+```bash
+# A: docker exec -it -e DISPLAY=:1 iros2026_system bash -c "/home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh"
+# B: docker exec -it iros2026_ai_module bash -c "source install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+# C: docker exec -it iros2026_ai_module bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: 'How many books are on the sofa'}\""
+```
+Eval-realistic (6-topic firewall): use `scripts/challenge_simulation.sh` in A, `ROS_DOMAIN_ID=0` in B.
+
+### 3 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
+```bash
+python3 scripts/eval/run_bench.py --repo . --scenes-dir ~/vln_scenes --out ~/vln_eval/$(date +%Y%m%d_%H%M) --smoke
+python3 scripts/eval/score.py --results ~/vln_eval/<run> --gt scripts/eval/gt/gt.json
+```
+
 -----------------------
 
 

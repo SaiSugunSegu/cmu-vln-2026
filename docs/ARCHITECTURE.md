@@ -17,48 +17,7 @@ Research-backed; sources at the bottom. Companion trackers: `M0…M6` in this fo
 
 ## 2. System overview
 
-```mermaid
-flowchart TB
-  subgraph BASE["Base autonomy (provided — do not touch)"]
-    SIM["Unity sim / robot"] --> SE["State estimation"]
-    SE --> TA["Terrain analysis"]
-    TA --> NAV["Waypoint nav + collision avoidance"]
-  end
-
-  subgraph AI["AI module (ours, ai_module/)"]
-    subgraph PERC["M2 Perception"]
-      REMAP["360° → pinhole crops"] --> DET["Open-vocab detect+segment"]
-      DET --> LIFT["Lidar lifting → 3D boxes"]
-      LIFT --> MEM["Instance memory (re-ID, merge)"]
-    end
-    subgraph GRAPH["M3 Scene graph"]
-      MEM --> SG["Objects · attributes · relations · regions"]
-    end
-    subgraph REASON["M4 Reasoner"]
-      QP["Question parser"] --> GATE["Decision gate"]
-      SG --> GATE
-      GATE -->|"ambiguous"| REOBS["Reobserve request"]
-      GATE -->|"unknown area"| EXPL
-      GATE -->|"confident"| ANS["Answer heads"]
-    end
-    subgraph ACT["M1 Exploration"]
-      EXPL["Frontier scoring + viewpoint select"]
-    end
-    subgraph PLAN["M5 Instruction planner"]
-      ANS -->|"instruction Q"| IF["Constraint-ordered waypoints + costmap"]
-    end
-  end
-
-  Q["/challenge_question"] --> QP
-  SIM -->|"/camera/image 10Hz"| REMAP
-  SE -->|"/registered_scan 5Hz"| LIFT
-  TA -->|"/terrain_map_ext 5Hz"| EXPL
-  EXPL -->|"/way_point_with_heading"| NAV
-  IF -->|"/way_point_with_heading"| NAV
-  REOBS --> EXPL
-  ANS -->|"numerical"| OUT1["/numerical_response Int32"]
-  ANS -->|"object ref"| OUT2["/selected_object_marker Marker"]
-```
+Component-level block diagram + per-component summaries: **[main README](../README.md#architecture)**. Below: the runtime behavior that diagram doesn't show.
 
 ### Runtime sequence (one question, 10-min budget)
 
@@ -113,12 +72,12 @@ Expected baseline scoring (against 75 training Qs): numerical ~50-60% (dedup err
 
 ## 4. Per-component proposals: baseline → top candidate
 
-### M1 Exploration
+### M1 Exploration — DECIDED Jul 22, see [M1 doc](M1_exploration.md)
 | | Choice | Why / research |
 |---|---|---|
-| Baseline | Nearest-frontier on terrain map occupancy grid | Trivial, deterministic, good enough for single rooms |
-| **Top candidate** | **VLFM-style language-scored frontiers**: score each frontier by SigLIP 2 similarity between its image direction and the question text; add lidar **doorway detection** for multi-room (LLM-MCoX technique); targeted `reobserve(id)` poses with line-of-sight check; confidence-based early stop | [VLFM](https://arxiv.org/pdf/2312.03275) (zero-shot semantic nav SOTA recipe), [LGR](https://arxiv.org/pdf/2503.20241) (LLM frontier ranking), [LLM-MCoX](https://arxiv.org/html/2509.26324v1) (lidar frontier + doorway extraction) |
-| Fallback | Coverage-lawnmower over traversable area | If frontier extraction from terrain PointCloud2 proves noisy |
+| **Decided** | **TARE (vendored) + supervisor node** owning clock, question-conditioned stopping, waypoint mux, object-coverage done-signal | TARE pre-integrated in organizer's stack; supervisor holds all scoring logic |
+| Upgrade | Question-biased visit order: VLFM-style SigLIP frontier scoring + lidar doorway detection (multi-room) | [VLFM](https://arxiv.org/pdf/2312.03275), [LGR](https://arxiv.org/pdf/2503.20241), [LLM-MCoX](https://arxiv.org/html/2509.26324v1) |
+| Fallback | Sparse viewpoint sweep (360° camera → ~4 m observed disk per pose, mini-TSP) | If TARE vendoring/build fights us |
 
 ### M2 Perception
 | | Choice | Why / research |
@@ -158,13 +117,7 @@ Expected baseline scoring (against 75 training Qs): numerical ~50-60% (dedup err
 
 ## 5. Weekly plan
 
-| Week | Theme | What to try | Exit criteria |
-|---|---|---|---|
-| **W1** Jul 21–27 | It runs | Register (Jul 25!). M0 done (✅ sim+RViz Jul 21). Bags for 3 scenes. M6 skeleton + dummy-model floor score. Frontier explorer v0. **SAM 3 vs YOLOE bake-off on Unity renders** | Skeleton explores a room <3 min; perception model picked with L4 latency numbers; harness scores the dummy model |
-| **W2** Jul 28–Aug 3 | Baseline e2e | Wire walking skeleton (§3): parse → explore → perceive → answer, all 3 types. First full 75-Q run | **Non-zero score on every question type**; instance recall ≥70%, dupes <15% on 4 scenes |
-| **W3** Aug 4–10 | It answers well | M2 top candidate (SAM 3 + SigLIP 2 re-ID); SORT3D toolbox in; tool-calling agent + decision gate + reobserve | ≥70% numerical exact + object-ref IoU on training Qs; dupes <10% |
-| **W4** Aug 11–17 | It follows | M5 top candidate (costmap, dense waypoints, monitor); M6 trajectory scorer; language-scored frontiers for multi-room; mid-point model-watch check | Majority of instruction Qs scoring >3/6 on our scorer; multi-room scenes covered <6 min |
-| **W5** Aug 18–25 | It survives | Timing/early-stop tuning; fallback paths forced-tested; API retry + provider fallback; clean-machine rebuild of amd64 image; **submit ~Aug 20, iterate to Aug 25** | Full 75-Q run with zero unanswered; submission evaluated same way organizers will run it |
+Maintained in one place: **[TEAM_PLAN.md](../TEAM_PLAN.md#weekly-milestones)**.
 
 ---
 

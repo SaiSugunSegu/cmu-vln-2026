@@ -1,0 +1,29 @@
+<launch>
+  <!-- smart_vlm: supervisor + dummy answer heads + exploration.
+       Replaces dummy_vlm.launch. Launch:  ros2 launch smart_vlm smart_vlm.launch -->
+
+  <!-- 1. Supervisor: mission clock, question handling, exploration control -->
+  <node pkg="smart_vlm" exec="supervisor" name="smart_vlm_supervisor" output="screen"/>
+
+  <!-- 2. Dummy VLM: keeps answer behavior until real M2-M4 replace it.
+       NOTE: dummyVLM also publishes waypoints on question receipt; while TARE
+       and dummyVLM both run, two writers exist on /way_point_with_heading.
+       For today that's acceptable (dummy only reacts to questions); the
+       supervisor becomes the single writer once the waypoint mux is in. -->
+  <include file="$(find-pkg-share dummy_vlm)/launch/dummy_vlm.launch"/>
+
+  <!-- 3. TARE exploration planner (vendored) — UNCOMMENT after vendoring.
+       Steps (see docs/M1_exploration.md):
+         a) git submodule update -init -recursive   (get the stack source)
+         b) cat autonomy_stack_mecanum_wheel_platform/system_simulation_with_exploration_planner.sh
+            and copy the exact tare launch line + args it uses
+         c) copy src/exploration_planner/tare_planner into ai_module/src/
+            (plus OR-Tools: check its README for the amd64 binary path)
+         d) rebuild the ai_module container; replace the include below.
+       <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
+         <arg name="scenario" value="indoor"/>
+         <arg name="rviz" value="false"/>
+       </include>
+  -->
+
+</launch>
