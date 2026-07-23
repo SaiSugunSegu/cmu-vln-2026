@@ -30,3 +30,8 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# colcon build artifacts (created on host by compose_dev.yml mount)
+ai_module/build/
+ai_module/install/
+ai_module/log/

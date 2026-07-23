@@ -70,8 +70,9 @@ Full plan: [TEAM_PLAN.md](TEAM_PLAN.md) · deep dives: [docs/](docs/)
 ```bash
 git clone --recurse-submodules git@github.com:SaiSugunSegu/cmu-vln-2026.git && cd cmu-vln-2026
 # existing clone:  git pull && git submodule update --init --recursive
-cd docker && xhost +local: && docker compose -f compose_gpu.yml up --build -d
-docker exec -it iros2026_ai_module bash -c "cd <ai_module path> && colcon build --symlink-install"
+cd docker && xhost +local: && docker compose -f compose_gpu.yml -f compose_dev.yml up --build -d
+docker exec -it iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && \
+  cd /home/docker/ai_module && colcon build --symlink-install --packages-select dummy_vlm smart_vlm"
 ```
 
 ### 2 · Dev run — sim + smart_vlm ([details → docs/M0_infra.md](docs/M0_infra.md))

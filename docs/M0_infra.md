@@ -92,9 +92,12 @@ RViz should open with the scene. To change scenes: drop scene files into
 (training scenes download: link in repo README).
 
 ### 3.5 Daily dev loop (smart_vlm — current AI module)
+Workspace path in the ai container: `/home/docker/ai_module`. **Daily driver = dev mode** — original files untouched, all our tooling in the NEW `docker/compose_dev.yml`, which mounts host `ai_module/` over the container workspace:
+`docker compose -f compose_gpu.yml -f compose_dev.yml up -d`, then build inside:
 ```bash
-# after every git pull: rebuild our workspace inside the ai container
-docker exec -it iros2026_ai_module bash -c "cd <ai_module path> && colcon build --symlink-install"
+# after every git pull (dev mode):
+docker exec -it iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && \
+  cd /home/docker/ai_module && colcon build --symlink-install --packages-select dummy_vlm smart_vlm"
 # run it:
 docker exec -it iros2026_ai_module bash -c "source install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
 ```
@@ -181,6 +184,7 @@ Tips: best-effort QoS + decay for `/registered_scan`; Image panel for `/camera/i
 - [ ] questions.json + answer PDFs + .ply trajectories downloaded and organized
 - [ ] AI-module node skeleton (python) replaces dummy_vlm: subscribes all inputs, publishes all 3 outputs
 - [ ] amd64 image pinned via buildx; clean-machine rebuild tested
+- [ ] **W5 submission prep:** update `ai_module/docker/Dockerfile` to COPY + build `smart_vlm` (kept stock during dev — dev mode mounts code instead); test the pure-image build end-to-end
 - [ ] (Optional) Foxglove bridge up; laptop connects; shared layout saved
 
 ### Topic verification table (measured Jul 22)

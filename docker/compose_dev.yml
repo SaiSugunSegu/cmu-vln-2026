@@ -1,0 +1,17 @@
+# Dev override (NEW file — leaves upstream compose_gpu.yml untouched).
+# Mounts the host ai_module into the container so code edits need NO image
+# rebuild — just colcon build inside the container.
+#
+# Usage:
+#   docker compose -f compose_gpu.yml -f compose_dev.yml up -d
+#   docker exec -it iros2026_ai_module bash -c \
+#     "source /opt/ros/jazzy/setup.bash && cd /home/docker/ai_module && \
+#      colcon build --symlink-install --packages-select dummy_vlm smart_vlm"
+#
+# Note: the mount shadows the image's prebuilt /home/docker/ai_module, so the
+# first colcon build after 'up' recreates build/install on the host (persists
+# across container restarts). CI/eval path stays the pure-image build.
+services:
+  ai_module:
+    volumes:
+      - ../ai_module:/home/docker/ai_module
