@@ -1,6 +1,8 @@
 services:
   system:
-    image: zhangjicmu/ubuntu24_ros:cmu_vla_challenge_simulation
+    build:
+      context: ..
+      dockerfile: docker/system/Dockerfile
     container_name: iros2026_system
     privileged: true
     network_mode: host

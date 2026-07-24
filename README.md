@@ -70,18 +70,33 @@ Full plan: [TEAM_PLAN.md](TEAM_PLAN.md) · deep dives: [docs/](docs/)
 ```bash
 git clone --recurse-submodules git@github.com:SaiSugunSegu/cmu-vln-2026.git && cd cmu-vln-2026
 # existing clone:  git pull && git submodule update --init --recursive
-cd docker && xhost +local: && docker compose -f compose_gpu.yml -f compose_dev.yml up --build -d
-docker exec -it iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && \
-  cd /home/docker/ai_module && colcon build --symlink-install --packages-select dummy_vlm smart_vlm"
+
+# Build and start the pure Docker environment (guarantees eval compatibility)
+cd docker && xhost +local: && docker compose -f compose_gpu.yml up --build -d
 ```
 
 ### 2 · Dev run — sim + smart_vlm ([details → docs/M0_infra.md](docs/M0_infra.md))
 ```bash
-# A: docker exec -it -e DISPLAY=:1 iros2026_system bash -c "/home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh"
-# B: docker exec -it iros2026_ai_module bash -c "source install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
-# C: docker exec -it iros2026_ai_module bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: 'How many books are on the sofa'}\""
+# Terminal A (Launch Simulator):
+docker exec -it -e DISPLAY=:1 iros2026_system bash
+
+# Choose ONE of the following to launch the sim:
+# Option 1: Standard dev mode (all topics visible)
+/home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh
+
+# Option 2: Eval-realistic mode (6-topic firewall, simulates challenge conditions)
+/home/docker/autonomy_stack_mecanum_wheel_platform/challenge_simulation.sh
+
+# Terminal B (Launch AI Module):
+docker exec -it iros2026_ai_module bash
+source install/setup.bash
+ros2 launch smart_vlm smart_vlm.launch
+
+# Terminal C (Send a Test Question):
+# (If using Option 2 above, you must add `export ROS_DOMAIN_ID=42` before running this)
+docker exec -it iros2026_ai_module bash
+ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'How many books are on the sofa'}"
 ```
-Eval-realistic (6-topic firewall): use `scripts/challenge_simulation.sh` in A, `ROS_DOMAIN_ID=0` in B.
 
 ### 3 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
 ```bash

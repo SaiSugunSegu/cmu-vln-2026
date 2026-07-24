@@ -1,6 +1,6 @@
 # Common ops — run from the repo's docker/ folder:  make -f ../scripts/Makefile <target>
 
-up:            ## build + start both containers (GPU)
+up:            ## build + start both containers (GPU) using pure Docker image
 	docker compose -f compose_gpu.yml up --build -d
 
 down:
@@ -9,8 +9,8 @@ down:
 sim:           ## launch simulator + base autonomy (blocks; terminal A)
 	docker exec -it iros2026_system bash -c "/home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh"
 
-ai:            ## launch dummy/our VLM (blocks; terminal B)
-	docker exec -it iros2026_ai_module bash -c "ros2 launch dummy_vlm dummy_vlm.launch"
+ai:            ## launch smart_vlm (blocks; terminal B)
+	docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
 
 # make ask q="How many books are on the sofa"
 ask:

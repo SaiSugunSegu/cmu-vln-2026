@@ -80,7 +80,7 @@ docker compose -f compose_gpu.yml up --build -d   # (compose.yml if no GPU)
 ```
 Two containers start (shared host network):
 - `iros2026_system` — simulator + base autonomy
-- `iros2026_ai_module` — our dev environment (dummy_vlm inside)
+- `iros2026_ai_module` — our dev environment (smart_vlm inside)
 
 ### 3. Launch sim + visualization
 ```bash
@@ -92,14 +92,15 @@ RViz should open with the scene. To change scenes: drop scene files into
 (training scenes download: link in repo README).
 
 ### 3.5 Daily dev loop (smart_vlm — current AI module)
-Workspace path in the ai container: `/home/docker/ai_module`. **Daily driver = dev mode** — original files untouched, all our tooling in the NEW `docker/compose_dev.yml`, which mounts host `ai_module/` over the container workspace:
-`docker compose -f compose_gpu.yml -f compose_dev.yml up -d`, then build inside:
+Workspace path in the ai container: `/home/docker/ai_module`.
+We use a **Pure Docker workflow** to guarantee our code runs exactly as it will at evaluation time.
 ```bash
-# after every git pull (dev mode):
-docker exec -it iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && \
-  cd /home/docker/ai_module && colcon build --symlink-install --packages-select dummy_vlm smart_vlm"
+# after every git pull or code change, rebuild the container:
+cd docker
+docker compose -f compose_gpu.yml up --build -d
+
 # run it:
-docker exec -it iros2026_ai_module bash -c "source install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
 ```
 `smart_vlm.launch` = supervisor (mission clock, question intake, topic health) + dummy_vlm answer heads + TARE (once vendored — see launch file comments). Watch the supervisor heartbeat: it logs per-topic rates and warns on dead topics.
 Eval-realistic mode: `scripts/challenge_simulation.sh` runs the sim in ROS domain 42 with a domain-bridge firewall passing only the 6 allowed inputs + question in and 3 answers out; launch the AI side with `ROS_DOMAIN_ID=0`. Needs `ros-jazzy-domain-bridge` in the system container (add to Dockerfile once validated).
@@ -182,7 +183,7 @@ Tips: best-effort QoS + decay for `/registered_scan`; Image panel for `/camera/i
 - [ ] Bag recorded and replayable (`ros2 bag play`)
 - [ ] Training scenes downloaded; scene-swap procedure tested
 - [ ] questions.json + answer PDFs + .ply trajectories downloaded and organized
-- [ ] AI-module node skeleton (python) replaces dummy_vlm: subscribes all inputs, publishes all 3 outputs
+- [x] smart_vlm package builds + launches in dev mode (Jul 23 — supervisor + dummy_vlm heads)
 - [ ] amd64 image pinned via buildx; clean-machine rebuild tested
 - [ ] **W5 submission prep:** update `ai_module/docker/Dockerfile` to COPY + build `smart_vlm` (kept stock during dev — dev mode mounts code instead); test the pure-image build end-to-end
 - [ ] (Optional) Foxglove bridge up; laptop connects; shared layout saved
@@ -217,3 +218,4 @@ Many extra topics also publish (e.g. /overall_map, camera/semantic_image/*) — 
 | Jul 21 | Doc created; runbook from repo docker/README.md |
 | Jul 21 | Setup complete on L4 box: containers up, sim + RViz working, teleop verified, all sensor data visible. Gotchas: DISPLAY empty in container when compose'd from SSH (fix: `docker exec -e DISPLAY=...`); X session must be alive (auto-login recommended) |
 | Jul 21 | Folder accidentally deleted; fully restored from Claude session |
+| Jul 23 | smart_vlm builds + launches (dev mode). Gotchas found & fixed: (1) ament_python needs `setup.cfg` (script_dir→lib/smart_vlm) or `ros2 launch` can't find the executable (libexec dir missing); (2) bind-mount uid mismatch (host 1000 / container 1001) → `chmod -R a+w ai_module` on host once; (3) mount hides image's prebuilt dummy_vlm → always `colcon build` BOTH packages together |
