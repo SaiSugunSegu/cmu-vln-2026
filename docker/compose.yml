@@ -6,6 +6,9 @@ services:
     container_name: iros2026_system
     privileged: true
     network_mode: host
+    # FastDDS moves payloads over shared memory between same-host peers; with a
+    # private /dev/shm the ai_module discovers topics but receives no messages.
+    ipc: host
     environment:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
@@ -24,5 +27,6 @@ services:
       dockerfile: docker/Dockerfile
     container_name: iros2026_ai_module
     network_mode: host
+    ipc: host
     stdin_open: true
     tty: true
