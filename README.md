@@ -76,29 +76,49 @@ cd docker && xhost +local: && docker compose -f compose_gpu.yml up --build -d
 ```
 
 ### 2 · Dev run — sim + smart_vlm ([details → docs/M0_infra.md](docs/M0_infra.md))
+
+#### Step A: Launch Simulator
+Choose either standard mode or challenge mode (run in Terminal A on the remote machine):
 ```bash
-# Terminal A (Launch Simulator):
 docker exec -it -e DISPLAY=:1 iros2026_system bash
 
-# Choose ONE of the following to launch the sim:
+# Inside the container, run ONE of these:
 # Option 1: Standard dev mode (all topics visible)
 /home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh
 
 # Option 2: Eval-realistic mode (6-topic firewall, simulates challenge conditions)
 /home/docker/autonomy_stack_mecanum_wheel_platform/challenge_simulation.sh
+```
 
-# Terminal B (Launch AI Module):
+#### Step B: Launch AI Module & Questions
+Run the AI stack and publish testing questions (Terminal B and C):
+```bash
+# Terminal B: Start the AI module
 docker exec -it iros2026_ai_module bash
 source install/setup.bash
 ros2 launch smart_vlm smart_vlm.launch
-
-# Terminal C (Send a Test Question):
-# (If using Option 2 above, you must add `export ROS_DOMAIN_ID=42` before running this)
+```
+```bash
+# Terminal C: Publish a test question
 docker exec -it iros2026_ai_module bash
+# (Note: If using Option 2 simulator, run `export ROS_DOMAIN_ID=42` before publishing)
 ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'How many books are on the sofa'}"
 ```
 
-### 3 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
+### 3 · Remote Visualization (Foxglove over SSH)
+To visualize simulator camera feeds, maps, and point clouds on your local laptop without lagging X11/VNC:
+1. **On your local machine (laptop):** Establish SSH tunnel to port-forward the bridge port:
+   ```bash
+   ssh -L 8765:localhost:8765 user@<remote-machine-ip>
+   ```
+2. **In Terminal B (or a new Terminal) on the remote machine:** Launch the Foxglove Bridge:
+   ```bash
+   docker exec -it iros2026_ai_module bash
+   ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+   ```
+3. Open Foxglove Studio on your laptop, select **Open Connection -> Foxglove WebSocket**, and connect to `ws://localhost:8765`.
+
+### 4 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
 ```bash
 python3 scripts/eval/run_bench.py --repo . --scenes-dir ~/vln_scenes --out ~/vln_eval/$(date +%Y%m%d_%H%M) --smoke
 python3 scripts/eval/score.py --results ~/vln_eval/<run> --gt scripts/eval/gt/gt.json
