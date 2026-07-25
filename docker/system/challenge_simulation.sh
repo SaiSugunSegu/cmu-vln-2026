@@ -40,9 +40,8 @@ source ./install/setup.bash
 echo "[challenge_sim] starting ${SIM} in ROS_DOMAIN_ID=${SIM_DOMAIN}"
 ROS_DOMAIN_ID=${SIM_DOMAIN} "${SIM}" &
 SIM_PID=$!
+trap 'kill -TERM "${SIM_PID}" 2>/dev/null || true' EXIT SIGINT SIGTERM
 sleep 8
 
 echo "[challenge_sim] starting topic firewall (domain ${SIM_DOMAIN} <-> 0)"
 ros2 run domain_bridge domain_bridge "${BRIDGE_CFG}"
-
-kill ${SIM_PID} 2>/dev/null || true

@@ -6,10 +6,15 @@ RUN apt-get update && apt-get install -y ros-jazzy-domain-bridge && rm -rf /var/
 # software X server (Xvnc), which has no GL acceleration of its own. mesa-utils
 # provides glxinfo for checking which renderer you actually got.
 ARG VIRTUALGL_VERSION=3.1.4
+# sha256 of virtualgl_${VIRTUALGL_VERSION}_amd64.deb from the official GitHub
+# release. Verified before install so a changed/MITM'd asset fails the build.
+# Update this hash whenever VIRTUALGL_VERSION changes.
+ARG VIRTUALGL_SHA256=02edc6b599571c385389af1a006f07a70c298e1d97c580a9bfd4b39d835c51e6
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl mesa-utils \
     && curl -fsSL -o /tmp/virtualgl.deb \
       "https://github.com/VirtualGL/virtualgl/releases/download/${VIRTUALGL_VERSION}/virtualgl_${VIRTUALGL_VERSION}_amd64.deb" \
+    && echo "${VIRTUALGL_SHA256}  /tmp/virtualgl.deb" | sha256sum -c - \
     && apt-get install -y --no-install-recommends /tmp/virtualgl.deb \
     && rm -f /tmp/virtualgl.deb \
     && rm -rf /var/lib/apt/lists/*
