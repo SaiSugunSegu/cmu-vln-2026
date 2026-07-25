@@ -138,18 +138,26 @@ install(TARGETS
   tare_planner_node
   DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY launch/
-        DESTINATION share/${PROJECT_NAME}/
+# Install third-party OR-Tools shared libraries natively into workspace lib
+install(FILES
+  or-tools/lib/libortools.so
+  or-tools/lib/libortools.so.9
+  or-tools/lib/libortools.so.9.8.3296
+  DESTINATION lib
+  )
+
+install(DIRECTORY launch
+        DESTINATION share/${PROJECT_NAME}
         )
-install(DIRECTORY rviz/
-        DESTINATION share/${PROJECT_NAME}/
+install(DIRECTORY rviz
+        DESTINATION share/${PROJECT_NAME}
         )
 install(DIRECTORY config/
         DESTINATION share/${PROJECT_NAME}
       )
-install(DIRECTORY data/
-        DESTINATION share/${PROJECT_NAME}
-      )
+#install(DIRECTORY data
+#        DESTINATION share/${PROJECT_NAME}
+#      )
 
 ament_package()
 

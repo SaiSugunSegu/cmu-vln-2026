@@ -14,7 +14,7 @@
 
   <!-- 3. TARE exploration planner (vendored) -->
   <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
-    <arg name="scenario" value="indoor"/>
+    <arg name="scenario" value="indoor_small"/>
   </include>
 
 </launch>
