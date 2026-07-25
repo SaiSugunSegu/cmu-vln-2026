@@ -1,0 +1,120 @@
+{
+  "configById": {
+    "3D!vlnscene": {
+      "cameraState": {
+        "distance": 28,
+        "perspective": true,
+        "phi": 55,
+        "target": [0, 0, 0],
+        "targetOffset": [0, 0, 0],
+        "targetOrientation": [0, 0, 0, 1],
+        "thetaOffset": 45,
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-position",
+      "followTf": "map",
+      "scene": {
+        "transforms": {
+          "showLabel": false,
+          "axisScale": 1.2
+        }
+      },
+      "transforms": {
+        "frame:map": { "visible": true },
+        "frame:sensor": { "visible": true },
+        "frame:camera": { "visible": true },
+        "frame:vehicle": { "visible": true }
+      },
+      "topics": {
+        "/registered_scan": {
+          "visible": true,
+          "colorMode": "colormap",
+          "colorField": "z",
+          "colorMap": "turbo",
+          "pointSize": 2
+        },
+        "/terrain_map_ext": {
+          "visible": true,
+          "colorMode": "colormap",
+          "colorField": "intensity",
+          "colorMap": "rainbow",
+          "pointSize": 3
+        },
+        "/overall_map": {
+          "visible": false,
+          "colorMode": "flat",
+          "flatColor": "#8a8a8aff",
+          "pointSize": 1
+        },
+        "/explored_areas": {
+          "visible": false,
+          "colorMode": "flat",
+          "flatColor": "#4caf50ff",
+          "pointSize": 2
+        },
+        "/traversable_area": {
+          "visible": false,
+          "colorMode": "flat",
+          "flatColor": "#2196f3ff",
+          "pointSize": 2
+        },
+        "/selected_object_marker": { "visible": true },
+        "/path": { "visible": true },
+        "/way_point": { "visible": true },
+        "/navigation_boundary": { "visible": false },
+        "/state_estimation": { "visible": true, "type": "axis" }
+      },
+      "layers": {},
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose"
+      }
+    },
+    "Image!vlncam": {
+      "imageMode": {
+        "imageTopic": "/camera/image/compressed"
+      }
+    },
+    "RawMessages!vlnodom": {
+      "topicPath": "/state_estimation.pose.pose",
+      "expansion": "all"
+    },
+    "Plot!vlnspeed": {
+      "paths": [
+        {
+          "value": "/speed.data",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "speed (m/s)"
+        }
+      ],
+      "showLegend": true,
+      "xAxisVal": "timestamp",
+      "followingViewWidth": 60,
+      "isSynced": true
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": { "speed": 1 },
+  "layout": {
+    "first": "3D!vlnscene",
+    "second": {
+      "first": "Image!vlncam",
+      "second": {
+        "first": "RawMessages!vlnodom",
+        "second": "Plot!vlnspeed",
+        "direction": "column",
+        "splitPercentage": 55
+      },
+      "direction": "column",
+      "splitPercentage": 45
+    },
+    "direction": "row",
+    "splitPercentage": 62
+  }
+}

@@ -84,9 +84,13 @@ Two containers start (shared host network):
 
 ### 3. Launch sim + visualization
 ```bash
-docker exec -it iros2026_system bash
-/home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh
+docker exec -it -e DISPLAY=:1 iros2026_system bash
+cd /home/docker/autonomy_stack_mecanum_wheel_platform
+vglrun -d egl ./system_simulation.sh          # ./system_simulation_noviz.sh to skip RViz
 ```
+The `vglrun -d egl` prefix renders Unity on the GPU; without it Unity falls back to
+Mesa `llvmpipe` and the sensor topics crawl (see [GPU rendering](#gpu-rendering) below).
+
 RViz should open with the scene. To change scenes: drop scene files into
 `autonomy_stack_mecanum_wheel_platform/src/base_autonomy/vehicle_simulator/mesh/unity/`
 (training scenes download: link in repo README).
@@ -103,7 +107,7 @@ docker compose -f compose_gpu.yml up --build -d
 docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
 ```
 `smart_vlm.launch` = supervisor (mission clock, question intake, topic health) + dummy_vlm answer heads + TARE (once vendored — see launch file comments). Watch the supervisor heartbeat: it logs per-topic rates and warns on dead topics.
-Eval-realistic mode: `scripts/challenge_simulation.sh` runs the sim in ROS domain 42 with a domain-bridge firewall passing only the 6 allowed inputs + question in and 3 answers out; launch the AI side with `ROS_DOMAIN_ID=0`. Needs `ros-jazzy-domain-bridge` in the system container (add to Dockerfile once validated).
+Eval-realistic mode: `docker/system/challenge_simulation.sh` (baked into the system container at `/home/docker/autonomy_stack_mecanum_wheel_platform/`) runs the sim in ROS domain 42 with a domain-bridge firewall passing only the 6 allowed inputs + question in and 3 answers out; launch the AI side with `ROS_DOMAIN_ID=0`. Pass `--noviz` to skip RViz. `ros-jazzy-domain-bridge` is installed by `docker/system/Dockerfile`.
 
 ### 4. Launch dummy VLM + send test questions
 ```bash
@@ -148,18 +152,61 @@ ros2 bag record /camera/image /registered_scan /sensor_scan \
 
 ---
 
+## GPU rendering
+
+On a headless box the only X server is Xvnc, which has no GL acceleration, so Unity falls
+back to Mesa's `llvmpipe` software rasteriser: `/registered_scan` drops to **0.06 Hz** and
+Unity burns ~400% CPU. `vglrun -d egl` makes Unity render on the NVIDIA GPU via EGL and
+blits the result to Xvnc. Two things in this repo make that possible:
+
+- **VirtualGL**, installed by `docker/system/Dockerfile`, which provides `vglrun`.
+- **`/usr/share/glvnd/egl_vendor.d/10_nvidia.json`**, also written by that Dockerfile. The
+  container toolkit injects `libEGL_nvidia.so.0` but not this vendor config, so libglvnd
+  would only ever find Mesa. Without it `vglrun` still yields `llvmpipe`.
+
+No extra GPU settings are needed in the compose files — the base image already ships
+`NVIDIA_DRIVER_CAPABILITIES=graphics`, so `capabilities: [gpu]` is enough.
+
+Check which renderer you actually got:
+```bash
+docker exec -e DISPLAY=:1 iros2026_system vglrun -d egl glxinfo | grep "OpenGL renderer"
+# want: NVIDIA A10G/PCIe/SSE2      not: llvmpipe (LLVM 20.1.2, 256 bits)
+```
+Unity records the same thing at startup in `~/.config/unity3d/UnityRobotics/cmu_vla_challenge_unity/Player.log`.
+
+Rates on an A10G with GPU rendering, measured from inside `iros2026_ai_module`:
+
+| Topic | Rate | Spec |
+|-|-|-|
+| `/state_estimation` | 200.7 Hz | 100–200 Hz |
+| `/registered_scan` | 4.1 Hz | 5 Hz |
+| `/terrain_map`, `/terrain_map_ext` | 3.9–4.0 Hz | 5 Hz |
+| `/camera/image` | 3.0 Hz | 10 Hz |
+
+The camera still trails spec because the 360° image is re-encoded on the CPU.
+
+## Troubleshooting: topics list but no messages
+
+If `ros2 topic list` inside `iros2026_ai_module` shows every topic but `ros2 topic hz /state_estimation` reports nothing, the two containers are not sharing an IPC namespace. FastDDS discovers peers over the host network but moves payloads over shared memory for same-host peers, and a private `/dev/shm` per container silently drops all of it. This breaks the whole AI module, not just visualization.
+
+Both compose files set `ipc: host` on both services, so `docker compose -f compose_gpu.yml up -d` handles this. To unblock a container that is already running (no simulator restart needed), force UDP transport instead:
+```bash
+docker exec -it -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 iros2026_ai_module bash
+```
+
+---
+
 ## Remote visualization (optional)
 
 The L4 box has a GUI — RViz runs natively per the runbook. This section is only for watching runs from a laptop elsewhere.
 
-**Foxglove:** run a websocket bridge on the L4 box, connect from a browser or the Foxglove desktop app. No host installs needed — run it inside the AI container:
+**Foxglove:** run a websocket bridge on the sim box, connect from the Foxglove desktop app. `ros-jazzy-foxglove-bridge` is already installed by `ai_module/docker/Dockerfile` — no apt step needed:
 ```bash
-docker exec -it iros2026_ai_module bash
-sudo apt update && sudo apt install -y ros-jazzy-foxglove-bridge
-ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
-# laptop: Foxglove → Open connection → ws://<l4-box-ip>:8765
+docker exec -it -e ROS_DOMAIN_ID=42 iros2026_ai_module bash   # 42 in challenge mode, 0 in standard
+ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0
+# laptop: ssh -N -L 8765:localhost:8765 <user>@<box>, then Foxglove → Open connection → ws://localhost:8765
 ```
-Tips: best-effort QoS + decay for `/registered_scan`; Image panel for `/camera/image`. Save the layout as `vln_dev.json` in the repo so the team shares one view.
+The shared panel layout lives at `scripts/foxglove/vln_layout.json` (Layouts → Import from file). Full walkthrough and gotchas: "Remote Visualization" in the repo README.
 
 **Remote RViz via DDS** also works (laptop on same LAN, same `ROS_DOMAIN_ID`; `ROS_STATIC_PEERS=<l4-box-ip>` if multicast discovery fails), but expect lag on raw images over Wi-Fi — prefer Foxglove.
 
@@ -186,7 +233,8 @@ Tips: best-effort QoS + decay for `/registered_scan`; Image panel for `/camera/i
 - [x] smart_vlm package builds + launches in dev mode (Jul 23 — supervisor + dummy_vlm heads)
 - [ ] amd64 image pinned via buildx; clean-machine rebuild tested
 - [ ] **W5 submission prep:** update `ai_module/docker/Dockerfile` to COPY + build `smart_vlm` (kept stock during dev — dev mode mounts code instead); test the pure-image build end-to-end
-- [ ] (Optional) Foxglove bridge up; laptop connects; shared layout saved
+- [x] Foxglove bridge up; laptop connects over SSH tunnel; shared layout saved (`scripts/foxglove/vln_layout.json`)
+- [x] Unity rendering on the GPU via VirtualGL (`vglrun -d egl`) — was silently on Mesa llvmpipe
 
 ### Topic verification table (measured Jul 22)
 | Topic | Type | Expected | Measured | Notes |
@@ -198,7 +246,7 @@ Tips: best-effort QoS + decay for `/registered_scan`; Image panel for `/camera/i
 | /terrain_map_ext | PointCloud2 | 5 Hz, 20 m | 5 Hz | ✓ |
 | /state_estimation | Odometry | 100–200 Hz | ~200 Hz | ✓ |
 
-Many extra topics also publish (e.g. /overall_map, camera/semantic_image/*) — dev-only, firewalled at eval-mimic time by `scripts/challenge_simulation.sh` (domain bridge, only the 6+question in / 3 answers out).
+Many extra topics also publish (e.g. /overall_map, camera/semantic_image/*) — dev-only, firewalled at eval-mimic time by `docker/system/challenge_simulation.sh` (domain bridge, only the 6+question in / 3 answers out).
 
 ---
 

@@ -63,7 +63,7 @@ docker compose -f compose_gpu.yml up --build -d
 ```
 This starts two containers:
 - `iros2026_system` — the base autonomy system (simulator + autonomy stack)
-- `iros2026_ai_module` — the AI module development environment with the updated `dummy_vlm` built in
+- `iros2026_ai_module` — the AI module development environment, with `dummy_vlm` and `smart_vlm` built in
 
 ## Launch base autonomy system
 
@@ -75,6 +75,14 @@ Inside the container, launch the base autonomy system.
 ```bash
 /home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh
 ```
+On a machine with an Nvidia GPU but no hardware-accelerated X server (e.g. a headless
+box running Xvnc), prefix the launch with VirtualGL so Unity renders on the GPU instead
+of falling back to Mesa `llvmpipe`:
+```bash
+cd /home/docker/autonomy_stack_mecanum_wheel_platform
+vglrun -d egl ./system_simulation.sh              # ./system_simulation_noviz.sh to skip RVIZ
+```
+See "GPU rendering" in the [repo README](../README.md) for details and how to verify.
 
 ## Launch dummy VLM
 
@@ -112,7 +120,7 @@ You should see the vehicle following waypoints and the selected object being hig
 
 To replace the dummy VLM with your own model, modify `ai_module/src/dummy_vlm/src/dummyVLM.cpp` and rebuild the Docker image.
 ```bash
-cd ~/iros2026_workshop/docker
+cd <path-to-repo>/docker
 docker compose -f compose.yml up --build -d
 ```
 Your model must subscribe to `/challenge_question` (std_msgs/msg/String) and publish on the appropriate response topic based on the question type.

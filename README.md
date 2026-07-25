@@ -78,16 +78,16 @@ cd docker && xhost +local: && docker compose -f compose_gpu.yml up --build -d
 ### 2 · Dev run — sim + smart_vlm ([details → docs/M0_infra.md](docs/M0_infra.md))
 
 #### Step A: Launch Simulator
-Choose either standard mode or challenge mode (run in Terminal A on the remote machine):
+Choose standard or challenge mode (Terminal A). 
 ```bash
 docker exec -it -e DISPLAY=:1 iros2026_system bash
+cd /home/docker/autonomy_stack_mecanum_wheel_platform
 
-# Inside the container, run ONE of these:
-# Option 1: Standard dev mode (all topics visible)
-/home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh
-
-# Option 2: Eval-realistic mode (6-topic firewall, simulates challenge conditions)
-/home/docker/autonomy_stack_mecanum_wheel_platform/challenge_simulation.sh
+# run ONE of these:
+vglrun -d egl ./system_simulation.sh          # standard — all topics + rviz2
+vglrun -d egl ./challenge_simulation.sh       # eval-realistic — 6-topic firewall
+#   vglrun -d egl ./system_simulation_noviz.sh   ·  
+#   vglrun -d egl ./challenge_simulation.sh --noviz
 ```
 
 #### Step B: Launch AI Module & Questions
@@ -107,16 +107,28 @@ ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'How many 
 
 ### 3 · Remote Visualization (Foxglove over SSH)
 To visualize simulator camera feeds, maps, and point clouds on your local laptop without lagging X11/VNC:
-1. **On your local machine (laptop):** Establish SSH tunnel to port-forward the bridge port:
+
+1. **Start the sim without rviz2** (Step A above), e.g. `vglrun -d egl ./challenge_simulation.sh --noviz`.
+2. **On the remote machine:** launch the Foxglove bridge. Use `ROS_DOMAIN_ID=42` in challenge
+   mode so the bridge sees the full simulator rather than just the 6 firewalled inputs
+   (the `ai_module` container runs with `network_mode: host`, so container port 8765 *is* host port 8765):
    ```bash
-   ssh -L 8765:localhost:8765 user@<remote-machine-ip>
+   docker exec -it -e ROS_DOMAIN_ID=42 iros2026_ai_module bash
+   ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0
+   # or from docker/:  make -f ../scripts/Makefile foxglove          (DOMAIN=42 by default)
+   #                   make -f ../scripts/Makefile foxglove DOMAIN=0 (standard mode)
    ```
-2. **In Terminal B (or a new Terminal) on the remote machine:** Launch the Foxglove Bridge:
+
+3. **On your laptop:** open an SSH tunnel forwarding that port:
    ```bash
-   docker exec -it iros2026_ai_module bash
-   ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+   ssh -N -L 8765:localhost:8765 <user>@<remote-machine-ip>
    ```
-3. Open Foxglove Studio on your laptop, select **Open Connection -> Foxglove WebSocket**, and connect to `ws://localhost:8765`.
+4. Open the Foxglove desktop app, choose **Open connection → Foxglove WebSocket**, and connect to `ws://localhost:8765`.
+5. Import the ready-made panel layout — copy it to your laptop and load it via **Layouts → Import from file**:
+   ```bash
+   scp <user>@<remote-machine-ip>:<path-to-repo>/scripts/foxglove/vln_layout.json .
+   ```
+   
 
 ### 4 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
 ```bash
