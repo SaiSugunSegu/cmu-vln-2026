@@ -12,18 +12,9 @@
        supervisor becomes the single writer once the waypoint mux is in. -->
   <include file="$(find-pkg-share dummy_vlm)/launch/dummy_vlm.launch"/>
 
-  <!-- 3. TARE exploration planner (vendored) — UNCOMMENT after vendoring.
-       Steps (see docs/M1_exploration.md):
-         a) git submodule update -init -recursive   (get the stack source)
-         b) cat autonomy_stack_mecanum_wheel_platform/system_simulation_with_exploration_planner.sh
-            and copy the exact tare launch line + args it uses
-         c) copy src/exploration_planner/tare_planner into ai_module/src/
-            (plus OR-Tools: check its README for the amd64 binary path)
-         d) rebuild the ai_module container; replace the include below.
-       <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
-         <arg name="scenario" value="indoor"/>
-         <arg name="rviz" value="false"/>
-       </include>
-  -->
+  <!-- 3. TARE exploration planner (vendored) -->
+  <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
+    <arg name="scenario" value="indoor"/>
+  </include>
 
 </launch>

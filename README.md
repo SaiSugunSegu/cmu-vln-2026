@@ -93,7 +93,7 @@ vglrun -d egl ./challenge_simulation.sh       # eval-realistic — 6-topic firew
 #### Step B: Launch AI Module & Questions
 Run the AI stack and publish testing questions (Terminal B and C):
 ```bash
-# Terminal B: Start the AI module
+# Terminal B: Start the AI module (runs Supervisor + Dummy VLM + TARE Planner)
 docker exec -it iros2026_ai_module bash
 source install/setup.bash
 ros2 launch smart_vlm smart_vlm.launch
