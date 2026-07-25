@@ -4,8 +4,8 @@ RUN apt-get update && apt-get install -y ros-jazzy-domain-bridge && rm -rf /var/
 USER docker
 
 # Copy the challenge simulation scripts into the autonomy stack
-COPY autonomy_stack_mecanum_wheel_platform/challenge_simulation.sh /home/docker/autonomy_stack_mecanum_wheel_platform/
-COPY autonomy_stack_mecanum_wheel_platform/challenge_topics_bridge.yaml /home/docker/autonomy_stack_mecanum_wheel_platform/
+COPY challenge_simulation.sh /home/docker/autonomy_stack_mecanum_wheel_platform/
+COPY challenge_topics_bridge.yaml /home/docker/autonomy_stack_mecanum_wheel_platform/
 
 # Ensure the script is executable
 USER root

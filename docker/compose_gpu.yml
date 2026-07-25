@@ -1,8 +1,8 @@
 services:
   system:
     build:
-      context: ..
-      dockerfile: docker/system/Dockerfile
+      context: ./system
+      dockerfile: Dockerfile
     container_name: iros2026_system
     privileged: true
     network_mode: host
