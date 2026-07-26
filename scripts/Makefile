@@ -43,7 +43,7 @@ topics:        ## sanity-check input topic rates
 
 # make bag name=scene01_run1
 bag:
-	docker exec -it iros2026_ai_module bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /challenge_question -o /data/bags/$(name)"
+	docker exec -it iros2026_ai_module bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /tf /tf_static /challenge_question -o /data/bags/$(name)"
 
 shell-sys:
 	docker exec -it iros2026_system bash

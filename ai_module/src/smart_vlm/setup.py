@@ -22,6 +22,7 @@ setup(
     entry_points={
         'console_scripts': [
             'supervisor = smart_vlm.supervisor:main',
+            'bag_fetch = smart_vlm.bag_fetch:main',
         ],
     },
 )

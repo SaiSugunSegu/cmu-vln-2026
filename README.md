@@ -89,6 +89,8 @@ vglrun -d egl ./challenge_simulation.sh       # eval-realistic — 6-topic firew
 #   vglrun -d egl ./system_simulation_noviz.sh   ·  
 #   vglrun -d egl ./challenge_simulation.sh --noviz
 ```
+Offline (no Unity/GPU): replay a recorded bag instead — `ros2 launch smart_vlm bag_replay.launch scene:=scene_0`
+([docs/M0.5_rosbag_infra.md](docs/M0.5_rosbag_infra.md)).
 
 #### Step B: Launch AI Module & Questions
 Run the AI stack and publish testing questions (Terminal B and C):

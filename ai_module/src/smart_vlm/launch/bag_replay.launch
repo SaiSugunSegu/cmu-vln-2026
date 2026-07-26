@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""Replay a recorded scene bag INSTEAD of the live simulator (offline dev).
+
+Auto-downloads the scene from Google Drive if it's not on disk yet (via
+`smart_vlm bag_fetch`, which reads <bags_dir>/scenes.yaml), then plays it. The
+bag holds only the allowed inputs (plus /tf, /tf_static). See
+docs/M0.5_rosbag_infra.md.
+
+  ros2 launch smart_vlm bag_replay.launch scene:=scene_0
+  ros2 launch smart_vlm bag_replay.launch scene:=scene_0 args:=""   # single pass (default --loop)
+
+(Python launch file with a .launch name, matching the repo's other launch files.)
+"""
+import os
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
+
+
+def _play(context, *args, **kwargs):
+    scene = LaunchConfiguration("scene").perform(context)
+    bags_dir = LaunchConfiguration("bags_dir").perform(context)
+    extra = LaunchConfiguration("args").perform(context)
+    scene_dir = os.path.join(bags_dir, scene)
+
+    # fetch-if-missing, then play. Resolve the .mcap *after* the fetch and play it
+    # directly, so the recorded filename doesn't have to match metadata.yaml (and
+    # the scene folder can be renamed freely). Fall back to the bag dir if there
+    # isn't exactly one .mcap. `exec` so Ctrl-C reaches the player.
+    cmd = (
+        f"ros2 run smart_vlm bag_fetch {scene} --bags-dir {bags_dir} && "
+        f'{{ mcap="$(ls {scene_dir}/*.mcap 2>/dev/null | head -n1)"; '
+        f'if [ -n "$mcap" ]; then exec ros2 bag play "$mcap" -s mcap {extra}; '
+        f"else exec ros2 bag play {scene_dir} {extra}; fi; }}"
+    )
+    return [ExecuteProcess(cmd=["bash", "-c", cmd], output="screen")]
+
+
+def generate_launch_description():
+    return LaunchDescription([
+        DeclareLaunchArgument("scene", default_value="scene_0"),
+        DeclareLaunchArgument("bags_dir", default_value="/data/bags"),
+        DeclareLaunchArgument("args", default_value="--loop",
+                              description='ros2 bag play flags; set args:="" for a single pass'),
+        OpaqueFunction(function=_play),
+    ])

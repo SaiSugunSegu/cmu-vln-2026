@@ -5,7 +5,10 @@
 *.bag
 *.db3
 *.mcap
-bags/
+bags/*
+!bags/README.md
+!bags/scenes.yaml
+
 *.ply
 *.onnx
 *.engine

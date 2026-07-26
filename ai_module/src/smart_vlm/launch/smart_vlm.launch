@@ -1,6 +1,16 @@
 <launch>
   <!-- smart_vlm: supervisor + dummy answer heads + exploration.
-       Replaces dummy_vlm.launch. Launch:  ros2 launch smart_vlm smart_vlm.launch -->
+       Replaces dummy_vlm.launch. Launch:  ros2 launch smart_vlm smart_vlm.launch
+
+       Optional offline mode: set use_bag:=true to also replay a recorded scene
+         ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=scene_0 -->
+  <arg name="use_bag" default="false"/>   <!-- true = also replay a bag instead of the live sim -->
+  <arg name="bag"     default="scene_0"/>  <!-- scene name under /data/bags -->
+
+  <!-- 0. Optional bag replay (offline dev; default off leaves live-sim runs untouched) -->
+  <include file="$(find-pkg-share smart_vlm)/launch/bag_replay.launch" if="$(var use_bag)">
+    <arg name="scene" value="$(var bag)"/>
+  </include>
 
   <!-- 1. Supervisor: mission clock, question handling, exploration control -->
   <node pkg="smart_vlm" exec="supervisor" name="smart_vlm_supervisor" output="screen"/>

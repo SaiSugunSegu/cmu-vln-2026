@@ -28,6 +28,16 @@ services:
               count: all
               capabilities: [gpu]
 
+  # Init container: prepares the bind-mounted bags dir so the non-root ai_module
+  # user can write fetched bags into it (a Dockerfile can't chmod a bind mount).
+  # This is a ONE-SHOT — it runs, fixes perms, and exits: `Exited (0)` is success.
+  bags_init:
+    image: busybox
+    volumes:
+      - ../bags:/data/bags
+    command: sh -c "mkdir -p /data/bags && chmod -R a+w /data/bags"
+    restart: "no"
+
   ai_module:
     build:
       context: ../ai_module
@@ -35,6 +45,11 @@ services:
     container_name: iros2026_ai_module
     network_mode: host
     ipc: host
+    volumes:
+      - ../bags:/data/bags
+    depends_on:
+      bags_init:
+        condition: service_completed_successfully
     stdin_open: true
     tty: true
     deploy:

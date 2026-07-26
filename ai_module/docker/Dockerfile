@@ -3,6 +3,10 @@ FROM zhangjicmu/ubuntu24_ros:ai_module
 # Install Foxglove bridge for remote visualization
 USER root
 RUN apt-get update && apt-get install -y ros-jazzy-foxglove-bridge && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3-pip python3-yaml \
+    && python3 -m pip install --no-cache-dir --break-system-packages gdown \
+    && rm -rf /var/lib/apt/lists/*
 USER docker
 
 # Copy and compile TARE first (takes 90s, but is heavily cached and rarely changes)
