@@ -40,9 +40,9 @@ challenge sim_display=":1":
 ai:
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
 
-# Publish a one-shot challenge question
-ask q:
-    docker exec -it iros2026_ai_module bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: '{{q}}'}\""
+# Publish a one-shot challenge question (challenge: just ask "…" 42)
+ask q domain="0":
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: '{{q}}'}\""
 
 # Foxglove bridge on host port 8765 (blocks; tunnel from laptop)
 # Default domain 0 matches sim-noviz. Challenge mode: just foxglove 42
