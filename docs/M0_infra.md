@@ -212,6 +212,14 @@ ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0
 ```
 The shared panel layout lives at `scripts/foxglove/vln_layout.json` (Layouts → Import from file). Full walkthrough and gotchas: "Remote Visualization" in the repo README.
 
+**Keyboard teleop + Foxglove:** `scripts/keyboard_teleop.py` publishes `/joy` for manual mecanum drive (no physical controller). Prefer `sim-noviz` / `challenge --noviz` so you watch in Foxglove instead of RViz. From the repo root (requires [`just`](https://github.com/casey/just)):
+```bash
+just sim-noviz
+just foxglove            # default domain 0; just foxglove 42 with challenge
+just teleop              # click this terminal for key focus
+```
+`compose_*.yml` bind-mounts `scripts/` into `iros2026_system` at `/home/docker/scripts`. Recreate containers once after pulling if the mount is missing (`just up`).
+
 **Remote RViz via DDS** also works (laptop on same LAN, same `ROS_DOMAIN_ID`; `ROS_STATIC_PEERS=<l4-box-ip>` if multicast discovery fails), but expect lag on raw images over Wi-Fi — prefer Foxglove.
 
 **VNC of the box's display** (see the actual RViz window): `sudo apt install x11vnc; x11vnc -display :1 -localhost -nopw -forever &`, then `ssh -L 5900:localhost:5900 tester03@<box>` and VNC-view `localhost:5900`.
@@ -261,7 +269,7 @@ Many extra topics also publish (e.g. /overall_map, camera/semantic_image/*) — 
 - **Wrap heavy models behind a local HTTP/gRPC service** inside the AI module container (e.g., a small FastAPI server for SAM 3). Decouples model runtime from ROS node lifecycle and makes model swaps/restarts independent of the ROS graph; runs on localhost in both dev and eval.
 - **Bag-first development:** record one good exploration bag per training scene in W1; M2/M3 development then runs offline against bags (fast, deterministic, no sim launch needed).
 - **Pin everything now** (base image digest, apt/pip versions) — avoids eval-day surprises when they rebuild our image.
-- **Makefile/justfile targets** for the 5 common ops: `up`, `sim`, `ai`, `ask q="..."`, `bag`. Removes tribal knowledge. (See `scripts/Makefile`.)
+- **`just` recipes** for the common ops: `up`, `sim`, `ai`, `ask "..."`, `bag`, `foxglove`, `teleop`. Removes tribal knowledge. (See repo-root `justfile`.)
 - **CI later:** a GitHub Action that builds the amd64 image weekly catches bit-rot before submission week.
 
 ## Log

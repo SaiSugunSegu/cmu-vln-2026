@@ -18,6 +18,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /dev/input:/dev/input
       - /dev/bus/usb:/dev/bus/usb
+      - ../scripts:/home/docker/scripts:ro
     stdin_open: true
     tty: true
 

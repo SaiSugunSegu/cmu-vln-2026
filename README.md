@@ -117,8 +117,8 @@ To visualize simulator camera feeds, maps, and point clouds on your local laptop
    ```bash
    docker exec -it -e ROS_DOMAIN_ID=42 iros2026_ai_module bash
    ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0
-   # or from docker/:  make -f ../scripts/Makefile foxglove          (DOMAIN=42 by default)
-   #                   make -f ../scripts/Makefile foxglove DOMAIN=0 (standard mode)
+   # or from repo root:  just foxglove       (domain 0 — matches sim-noviz)
+   #                     just foxglove 42   (challenge mode)
    ```
 
 3. **On your laptop:** open an SSH tunnel forwarding that port:
@@ -130,7 +130,37 @@ To visualize simulator camera feeds, maps, and point clouds on your local laptop
    ```bash
    scp <user>@<remote-machine-ip>:<path-to-repo>/scripts/foxglove/vln_layout.json .
    ```
-   
+
+### 3.5 · Keyboard teleop (drive while watching Foxglove)
+Manual holonomic drive via `/joy` — useful for bag recording and sanity-checking sensors. Type in the teleop terminal (it needs keyboard focus); watch the robot in Foxglove.
+
+Requires [`just`](https://github.com/casey/just) (`cargo install just` or `sudo snap install just`). Recipes live in the repo-root `justfile`.
+
+```bash
+# recreate containers once if scripts/ is not mounted yet:
+#   just up
+
+# Terminal A: sim without rviz
+just sim-noviz          # domain 0
+# or:  just challenge   # domain 42
+
+# Terminal B: Foxglove bridge (domain must match the sim)
+just foxglove           # default 0; use just foxglove 42 with challenge
+
+# Terminal C: keyboard teleop (same domain)
+just teleop             # default 0; use just teleop 42 with challenge
+```
+
+| Key | Action |
+|-----|--------|
+| `w` / `s` | forward / backward |
+| `a` / `d` | strafe left / right |
+| `q` / `e` | rotate left / right |
+| `space` / `k` | stop |
+| `z` / `x` | speed scale down / up |
+| `Ctrl-C` | quit (stops + returns control to autonomy) |
+
+Keys are **cruise-style**: motion continues until you change direction or press `space`. On exit, teleop releases manual mode so waypoint / autonomous nav works again.
 
 ### 4 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
 ```bash
