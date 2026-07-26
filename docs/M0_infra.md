@@ -144,6 +144,10 @@ Note from first run: sim publishes `camera/image/compressed` + `camera/semantic_
 
 ### 6. Record a dev bag (enables offline perception work without the sim)
 
+> Scene-bag replay (`ros2 launch smart_vlm bag_replay.launch scene:=<name>` — auto-downloads +
+> plays a bag instead of the sim; also record + publish) is documented in
+> [M0.5 — Rosbag Infra](M0.5_rosbag_infra.md).
+
 **Good-bag protocol:** drive a slow full lap covering every region of the scene; pass within 1–2 m of most objects; revisit 3–4 objects from a second, different viewpoint (this is what tests instance re-ID/merging later); include a doorway transit if multi-room; keep it 3–6 min. Name it `<scene>_lap1` and note the scene + date in a bags/README. Record ALL topics below — including `camera/semantic_image/compressed` if present (GT semantics: dev-only, great for debugging M2, banned at test time).
 ```bash
 ros2 bag record /camera/image /registered_scan /sensor_scan \

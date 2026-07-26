@@ -1,0 +1,18 @@
+# Scene bag manifest — the source of truth for lazy per-scene download.
+# Each scene is ONE zip on Google Drive (a single file ID downloads reliably
+# with gdown). `ros2 run smart_vlm bag_fetch <scene>` (used by bag_replay.launch) reads this file.
+#
+# Drive folder (browse / upload new scenes):
+#   https://drive.google.com/drive/folders/1dgTn2f_oSGkJFlgA1jHcikDdjIYqZxE4?usp=drive_link
+#
+# To add a scene, see "Publishing a new scene" in docs/M0.5_rosbag_infra.md:
+#   cd <repo>/bags && zip -r <scene>.zip <scene> && sha256sum <scene>.zip
+#   upload the zip (Share -> "Anyone with the link"), then add drive_id (+ optional sha256) below.
+
+scenes:
+  scene_0:
+    drive_id: "1cIlfNajc3kioYxm1tW1WjBFlyVmAWBMp"      # fill after uploading scene_0.zip
+    sha256:   "<sha256-of-zip>"    # optional but recommended (verified if present)
+  # office:
+  #   drive_id: "<ZIP_FILE_ID>"
+  #   sha256:   "<sha256-of-zip>"
