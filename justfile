@@ -36,6 +36,10 @@ sim-noviz sim_display=":1":
 challenge sim_display=":1":
     docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./challenge_simulation.sh --noviz"
 
+# Play Ros Bag from a scene
+bag-play scene="scene_0":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}}"
+    
 # smart_vlm (blocks; terminal B)
 ai:
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
@@ -57,16 +61,18 @@ teleop domain="0":
        source /home/docker/autonomy_stack_mecanum_wheel_platform/install/setup.bash && \
        python3 /home/docker/scripts/keyboard_teleop.py'
 
-# Sanity-check input topic rates
+# Check the list of topics available
 topics:
-    docker exec -it iros2026_ai_module bash -c "ros2 topic hz /camera/image & ros2 topic hz /registered_scan & ros2 topic hz /state_estimation & sleep 12; kill %1 %2 %3"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic list"
 
 # Record a bag under /data/bags/<name>
 bag name:
     docker exec -it iros2026_ai_module bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /tf /tf_static /challenge_question -o /data/bags/{{name}}"
 
+# Enter into iros2026_system container
 shell-sys:
     docker exec -it iros2026_system bash
 
+# Enter into iros2026_ai_module container
 shell-ai:
     docker exec -it iros2026_ai_module bash
