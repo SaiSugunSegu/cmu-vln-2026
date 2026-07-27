@@ -71,54 +71,38 @@ Full plan: [TEAM_PLAN.md](TEAM_PLAN.md) · deep dives: [docs/](docs/)
 git clone --recurse-submodules git@github.com:SaiSugunSegu/cmu-vln-2026.git && cd cmu-vln-2026
 # existing clone:  git pull && git submodule update --init --recursive
 
-# Build and start the pure Docker environment (guarantees eval compatibility)
-cd docker && xhost +local: && docker compose -f compose_gpu.yml up --build -d
+xhost +local:
+just up    # build + start GPU containers (requires just: https://github.com/casey/just)
 ```
 
 ### 2 · Dev run — sim + smart_vlm ([details → docs/M0_infra.md](docs/M0_infra.md))
 
 #### Step A: Launch Simulator
-Choose standard or challenge mode (Terminal A). 
 ```bash
-docker exec -it -e DISPLAY=:1 iros2026_system bash
-cd /home/docker/autonomy_stack_mecanum_wheel_platform
-
-# run ONE of these:
-vglrun -d egl ./system_simulation.sh          # standard — all topics + rviz2
-vglrun -d egl ./challenge_simulation.sh       # eval-realistic — 6-topic firewall
-#   vglrun -d egl ./system_simulation_noviz.sh   ·  
-#   vglrun -d egl ./challenge_simulation.sh --noviz
+just sim          # standard — all topics + rviz2
+# just sim-noviz  # no rviz — use with Foxglove (§3)
+# just challenge  # eval-realistic 6-topic firewall (domain 42, no rviz)
 ```
 Offline (no Unity/GPU): replay a recorded bag instead — `ros2 launch smart_vlm bag_replay.launch scene:=scene_0`
 ([docs/M0.5_rosbag_infra.md](docs/M0.5_rosbag_infra.md)).
 
 #### Step B: Launch AI Module & Questions
-Run the AI stack and publish testing questions (Terminal B and C):
 ```bash
-# Terminal B: Start the AI module (runs Supervisor + Dummy VLM + TARE Planner)
-docker exec -it iros2026_ai_module bash
-source install/setup.bash
-ros2 launch smart_vlm smart_vlm.launch
-```
-```bash
-# Terminal C: Publish a test question
-docker exec -it iros2026_ai_module bash
-# (Note: If using Option 2 simulator, run `export ROS_DOMAIN_ID=42` before publishing)
-ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'How many books are on the sofa'}"
+just ai                                                 # Terminal B — supervisor + dummy VLM + TARE
+just ask "How many books are on the sofa"               # Terminal C
+# just ask "How many books are on the sofa" 42          # if using just challenge
 ```
 
 ### 3 · Remote Visualization (Foxglove over SSH)
 To visualize simulator camera feeds, maps, and point clouds on your local laptop without lagging X11/VNC:
 
-1. **Start the sim without rviz2** (Step A above), e.g. `vglrun -d egl ./challenge_simulation.sh --noviz`.
-2. **On the remote machine:** launch the Foxglove bridge. Use `ROS_DOMAIN_ID=42` in challenge
+1. **Start the sim without rviz2** — `just sim-noviz` (or `just challenge`).
+2. **On the remote machine:** launch the Foxglove bridge. Use domain `42` in challenge
    mode so the bridge sees the full simulator rather than just the 6 firewalled inputs
    (the `ai_module` container runs with `network_mode: host`, so container port 8765 *is* host port 8765):
    ```bash
-   docker exec -it -e ROS_DOMAIN_ID=42 iros2026_ai_module bash
-   ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0
-   # or from docker/:  make -f ../scripts/Makefile foxglove          (DOMAIN=42 by default)
-   #                   make -f ../scripts/Makefile foxglove DOMAIN=0 (standard mode)
+   just foxglove       # domain 0 — matches sim-noviz
+   # just foxglove 42  # challenge mode
    ```
 
 3. **On your laptop:** open an SSH tunnel forwarding that port:
@@ -130,7 +114,14 @@ To visualize simulator camera feeds, maps, and point clouds on your local laptop
    ```bash
    scp <user>@<remote-machine-ip>:<path-to-repo>/scripts/foxglove/vln_layout.json .
    ```
-   
+
+### 3.5 · Keyboard teleop (drive while watching Foxglove)
+```bash
+just sim-noviz    # Terminal A
+just foxglove     # Terminal B — then tunnel + connect from your laptop (above)
+just teleop       # Terminal C — needs keyboard focus; see scripts/keyboard_teleop.py for keys
+```
+Requires [`just`](https://github.com/casey/just). For challenge mode use `just challenge` and `just foxglove 42` / `just teleop 42`.
 
 ### 4 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
 ```bash
