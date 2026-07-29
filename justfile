@@ -8,6 +8,8 @@
 #   just teleop
 #   just ask "How many books are on the sofa"
 #   just bag scene01_run1
+#   just caption
+#   just caption crops captions
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
 
@@ -66,6 +68,47 @@ sam-probe frames="/tmp/frames" config="sam3_mecanum_sim.yaml" args="--sweep-imag
 # attention is the bottleneck -> cut prompts, and SAM 3.1 Object Multiplex is the real fix.
 sam-prompts frames="/tmp/frames" config="sam3_mecanum_sim.yaml":
     just sam-probe {{frames}} {{config}} --sweep-prompts
+
+# Offline Qwen captioner (host data/ <-> /data/workspace). Ex: just caption crops captions
+# Weights: host ~/.cache/huggingface mounted at /home/docker/.cache/huggingface
+# Optional knobs (env or key=value positionals for older just):
+#   just caption crops captions
+#   BATCH_SIZE=8 QUANTIZATION=int4 just caption crops captions
+caption input="crops" output="captions" batch_size="8" quantization="int4" model="qwen3vl":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Older just versions pass "model=qwen3vl" as a positional string instead of
+    # binding the keyword; strip key= prefixes so both styles work.
+    in="{{input}}"
+    out="{{output}}"
+    batch_size="{{batch_size}}"
+    quantization="{{quantization}}"
+    model="{{model}}"
+    batch_size="${batch_size#batch_size=}"
+    quantization="${quantization#quantization=}"
+    model="${model#model=}"
+    [[ "$in"  == /* ]] || in="/data/workspace/${in}"
+    [[ "$out" == /* ]] || out="/data/workspace/${out}"
+    # Host paths under the repo data/ mount are rewritten to the container path.
+    in="${in/#$PWD\/data//data/workspace}"
+    out="${out/#$PWD\/data//data/workspace}"
+    # Container user is uid 1001 and cannot create dirs in host-owned 755 trees.
+    # Prep the output dir on the host and make it writable by the container user.
+    # (Running as host uid fails because /home/docker is mode 750.)
+    mkdir -p "${out}"
+    chmod a+rwx "${out}"
+    # PYTHONUTF8: native libs loaded during model init can reset the C locale, which
+    # makes Python's default text encoding ascii and breaks writing captions that
+    # contain curly quotes. UTF-8 mode ignores the locale entirely.
+    docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
+      source /home/docker/ai_module/install/setup.bash &&
+      export PATH=/home/docker/ai_module/install/captioner/lib/captioner:\$PATH &&
+      caption_crops '${in}' \
+        --output_dir '${out}' \
+        --captioning_model '${model}' \
+        --quantization '${quantization}' \
+        --batch_size ${batch_size}
+    "
 
 # Publish a one-shot challenge question (challenge: just ask "…" 42)
 ask q domain="0":

@@ -63,7 +63,7 @@ docker compose -f compose_gpu.yml up --build -d
 ```
 This starts two containers:
 - `iros2026_system` — the base autonomy system (simulator + autonomy stack)
-- `iros2026_ai_module` — the AI module development environment, with `dummy_vlm` and `smart_vlm` built in
+- `iros2026_ai_module` — the AI module development environment, with `dummy_vlm`, `smart_vlm`, and `captioner` built in
 
 ## Launch base autonomy system
 
@@ -115,6 +115,56 @@ ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'Go to the
 ```
 
 You should see the vehicle following waypoints and the selected object being highlighted in RVIZ.
+
+## Run the captioner (offline crop CLI)
+
+The AI image installs CUDA PyTorch, transformers, and the `captioner` ROS package.
+Host folder `data/` is mounted at `/data/workspace`, and your Hugging Face cache is
+mounted so model weights persist across rebuilds.
+
+Put instance-crop folders (each with `crop.png` or `rgb.png`) under `data/crops`, then:
+
+```bash
+docker exec -it iros2026_ai_module bash -lc '
+  source /home/docker/ai_module/install/setup.bash &&
+  export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH &&
+  caption_crops /data/workspace/crops \
+    --output_dir /data/workspace/captions \
+    --captioning_model qwen3vl \
+    --quantization int4 \
+    --batch_size 8
+'
+```
+
+Or with the helper script from the repo root:
+
+```bash
+./ai_module/docker/run_captioner.sh /data/workspace/crops /data/workspace/captions
+```
+
+Or with explicit host paths already visible via the `data/` mount:
+
+```bash
+# from repo root on the host
+mkdir -p data/crops data/captions
+# copy/symlink a scene of crops into data/crops, then:
+docker exec -it iros2026_ai_module bash -lc '
+  source /home/docker/ai_module/install/setup.bash &&
+  export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH &&
+  caption_crops /data/workspace/crops --output_dir /data/workspace/captions
+'
+```
+
+After editing captioner Python sources with the [dev overlay](compose_dev.yml), rebuild only the package inside the container (ML wheels stay in the image):
+
+```bash
+docker compose -f compose_gpu.yml -f compose_dev.yml up -d
+docker exec -it iros2026_ai_module bash -lc '
+  source /opt/ros/jazzy/setup.bash &&
+  cd /home/docker/ai_module &&
+  colcon build --symlink-install --packages-select captioner
+'
+```
 
 ## Integrate your AI model
 

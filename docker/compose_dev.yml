@@ -6,11 +6,18 @@
 #   docker compose -f compose_gpu.yml -f compose_dev.yml up -d
 #   docker exec -it iros2026_ai_module bash -c \
 #     "source /opt/ros/jazzy/setup.bash && cd /home/docker/ai_module && \
-#      colcon build --symlink-install --packages-select dummy_vlm smart_vlm"
+#      colcon build --symlink-install --packages-select dummy_vlm smart_vlm captioner"
+#
+# Offline captioner (after build / with image that already has ML deps):
+#   docker exec -it iros2026_ai_module bash -lc \
+#     'source /home/docker/ai_module/install/setup.bash && \
+#      caption_crops /data/workspace/crops --output_dir /data/workspace/captions'
 #
 # Note: the mount shadows the image's prebuilt /home/docker/ai_module, so the
 # first colcon build after 'up' recreates build/install on the host (persists
 # across container restarts). CI/eval path stays the pure-image build.
+# ML Python deps (torch, transformers, …) still come from the image — rebuild
+# the image when docker/requirements_captioner.txt changes.
 services:
   ai_module:
     volumes:
