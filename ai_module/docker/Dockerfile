@@ -1,12 +1,35 @@
 FROM zhangjicmu/ubuntu24_ros:ai_module
 
-# Install Foxglove bridge for remote visualization
+# Install Foxglove bridge + system libs needed by OpenCV / captioner
 USER root
-RUN apt-get update && apt-get install -y ros-jazzy-foxglove-bridge && rm -rf /var/lib/apt/lists/*
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3-pip python3-yaml \
-    && python3 -m pip install --no-cache-dir --break-system-packages gdown \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-foxglove-bridge \
+      python3-pip \
+      python3-yaml \
+      libgl1 \
+      libglib2.0-0 \
+      libgomp1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Captioner Python deps (torch CUDA + transformers / bitsandbytes). Layer is
+# cached until requirements_captioner.txt changes.
+COPY docker/requirements_captioner.txt /tmp/requirements_captioner.txt
+# --ignore-installed: base image ships some Debian Python pkgs (e.g. psutil)
+# without pip RECORD metadata, which otherwise breaks upgrades.
+RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
+      -r /tmp/requirements_captioner.txt \
+    && python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed gdown \
+    && rm -f /tmp/requirements_captioner.txt
+
+# Hugging Face cache lives under the docker user home (compose can bind-mount it).
+ENV HF_HOME=/home/docker/.cache/huggingface \
+    TRANSFORMERS_CACHE=/home/docker/.cache/huggingface/hub \
+    HUGGINGFACE_HUB_CACHE=/home/docker/.cache/huggingface/hub \
+    HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1 \
+    CAPTIONER_OFFLINE=1
+RUN mkdir -p /home/docker/.cache/huggingface && chown -R docker:docker /home/docker/.cache
+
 USER docker
 
 # Copy and compile TARE first (takes 90s, but is heavily cached and rarely changes)
@@ -116,14 +139,16 @@ USER docker
 COPY src/dummy_vlm /home/docker/ai_module/src/dummy_vlm
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm
 COPY src/sam_mapper /home/docker/ai_module/src/sam_mapper
+COPY src/captioner /home/docker/ai_module/src/captioner
 RUN /bin/bash -c "\
     source /opt/ros/jazzy/setup.bash && \
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=Release \
-      --packages-select dummy_vlm smart_vlm sam_mapper"
+      --packages-select dummy_vlm smart_vlm sam_mapper captioner"
 
 # Ensure the updated install is sourced in every new shell
-RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc
+RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc \
+ && echo 'export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH' >> /home/docker/.bashrc
 
 # Fail the build, not the first run, if the import chain is broken. sam_mapper owns its full
 # 3D-mapping stack (docs/M2_perception.md 3.6-split — object_mapper.py, cloud_image_fusion.py,
@@ -140,5 +165,5 @@ from sam_mapper.detections import PromptTable; \
 from sam_mapper.sam3_backend import Sam3Backend; \
 print('import check OK: transformers', transformers.__version__)\""
 
-# SAM 3 weights are gated: run `hf auth login` once inside the container.
-ENV HF_HOME=/home/docker/.cache/huggingface
+# SAM 3 weights are gated: run `hf auth login` once inside the container
+# (or set HF_TOKEN via docker/.env). Override HF_HUB_OFFLINE=0 for the download.

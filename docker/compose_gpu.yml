@@ -44,13 +44,32 @@ services:
       context: ../ai_module
       dockerfile: docker/Dockerfile
     container_name: iros2026_ai_module
+    privileged: true
     network_mode: host
     ipc: host
     env_file:
       - path: ../.env
         required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
+    environment:
+      - HF_HOME=/home/docker/.cache/huggingface
+      - HUGGINGFACE_HUB_CACHE=/home/docker/.cache/huggingface/hub
+      - TRANSFORMERS_CACHE=/home/docker/.cache/huggingface/hub
+      # Never hit huggingface.co at runtime (robot has no internet). Pre-seed the
+      # HF cache mount with Qwen/SAM weights before deploy. Override via .env
+      # (HF_HUB_OFFLINE=0 + HF_TOKEN) for gated first-time downloads.
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+      - CAPTIONER_OFFLINE=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
     volumes:
       - ../bags:/data/bags
+      # Host crops / caption outputs. Put input under data/crops, read results from data/captions.
+      - ../data:/data/workspace
+      # Persist HF model weights across container rebuilds.
+      - ${HOME}/.cache/huggingface:/home/docker/.cache/huggingface
+      # Allow absolute host paths (e.g. ~/myspace/SORT3D/...) in just caption.
+      - ${HOME}:${HOME}
     depends_on:
       bags_init:
         condition: service_completed_successfully
