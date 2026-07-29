@@ -36,7 +36,9 @@ class CaptioningNode(Node):
             model_type = 'clip',
             process_terrain_map_into_freespace = False,
             simulator = 'wheelchair_unity',
-            batch_size = 16
+            batch_size = 16,
+            captioning_model = 'qwen3vl',
+            captioning_model_id = None
             ):
 
         # Variable Initialization
@@ -129,7 +131,9 @@ class CaptioningNode(Node):
             log_info=self.log_info,
             load_captioner=True,
             crop_update_source="gt_semantics",
-            batch_size=self.batch_size
+            batch_size=self.batch_size,
+            captioning_model=captioning_model,
+            captioning_model_id=captioning_model_id
         )
 
         # ROS
@@ -252,6 +256,8 @@ def main():
     parser.add_argument('--process_terrain_map_into_freespace', type=lambda x: x.lower() == 'true', default=False)
     parser.add_argument('--simulator', default='wheelchair_unity')
     parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--captioning_model', default='qwen3vl', choices=['qwen3vl', 'qwen2_5vl', 'paligemma'])
+    parser.add_argument('--captioning_model_id', default=None)
     args, other_args = parser.parse_known_args()
 
     captioning_node = CaptioningNode(**vars(args))

@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'captioning_node = captioner.captioning_node:main'
+            'captioning_node = captioner.captioning_node:main',
+            'caption_crops = captioner.models.captioning:main',
         ],
     },
 )

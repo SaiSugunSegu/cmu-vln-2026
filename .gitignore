@@ -16,6 +16,8 @@ bags/*
 *.pth
 *.safetensors
 models/
+# source package of captioner model wrappers, not weights
+!ai_module/src/captioner/captioner/models/
 outputs/
 runs/
 

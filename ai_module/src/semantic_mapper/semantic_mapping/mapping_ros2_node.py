@@ -75,7 +75,7 @@ except ModuleNotFoundError:
     print(f"Captioner not found. Fall back to no captioning version.")
 
 class MappingNode(Node):
-    def __init__(self, config, mask_predictor, grounding_processor, grounding_model, tracker, device='cuda', captioner_batch_size=16):
+    def __init__(self, config, mask_predictor, grounding_processor, grounding_model, tracker, device='cuda', captioner_batch_size=16, captioning_model='qwen3vl'):
         super().__init__('semantic_mapping_node')
 
         # class global containers
@@ -153,7 +153,8 @@ class MappingNode(Node):
                 log_info=self.log_info,
                 load_captioner=True,
                 crop_update_source="semantic_mapping",
-                batch_size=captioner_batch_size
+                batch_size=captioner_batch_size,
+                captioning_model=captioning_model
             )
         
         self.cloud_img_fusion = CloudImageFusion(platform=self.platform)
@@ -674,6 +675,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="config.yaml")
     parser.add_argument("--captioner_batch_size", type=int, default=16)
+    parser.add_argument("--captioning_model", type=str, default="qwen3vl", choices=["qwen3vl", "qwen2_5vl", "paligemma"])
     args = parser.parse_args()
     
     try:
@@ -720,7 +722,7 @@ if __name__ == "__main__":
     tracker = BYTETracker(byte_tracker_args)
     
     rclpy.init(args=None)
-    node = MappingNode(config, mask_predictor, grounding_processor, grounding_model, tracker, device=device, captioner_batch_size=args.captioner_batch_size)
+    node = MappingNode(config, mask_predictor, grounding_processor, grounding_model, tracker, device=device, captioner_batch_size=args.captioner_batch_size, captioning_model=args.captioning_model)
     
     # executor = MultiThreadedExecutor(num_threads=6)
     # executor.add_node(node)
