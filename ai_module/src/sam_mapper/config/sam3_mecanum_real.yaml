@@ -1,0 +1,59 @@
+# SAM 3 mapping config — real mecanum platform (Livox Mid-360 + Ricoh Theta Z1).
+# See docs/M2_perception.md 3.5.
+
+platform: mecanum                  # -> scan2pixels_mecanum (camera -0.12, -0.075, 0.265)
+detection_linear_state_time_bias: 0.0    # tune against the rig
+detection_angular_state_time_bias: 0.0
+
+sam3:
+  model_id: facebook/sam3
+  device: cuda
+  dtype: bfloat16
+  attn_implementation: flash_attention_2   # falls back to sdpa, then eager
+  max_vision_features_cache_size: 1
+
+  # Must be square: a reshape downstream of the ViT hardcodes a square token grid.
+  # Valid sizes divide by patch 14 and give a grid divisible by window 24:
+  #   [1008,1008] 5184 tokens (default) | [672,672] 0.44x | [336,336] 0.11x
+  image_size: [1008, 1008]
+
+  # Streaming disables SAM 3's hotstart heuristics, so these run stricter than the
+  # model defaults to hold down duplicate tracks.
+  score_threshold_detection: 0.5
+  new_det_thresh: 0.7
+  det_nms_thresh: 0.1
+  recondition_every_nth_frame: 16
+
+# Hard-coded focus list; each entry is one SAM 3 text prompt (a short noun phrase).
+# instance: false -> background class: gets a negative id and is re-created every frame
+# rather than tracked as a persistent 3D instance.
+# Optional `label:` merges several prompts into one class.
+objects:
+  - {prompt: "chair",      instance: true}
+  - {prompt: "table",      instance: true}
+  - {prompt: "sofa",       instance: true}
+  - {prompt: "screen",     instance: true}
+  - {prompt: "cabinet",    instance: true}
+  - {prompt: "whiteboard", instance: true}
+  - {prompt: "painting",   instance: true}
+  - {prompt: "door",       instance: true}
+  # Background classes are DISABLED by default. They cost real time — SAM 3's tracker
+  # runs memory attention per object, so inference scales with object count (measured:
+  # 17 objects -> 22 s, 36 -> 37 s) — and they produce nothing persistent, because
+  # update_map's background merge branch is commented out (semantic_map.py:312-318),
+  # so they are re-created and discarded every frame. Re-enable if you need them.
+  # - {prompt: "wall",       instance: false}
+  # - {prompt: "floor",      instance: false}
+  # - {prompt: "ceiling",    instance: false}
+
+runtime:
+  # Read by both sam_node and map_node. MultiThreadedExecutor defaults to
+  # cpu_count() threads, all spinning in rclpy's Python wait loop and holding the GIL — the
+  # actual GIL-starvation fix is running SAM3 in its own process (docs/M2_perception.md
+  # 3.6-split); this just keeps each node's own executor lean.
+  executor_threads: 2
+  publish_annotated: true
+  log_every_n_frames: 5
+  cloud_window_before: 0.5         # gather clouds in [stamp - before, stamp + after]
+  cloud_window_after: 0.1
+  verbose_objects: false           # print every 2D detection + 3D map object per frame

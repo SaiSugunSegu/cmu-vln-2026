@@ -36,13 +36,36 @@ sim-noviz sim_display=":1":
 challenge sim_display=":1":
     docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./challenge_simulation.sh --noviz"
 
-# Play Ros Bag from a scene
-bag-play scene="scene_0":
-    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}}"
+# Play Ros Bag from a scene. Single pass by default; loop:=true to loop (e.g. just bag-play scene_0 1.0 true)
+bag-play scene="scene_0" speed="1.0" loop="false":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
     
 # smart_vlm (blocks; terminal B)
 ai:
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+
+# SAM 3 2D detector. /camera/image in -> /annotated_image, /sam3/instance_map, /sam3/detections out.
+run-sam config="sam3_mecanum_sim.yaml":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper sam_node.launch config:={{config}}"
+
+# Lidar fusion / 3D mapping node 
+run-map config="sam3_mecanum_sim.yaml":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper map_node.launch config:={{config}}"
+
+# Dump /camera/image frames from a bag to PNGs, for the offline backend probe. Use out=/data/bags/_frames to see them on the host.
+sam-frames scene="scene_0" out="/data/bags/_frames" limit="40":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.dump_frames --bag /data/bags/{{scene}} --out {{out}} --limit {{limit}}"
+
+# Offline SAM 3 probe on dumped frames: are object IDs stable across frames, and which
+# image_size is fastest? Answers whether dropping ByteTrack was sound.
+sam-probe frames="/tmp/frames" config="sam3_mecanum_sim.yaml" args="--sweep-image-size":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.sam3_backend --frames {{frames}} --config /home/docker/ai_module/src/sam_mapper/config/{{config}} {{args}}"
+
+# Does runtime scale with OBJECT COUNT? Times all prompts vs instances-only vs 3 classes.
+# If ms/frame falls with fewer objects while ms/object stays flat, per-object memory
+# attention is the bottleneck -> cut prompts, and SAM 3.1 Object Multiplex is the real fix.
+sam-prompts frames="/tmp/frames" config="sam3_mecanum_sim.yaml":
+    just sam-probe {{frames}} {{config}} --sweep-prompts
 
 # Publish a one-shot challenge question (challenge: just ask "…" 42)
 ask q domain="0":
@@ -93,3 +116,11 @@ shell-sys:
 # Enter into iros2026_ai_module container
 shell-ai:
     docker exec -it iros2026_ai_module bash
+
+# What has the mapper actually built? One-shot JSON dump of every 3D instance.
+sam-map-json:
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic echo /obj_map_json --once"
+
+# Is sam_mapper working? Rates on every output topic + a summary of the 3D map.
+sam-status seconds="15":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.status --seconds {{seconds}}"
