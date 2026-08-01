@@ -21,6 +21,7 @@ import cv2
 import imageio.v3 as iio
 import json
 import os
+import re
 from time import time
 try:
     from vllm import LLM, SamplingParams, RequestOutput
@@ -215,6 +216,11 @@ class QwenVLHFBackend(CaptioningModel):
         self.load_seconds = time() - load_start
 
         self.prompt = "Describe the {obj} in this image, using properties like color, material, shape, affordances, and other meaningful attributes. Provide the response in this format: “The <object name> is <color>, <material>, <shape>."
+        # Ask for a bare integer so challenge numerical answers need minimal parsing.
+        self.vqa_prompt = (
+            "Answer the question about this image with a single integer only. "
+            "Do not include units, words, or explanation.\nQuestion: {question}"
+        )
 
     @staticmethod
     def model_class():
@@ -231,6 +237,16 @@ class QwenVLHFBackend(CaptioningModel):
         if isinstance(image, torch.Tensor):
             image = image.detach().contiguous().cpu().numpy()
         return Image.fromarray(image)
+
+    @staticmethod
+    def extract_integer(text: str) -> Optional[int]:
+        '''Parse the first integer from a VLM reply (handles "4", "There are 4 pillows").'''
+        if text is None:
+            return None
+        match = re.search(r"-?\d+", text.replace(",", ""))
+        if match is None:
+            return None
+        return int(match.group(0))
 
     def build_prompts(self, pil_images, names: list[str]) -> list[str]:
         messages = [[
@@ -249,6 +265,61 @@ class QwenVLHFBackend(CaptioningModel):
         return [self.processor.apply_chat_template(
             message, tokenize=False, add_generation_prompt=True
         ) for message in messages]
+
+    def build_vqa_prompts(self, pil_images, questions: list[str]) -> list[str]:
+        messages = [[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": image,
+                    },
+                    {
+                        "type": "text",
+                        "text": self.vqa_prompt.format(question=question),
+                    },
+                ],
+            }
+        ] for image, question in zip(pil_images, questions)]
+
+        return [self.processor.apply_chat_template(
+            message, tokenize=False, add_generation_prompt=True
+        ) for message in messages]
+
+    def answer_questions(
+            self,
+            images,
+            questions: list[str],
+            max_new_tokens: Optional[int] = None,
+            ) -> list[str]:
+        '''Free-form visual question answering for one image/question pair each.'''
+        if len(images) != len(questions):
+            raise ValueError(
+                f"images ({len(images)}) and questions ({len(questions)}) length mismatch")
+
+        pil_images = [self.to_pil(image) for image in images]
+        prompts = self.build_vqa_prompts(pil_images, questions)
+        token_budget = self.max_new_tokens if max_new_tokens is None else max_new_tokens
+
+        answers = []
+        for batch in self.split_into_batches(list(zip(pil_images, prompts)), self.batch_size):
+            image_batch = [b[0] for b in batch]
+            prompt_batch = [b[1] for b in batch]
+            answer_batch, _, _ = self.run_batch(image_batch, prompt_batch, token_budget)
+            answers.extend(answer_batch)
+        return answers
+
+    def answer_numerical(
+            self,
+            images,
+            questions: list[str],
+            max_new_tokens: int = 16,
+            ) -> list[Optional[int]]:
+        '''VQA that returns parsed integers (None when the model reply has no digit).'''
+        answers = self.answer_questions(
+            images, questions, max_new_tokens=max_new_tokens)
+        return [self.extract_integer(a) for a in answers]
 
     def run_batch(self, image_batch, prompt_batch, max_new_tokens: int):
         inputs = self.processor(
@@ -383,6 +454,36 @@ class Qwen3VLHFBackend(QwenVLHFBackend):
         return Qwen3VLForConditionalGeneration
 
 
+QWEN_BACKENDS = {
+    "qwen3vl": Qwen3VLHFBackend,
+    "qwen2_5vl": QwenHFBackend,
+}
+
+
+def load_qwen_backend(
+        captioning_model: str,
+        quantization: Optional[str] = "int4",
+        model_id: Optional[str] = None,
+        batch_size: int = 1,
+        max_new_tokens: int = 32,
+        max_pixels: int = 1280 * 28 * 28,
+        ):
+    '''Construct a Qwen-VL HF backend by name (shared by CLI / ROS nodes).'''
+    if captioning_model not in QWEN_BACKENDS:
+        raise ValueError(
+            f"Unknown captioning_model={captioning_model!r}. "
+            f"Choose from {sorted(QWEN_BACKENDS)}")
+    if quantization in ("", "none", "None"):
+        quantization = None
+    return QWEN_BACKENDS[captioning_model](
+        model_id=model_id,
+        quantization=quantization,
+        batch_size=batch_size,
+        max_new_tokens=max_new_tokens,
+        max_pixels=max_pixels,
+    )
+
+
 class PaliGemmaVLLMBackend(CaptioningModel):
     def __init__(
             self,
@@ -488,12 +589,10 @@ def main(argv: Optional[List[str]] = None):
 
     print(f'Loaded {len(images)} crops from {args.crops_path}')
 
-    quantization = None if args.quantization == 'none' else args.quantization
-    backends = {'qwen3vl': Qwen3VLHFBackend, 'qwen2_5vl': QwenHFBackend}
-
-    captioning_model = backends[args.captioning_model](
+    captioning_model = load_qwen_backend(
+        args.captioning_model,
+        quantization=args.quantization,
         model_id=args.model_id,
-        quantization=quantization,
         batch_size=args.batch_size,
         max_new_tokens=args.max_new_tokens,
     )

@@ -3,6 +3,9 @@
 # PyPI is secondary so non-torch packages still resolve.
 --index-url https://download.pytorch.org/whl/cu121
 --extra-index-url https://pypi.org/simple
+# setuptools>=80 drops easy_install --editable, which breaks ament_python
+# `colcon build --symlink-install` ("option --editable not recognized").
+setuptools>=68,<80
 torch==2.5.1+cu121
 torchvision==0.20.1+cu121
 transformers>=4.57.0
