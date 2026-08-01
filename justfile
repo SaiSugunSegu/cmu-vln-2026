@@ -70,6 +70,8 @@ bag name:
     docker exec -it iros2026_ai_module bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /tf /tf_static /challenge_question -o /data/bags/{{name}}"
 
 # List all 18 Unity scenes in the Drive source folder: 15 training (in questions/)
+# + 3 held-out test scenes (README.md:224). Static list -- the folder is a public
+# link, not in this account's own Drive, so it can't be queried live.
 list-scenes:
     #!/usr/bin/env bash
     echo "Training scenes (15, have questions/ + IRef-VLA metadata):"
@@ -83,19 +85,6 @@ list-scenes:
     echo "  office_building_2_without_360_cam  (dev-speed variant of office_building_2, no camera data -- skip for real collection)"
     echo
     echo "Source: https://drive.google.com/drive/folders/1nki_xoFKX1bYr8m7qiGRQelwnQ7EKVYc"
-
-# Download the 15 Unity scene builds needed for collect-bag(s) (see README's Drive link)
-download-scenes:
-    ./scripts/download_scenes.sh
-
-# Swap in one scene, explore it, record bag + IRef-VLA metadata. e.g. just collect-bag arabic_room 60
-collect-bag scene duration="600":
-    ./scripts/collect_scene_bags.sh --scenes {{scene}} --duration {{duration}}
-
-# Same as collect-bag but loops over all 15 training scenes (long-running).
-# To skip some, e.g.: just collect-bags-all 600 home_building_1,home_building_2
-collect-bags-all duration="600" exclude="":
-    ./scripts/collect_scene_bags.sh --duration {{duration}} {{ if exclude != "" { "--exclude " + exclude } else { "" } }}
 
 # Enter into iros2026_system container
 shell-sys:
