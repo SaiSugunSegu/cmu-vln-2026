@@ -24,17 +24,17 @@ sam3:
   det_nms_thresh: 0.1
   recondition_every_nth_frame: 16
 
-# Hard-coded focus list; each entry is one SAM 3 text prompt (a short noun phrase).
-# instance: false -> background class: gets a negative id and is re-created every frame
-# rather than tracked as a persistent 3D instance.
+# One SAM 3 text prompt per entry (a short noun phrase). Prompts must be unique.
+# instance: false -> background class: negative id, re-created each frame, never tracked.
 # Optional `label:` merges several prompts into one class.
 objects:
-  - {prompt: "chair",      instance: true}
-  - {prompt: "pillow",      instance: true}
-  - {prompt: "sofa",       instance: true}
+  - {prompt: "tv",           instance: true}
+  - {prompt: "cabinet",      instance: true}
+  # - {prompt: "chair",      instance: true}
+  # - {prompt: "pillow",     instance: true}
+  # - {prompt: "sofa",       instance: true}
   # - {prompt: "table",      instance: true}
   # - {prompt: "screen",     instance: true}
-  # - {prompt: "cabinet",    instance: true}
   # - {prompt: "whiteboard", instance: true}
   # - {prompt: "painting",   instance: true}
   # - {prompt: "door",       instance: true}
@@ -42,11 +42,24 @@ objects:
   # - {prompt: "floor",      instance: false}
   # - {prompt: "ceiling",    instance: false}
 
+# Top-N crops covering the instance: true labels above -- no separate target list, so to
+# change what's tracked just (un)comment entries in objects:. Picks by distinct-instance
+# coverage first, then how tightly grouped they are, then visibility.
+save_best_target_view_images:
+  enabled: true
+  top_n: 3
+  output_dir: /data/bags/_best_views   # host-visible, same convention as sam-frames
+  save_annotated_copy: true            # also write a masks/boxes/labels overlay per image
+  # Score = (mask px / frame px) x confidence, so real values sit near 1e-3, not near 1.
+  min_instance_score: 0.0005
+  crop_to_roi: true          # crop to the objects rather than saving the whole panorama
+  roi_padding_frac: 0.2      # margin around the object group, as a fraction of its size
+  roi_min_size_px: 300       # floor, so a small/far object still gives a readable crop
+  roi_cluster_gap_px: 250    # objects further apart than this are cropped as separate images
+
 runtime:
-  # Read by both sam_node and map_node. MultiThreadedExecutor defaults to
-  # cpu_count() threads, all spinning in rclpy's Python wait loop and holding the GIL — the
-  # actual GIL-starvation fix is running SAM3 in its own process (docs/M2_perception.md
-  # 3.6-split); this just keeps each node's own executor lean.
+  # Read by both nodes. MultiThreadedExecutor defaults to cpu_count() threads, which all
+  # spin holding the GIL; keep it lean (the real fix was the process split, M2 3.6-split).
   executor_threads: 16
   publish_annotated: true
   log_every_n_frames: 5
