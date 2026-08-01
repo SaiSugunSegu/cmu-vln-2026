@@ -3,16 +3,58 @@
 # with gdown). `ros2 run smart_vlm bag_fetch <scene>` (used by bag_replay.launch) reads this file.
 #
 # Drive folder (browse / upload new scenes):
-#   https://drive.google.com/drive/folders/1dgTn2f_oSGkJFlgA1jHcikDdjIYqZxE4?usp=drive_link
+#  https://drive.google.com/drive/folders/1dgTn2f_oSGkJFlgA1jHcikDdjIYqZxE4?usp=drive_link
 #
 # To add a scene, see "Publishing a new scene" in docs/M0.5_rosbag_infra.md:
-#   cd <repo>/bags && zip -r <scene>.zip <scene> && sha256sum <scene>.zip
-#   upload the zip (Share -> "Anyone with the link"), then add drive_id (+ optional sha256) below.
+#  cd <repo>/bags && zip -r <scene>.zip <scene> && sha256sum <scene>.zip
+#  upload the zip (Share -> "Anyone with the link"), then add drive_id (+ optional sha256) below.
 
 scenes:
-  scene_0:
-    drive_id: "1cIlfNajc3kioYxm1tW1WjBFlyVmAWBMp"      # fill after uploading scene_0.zip
-    sha256:   "<sha256-of-zip>"    # optional but recommended (verified if present)
-  # office:
-  #   drive_id: "<ZIP_FILE_ID>"
-  #   sha256:   "<sha256-of-zip>"
+  arabic_room:
+    drive_id: "1ShUcNDaY01bzaUycXPQ7R5xzinc2Z18P"      # arabic_room.zip
+    sha256:   "8f97d99c03a18d64e7342d6f28334e1149f354ea378fef2b10ee677d32ecdb18"
+  chinese_room:
+    drive_id: "1-VWoxZyi0N_4-VjHuuj1ME2AqNzcUTvT"      # chinese_room.zip
+    sha256:   "1628da79c0a07374f8c7d22e8e87502fdd423c5b1d081d3c020d17d848007acb"
+  hotel_room_1:
+    drive_id: "18cU0pV5Aj9UOpJdH7uvu0AVwvJAXpLoD"      # hotel_room_1.zip
+    sha256:   "9621a336bbe10a475d44ee31800fb64535e8b527a36d8095ce567f8cf689c4b3"
+  hotel_room_2:
+    drive_id: "1LXn5H5nVjVykCPPvbVp3QDuRfYAVgN_M"      # hotel_room_2.zip
+    sha256:   "1d9512a8c519ff64817350c1049b274ae252515a15e46e959896bbc5ea3344dc"
+  japanese_room:
+    drive_id: "1s95FZyK3WlzIZ5dfcWk2ejvd07A3sl5_"      # japanese_room.zip
+    sha256:   "98025e99c16970f479cd3a7a5de26fe86acfa5741f23b53561dab08acf927523"
+  livingroom_1:
+    drive_id: "1v5kEwLaYcuh6IXMH9A8L0N7MDzZSyvKT"      # livingroom_1.zip
+    sha256:   "d250081565ff273d5b0f0bcb3c44f45a0dc1d9e896fc84c62caa5202e2195f7c"
+  livingroom_2:
+    drive_id: "1xJUtq1IYEeLMSrrkpIz3IHz3RQJ8d75P"      # livingroom_2.zip
+    sha256:   "1c59d6dd81b97bcffc2be6b9c3bac24aaa81fda167e6f5acb5d47cb2ba2e0c3a"
+  livingroom_3:
+    drive_id: "1_tBWHdsGDHPAr4VraeOap3ifs3t63Fhr"      # livingroom_3.zip
+    sha256:   "afc76ba3b8fc46f1bbf28d689e92cd4b135267f46bebb703b23fe0913dbf9469"
+  livingroom_4:
+    drive_id: "1yYgpC5Bcw-C15JdoD54Ln7gqW58DVetg"      # livingroom_4.zip
+    sha256:   "50a1eb371a587166453315c13168939de54659d7a329db6ae5bdbac1fdeeeb47"
+  loft:
+    drive_id: "1Q_ohhzBAc5v-uA2ZzynEppihzrL-ilnB"      # loft.zip
+    sha256:   "088bd46f51111c0711da3282d88365683a5a250b929bdc2b545c19ae2f4c38c2"
+  office_1:
+    drive_id: "1023gRMeOcHiFjNtapGZY-yvjRhw0fKNk"      # office_1.zip
+    sha256:   "b6d69511ed38b667bdbfa4b5efe72f043d3fc6da9c08833ea554c6c7114e1b49"
+  office_2:
+    drive_id: "1rtfzcrRstkxIPS4WMJ5Y08WHeLw-uW9D"      # office_2.zip
+    sha256:   "291de0d56a94da57153c94111205105426052ec37d2d541960a077c43fdc2b4a"
+  studio:
+    drive_id: "1OYF3mAsVno6whFSHrtJ4L_2F09t4L4WR"      # studio.zip
+    sha256:   "06a4b1e2767f1269d8e8d673a0328d58c634da6ac2b00483d2aa9ca7b3bdc806"
+  office_building_1:
+    drive_id: "1NORXWEpBzifhomOy3j5wMLrBRZ1fz8Le"      # office_building_1.zip
+    sha256:   "f2f818f227551f0083c798676bee8a5d7643142afee98fae20152182b47d7cac"
+  office_building_2:
+    drive_id: "1Huuxk3UuT1-KUfToO99cVeGx_rHtQREO"      # office_building_2.zip
+    sha256:   "b3f83b5bf6642b12a773813d3532eaa14bd77c664711f685b4fc9c92ad7c1564"
+  # home_building_1 and home_building_2 intentionally skipped: TARE exploration
+  # currently wanders into the surrounding courtyard for these two (see
+  # navigationBoundary fix noted in the project plan) -- add once resolved.
