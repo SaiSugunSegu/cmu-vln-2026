@@ -69,6 +69,23 @@ topics:
 bag name:
     docker exec -it iros2026_ai_module bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /tf /tf_static /challenge_question -o /data/bags/{{name}}"
 
+# List all 18 Unity scenes in the Drive source folder: 15 training (in questions/)
+# + 3 held-out test scenes (README.md:224). Static list -- the folder is a public
+# link, not in this account's own Drive, so it can't be queried live.
+list-scenes:
+    #!/usr/bin/env bash
+    echo "Training scenes (15, have questions/ + IRef-VLA metadata):"
+    for s in arabic_room chinese_room home_building_1 home_building_2 hotel_room_1 hotel_room_2 japanese_room livingroom_1 livingroom_2 livingroom_3 livingroom_4 loft office_1 office_2 studio; do
+      echo "  $s"
+    done
+    echo
+    echo "Held-out test scenes (3, per README -- no IRef-VLA metadata published):"
+    echo "  office_building_1"
+    echo "  office_building_2"
+    echo "  office_building_2_without_360_cam  (dev-speed variant of office_building_2, no camera data -- skip for real collection)"
+    echo
+    echo "Source: https://drive.google.com/drive/folders/1nki_xoFKX1bYr8m7qiGRQelwnQ7EKVYc"
+
 # Enter into iros2026_system container
 shell-sys:
     docker exec -it iros2026_system bash
