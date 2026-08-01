@@ -1,0 +1,596 @@
+{
+  "scene": "office_1",
+  "category": 1,
+  "category_name": "numerical",
+  "description": "Category 1 (numerical) evaluation questions with integer answers. Grounded in scene-graph relations and object color attributes. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "difficulty: easy = attribute or single relation; medium = relation+attribute or non-unique anchors; hard = nested relations (e.g. near X with Y on it).",
+    "raw_label is preferred for SAM prompts when more specific than nyu_label.",
+    "Structural classes (wall/floor/ceiling) are excluded from counted answers and noisy on/near anchors.",
+    "object_ids lists supporting scene-graph ids for auditing; SAM3 should use target_objects."
+  ],
+  "difficulty_counts": {
+    "easy": 10,
+    "medium": 12,
+    "hard": 8
+  },
+  "target_object_coverage": [
+    "bench",
+    "book",
+    "bottle",
+    "box",
+    "ceiling",
+    "chair",
+    "clock",
+    "coffee machine",
+    "computer monitor",
+    "computer mouse",
+    "door",
+    "eye glasses",
+    "file",
+    "file cabinet",
+    "floor",
+    "focus light",
+    "folder",
+    "keyboard",
+    "lamp",
+    "laptop",
+    "map wall decal",
+    "marker",
+    "paper",
+    "paper box",
+    "paper cup",
+    "pen",
+    "phone",
+    "potted cactus",
+    "potted plant",
+    "shelf",
+    "table",
+    "trash bin",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "How many benches are near the window?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "bench",
+        "window"
+      ],
+      "evidence": "near[6:window] -> ['99', '107']",
+      "object_ids": [
+        "99",
+        "107",
+        "6"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "How many books are in the scene?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "attribute",
+      "target_objects": [
+        "book"
+      ],
+      "evidence": "Count of book: ['15', '72', '106']",
+      "object_ids": [
+        "15",
+        "72",
+        "106"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "How many boxes are in the scene?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "attribute",
+      "target_objects": [
+        "box"
+      ],
+      "evidence": "Count of box: ['14', '41', '57']",
+      "object_ids": [
+        "14",
+        "41",
+        "57"
+      ]
+    },
+    {
+      "id": "Q04",
+      "question": "How many brown doors are in the scene?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "attribute",
+      "target_objects": [
+        "door"
+      ],
+      "evidence": "3 door with primary color brown: ['8', '38', '60']",
+      "object_ids": [
+        "8",
+        "38",
+        "60"
+      ]
+    },
+    {
+      "id": "Q05",
+      "question": "How many chairs are near the coffee machine?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "chair",
+        "coffee machine"
+      ],
+      "evidence": "near[78:coffee machine] -> ['29', '58']",
+      "object_ids": [
+        "29",
+        "58",
+        "78"
+      ]
+    },
+    {
+      "id": "Q06",
+      "question": "How many focus lights are near the clock?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "focus light",
+        "clock"
+      ],
+      "evidence": "near[80:clock] -> ['77', '87', '109']",
+      "object_ids": [
+        "77",
+        "87",
+        "109",
+        "80"
+      ]
+    },
+    {
+      "id": "Q07",
+      "question": "How many markers are near the eye glasses?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "marker",
+        "eye glasses"
+      ],
+      "evidence": "near[44:eye glasses] -> ['74', '75', '76']",
+      "object_ids": [
+        "74",
+        "75",
+        "76",
+        "44"
+      ]
+    },
+    {
+      "id": "Q08",
+      "question": "How many markers are near the lamp?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "marker",
+        "lamp"
+      ],
+      "evidence": "near[63:lamp] -> ['74', '75', '76']",
+      "object_ids": [
+        "74",
+        "75",
+        "76",
+        "63"
+      ]
+    },
+    {
+      "id": "Q09",
+      "question": "How many papers are near the map wall decal?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "paper",
+        "map wall decal"
+      ],
+      "evidence": "near[108:map wall decal] -> ['33', '34', '46']",
+      "object_ids": [
+        "33",
+        "34",
+        "46",
+        "108"
+      ]
+    },
+    {
+      "id": "Q10",
+      "question": "How many potted cactus are near the trash bin?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "potted cactus",
+        "trash bin"
+      ],
+      "evidence": "near[31:trash bin] -> ['90', '91', '92']",
+      "object_ids": [
+        "90",
+        "91",
+        "92",
+        "31"
+      ]
+    },
+    {
+      "id": "Q11",
+      "question": "How many black computer monitors are near the focus light?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "computer monitor",
+        "focus light"
+      ],
+      "evidence": "near[86] colored black: ['12', '36']",
+      "object_ids": [
+        "12",
+        "36",
+        "86"
+      ]
+    },
+    {
+      "id": "Q12",
+      "question": "How many books are above the floor?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "book",
+        "floor"
+      ],
+      "evidence": "above[96:floor] -> ['15', '72', '106']",
+      "object_ids": [
+        "15",
+        "72",
+        "106",
+        "96"
+      ]
+    },
+    {
+      "id": "Q13",
+      "question": "How many books are below the black ceiling?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "book",
+        "ceiling"
+      ],
+      "evidence": "below[94 black ceiling] -> ['15', '72', '106']",
+      "object_ids": [
+        "15",
+        "72",
+        "106",
+        "94"
+      ]
+    },
+    {
+      "id": "Q14",
+      "question": "How many boxes are near the file?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "file"
+      ],
+      "evidence": "near[5:file] -> ['14', '41', '57']",
+      "object_ids": [
+        "14",
+        "41",
+        "57",
+        "5"
+      ]
+    },
+    {
+      "id": "Q15",
+      "question": "How many boxes are near the folder?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "folder"
+      ],
+      "evidence": "near[88:folder] -> ['14', '41', '57']",
+      "object_ids": [
+        "14",
+        "41",
+        "57",
+        "88"
+      ]
+    },
+    {
+      "id": "Q16",
+      "question": "How many chairs are near the phone?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "chair",
+        "phone"
+      ],
+      "evidence": "near[20:phone] -> ['26', '29', '58']",
+      "object_ids": [
+        "26",
+        "29",
+        "58",
+        "20"
+      ]
+    },
+    {
+      "id": "Q17",
+      "question": "How many markers are on the table?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "marker",
+        "table"
+      ],
+      "evidence": "on[50:table] -> ['74', '75', '76']",
+      "object_ids": [
+        "74",
+        "75",
+        "76",
+        "50"
+      ]
+    },
+    {
+      "id": "Q18",
+      "question": "How many olive potted plants are below the ceiling?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "potted plant",
+        "ceiling"
+      ],
+      "evidence": "below[94] colored olive: ['55', '67', '71']",
+      "object_ids": [
+        "55",
+        "67",
+        "71",
+        "94"
+      ]
+    },
+    {
+      "id": "Q19",
+      "question": "How many paper boxes are above the floor?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "paper box",
+        "floor"
+      ],
+      "evidence": "above[96:floor] -> ['17', '25', '66']",
+      "object_ids": [
+        "17",
+        "25",
+        "66",
+        "96"
+      ]
+    },
+    {
+      "id": "Q20",
+      "question": "How many paper boxes are near the shelf?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "paper box",
+        "shelf"
+      ],
+      "evidence": "near[0:shelf] -> ['17', '25', '66']",
+      "object_ids": [
+        "17",
+        "25",
+        "66",
+        "0"
+      ]
+    },
+    {
+      "id": "Q21",
+      "question": "How many paper cups are above the floor?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "paper cup",
+        "floor"
+      ],
+      "evidence": "above[96:floor] -> ['79', '84', '97']",
+      "object_ids": [
+        "79",
+        "84",
+        "97",
+        "96"
+      ]
+    },
+    {
+      "id": "Q22",
+      "question": "How many potted cactus are near the bottle?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "potted cactus",
+        "bottle"
+      ],
+      "evidence": "near[93:bottle] -> ['90', '91', '92']",
+      "object_ids": [
+        "90",
+        "91",
+        "92",
+        "93"
+      ]
+    },
+    {
+      "id": "Q23",
+      "question": "How many bottles are near the table with a keyboard on it?",
+      "answer": 1,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "bottle",
+        "table",
+        "keyboard"
+      ],
+      "evidence": "near[53:table with 3:keyboard on] -> ['93']",
+      "object_ids": [
+        "93",
+        "53",
+        "3"
+      ]
+    },
+    {
+      "id": "Q24",
+      "question": "How many boxes are near the shelf with a book on it?",
+      "answer": 3,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "shelf",
+        "book"
+      ],
+      "evidence": "near[0:shelf with 72:book on] -> ['14', '41', '57']",
+      "object_ids": [
+        "14",
+        "41",
+        "57",
+        "0",
+        "72"
+      ]
+    },
+    {
+      "id": "Q25",
+      "question": "How many boxes are near the shelf with a file on it?",
+      "answer": 3,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "shelf",
+        "file"
+      ],
+      "evidence": "near[51:shelf with 5:file on] -> ['14', '41', '57']",
+      "object_ids": [
+        "14",
+        "41",
+        "57",
+        "51",
+        "5"
+      ]
+    },
+    {
+      "id": "Q26",
+      "question": "How many boxes are near the shelf with a folder on it?",
+      "answer": 3,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "shelf",
+        "folder"
+      ],
+      "evidence": "near[0:shelf with 103:folder on] -> ['14', '41', '57']",
+      "object_ids": [
+        "14",
+        "41",
+        "57",
+        "0",
+        "103"
+      ]
+    },
+    {
+      "id": "Q27",
+      "question": "How many chairs are near the file cabinet with a bottle on it?",
+      "answer": 2,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "chair",
+        "file cabinet",
+        "bottle"
+      ],
+      "evidence": "near[69:file cabinet with 100:bottle on] -> ['29', '58']",
+      "object_ids": [
+        "29",
+        "58",
+        "69",
+        "100"
+      ]
+    },
+    {
+      "id": "Q28",
+      "question": "How many gray papers are near the table with a laptop on it?",
+      "answer": 2,
+      "difficulty": "hard",
+      "type": "relational+attribute",
+      "target_objects": [
+        "paper",
+        "table",
+        "laptop"
+      ],
+      "evidence": "colored gray near nested: ['1', '62']",
+      "object_ids": [
+        "1",
+        "62",
+        "50",
+        "70"
+      ]
+    },
+    {
+      "id": "Q29",
+      "question": "How many gray papers are near the table with a pen on it?",
+      "answer": 2,
+      "difficulty": "hard",
+      "type": "relational+attribute",
+      "target_objects": [
+        "paper",
+        "table",
+        "pen"
+      ],
+      "evidence": "colored gray near nested: ['1', '62']",
+      "object_ids": [
+        "1",
+        "62",
+        "50",
+        "73"
+      ]
+    },
+    {
+      "id": "Q30",
+      "question": "How many potted cactus are near the table with a computer mouse on it?",
+      "answer": 3,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "potted cactus",
+        "table",
+        "computer mouse"
+      ],
+      "evidence": "near[53:table with 4:computer mouse on] -> ['90', '91', '92']",
+      "object_ids": [
+        "90",
+        "91",
+        "92",
+        "53",
+        "4"
+      ]
+    }
+  ]
+}
