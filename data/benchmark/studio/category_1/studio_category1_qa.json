@@ -1,0 +1,583 @@
+{
+  "scene": "studio",
+  "category": 1,
+  "category_name": "numerical",
+  "description": "Category 1 (numerical) evaluation questions with integer answers. Grounded in scene-graph relations and object color attributes. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "difficulty: easy = attribute or single relation; medium = relation+attribute or non-unique anchors; hard = nested relations (e.g. near X with Y on it).",
+    "raw_label is preferred for SAM prompts when more specific than nyu_label.",
+    "Structural classes (wall/floor/ceiling) are excluded from counted answers and noisy on/near anchors.",
+    "object_ids lists supporting scene-graph ids for auditing; SAM3 should use target_objects."
+  ],
+  "difficulty_counts": {
+    "easy": 10,
+    "medium": 12,
+    "hard": 8
+  },
+  "target_object_coverage": [
+    "beer bottle",
+    "bird decoration",
+    "bookcase",
+    "books",
+    "box",
+    "cabinet",
+    "ceiling",
+    "chair",
+    "clothes",
+    "couch",
+    "door",
+    "drawing",
+    "easel",
+    "floor",
+    "focus light",
+    "framed record",
+    "guitar",
+    "gymnastics decoration",
+    "hanger",
+    "hat",
+    "lamp",
+    "light switch",
+    "newspaper",
+    "phone",
+    "picture",
+    "pillow",
+    "pillows",
+    "potted plant",
+    "round box",
+    "shelf",
+    "table",
+    "tv",
+    "vase",
+    "windows"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "How many beer bottles are near the chair?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "beer bottle",
+        "chair"
+      ],
+      "evidence": "near[40:chair] -> ['54', '72']",
+      "object_ids": [
+        "54",
+        "72",
+        "40"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "How many beer bottles are near the couch?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "beer bottle",
+        "couch"
+      ],
+      "evidence": "near[16:couch] -> ['54', '72']",
+      "object_ids": [
+        "54",
+        "72",
+        "16"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "How many beer bottles are on the table?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "beer bottle",
+        "table"
+      ],
+      "evidence": "on[63:table] -> ['54', '72']",
+      "object_ids": [
+        "54",
+        "72",
+        "63"
+      ]
+    },
+    {
+      "id": "Q04",
+      "question": "How many bird decorations are near the cabinet?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "bird decoration",
+        "cabinet"
+      ],
+      "evidence": "near[55:cabinet] -> ['59', '62']",
+      "object_ids": [
+        "59",
+        "62",
+        "55"
+      ]
+    },
+    {
+      "id": "Q05",
+      "question": "How many bird decorations are near the tv?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "bird decoration",
+        "tv"
+      ],
+      "evidence": "near[14:tv] -> ['59', '62']",
+      "object_ids": [
+        "59",
+        "62",
+        "14"
+      ]
+    },
+    {
+      "id": "Q06",
+      "question": "How many books are near the bookcase?",
+      "answer": 4,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "books",
+        "bookcase"
+      ],
+      "evidence": "near[58:bookcase] -> ['12', '15', '20', '37']",
+      "object_ids": [
+        "12",
+        "15",
+        "20",
+        "37",
+        "58"
+      ]
+    },
+    {
+      "id": "Q07",
+      "question": "How many books are near the light switch?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "books",
+        "light switch"
+      ],
+      "evidence": "near[3:light switch] -> ['15', '20', '37']",
+      "object_ids": [
+        "15",
+        "20",
+        "37",
+        "3"
+      ]
+    },
+    {
+      "id": "Q08",
+      "question": "How many boxes are near the potted plant?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "potted plant"
+      ],
+      "evidence": "near[38:potted plant] -> ['32', '43', '56']",
+      "object_ids": [
+        "32",
+        "43",
+        "56",
+        "38"
+      ]
+    },
+    {
+      "id": "Q09",
+      "question": "How many boxes are on the shelf?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "shelf"
+      ],
+      "evidence": "on[71:shelf] -> ['32', '43', '56']",
+      "object_ids": [
+        "32",
+        "43",
+        "56",
+        "71"
+      ]
+    },
+    {
+      "id": "Q10",
+      "question": "How many vases are on the cabinet?",
+      "answer": 3,
+      "difficulty": "easy",
+      "type": "relational",
+      "target_objects": [
+        "vase",
+        "cabinet"
+      ],
+      "evidence": "on[55:cabinet] -> ['24', '25', '26']",
+      "object_ids": [
+        "24",
+        "25",
+        "26",
+        "55"
+      ]
+    },
+    {
+      "id": "Q11",
+      "question": "How many black cabinets are near the gymnastics decoration?",
+      "answer": 1,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "cabinet",
+        "gymnastics decoration"
+      ],
+      "evidence": "near[62] colored black: ['55']",
+      "object_ids": [
+        "55",
+        "62"
+      ]
+    },
+    {
+      "id": "Q12",
+      "question": "How many black guitars are below the ceiling?",
+      "answer": 1,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "guitar",
+        "ceiling"
+      ],
+      "evidence": "below[4] colored black: ['48']",
+      "object_ids": [
+        "48",
+        "4"
+      ]
+    },
+    {
+      "id": "Q13",
+      "question": "How many boxes are near the windows?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "windows"
+      ],
+      "evidence": "near[42:windows] -> ['32', '43', '56']",
+      "object_ids": [
+        "32",
+        "43",
+        "56",
+        "42"
+      ]
+    },
+    {
+      "id": "Q14",
+      "question": "How many brown vases are above the floor?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "vase",
+        "floor"
+      ],
+      "evidence": "above[68] colored brown: ['24', '25', '26']",
+      "object_ids": [
+        "24",
+        "25",
+        "26",
+        "68"
+      ]
+    },
+    {
+      "id": "Q15",
+      "question": "How many brown vases are below the ceiling?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "vase",
+        "ceiling"
+      ],
+      "evidence": "below[4] colored brown: ['24', '25', '26']",
+      "object_ids": [
+        "24",
+        "25",
+        "26",
+        "4"
+      ]
+    },
+    {
+      "id": "Q16",
+      "question": "How many chairs are near the gray phone?",
+      "answer": 1,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "chair",
+        "phone"
+      ],
+      "evidence": "near[45 gray phone] -> ['40']",
+      "object_ids": [
+        "40",
+        "45"
+      ]
+    },
+    {
+      "id": "Q17",
+      "question": "How many chairs are near the pillow?",
+      "answer": 1,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "chair",
+        "pillow"
+      ],
+      "evidence": "near[41:pillow] -> ['40']",
+      "object_ids": [
+        "40",
+        "41"
+      ]
+    },
+    {
+      "id": "Q18",
+      "question": "How many drawings are above the brown floor?",
+      "answer": 3,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "drawing",
+        "floor"
+      ],
+      "evidence": "above[68 brown floor] -> ['7', '11', '21']",
+      "object_ids": [
+        "7",
+        "11",
+        "21",
+        "68"
+      ]
+    },
+    {
+      "id": "Q19",
+      "question": "How many focus lights are near the black tv?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "focus light",
+        "tv"
+      ],
+      "evidence": "near[14 black tv] -> ['67', '69']",
+      "object_ids": [
+        "67",
+        "69",
+        "14"
+      ]
+    },
+    {
+      "id": "Q20",
+      "question": "How many focus lights are near the brown easel?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "focus light",
+        "easel"
+      ],
+      "evidence": "near[39 brown easel] -> ['66', '70']",
+      "object_ids": [
+        "66",
+        "70",
+        "39"
+      ]
+    },
+    {
+      "id": "Q21",
+      "question": "How many gray pillows are above the floor?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "pillows",
+        "floor"
+      ],
+      "evidence": "above[68] colored gray: ['17', '41']",
+      "object_ids": [
+        "17",
+        "41",
+        "68"
+      ]
+    },
+    {
+      "id": "Q22",
+      "question": "How many gray pillows are near the newspaper?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational+attribute",
+      "target_objects": [
+        "pillows",
+        "newspaper"
+      ],
+      "evidence": "near[19] colored gray: ['17', '41']",
+      "object_ids": [
+        "17",
+        "41",
+        "19"
+      ]
+    },
+    {
+      "id": "Q23",
+      "question": "How many bird decorations are on the cabinet near the lamp?",
+      "answer": 1,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "bird decoration",
+        "cabinet",
+        "lamp"
+      ],
+      "evidence": "on[55] near 47:lamp tops=['59']",
+      "object_ids": [
+        "59",
+        "55",
+        "47"
+      ]
+    },
+    {
+      "id": "Q24",
+      "question": "How many black framed records are near the couch with pillows on it?",
+      "answer": 1,
+      "difficulty": "hard",
+      "type": "relational+attribute",
+      "target_objects": [
+        "framed record",
+        "couch",
+        "pillows"
+      ],
+      "evidence": "colored black near nested: ['11']",
+      "object_ids": [
+        "11",
+        "16",
+        "17"
+      ]
+    },
+    {
+      "id": "Q25",
+      "question": "How many black windows are near the hanger with a hat on it?",
+      "answer": 1,
+      "difficulty": "hard",
+      "type": "relational+attribute",
+      "target_objects": [
+        "windows",
+        "hanger",
+        "hat"
+      ],
+      "evidence": "colored black near nested: ['42']",
+      "object_ids": [
+        "42",
+        "6",
+        "34"
+      ]
+    },
+    {
+      "id": "Q26",
+      "question": "How many boxes are on the shelf near the pillow?",
+      "answer": 3,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "box",
+        "shelf",
+        "pillow"
+      ],
+      "evidence": "on[71] near 41:pillow tops=['32', '43', '56']",
+      "object_ids": [
+        "32",
+        "43",
+        "56",
+        "71",
+        "41"
+      ]
+    },
+    {
+      "id": "Q27",
+      "question": "How many clothes are near the hanger with a hat on it?",
+      "answer": 1,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "clothes",
+        "hanger",
+        "hat"
+      ],
+      "evidence": "near[6:hanger with 34:hat on] -> ['18']",
+      "object_ids": [
+        "18",
+        "6",
+        "34"
+      ]
+    },
+    {
+      "id": "Q28",
+      "question": "How many clothes are on the hanger near the door?",
+      "answer": 1,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "clothes",
+        "hanger",
+        "door"
+      ],
+      "evidence": "on[6] near 1:door tops=['18']",
+      "object_ids": [
+        "18",
+        "6",
+        "1"
+      ]
+    },
+    {
+      "id": "Q29",
+      "question": "How many clothes are on the hanger near the picture?",
+      "answer": 1,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "clothes",
+        "hanger",
+        "picture"
+      ],
+      "evidence": "on[6] near 21:picture tops=['18']",
+      "object_ids": [
+        "18",
+        "6",
+        "21"
+      ]
+    },
+    {
+      "id": "Q30",
+      "question": "How many round boxes are on the shelf near the pillow?",
+      "answer": 3,
+      "difficulty": "hard",
+      "type": "relational",
+      "target_objects": [
+        "round box",
+        "shelf",
+        "pillow"
+      ],
+      "evidence": "on[71] near 41:pillow tops=['32', '43', '56']",
+      "object_ids": [
+        "32",
+        "43",
+        "56",
+        "71",
+        "41"
+      ]
+    }
+  ]
+}
