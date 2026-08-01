@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Run just the SAM 3 2D detector node (docs/M2_perception.md 3.6-split).
+
+/camera/image in -> /annotated_image, /sam3/instance_map, /sam3/detections out. Run
+map_node.launch alongside this (separate process — that's the point) for the full
+lidar-fusion / 3D pipeline; `just sam_node` + `just map_node` in two terminals does both.
+
+  ros2 launch sam_mapper sam_node.launch
+  ros2 launch sam_mapper sam_node.launch config:=sam3_mecanum_real.yaml
+  ros2 launch sam_mapper sam_node.launch config:=/abs/path/to/custom.yaml
+
+(Python launch file with a .launch name, matching the repo's other launch files.)
+"""
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+def _launch(context, *args, **kwargs):
+    config = LaunchConfiguration("config").perform(context)
+    if not os.path.isabs(config):
+        config = os.path.join(get_package_share_directory("sam_mapper"), "config", config)
+
+    return [Node(
+        package="sam_mapper",
+        executable="sam_node",
+        name="sam_node",
+        output="screen",
+        emulate_tty=True,
+        parameters=[{"config": config}],
+    )]
+
+
+def generate_launch_description():
+    return LaunchDescription([
+        DeclareLaunchArgument("config", default_value="sam3_mecanum_sim.yaml",
+                              description="Config file name (resolved against the package "
+                                          "config/ dir) or an absolute path"),
+        OpaqueFunction(function=_launch),
+    ])

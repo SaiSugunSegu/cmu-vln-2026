@@ -7,7 +7,8 @@ bag holds only the allowed inputs (plus /tf, /tf_static). See
 docs/M0.5_rosbag_infra.md.
 
   ros2 launch smart_vlm bag_replay.launch scene:=scene_0
-  ros2 launch smart_vlm bag_replay.launch scene:=scene_0 args:=""   # single pass (default --loop)
+  ros2 launch smart_vlm bag_replay.launch scene:=scene_0 loop:=true  # loop playback (default: single pass)
+  ros2 launch smart_vlm bag_replay.launch scene:=scene_0 speed:=0.5  # half speed (ros2 bag play --rate)
 
 (Python launch file with a .launch name, matching the repo's other launch files.)
 """
@@ -22,7 +23,14 @@ def _play(context, *args, **kwargs):
     scene = LaunchConfiguration("scene").perform(context)
     bags_dir = LaunchConfiguration("bags_dir").perform(context)
     extra = LaunchConfiguration("args").perform(context)
+    speed = LaunchConfiguration("speed").perform(context)
+    loop = LaunchConfiguration("loop").perform(context)
     scene_dir = os.path.join(bags_dir, scene)
+
+    # --rate is ros2 bag play's own playback-speed flag; kept as a dedicated launch arg
+    # (rather than folding it into `args`) since it's the one knob people reach for often.
+    rate = f"--rate {speed}"
+    loop_flag = "--loop" if loop.lower() in ("true", "1") else ""
 
     # fetch-if-missing, then play. Resolve the .mcap *after* the fetch and play it
     # directly, so the recorded filename doesn't have to match metadata.yaml (and
@@ -31,8 +39,8 @@ def _play(context, *args, **kwargs):
     cmd = (
         f"ros2 run smart_vlm bag_fetch {scene} --bags-dir {bags_dir} && "
         f'{{ mcap="$(ls {scene_dir}/*.mcap 2>/dev/null | head -n1)"; '
-        f'if [ -n "$mcap" ]; then exec ros2 bag play "$mcap" -s mcap {extra}; '
-        f"else exec ros2 bag play {scene_dir} {extra}; fi; }}"
+        f'if [ -n "$mcap" ]; then exec ros2 bag play "$mcap" -s mcap {rate} {loop_flag} {extra}; '
+        f"else exec ros2 bag play {scene_dir} {rate} {loop_flag} {extra}; fi; }}"
     )
     return [ExecuteProcess(cmd=["bash", "-c", cmd], output="screen")]
 
@@ -41,7 +49,13 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("scene", default_value="scene_0"),
         DeclareLaunchArgument("bags_dir", default_value="/data/bags"),
-        DeclareLaunchArgument("args", default_value="--loop",
-                              description='ros2 bag play flags; set args:="" for a single pass'),
+        DeclareLaunchArgument("args", default_value="",
+                              description="extra ros2 bag play flags"),
+        DeclareLaunchArgument("speed", default_value="1.0",
+                              description="playback rate multiplier (ros2 bag play --rate), "
+                                          "e.g. 0.5 = half speed, 2.0 = double speed"),
+        DeclareLaunchArgument("loop", default_value="false",
+                              description="loop playback (ros2 bag play --loop); "
+                                          "default is a single pass"),
         OpaqueFunction(function=_play),
     ])

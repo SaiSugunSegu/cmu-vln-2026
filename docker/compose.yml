@@ -39,6 +39,9 @@ services:
     container_name: iros2026_ai_module
     network_mode: host
     ipc: host
+    env_file:
+      - path: ../.env
+        required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
     volumes:
       - ../bags:/data/bags
     depends_on:
