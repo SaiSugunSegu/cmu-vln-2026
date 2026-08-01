@@ -35,6 +35,7 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
 from sam_mapper.annotate import annotate_frame
+from sam_mapper.best_view import BestViewCollector, BestViewConfig
 from sam_mapper.detections import PromptTable, encode_instance_id, to_detections
 from sam_mapper.node_base import WorkerNodeMixin, run_node
 from sam_mapper.sam3_backend import Sam3Backend
@@ -58,6 +59,12 @@ class SamNode(WorkerNodeMixin, Node):
 
         self.prompt_table = PromptTable(config['objects'])
         self.log(f"prompts ({len(self.prompt_table.prompts)}): {self.prompt_table.prompts}")
+
+        best_view_cfg = config.get('save_best_target_view_images', {})
+        self.best_view_collector = None
+        if best_view_cfg.get('enabled', False):
+            self.best_view_collector = BestViewCollector(
+                BestViewConfig.from_dict(best_view_cfg, self.prompt_table), log=self.log)
 
         self.log("loading SAM 3 (first run downloads weights, this can take a while) ...")
         self.backend = Sam3Backend(config['sam3'], log=self.log)
@@ -131,6 +138,10 @@ class SamNode(WorkerNodeMixin, Node):
         self.id_offset = self.max_seen_id + 1
         self.backend.reset()
         self.last_frame_stamp = stamp
+        # The id offset above means the same physical object returns under a new id, which
+        # the collector would otherwise count as another object to cover.
+        if self.best_view_collector:
+            self.best_view_collector.on_time_jump()
 
     # -- worker ---------------------------------------------------------------
 
@@ -179,6 +190,9 @@ class SamNode(WorkerNodeMixin, Node):
             detections['ids'][instance] += self.id_offset
         if instance.any():
             self.max_seen_id = max(self.max_seen_id, int(detections['ids'][instance].max()))
+
+        if self.best_view_collector:
+            self.best_view_collector.consider(image, detections, stamp)
 
         self._set_stage('publish')
         self._publish_detections(detections, stamp, image.shape[:2])
