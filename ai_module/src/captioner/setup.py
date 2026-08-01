@@ -22,6 +22,10 @@ setup(
         'console_scripts': [
             'captioning_node = captioner.captioning_node:main',
             'caption_crops = captioner.models.captioning:main',
+            'qwen_vqa = captioner.models.vqa:main',
+            'qwen_vqa_server = captioner.qwen_vqa_server:main',
+            'qwen_vqa_ask = captioner.qwen_vqa_client:main',
+            'qwen_vqa_wait_ready = captioner.qwen_vqa_wait_ready:main',
         ],
     },
 )

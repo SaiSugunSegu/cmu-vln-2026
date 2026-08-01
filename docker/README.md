@@ -142,6 +142,28 @@ Or with the helper script from the repo root:
 ./ai_module/docker/run_captioner.sh /data/workspace/crops /data/workspace/captions
 ```
 
+## Run Qwen VQA (offline image + question CLI)
+
+**Preferred (persistent server — load once, ask many):** from the repo root:
+
+```bash
+just vqa-up          # compose + load Qwen int4; blocks until ready
+just vqa-ask "How many pillows are on the bed?" /data/workspace/pillow_bed.png
+just vqa-ask "How many lamps are there?" /data/workspace/pillow_bed.png   # fast
+just vqa-status
+just vqa-down
+```
+
+Image paths must be visible in the AI container (`/data/workspace/…` via the
+`data/` mount, or any path under `$HOME` — compose mounts `${HOME}:${HOME}`).
+
+One-shot CLI (reloads weights every call — slow):
+
+```bash
+./ai_module/docker/run_qwen_vqa.sh /data/workspace/pillow_bed.png \
+  "How many pillows are on the bed?"
+```
+
 Or with explicit host paths already visible via the `data/` mount:
 
 ```bash

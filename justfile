@@ -2,7 +2,8 @@
 # Requires https://github.com/casey/just  (e.g. `cargo install just` or `sudo snap install just`)
 #
 # Examples:
-#   just up
+#   just up                 # GPU compose (baked ai_module image)
+#   just up-dev             # + bind-mount host ai_module for live code edits
 #   just sim-noviz
 #   just foxglove
 #   just teleop
@@ -10,20 +11,34 @@
 #   just bag scene01_run1
 #   just caption
 #   just caption crops captions
+#   just vqa-up             # load Qwen once inside the AI container
+#   just vqa-ask "How many pillows are on the bed?" "/abs/path/image.png"
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
+# Container path (compose_dev mounts host ai_module here).
+ai_src := "/home/docker/ai_module"
 
 default:
     @just --list
 
-# Build + start both containers (GPU)
+# Build + start both containers (GPU). Pure image — ai_module is NOT bind-mounted.
 [working-directory: 'docker']
 up:
     docker compose -f compose_gpu.yml up --build -d
 
+# Same as up, but mount host ../ai_module → /home/docker/ai_module (daily dev).
+[working-directory: 'docker']
+up-dev:
+    docker compose -f compose_gpu.yml -f compose_dev.yml up --build -d
+
+# Start containers if needed without forcing an image rebuild.
+[working-directory: 'docker']
+up-dev-fast:
+    docker compose -f compose_gpu.yml -f compose_dev.yml up -d
+
 [working-directory: 'docker']
 down:
-    docker compose -f compose_gpu.yml down
+    docker compose -f compose_gpu.yml -f compose_dev.yml down
 
 # Simulator + base autonomy + rviz2 (blocks; terminal A)
 # Override display: just sim :0
@@ -167,3 +182,93 @@ sam-map-json:
 # Is sam_mapper working? Rates on every output topic + a summary of the 3D map.
 sam-status seconds="15":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.status --seconds {{seconds}}"
+
+# ---------- Persistent Qwen VQA (model stays loaded) --------------------
+#   just vqa-up
+#   just vqa-ask "How many pillows?" /data/workspace/img.png
+#   just vqa-down
+
+# Start compose (dev mount), rebuild captioner, load Qwen once (~60s first time).
+vqa-up model="qwen3vl" quantization="int4":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    model="{{model}}"
+    quantization="{{quantization}}"
+    model="${model#model=}"
+    quantization="${quantization#quantization=}"
+    just up-dev-fast
+    # ament_python --symlink-install needs setuptools<80 (83 drops --editable).
+    docker exec iros2026_ai_module bash -lc "
+      pip install 'setuptools>=68,<80' --break-system-packages -q
+      source /opt/ros/jazzy/setup.bash &&
+      cd {{ai_src}} &&
+      colcon build --symlink-install --packages-select captioner
+    "
+    # [q]wen… so pkill's cmdline does not match itself.
+    docker exec iros2026_ai_module bash -lc \
+      "pkill -f '[q]wen_vqa_server --ros-args' || true" >/dev/null 2>&1 || true
+    sleep 1
+    docker exec -d -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
+      source {{ai_src}}/install/setup.bash &&
+      export PATH={{ai_src}}/install/captioner/lib/captioner:\$PATH &&
+      : > /tmp/qwen_vqa_server.log &&
+      setsid nohup qwen_vqa_server --ros-args \
+        -p captioning_model:=${model} \
+        -p quantization:=${quantization} \
+        >> /tmp/qwen_vqa_server.log 2>&1 < /dev/null &
+    "
+    echo "Waiting for Qwen VQA server (loading weights)…"
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
+      source {{ai_src}}/install/setup.bash &&
+      export PATH={{ai_src}}/install/captioner/lib/captioner:\$PATH &&
+      qwen_vqa_wait_ready --timeout 600
+    "
+
+# Image path: container-absolute under $HOME or /data/workspace.
+vqa-ask q image:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    q="{{q}}"
+    image="{{image}}"
+    q="${q#q=}"
+    image="${image#image=}"
+    # Rewrite repo-relative data/ paths to the container mount.
+    if [[ "$image" != /* ]]; then
+      if [[ -f "$PWD/data/$image" ]]; then
+        image="/data/workspace/$image"
+      elif [[ -f "$image" ]]; then
+        image="$(cd "$(dirname "$image")" && pwd)/$(basename "$image")"
+      fi
+    fi
+    image="${image/#$PWD\/data//data/workspace}"
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
+      if ! pgrep -f '[q]wen_vqa_server --ros-args' >/dev/null; then
+        echo 'VQA server is not running. Start it with: just vqa-up' >&2
+        exit 1
+      fi
+      source {{ai_src}}/install/setup.bash &&
+      export PATH={{ai_src}}/install/captioner/lib/captioner:\$PATH &&
+      qwen_vqa_ask --question $(printf '%q' "$q") --image $(printf '%q' "$image")
+    "
+
+# Show server status (ready / loading) without reloading the model.
+vqa-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
+      if ! pgrep -f '[q]wen_vqa_server --ros-args' >/dev/null; then
+        echo 'VQA server is not running. Start it with: just vqa-up' >&2
+        echo 'Last log lines:' >&2
+        tail -n 20 /tmp/qwen_vqa_server.log 2>/dev/null >&2 || true
+        exit 1
+      fi
+      source {{ai_src}}/install/setup.bash
+      timeout 5 ros2 topic echo /qwen_vqa/status std_msgs/msg/String --once
+    "
+
+# Stop the persistent VQA server (keeps the container running).
+vqa-down:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    docker exec iros2026_ai_module bash -lc "pkill -f '[q]wen_vqa_server --ros-args' || true"
+    echo "VQA server stopped."
