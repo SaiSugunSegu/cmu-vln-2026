@@ -105,7 +105,7 @@ Object reference question (triggers marker + object waypoint):
 ```bash
 ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'Find teal pillow on the sofa farthest from the window'}"
 ```
-Numerical question (triggers random integer response):
+Numerical question (triggers random integer response from dummy alone):
 ```bash
 ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'How many books are on the sofa'}"
 ```
@@ -115,6 +115,25 @@ ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'Go to the
 ```
 
 You should see the vehicle following waypoints and the selected object being highlighted in RVIZ.
+
+### Qwen numerical answers (smart_vlm)
+
+`ros2 launch smart_vlm smart_vlm.launch` starts `qwen_numerical` (Qwen3-VL int4 by
+default). It answers **How many / Count** questions from `/camera/image` and
+publishes an `Int32` on `/numerical_response`. Dummy’s random numerical publisher
+is disabled in that launch (`dummy_answer_numerical:=false`).
+
+```bash
+# after colcon build --packages-select captioner smart_vlm dummy_vlm
+ros2 launch smart_vlm smart_vlm.launch
+# elsewhere:
+ros2 topic pub --once /challenge_question std_msgs/msg/String \
+  "{data: 'How many pillows are on the bed?'}"
+ros2 topic echo /numerical_response --once
+```
+
+Disable the Qwen head and restore dummy random ints with:
+`use_qwen_numerical:=false dummy_answer_numerical:=true`.
 
 ## Run the captioner (offline crop CLI)
 

@@ -1,11 +1,16 @@
 <launch>
-  <!-- smart_vlm: supervisor + dummy answer heads + exploration.
+  <!-- smart_vlm: supervisor + Qwen numerical head + dummy answer heads + exploration.
        Replaces dummy_vlm.launch. Launch:  ros2 launch smart_vlm smart_vlm.launch
 
        Optional offline mode: set use_bag:=true to also replay a recorded scene
          ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=scene_0 -->
   <arg name="use_bag" default="false"/>   <!-- true = also replay a bag instead of the live sim -->
   <arg name="bag"     default="scene_0"/>  <!-- scene name under /data/bags -->
+  <arg name="use_qwen_numerical" default="true"/>
+  <arg name="captioning_model" default="qwen3vl"/>
+  <arg name="quantization" default="int4"/>
+  <!-- When Qwen owns numerical answers, disable dummy's random Int32 publisher. -->
+  <arg name="dummy_answer_numerical" default="false"/>
 
   <!-- 0. Optional bag replay (offline dev; default off leaves live-sim runs untouched) -->
   <include file="$(find-pkg-share smart_vlm)/launch/bag_replay.launch" if="$(var use_bag)">
@@ -15,14 +20,25 @@
   <!-- 1. Supervisor: mission clock, question handling, exploration control -->
   <node pkg="smart_vlm" exec="supervisor" name="smart_vlm_supervisor" output="screen"/>
 
-  <!-- 2. Dummy VLM: keeps answer behavior until real M2-M4 replace it.
+  <!-- 2. Qwen-VL int4 numerical head: How many / Count → /numerical_response -->
+  <group if="$(var use_qwen_numerical)">
+    <node pkg="smart_vlm" exec="qwen_numerical" name="qwen_numerical" output="screen">
+      <param name="captioning_model" value="$(var captioning_model)"/>
+      <param name="quantization" value="$(var quantization)"/>
+    </node>
+  </group>
+
+  <!-- 3. Dummy VLM: Find / navigation heads until real M2-M4 replace them.
+       Pass dummy_answer_numerical:=true only if use_qwen_numerical:=false.
        NOTE: dummyVLM also publishes waypoints on question receipt; while TARE
        and dummyVLM both run, two writers exist on /way_point_with_heading.
        For today that's acceptable (dummy only reacts to questions); the
        supervisor becomes the single writer once the waypoint mux is in. -->
-  <include file="$(find-pkg-share dummy_vlm)/launch/dummy_vlm.launch"/>
+  <include file="$(find-pkg-share dummy_vlm)/launch/dummy_vlm.launch">
+    <arg name="answer_numerical" value="$(var dummy_answer_numerical)"/>
+  </include>
 
-  <!-- 3. TARE exploration planner (vendored) -->
+  <!-- 4. TARE exploration planner (vendored) -->
   <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
     <arg name="scenario" value="indoor_small"/>
   </include>

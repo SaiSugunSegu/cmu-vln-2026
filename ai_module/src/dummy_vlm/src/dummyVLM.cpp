@@ -31,6 +31,7 @@ string objLabel;
 float vehicleX = 0, vehicleY = 0;
 
 string question;
+bool answerNumerical = true;
 
 shared_ptr<rclcpp::Node> nh;
 
@@ -248,10 +249,13 @@ int main(int argc, char** argv)
   nh->declare_parameter<std::string>("waypoint_file_dir", waypoint_file_dir);
   nh->declare_parameter<std::string>("object_list_file_dir", object_list_file_dir);
   nh->declare_parameter<double>("waypointReachDis", waypointReachDis);
+  // When false, leave /numerical_response to qwen_numerical (or another head).
+  nh->declare_parameter<bool>("answer_numerical", answerNumerical);
 
   nh->get_parameter("waypoint_file_dir", waypoint_file_dir);
   nh->get_parameter("object_list_file_dir", object_list_file_dir);
   nh->get_parameter("waypointReachDis", waypointReachDis);
+  nh->get_parameter("answer_numerical", answerNumerical);
 
   auto subPose = nh->create_subscription<nav_msgs::msg::Odometry>("/state_estimation", 5, poseHandler);
   auto subQuestion = nh->create_subscription<std_msgs::msg::String>("/challenge_question", 5, questionHandler);
@@ -291,9 +295,14 @@ int main(int argc, char** argv)
       pubObjectWaypoint(waypointPub, waypointMsgs);
     } else if (question.rfind("How many", 0) == 0 || question.rfind("how many", 0) == 0) {
       delObjectMarker(objectMarkerPub, objectMarkerMsgs);
-      int32_t number = (rand() % 10) + 1;
-      RCLCPP_INFO(nh->get_logger(), "%d", number);
-      pubNumericalAnswer(numericalAnswerPub, numericalResponseMsg, number);
+      if (!answerNumerical) {
+        RCLCPP_INFO(nh->get_logger(),
+          "Skipping numerical question (answer_numerical=false; handled elsewhere).");
+      } else {
+        int32_t number = (rand() % 10) + 1;
+        RCLCPP_INFO(nh->get_logger(), "%d", number);
+        pubNumericalAnswer(numericalAnswerPub, numericalResponseMsg, number);
+      }
     } else {
       delObjectMarker(objectMarkerPub, objectMarkerMsgs);
       RCLCPP_INFO(nh->get_logger(), "Navigation starts.");
