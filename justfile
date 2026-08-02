@@ -284,3 +284,55 @@ vqa-down:
     set -euo pipefail
     docker exec iros2026_ai_module bash -lc "pkill -f '[q]wen_vqa_server --ros-args' || true"
     echo "VQA server stopped."
+
+# ---------- Category-1 bag bench (SAM best-views + Qwen VQA) ---------------
+# Terminals: just vqa-up | just run-sam | just cat1-reasoner | just cat1-bag-bench
+# Bench waits for /sam3/status=ready before (and after) prompts, then starts the bag.
+#
+# Rebuilds smart_vlm (symlink) and launches category1_reasoner.
+cat1-reasoner:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    docker exec iros2026_ai_module bash -lc "
+      pip install 'setuptools>=68,<80' --break-system-packages -q
+      source /opt/ros/jazzy/setup.bash &&
+      cd {{ai_src}} &&
+      colcon build --symlink-install --packages-select smart_vlm sam_mapper
+    "
+    docker exec -it iros2026_ai_module bash -lc "
+      source {{ai_src}}/install/setup.bash &&
+      ros2 launch smart_vlm category1_reasoner.launch
+    "
+
+# Loop category-1 QA over a scene bag. Requires vqa-up + run-sam + cat1-reasoner.
+# Ex: just cat1-bag-bench arabic_room 3
+# Ex: just cat1-bag-bench arabic_room 0 "Q01 Q02 Q03"
+cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Support both `just cat1-bag-bench arabic_room 3` and key=value forms.
+    scene="{{scene}}"
+    limit="{{limit}}"
+    ids="{{ids}}"
+    speed="{{speed}}"
+    scene="${scene#scene=}"
+    limit="${limit#limit=}"
+    ids="${ids#ids=}"
+    speed="${speed#speed=}"
+    # If a caller passed ids=... as the positional limit slot, recover.
+    if [[ "$limit" == ids=* ]]; then
+      ids="${limit#ids=}"
+      limit="0"
+    fi
+    qa="/data/workspace/benchmark/${scene}/category_1/${scene}_category1_qa.json"
+    out="/data/workspace/runs/cat1_${scene}"
+    mkdir -p "{{justfile_directory()}}/data/runs"
+    chmod a+rwx "{{justfile_directory()}}/data/runs" 2>/dev/null || true
+    # Repo scripts/ is not bind-mounted into ai_module; $HOME is.
+    script="{{justfile_directory()}}/scripts/eval/run_cat1_bag_bench.py"
+    extra=""
+    if [[ -n "$ids" ]]; then
+      extra="--ids ${ids}"
+    fi
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
+      "source {{ai_src}}/install/setup.bash && python3 $(printf '%q' "$script") --qa $(printf '%q' "$qa") --scene $(printf '%q' "$scene") --out $(printf '%q' "$out") --limit $(printf '%q' "$limit") --speed $(printf '%q' "$speed") ${extra}"
