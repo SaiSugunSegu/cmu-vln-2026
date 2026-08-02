@@ -221,6 +221,8 @@ class QwenVLHFBackend(CaptioningModel):
             "Answer the question about this image with a single integer only. "
             "Do not include units, words, or explanation.\nQuestion: {question}"
         )
+        # Pass-through text for extract / attribute prompts (no integer constraint).
+        self.freeform_vqa_prompt = "{question}"
 
     @staticmethod
     def model_class():
@@ -266,7 +268,14 @@ class QwenVLHFBackend(CaptioningModel):
             message, tokenize=False, add_generation_prompt=True
         ) for message in messages]
 
-    def build_vqa_prompts(self, pil_images, questions: list[str]) -> list[str]:
+    def build_vqa_prompts(
+            self,
+            pil_images,
+            questions: list[str],
+            *,
+            freeform: bool = False,
+            ) -> list[str]:
+        template = self.freeform_vqa_prompt if freeform else self.vqa_prompt
         messages = [[
             {
                 "role": "user",
@@ -277,7 +286,7 @@ class QwenVLHFBackend(CaptioningModel):
                     },
                     {
                         "type": "text",
-                        "text": self.vqa_prompt.format(question=question),
+                        "text": template.format(question=question),
                     },
                 ],
             }
@@ -292,14 +301,20 @@ class QwenVLHFBackend(CaptioningModel):
             images,
             questions: list[str],
             max_new_tokens: Optional[int] = None,
+            *,
+            freeform: bool = False,
             ) -> list[str]:
-        '''Free-form visual question answering for one image/question pair each.'''
+        '''Visual question answering for one image/question pair each.
+
+        freeform=False (default): wrap with the integer-only challenge prompt.
+        freeform=True: send the question text as-is (extract / attribute captions).
+        '''
         if len(images) != len(questions):
             raise ValueError(
                 f"images ({len(images)}) and questions ({len(questions)}) length mismatch")
 
         pil_images = [self.to_pil(image) for image in images]
-        prompts = self.build_vqa_prompts(pil_images, questions)
+        prompts = self.build_vqa_prompts(pil_images, questions, freeform=freeform)
         token_budget = self.max_new_tokens if max_new_tokens is None else max_new_tokens
 
         answers = []

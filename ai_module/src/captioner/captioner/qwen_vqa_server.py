@@ -5,6 +5,8 @@ ROS topics
   /qwen_vqa/status   (std_msgs/String, TRANSIENT_LOCAL)  "loading" | "ready" | "error:…"
   /qwen_vqa/request  (std_msgs/String JSON)
       {"id": "<uuid>", "image": "/abs/path.png", "question": "How many…"}
+      {"id": "<uuid>", "image": null, "question": "…", "mode": "freeform"}
+      mode: "numerical" (default) | "freeform" (no integer-only wrapper)
   /qwen_vqa/response (std_msgs/String JSON)
       {"id": "…", "answer": "4", "number": 4, "error": null, "seconds": 0.5}
 
@@ -20,6 +22,7 @@ from typing import Optional
 from urllib.parse import unquote
 
 import imageio.v3 as iio
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
@@ -28,9 +31,13 @@ from std_msgs.msg import String
 from captioner.models.captioning import load_qwen_backend
 from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
 
+# Tiny RGB placeholder so VL backends accept text-only extract / planning prompts.
+_BLANK_RGB = np.zeros((64, 64, 3), dtype=np.uint8)
+
 def _allowed_roots() -> tuple[Path, ...]:
-    """Roots visible via compose mounts (data/, ai_module, ${HOME}:${HOME})."""
+    """Roots visible via compose mounts (bags/, data/, ai_module, ${HOME}:${HOME})."""
     candidates = [
+        Path("/data/bags"),
         Path("/data/workspace"),
         Path("/home/docker"),
         Path.home(),
@@ -117,28 +124,44 @@ class QwenVQAServer(Node):
         try:
             payload = json.loads(raw)
             req_id = payload.get("id")
+            if "image" not in payload or "question" not in payload:
+                raise KeyError("image")
             image_path = payload["image"]
             question = payload["question"]
-        except (json.JSONDecodeError, KeyError, TypeError):
+            if not isinstance(question, str) or not question.strip():
+                raise ValueError("question must be a non-empty string")
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
             self._publish_response({
                 "id": req_id,
                 "answer": None,
                 "number": None,
-                "error": "invalid request JSON (need id, image, question)",
+                "error": "invalid request JSON (need id, image, question; image may be null)",
                 "seconds": 0.0,
             })
             return
 
         try:
-            path = _secure_image_path(image_path)
-            image = iio.imread(str(path))
-            if image is None:
-                raise RuntimeError(f"Failed to read image: {path}")
+            if image_path is None or image_path == "":
+                image = _BLANK_RGB
+            else:
+                path = _secure_image_path(str(image_path))
+                image = iio.imread(str(path))
+                if image is None:
+                    raise RuntimeError(f"Failed to read image: {path}")
+
+            max_new_tokens = self.max_new_tokens
+            if payload.get("max_new_tokens") is not None:
+                max_new_tokens = int(payload["max_new_tokens"])
+            mode = str(payload.get("mode") or "numerical").lower()
+            freeform = mode in ("freeform", "text", "extract")
 
             with self._lock:
                 t0 = time.time()
                 answers = self.model.answer_questions(
-                    [image], [question], max_new_tokens=self.max_new_tokens)
+                    [image], [question],
+                    max_new_tokens=max_new_tokens,
+                    freeform=freeform,
+                )
                 elapsed = time.time() - t0
 
             raw_answer = answers[0]
