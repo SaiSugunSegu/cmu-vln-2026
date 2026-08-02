@@ -13,6 +13,12 @@ Publishes:
     /sam3/detections     std_msgs/String     JSON {stamp, entries: [{id, label, confidence, bbox}]}
                                              (String has no header, so the stamp is embedded here,
                                               matching /sam3/instance_map's)
+    /sam3/status         std_msgs/String     latched "loading" | "ready" | "setting_prompts"
+    /sam3/prompts_ack    std_msgs/String     JSON ack after /sam3/set_prompts
+    /sam3/best_view_dir  std_msgs/String     latched path of current best-view run dir
+
+Subscribes:
+    /sam3/set_prompts    std_msgs/String     JSON {"prompts": [...], "run_id": "..."}
 
 map_node (map_node.py) subscribes to the latter two and reconstructs each object's mask via
 `id_map == encode_instance_id(id)` — the existing 5-key to_detections() contract, unchanged,
@@ -30,6 +36,7 @@ import numpy as np
 from cv_bridge import CvBridge
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
@@ -60,11 +67,26 @@ class SamNode(WorkerNodeMixin, Node):
         self.prompt_table = PromptTable(config['objects'])
         self.log(f"prompts ({len(self.prompt_table.prompts)}): {self.prompt_table.prompts}")
 
-        best_view_cfg = config.get('save_best_target_view_images', {})
+        self.best_view_cfg = config.get('save_best_target_view_images', {})
         self.best_view_collector = None
-        if best_view_cfg.get('enabled', False):
+
+        # -- ROS interface (status first so clients can wait through weight load) --
+        def group():
+            return MutuallyExclusiveCallbackGroup()
+
+        latch_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            history=HistoryPolicy.KEEP_LAST,
+        )
+
+        self.status_pub = self.create_publisher(String, '/sam3/status', latch_qos)
+        self._publish_status('loading')
+
+        if self.best_view_cfg.get('enabled', False):
             self.best_view_collector = BestViewCollector(
-                BestViewConfig.from_dict(best_view_cfg, self.prompt_table), log=self.log)
+                BestViewConfig.from_dict(self.best_view_cfg, self.prompt_table), log=self.log)
 
         self.log("loading SAM 3 (first run downloads weights, this can take a while) ...")
         self.backend = Sam3Backend(config['sam3'], log=self.log)
@@ -74,6 +96,8 @@ class SamNode(WorkerNodeMixin, Node):
         # -- buffers ---------------------------------------------------------
         self.frame_lock = threading.Lock()
         self.latest_frame = None                # newest undecoded sensor_msgs/Image
+        # Guards prompt_table / backend session / best_view_collector against /sam3/set_prompts.
+        self.prompt_lock = threading.Lock()
 
         self.frames_in = 0
         self.frames_done = 0
@@ -85,23 +109,30 @@ class SamNode(WorkerNodeMixin, Node):
         self.id_offset = 0
         self.max_seen_id = -1
 
-        # -- ROS interface ---------------------------------------------------
-        def group():
-            return MutuallyExclusiveCallbackGroup()
-
         self.create_subscription(Image, '/camera/image', self.image_callback, 10,
+                                 callback_group=group())
+        self.create_subscription(String, '/sam3/set_prompts', self._on_set_prompts, 10,
                                  callback_group=group())
         self.annotated_pub = self.create_publisher(Image, '/annotated_image', 2)
         self.instance_map_pub = self.create_publisher(Image, '/sam3/instance_map', 2)
         self.detections_pub = self.create_publisher(String, '/sam3/detections', 2)
+        self.prompts_ack_pub = self.create_publisher(String, '/sam3/prompts_ack', 10)
+        self.best_view_dir_pub = self.create_publisher(String, '/sam3/best_view_dir', latch_qos)
+
+        if self.best_view_collector is not None:
+            self.best_view_dir_pub.publish(String(data=self.best_view_collector.run_dir))
 
         self.create_timer(self.HEARTBEAT_S, self._heartbeat, callback_group=group())
 
         self._start_worker(self._worker_loop)
+        self._publish_status('ready')
         self.log('sam_node started')
 
     def log(self, msg):
         self.get_logger().info(str(msg))
+
+    def _publish_status(self, text: str) -> None:
+        self.status_pub.publish(String(data=text))
 
     # -- callbacks ------------------------------------------------------------
 
@@ -118,6 +149,69 @@ class SamNode(WorkerNodeMixin, Node):
         with self.frame_lock:
             frame, self.latest_frame = self.latest_frame, None
             return frame
+
+    def _on_set_prompts(self, msg: String) -> None:
+        """Replace SAM text prompts and start a fresh best-view run for the next bag pass."""
+        try:
+            payload = json.loads(msg.data)
+            prompts = payload["prompts"]
+            if not isinstance(prompts, list) or not prompts:
+                raise ValueError("'prompts' must be a non-empty list of strings")
+            prompts = [str(p).strip() for p in prompts if str(p).strip()]
+            if not prompts:
+                raise ValueError("'prompts' has no non-empty strings")
+            # Preserve order, drop duplicates (PromptTable rejects duplicate prompt strings).
+            seen = set()
+            unique = []
+            for prompt in prompts:
+                if prompt not in seen:
+                    seen.add(prompt)
+                    unique.append(prompt)
+            prompts = unique
+            run_id = payload.get("run_id")
+            if run_id is not None:
+                run_id = str(run_id)
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
+            self.get_logger().error(f'/sam3/set_prompts rejected: {err}')
+            self.prompts_ack_pub.publish(String(data=json.dumps({
+                "ok": False, "error": str(err), "prompts": [], "run_dir": None,
+            })))
+            return
+
+        objects = [{"prompt": p, "instance": True} for p in prompts]
+        self._publish_status('setting_prompts')
+        with self.prompt_lock:
+            self.prompt_table = PromptTable(objects)
+            self.backend.set_prompts(self.prompt_table.prompts)
+            self.id_offset = 0
+            self.max_seen_id = -1
+            self.last_frame_stamp = None
+            with self.frame_lock:
+                self.latest_frame = None
+
+            run_dir = None
+            if self.best_view_cfg.get('enabled', False):
+                self.best_view_collector = BestViewCollector(
+                    BestViewConfig.from_dict(self.best_view_cfg, self.prompt_table),
+                    log=self.log,
+                    run_id=run_id,
+                )
+                run_dir = self.best_view_collector.run_dir
+                self.best_view_dir_pub.publish(String(data=run_dir))
+            else:
+                self.best_view_collector = None
+
+        ack = {
+            "ok": True,
+            "error": None,
+            "prompts": list(self.prompt_table.prompts),
+            "labels": [s.label for s in self.prompt_table.specs],
+            "run_id": run_id,
+            "run_dir": run_dir,
+        }
+        self.prompts_ack_pub.publish(String(data=json.dumps(ack)))
+        self._publish_status('ready')
+        self.log(f'set_prompts ok: {ack["prompts"]} -> {run_dir}')
 
     # -- bag-loop handling ------------------------------------------------------
 
@@ -155,12 +249,14 @@ class SamNode(WorkerNodeMixin, Node):
             image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             stamp = self._stamp_of(msg)
 
-            self._handle_time_jump(stamp)
-            try:
-                self._process(image, stamp)
-            except Exception as err:                  # noqa: BLE001 — one bad frame must not kill the node
-                self.get_logger().error(f'frame at {stamp:.3f} failed: {type(err).__name__}: {err}',
-                                        exc_info=True)
+            with self.prompt_lock:
+                self._handle_time_jump(stamp)
+                try:
+                    self._process(image, stamp)
+                except Exception as err:              # noqa: BLE001 — one bad frame must not kill the node
+                    self.get_logger().error(
+                        f'frame at {stamp:.3f} failed: {type(err).__name__}: {err}',
+                        exc_info=True)
 
     def _heartbeat(self):
         held = time.monotonic() - self.stage_since
