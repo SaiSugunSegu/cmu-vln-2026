@@ -14,6 +14,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Captioner Python deps (torch CUDA + transformers / bitsandbytes). Layer is
 # cached until requirements_captioner.txt changes.
 COPY docker/requirements_captioner.txt /tmp/requirements_captioner.txt
+# Pin numpy BEFORE captioner deps: an unpinned install can pull numpy 2.x, which
+# breaks cv_bridge (built against Debian 1.26) at runtime (segfault / ImportError).
+RUN python3 -c "import numpy; print('numpy==' + numpy.__version__)" \
+      > /etc/pip-constraints.txt \
+ && chmod 0644 /etc/pip-constraints.txt \
+ && echo "pip constraints: $(cat /etc/pip-constraints.txt)"
+ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
 # --ignore-installed: base image ships some Debian Python pkgs (e.g. psutil)
 # without pip RECORD metadata, which otherwise breaks upgrades.
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
@@ -64,15 +71,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
       packaging six filelock attrs typing_extensions \
       pillow jinja2 markupsafe
 
-# Pin numpy to the base image's version for every pip install below. rclpy, cv_bridge
-# and sensor_msgs_py are C extensions built against its ABI: a silent 1.x -> 2.x bump
-# does not fail the build, it segfaults at runtime. A resolution error is the safe
-# failure. (`|| true` -> empty constraints if the base image has no numpy.)
-RUN { python3 -c "import numpy; print('numpy==' + numpy.__version__)" || true; } \
-      > /etc/pip-constraints.txt \
- && chmod 0644 /etc/pip-constraints.txt \
- && echo "pip constraints: $(cat /etc/pip-constraints.txt)"
-ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
+# PIP_CONSTRAINT already set above (base-image numpy). Keep it for layers below.
 
 # Only if missing: the base image's torch is built against its own CUDA, and replacing
 # it with a generic PyPI wheel can break GPU support for the rest of the stack.
@@ -110,13 +109,14 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install open3d \
     || python3 -m pip install --ignore-installed open3d
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install scipy scikit-learn line_profiler \
-    || python3 -m pip install --ignore-installed scipy scikit-learn line_profiler
+    python3 -m pip install "scipy==1.13.1" scikit-learn line_profiler \
+    || python3 -m pip install --ignore-installed "scipy==1.13.1" scikit-learn line_profiler
 
 # cv2 normally arrives with cv_bridge in the ROS base image; only install if missing.
+# Pin <5: opencv 5.x requires numpy>=2, which breaks cv_bridge.
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -c "import cv2; print('found cv2', cv2.__version__)" \
-    || python3 -m pip install opencv-python-headless
+    || python3 -m pip install "opencv-python-headless==4.10.0.84"
 
 # spacy must genuinely work, not merely import: utils.py:60 calls spacy.load() at module
 # scope, reached via semantic_map.py:16, so ObjMapper fails without it. SAM 3 does not

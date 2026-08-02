@@ -14,13 +14,15 @@ bitsandbytes
 safetensors
 sentencepiece
 open_clip_torch
-opencv-python-headless
+# cv_bridge / rclpy are ABI-built against Debian numpy 1.26.x — numpy 2.x
+# imports, then segfaults at imgmsg_to_cv2. Keep the 1.x stack aligned.
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
 imageio
 Pillow
 pandas
-scipy
+scipy==1.13.1
 matplotlib
 requests
-numpy
 # Optional: needed by captioning_node ROS entrypoint, not the offline crop CLI.
 open3d
