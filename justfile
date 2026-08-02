@@ -40,6 +40,18 @@ up-dev-fast:
 down:
     docker compose -f compose_gpu.yml -f compose_dev.yml down
 
+# Run this after `up-dev`, after pulling, or whenever a launch reports "package '<name>'
+# not found": with compose_dev bind-mounting the host tree, install/ is whatever your last
+# --packages-select left behind, so a package present in src/ can be missing from install/.
+# src/semantic_mapper is a plain pyproject package, not ament — colcon skips it, as intended.
+# Build the whole ai_module workspace in the container (or `just build sam_mapper` for one).
+build pkgs="":
+    docker exec iros2026_ai_module bash -lc "\
+      pip install 'setuptools>=68,<80' --break-system-packages -q && \
+      source /opt/ros/jazzy/setup.bash && \
+      cd {{ai_src}} && \
+      colcon build --symlink-install {{ if pkgs != '' { '--packages-select ' + pkgs } else { '' } }}"
+
 # Simulator + base autonomy + rviz2 (blocks; terminal A)
 # Override display: just sim :0
 sim sim_display=":1":
