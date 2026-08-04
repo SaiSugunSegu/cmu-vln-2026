@@ -47,12 +47,16 @@ class Supervisor(Node):
         self.question = None
         self.qtype = None
         self.t_question = None
+        self.answered = False
+        self.fallback_published = False
         self.msg_counts = {t: 0 for t in ALLOWED_TOPICS}
         self.t0 = time.time()
 
         for topic, mtype in ALLOWED_TOPICS.items():
             self.create_subscription(mtype, topic, self._counter(topic), 10)
         self.create_subscription(String, "/challenge_question", self._on_question, 10)
+        # qwen_numerical (or dummy) may answer first; latch so T-30 fallback stays quiet.
+        self.create_subscription(Int32, "/numerical_response", self._on_numerical_answer, 10)
 
         # outputs (owned by supervisor so there is exactly ONE writer per topic)
         self.pub_int = self.create_publisher(Int32, "/numerical_response", 10)
@@ -75,8 +79,15 @@ class Supervisor(Node):
         self.question = msg.data
         self.qtype = classify(msg.data)
         self.t_question = time.time()
+        self.answered = False
+        self.fallback_published = False
         self.get_logger().info(f"QUESTION [{self.qtype}]: {self.question}")
         self._start_exploration()
+
+    def _on_numerical_answer(self, msg: Int32):
+        if self.qtype == "numerical":
+            self.answered = True
+            self.get_logger().info(f"Observed /numerical_response={msg.data}")
 
     # ---- exploration control hooks -------------------------------------
     def _start_exploration(self):
@@ -107,10 +118,14 @@ class Supervisor(Node):
 
     def _fallback_answer(self):
         """Always answer *something* — partial credit beats silence."""
+        if self.answered or self.fallback_published:
+            return
         if self.qtype == "numerical":
             self.pub_int.publish(Int32(data=2))  # TODO: modal count from instances
+            self.answered = True
         # TODO object_reference: best label-match instance marker
         # TODO instruction: publish goal-object waypoint
+        self.fallback_published = True
         self._status("fallback_answered")
 
     # ---- diagnostics -----------------------------------------------------

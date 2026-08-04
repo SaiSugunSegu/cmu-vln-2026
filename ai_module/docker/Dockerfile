@@ -1,12 +1,50 @@
 FROM zhangjicmu/ubuntu24_ros:ai_module
 
-# Install Foxglove bridge for remote visualization
+# Install Foxglove bridge + system libs needed by OpenCV / captioner
 USER root
-RUN apt-get update && apt-get install -y ros-jazzy-foxglove-bridge && rm -rf /var/lib/apt/lists/*
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3-pip python3-yaml \
-    && python3 -m pip install --no-cache-dir --break-system-packages gdown \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-foxglove-bridge \
+      python3-pip \
+      python3-yaml \
+      libgl1 \
+      libglib2.0-0 \
+      libgomp1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Captioner Python deps (torch CUDA + transformers / bitsandbytes). Layer is
+# cached until requirements_captioner.txt changes.
+COPY docker/requirements_captioner.txt /tmp/requirements_captioner.txt
+# Pin numpy BEFORE captioner deps: an unpinned install can pull numpy 2.x, which
+# breaks cv_bridge (built against Debian 1.26) at runtime (segfault / ImportError).
+# rclpy, cv_bridge and sensor_msgs_py are C extensions built against the base
+# image's numpy ABI, so a silent 1.x -> 2.x bump does not fail the build, it
+# segfaults at runtime. A pip resolution error is the safe failure.
+# This generated file is the single source of truth for the numpy version — do
+# NOT also pin numpy in requirements_captioner.txt, or a base-image bump turns
+# into an unresolvable conflict. (`|| true` -> empty constraints if the base
+# image has no numpy at all.)
+RUN { python3 -c "import numpy; print('numpy==' + numpy.__version__)" || true; } \
+      > /etc/pip-constraints.txt \
+ && chmod 0644 /etc/pip-constraints.txt \
+ && echo "pip constraints: $(cat /etc/pip-constraints.txt)"
+ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
+# --ignore-installed: base image ships some Debian Python pkgs (e.g. psutil)
+# without pip RECORD metadata, which otherwise breaks upgrades.
+RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
+      -r /tmp/requirements_captioner.txt \
+    && python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed gdown \
+    && rm -f /tmp/requirements_captioner.txt
+
+# Hugging Face cache lives under the docker user home (compose bind-mounts it).
+# These two are the whole HF configuration and this is the ONLY place they are
+# set: the compose files deliberately do not re-declare HF_HUB_OFFLINE, because a
+# value under `environment:` outranks `env_file:` and would silently defeat the
+# documented HF_HUB_OFFLINE=0 override in the repo-root .env.
+# HUGGINGFACE_HUB_CACHE is not set: HF derives $HF_HOME/hub by default.
+# TRANSFORMERS_CACHE / TRANSFORMERS_OFFLINE are deprecated aliases; don't add them.
+ENV HF_HOME=/home/docker/.cache/huggingface HF_HUB_OFFLINE=0
+RUN mkdir -p /home/docker/.cache/huggingface && chown -R docker:docker /home/docker/.cache
+
 USER docker
 
 # Copy and compile TARE first (takes 90s, but is heavily cached and rarely changes)
@@ -41,15 +79,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
       packaging six filelock attrs typing_extensions \
       pillow jinja2 markupsafe
 
-# Pin numpy to the base image's version for every pip install below. rclpy, cv_bridge
-# and sensor_msgs_py are C extensions built against its ABI: a silent 1.x -> 2.x bump
-# does not fail the build, it segfaults at runtime. A resolution error is the safe
-# failure. (`|| true` -> empty constraints if the base image has no numpy.)
-RUN { python3 -c "import numpy; print('numpy==' + numpy.__version__)" || true; } \
-      > /etc/pip-constraints.txt \
- && chmod 0644 /etc/pip-constraints.txt \
- && echo "pip constraints: $(cat /etc/pip-constraints.txt)"
-ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
+# PIP_CONSTRAINT already set above (base-image numpy). Keep it for layers below.
 
 # Only if missing: the base image's torch is built against its own CUDA, and replacing
 # it with a generic PyPI wheel can break GPU support for the rest of the stack.
@@ -87,13 +117,14 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install open3d \
     || python3 -m pip install --ignore-installed open3d
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install scipy scikit-learn line_profiler \
-    || python3 -m pip install --ignore-installed scipy scikit-learn line_profiler
+    python3 -m pip install "scipy==1.13.1" scikit-learn line_profiler \
+    || python3 -m pip install --ignore-installed "scipy==1.13.1" scikit-learn line_profiler
 
 # cv2 normally arrives with cv_bridge in the ROS base image; only install if missing.
+# Pin <5: opencv 5.x requires numpy>=2, which breaks cv_bridge.
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -c "import cv2; print('found cv2', cv2.__version__)" \
-    || python3 -m pip install opencv-python-headless
+    || python3 -m pip install "opencv-python-headless==4.10.0.84"
 
 # spacy must genuinely work, not merely import: utils.py:60 calls spacy.load() at module
 # scope, reached via semantic_map.py:16, so ObjMapper fails without it. SAM 3 does not
@@ -116,14 +147,16 @@ USER docker
 COPY src/dummy_vlm /home/docker/ai_module/src/dummy_vlm
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm
 COPY src/sam_mapper /home/docker/ai_module/src/sam_mapper
+COPY src/captioner /home/docker/ai_module/src/captioner
 RUN /bin/bash -c "\
     source /opt/ros/jazzy/setup.bash && \
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=Release \
-      --packages-select dummy_vlm smart_vlm sam_mapper"
+      --packages-select dummy_vlm smart_vlm sam_mapper captioner"
 
 # Ensure the updated install is sourced in every new shell
-RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc
+RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc \
+ && echo 'export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH' >> /home/docker/.bashrc
 
 # Fail the build, not the first run, if the import chain is broken. sam_mapper owns its full
 # 3D-mapping stack (docs/M2_perception.md 3.6-split — object_mapper.py, cloud_image_fusion.py,
@@ -138,7 +171,13 @@ from sam_mapper.object_mapper import ObjMapper; \
 from sam_mapper.cloud_image_fusion import CloudImageFusion; \
 from sam_mapper.detections import PromptTable; \
 from sam_mapper.sam3_backend import Sam3Backend; \
+from captioner.paths import ALLOWED_ROOTS; \
+from captioner.text_utils import extract_integer; \
 print('import check OK: transformers', transformers.__version__)\""
 
-# SAM 3 weights are gated: run `hf auth login` once inside the container.
-ENV HF_HOME=/home/docker/.cache/huggingface
+# No weights are baked into this image; HF_HUB_OFFLINE=1 above means every load
+# reads a pre-seeded cache. Populate it once with `just hf-fetch` (see docker/README.md),
+# which goes online for that command only. No `hf auth login` is needed: put
+# HF_TOKEN in the repo-root .env (docker/compose*.yml reads it via env_file) and
+# huggingface_hub picks it up on every from_pretrained(). SAM 3 is additionally
+# gated — accept its licence once on the model page with the same account.

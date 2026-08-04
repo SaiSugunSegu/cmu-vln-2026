@@ -22,6 +22,7 @@ import itertools
 import json
 import math
 import os
+import re
 import time
 from dataclasses import dataclass
 
@@ -30,6 +31,19 @@ import numpy as np
 
 from sam_mapper.annotate import annotate_frame
 from sam_mapper.detections import PromptTable
+
+_UNSAFE_RUN_ID_CHARS = re.compile(r"[^a-zA-Z0-9._-]+")
+
+
+def sanitize_run_id(run_id: str, fallback: str = "run") -> str:
+    """Reduce a caller-supplied run id to characters that are safe in a dir name.
+
+    Run ids reach us over ROS (`/sam3/set_prompts`) carrying question text, so
+    they can hold spaces, slashes, and punctuation. Callers that build paths from
+    a run id (sam_mapper here, smart_vlm's category-1 reasoner) must agree on the
+    transform or they compute different directories for the same run.
+    """
+    return _UNSAFE_RUN_ID_CHARS.sub("_", run_id.strip()).strip("_") or fallback
 
 
 @dataclass(frozen=True)
@@ -61,7 +75,7 @@ class BestViewConfig:
         return BestViewConfig(
             targets=targets,
             top_n=top_n,
-            output_dir=raw.get("output_dir", "/data/bags/_best_views"),
+            output_dir=raw.get("output_dir", "/data/crops"),
             save_annotated_copy=bool(raw.get("save_annotated_copy", True)),
             # An object covers well under 1% of a 1920x640 panorama, so real scores land
             # around 1e-3 to 1e-2, not near 1. This floor only rejects near-empty masks.
@@ -117,13 +131,16 @@ class BestViewCollector:
         x0, _, x1, _ = bbox
         return x0 <= cls.SEAM_MARGIN_PX or x1 >= width - cls.SEAM_MARGIN_PX
 
-    def __init__(self, config: BestViewConfig, log=print):
+    def __init__(self, config: BestViewConfig, log=print, run_id: str | None = None):
         self.config = config
         self.log = log
         self.targets = set(config.targets)
         self._target_tag = "+".join(sorted(self.targets))
 
-        run_name = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{self._target_tag}"
+        if run_id:
+            run_name = f"{sanitize_run_id(run_id)}_{self._target_tag}"
+        else:
+            run_name = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{self._target_tag}"
         self.run_dir = os.path.join(config.output_dir, run_name)
         os.makedirs(self.run_dir, exist_ok=True)
         if config.save_annotated_copy:
@@ -368,6 +385,14 @@ class BestViewCollector:
             x0, y0, x1, y1 = cand.instance_bboxes[tid]
             return [round(v, 1) for v in (x0 - rx0, y0 - ry0, x1 - rx0, y1 - ry0)]
 
+        def _label_for(cand: Candidate, tid: int) -> str:
+            ids = cand.crop_detections.get("ids", [])
+            labels = cand.crop_detections.get("labels", [])
+            for obj_id, label in zip(ids, labels):
+                if int(obj_id) == tid:
+                    return str(label)
+            return ""
+
         # From `written`, so the manifest never names a file that failed to write.
         manifest = {
             "targets": sorted(self.targets),
@@ -382,8 +407,8 @@ class BestViewCollector:
                     "roi": list(cand.roi),      # in ORIGINAL frame coords
                     "instances": [
                         # bbox is crop-relative: matches pixels in the saved PNG.
-                        {"track_id": tid, "score": score,
-                         "bbox": _crop_relative_bbox(cand, tid)}
+                        {"track_id": tid, "label": _label_for(cand, tid),
+                         "score": score, "bbox": _crop_relative_bbox(cand, tid)}
                         for tid, score in sorted(cand.instance_scores.items(),
                                                  key=lambda kv: -kv[1])
                     ],

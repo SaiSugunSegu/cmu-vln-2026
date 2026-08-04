@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 from scipy.spatial.transform import Rotation as R
 from captioner.models.clip import OpenCLIP, SigLIPHF
-from captioner.models.captioning import PaliGemmaHFBackend, QwenHFBackend
+from captioner.models.captioning import PaliGemmaHFBackend, QwenHFBackend, Qwen3VLHFBackend
 from captioner.image_utils.plotting import plot_captioned_images
 from captioner.image_utils.image_conversion import binary_opening_torch
 from captioner.image_utils.caption_postprocessing import postprocess_captions
@@ -26,6 +26,12 @@ class CaptionGenerationOptions(Enum):
 class CropUpdateSource(Enum):
     GROUND_TRUTH_SEMANTICS = "gt_semantics"
     SEMANTIC_MAPPING_MODULE = "semantic_mapping"
+
+
+class CaptioningBackendType(Enum):
+    QWEN3_VL = "qwen3vl"
+    QWEN2_5_VL = "qwen2_5vl"
+    PALIGEMMA = "paligemma"
 
 
 class Captioner:
@@ -47,6 +53,9 @@ class Captioner:
             crop_update_source = "gt_semantics",
             include_ego_robot_as_object = True,
             batch_size = 16,
+            captioning_model = "qwen3vl",
+            captioning_model_id = None,
+            captioning_quantization = "int4",
     ):
         # Parameters
 
@@ -64,10 +73,13 @@ class Captioner:
         self.batch_size = batch_size
         self.save_semantic_dict = save_semantic_dict
         self.semantic_dict_load_path = semantic_dict_load_path
+        self.captioning_model_id = captioning_model_id
+        self.captioning_quantization = captioning_quantization
         # Options
     
         self.caption_generation_option = CaptionGenerationOptions.ON_QUERY
         self.crop_update_source = CropUpdateSource(crop_update_source)
+        self.captioning_backend_type = CaptioningBackendType(captioning_model)
 
         # CLIP Model
 
@@ -81,9 +93,28 @@ class Captioner:
         # Captioning Model
 
         if self.load_captioner:
-            self.captioning_model = QwenHFBackend(
-                quantization='int4',
-                batch_size=self.batch_size
+
+            captioning_backends = {
+                CaptioningBackendType.QWEN3_VL: Qwen3VLHFBackend,
+                CaptioningBackendType.QWEN2_5_VL: QwenHFBackend,
+                CaptioningBackendType.PALIGEMMA: PaliGemmaHFBackend
+            }
+
+            # Only forwarded when set, so each backend keeps its own default
+            # checkpoint and precision. Use "none" for full-precision Qwen3.
+            captioning_model_kwargs = {"batch_size": self.batch_size}
+            if self.captioning_model_id is not None:
+                captioning_model_kwargs["model_id"] = self.captioning_model_id
+            if self.captioning_quantization is not None:
+                captioning_model_kwargs["quantization"] = (
+                    None if self.captioning_quantization == "none"
+                    else self.captioning_quantization
+                )
+
+            self.log_info(f'Loading {self.captioning_backend_type.value} captioning backend')
+
+            self.captioning_model = captioning_backends[self.captioning_backend_type](
+                **captioning_model_kwargs
             )
 
         # Variable Initialization

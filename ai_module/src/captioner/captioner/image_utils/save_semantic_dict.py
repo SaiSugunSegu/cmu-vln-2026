@@ -26,7 +26,7 @@ class SemanticDictSaver:
 
             caption = obj["image"]["caption"]
             if caption is not None:
-                with open(os.path.join(folder_path, "caption.txt"), "w") as f:
+                with open(os.path.join(folder_path, "caption.txt"), "w", encoding="utf-8") as f:
                     f.write(caption)
             
             clip = obj["image"]["clip"]
@@ -68,7 +68,7 @@ class SemanticDictSaver:
                 
             obj_id = int(folder.split('_')[0])
             
-            with open(os.path.join(folder_path, "caption.txt"), "r") as f:
+            with open(os.path.join(folder_path, "caption.txt"), "r", encoding="utf-8") as f:
                 caption = f.read()
                 
             crop_path = os.path.join(folder_path, "crop.png")

@@ -11,11 +11,12 @@
   <arg name="process_terrain_map_into_freespace" default="True"/>
   <arg name="simulator" default="mecanum_unity"/>
   <arg name="captioner_batch_size" default="16"/>
+  <arg name="captioning_model" default="qwen3vl"/>
 
   <node pkg="language_planner" exec="language_planner_node" name="language_planner_node" output="screen"
     args="--environment_name $(var environment_name) --model $(var ll_model) --run_mode $(var planner_run_mode) --object_query_type $(var object_query_type) --platform $(var platform)" />
 
   <node  pkg="captioner" exec="captioning_node" name="captioning_node" output="screen" 
-    args="--model_type $(var clip_model) --process_terrain_map_into_freespace $(var process_terrain_map_into_freespace) --simulator $(var simulator) --batch_size $(var captioner_batch_size)" />
+    args="--model_type $(var clip_model) --process_terrain_map_into_freespace $(var process_terrain_map_into_freespace) --simulator $(var simulator) --batch_size $(var captioner_batch_size) --captioning_model $(var captioning_model)" />
 
 </launch>

@@ -29,14 +29,26 @@ services:
               count: all
               capabilities: [gpu]
 
-  # Init container: prepares the bind-mounted bags dir so the non-root ai_module
-  # user can write fetched bags into it (a Dockerfile can't chmod a bind mount).
+  # Init container: prepares the bind mounts so the non-root ai_module user
+  # (uid 1001) can write into them — a Dockerfile can't chmod a bind mount, and
+  # Docker creates a missing mount source as root, which uid 1001 then cannot use.
+  # Runs as root, which is the point: the host user can't chown those dirs either.
   # This is a ONE-SHOT — it runs, fixes perms, and exits: `Exited (0)` is success.
-  bags_init:
+  init:
     image: busybox
     volumes:
-      - ../bags:/data/bags
-    command: sh -c "mkdir -p /data/bags && chmod -R a+w /data/bags"
+      - ../data:/data
+      - ${HOME}/.cache/huggingface:/hf
+    # The uid test guards the recursive chown: once seeded the HF cache is tens of
+    # GB, and chown -R on every `up` would cost minutes for nothing. $$ is compose
+    # escaping for a literal $.
+    # Folded scalar: every line must sit at the SAME indent, or YAML keeps the
+    # newlines and the shell sees a line starting with `&&`.
+    command: >-
+      sh -c "mkdir -p /data/bags /data/crops /data/captions /data/runs &&
+      chmod -R a+w /data &&
+      mkdir -p /hf &&
+      if [ \"$$(stat -c %u /hf)\" != 1001 ]; then chown -R 1001:1001 /hf; fi"
     restart: "no"
 
   ai_module:
@@ -49,10 +61,29 @@ services:
     env_file:
       - path: ../.env
         required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
+    # HF_HOME and HF_HUB_OFFLINE=1 come from the image (ai_module/docker/Dockerfile)
+    # and are deliberately NOT repeated here. Never hit huggingface.co at runtime
+    # (robot has no internet): pre-seed the HF cache mount with Qwen/SAM weights
+    # before deploy. For a gated first-time download put HF_HUB_OFFLINE=0 and
+    # HF_TOKEN in ../.env — env_file overrides the image ENV, but only because
+    # nothing below re-declares it (`environment:` would outrank env_file).
+    environment:
+      # No privileged: true — the nvidia runtime reservation below is what grants
+      # GPU access, and privileged would hand the container every host device.
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
     volumes:
-      - ../bags:/data/bags
+      # Host data/ maps 1:1 to /data — bags, benchmark, crops, captions, runs.
+      # Put caption input under data/crops, read results from data/captions.
+      - ../data:/data
+      # Ground-truth QA files are tracked in git; nothing in the container writes them.
+      - ../data/benchmark:/data/benchmark:ro
+      # Repo scripts (eval drivers) at a fixed container path.
+      - ../scripts:/home/docker/scripts:ro
+      # Persist HF model weights across container rebuilds.
+      - ${HOME}/.cache/huggingface:/home/docker/.cache/huggingface
     depends_on:
-      bags_init:
+      init:
         condition: service_completed_successfully
     stdin_open: true
     tty: true

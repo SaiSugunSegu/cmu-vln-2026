@@ -23,6 +23,8 @@ setup(
         'console_scripts': [
             'supervisor = smart_vlm.supervisor:main',
             'bag_fetch = smart_vlm.bag_fetch:main',
+            'qwen_numerical = smart_vlm.qwen_numerical:main',
+            'category1_reasoner = smart_vlm.category1_reasoner:main',
         ],
     },
 )
