@@ -26,6 +26,7 @@ setup(
             'qwen_vqa_server = captioner.qwen_vqa_server:main',
             'qwen_vqa_ask = captioner.qwen_vqa_client:main',
             'qwen_vqa_wait_ready = captioner.qwen_vqa_wait_ready:main',
+            'fetch_weights = captioner.tools.fetch_weights:main',
         ],
     },
 )

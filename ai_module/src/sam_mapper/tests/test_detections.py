@@ -3,16 +3,11 @@
 Pure numpy/python — no GPU, no model, no ROS. Run with:
     python -m pytest ai_module/src/sam_mapper/tests/test_detections.py
 """
-import os
-import sys
-
 import numpy as np
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from sam_mapper.detections import PromptTable, default_label, to_detections  # noqa: E402
-from sam_mapper.sam3_backend import Sam3FrameResult  # noqa: E402
+from sam_mapper.detections import PromptTable, default_label, to_detections
+from sam_mapper.sam3_backend import Sam3FrameResult
 
 
 OBJECTS = [

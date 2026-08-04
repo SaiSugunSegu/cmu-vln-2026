@@ -16,7 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY docker/requirements_captioner.txt /tmp/requirements_captioner.txt
 # Pin numpy BEFORE captioner deps: an unpinned install can pull numpy 2.x, which
 # breaks cv_bridge (built against Debian 1.26) at runtime (segfault / ImportError).
-RUN python3 -c "import numpy; print('numpy==' + numpy.__version__)" \
+# rclpy, cv_bridge and sensor_msgs_py are C extensions built against the base
+# image's numpy ABI, so a silent 1.x -> 2.x bump does not fail the build, it
+# segfaults at runtime. A pip resolution error is the safe failure.
+# This generated file is the single source of truth for the numpy version — do
+# NOT also pin numpy in requirements_captioner.txt, or a base-image bump turns
+# into an unresolvable conflict. (`|| true` -> empty constraints if the base
+# image has no numpy at all.)
+RUN { python3 -c "import numpy; print('numpy==' + numpy.__version__)" || true; } \
       > /etc/pip-constraints.txt \
  && chmod 0644 /etc/pip-constraints.txt \
  && echo "pip constraints: $(cat /etc/pip-constraints.txt)"
@@ -28,13 +35,14 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
     && python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed gdown \
     && rm -f /tmp/requirements_captioner.txt
 
-# Hugging Face cache lives under the docker user home (compose can bind-mount it).
-ENV HF_HOME=/home/docker/.cache/huggingface \
-    TRANSFORMERS_CACHE=/home/docker/.cache/huggingface/hub \
-    HUGGINGFACE_HUB_CACHE=/home/docker/.cache/huggingface/hub \
-    HF_HUB_OFFLINE=1 \
-    TRANSFORMERS_OFFLINE=1 \
-    CAPTIONER_OFFLINE=1
+# Hugging Face cache lives under the docker user home (compose bind-mounts it).
+# These two are the whole HF configuration and this is the ONLY place they are
+# set: the compose files deliberately do not re-declare HF_HUB_OFFLINE, because a
+# value under `environment:` outranks `env_file:` and would silently defeat the
+# documented HF_HUB_OFFLINE=0 override in the repo-root .env.
+# HUGGINGFACE_HUB_CACHE is not set: HF derives $HF_HOME/hub by default.
+# TRANSFORMERS_CACHE / TRANSFORMERS_OFFLINE are deprecated aliases; don't add them.
+ENV HF_HOME=/home/docker/.cache/huggingface HF_HUB_OFFLINE=0
 RUN mkdir -p /home/docker/.cache/huggingface && chown -R docker:docker /home/docker/.cache
 
 USER docker
@@ -163,7 +171,13 @@ from sam_mapper.object_mapper import ObjMapper; \
 from sam_mapper.cloud_image_fusion import CloudImageFusion; \
 from sam_mapper.detections import PromptTable; \
 from sam_mapper.sam3_backend import Sam3Backend; \
+from captioner.paths import ALLOWED_ROOTS; \
+from captioner.text_utils import extract_integer; \
 print('import check OK: transformers', transformers.__version__)\""
 
-# SAM 3 weights are gated: run `hf auth login` once inside the container
-# (or set HF_TOKEN via docker/.env). Override HF_HUB_OFFLINE=0 for the download.
+# No weights are baked into this image; HF_HUB_OFFLINE=1 above means every load
+# reads a pre-seeded cache. Populate it once with `just hf-fetch` (see docker/README.md),
+# which goes online for that command only. No `hf auth login` is needed: put
+# HF_TOKEN in the repo-root .env (docker/compose*.yml reads it via env_file) and
+# huggingface_hub picks it up on every from_pretrained(). SAM 3 is additionally
+# gated — accept its licence once on the model page with the same account.

@@ -14,9 +14,12 @@ bitsandbytes
 safetensors
 sentencepiece
 open_clip_torch
-# cv_bridge / rclpy are ABI-built against Debian numpy 1.26.x — numpy 2.x
-# imports, then segfaults at imgmsg_to_cv2. Keep the 1.x stack aligned.
-numpy==1.26.4
+# NOTE: numpy is deliberately NOT pinned here. cv_bridge / rclpy are ABI-built
+# against the base image's numpy 1.26.x (numpy 2.x imports, then segfaults at
+# imgmsg_to_cv2), and the Dockerfile enforces that exact version for every pip
+# install via PIP_CONSTRAINT=/etc/pip-constraints.txt. A second pin in this file
+# would turn any base-image numpy bump into an unresolvable conflict.
+# opencv <5 for the same reason: 5.x requires numpy>=2.
 opencv-python-headless==4.10.0.84
 imageio
 Pillow

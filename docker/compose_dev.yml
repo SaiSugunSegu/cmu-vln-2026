@@ -11,7 +11,7 @@
 # Offline captioner (after build / with image that already has ML deps):
 #   docker exec -it iros2026_ai_module bash -lc \
 #     'source /home/docker/ai_module/install/setup.bash && \
-#      caption_crops /data/workspace/crops --output_dir /data/workspace/captions'
+#      caption_crops /data/crops --output_dir /data/captions'
 #
 # Note: the mount shadows the image's prebuilt /home/docker/ai_module, so the
 # first colcon build after 'up' recreates build/install on the host (persists

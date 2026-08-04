@@ -1,14 +1,9 @@
+"""CLIP / SigLIP image-text embedding backends used for crop-to-query matching."""
+import open_clip
 import torch
 import torchvision.transforms.v2 as tt
-import open_clip
-from transformers import (
-    SiglipModel,
-    SiglipProcessor,
-    CLIPModel
-)
-from PIL import Image
-import requests
-import numpy as np
+from transformers import SiglipModel, SiglipProcessor
+
 
 class BaseCLIP:
 
@@ -19,10 +14,12 @@ class BaseCLIP:
         self.device = device
 
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
-        pass
+        """L2-normalised image embedding, shape (1, D)."""
+        raise NotImplementedError
 
     def encode_text(self, text: str) -> torch.Tensor:
-        pass
+        """L2-normalised text embedding, shape (1, D)."""
+        raise NotImplementedError
 
     @torch.no_grad()
     def get_similarity_score(
@@ -104,24 +101,42 @@ class SigLIPHF(BaseCLIP):
         return features
 
 
-    
-if __name__=="__main__":
+def main(argv=None):
+    """Score one local image against candidate labels — for tuning clip_threshold.
 
-    # clip_model = SigLIPHF()
-    clip_model = OpenCLIP()
+    Reads from disk rather than a URL: this package ships to a robot with
+    HF_HUB_OFFLINE=1 and no internet, so a demo that fetched a COCO image over
+    HTTP could not run where it matters.
 
-    url = "http://images.cocodataset.org/val2017/000000039769.jpg"
-    image = Image.open(requests.get(url, stream=True).raw)
-    # print(np.asarray(image))
-    image = tt.functional.to_tensor(image).transpose(0, -1)
+      python -m captioner.models.clip /data/crops/3_sofa/crop.png sofa "red sofa"
+    """
+    import argparse
 
-    candidate_labels = ["2 cats", "cats", "two cats", "two pets", "pets", "two animals", "animals"]
-    texts = [f'This is a photo of {label}.' for label in candidate_labels]
+    import numpy as np
+    from PIL import Image
 
+    parser = argparse.ArgumentParser(description=main.__doc__.splitlines()[0])
+    parser.add_argument('image', help='Path to a local RGB image.')
+    parser.add_argument('labels', nargs='+', help='Candidate labels to score.')
+    parser.add_argument('--model_type', default='clip', choices=['clip', 'siglip'])
+    args = parser.parse_args(argv)
+
+    clip_model = SigLIPHF() if args.model_type == 'siglip' else OpenCLIP()
+
+    # HWC uint8, matching what Captioner.get_crop() hands encode_image() in
+    # production (captioning_backend.py:152) so scores here are comparable.
+    image = torch.from_numpy(np.asarray(Image.open(args.image).convert('RGB')))
 
     image_feature = clip_model.encode_image(image)
-    text_features = [clip_model.encode_text(label) for label in candidate_labels]
-    similarities = [clip_model.get_similarity_score(image_feature, text_feature) for text_feature in text_features]
-    print(similarities)
-    print('Sigmoid:', torch.sigmoid(torch.tensor(similarities)))
-    print('Softmax:', torch.softmax(torch.tensor(similarities), dim=0))
+    similarities = [
+        clip_model.get_similarity_score(image_feature, clip_model.encode_text(label))
+        for label in args.labels
+    ]
+
+    for label, score in zip(args.labels, similarities):
+        print(f'{score:8.3f}  {label}')
+    print('Softmax:', torch.softmax(torch.tensor(similarities), dim=0).tolist())
+
+
+if __name__ == "__main__":
+    main()

@@ -150,8 +150,26 @@ class SamNode(WorkerNodeMixin, Node):
             frame, self.latest_frame = self.latest_frame, None
             return frame
 
+    def _nack_prompts(self, error: str) -> None:
+        """Report a failed set_prompts and return the node to a serving state.
+
+        Both callers below rely on this: a request that leaves /sam3/status at
+        'setting_prompts' with no ack strands every client (category1_reasoner,
+        run_cat1_bag_bench) until their own timeouts expire.
+        """
+        self.get_logger().error(f'/sam3/set_prompts rejected: {error}')
+        self.prompts_ack_pub.publish(String(data=json.dumps({
+            "ok": False, "error": error, "prompts": [], "run_dir": None,
+        })))
+        self._publish_status('ready')
+
     def _on_set_prompts(self, msg: String) -> None:
-        """Replace SAM text prompts and start a fresh best-view run for the next bag pass."""
+        """Replace SAM text prompts and start a fresh best-view run for the next bag pass.
+
+        Prompts arriving here are plain strings, so every one becomes an instance
+        object with its default label — any `label:` override from the YAML
+        `objects:` config is not preserved across a set_prompts call.
+        """
         try:
             payload = json.loads(msg.data)
             prompts = payload["prompts"]
@@ -172,34 +190,48 @@ class SamNode(WorkerNodeMixin, Node):
             if run_id is not None:
                 run_id = str(run_id)
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
-            self.get_logger().error(f'/sam3/set_prompts rejected: {err}')
-            self.prompts_ack_pub.publish(String(data=json.dumps({
-                "ok": False, "error": str(err), "prompts": [], "run_dir": None,
-            })))
+            self._nack_prompts(str(err))
             return
 
         objects = [{"prompt": p, "instance": True} for p in prompts]
         self._publish_status('setting_prompts')
         with self.prompt_lock:
-            self.prompt_table = PromptTable(objects)
-            self.backend.set_prompts(self.prompt_table.prompts)
-            self.id_offset = 0
-            self.max_seen_id = -1
-            self.last_frame_stamp = None
-            with self.frame_lock:
-                self.latest_frame = None
+            previous_table = self.prompt_table
+            previous_collector = self.best_view_collector
+            try:
+                # PromptTable validates, backend.set_prompts() re-inits the SAM
+                # session, and BestViewConfig.from_dict() parses config — any of
+                # them can raise on a bad request or a transient CUDA error.
+                self.prompt_table = PromptTable(objects)
+                self.backend.set_prompts(self.prompt_table.prompts)
+                self.id_offset = 0
+                self.max_seen_id = -1
+                self.last_frame_stamp = None
+                with self.frame_lock:
+                    self.latest_frame = None
 
-            run_dir = None
-            if self.best_view_cfg.get('enabled', False):
-                self.best_view_collector = BestViewCollector(
-                    BestViewConfig.from_dict(self.best_view_cfg, self.prompt_table),
-                    log=self.log,
-                    run_id=run_id,
-                )
-                run_dir = self.best_view_collector.run_dir
-                self.best_view_dir_pub.publish(String(data=run_dir))
-            else:
-                self.best_view_collector = None
+                run_dir = None
+                if self.best_view_cfg.get('enabled', False):
+                    self.best_view_collector = BestViewCollector(
+                        BestViewConfig.from_dict(self.best_view_cfg, self.prompt_table),
+                        log=self.log,
+                        run_id=run_id,
+                    )
+                    run_dir = self.best_view_collector.run_dir
+                    self.best_view_dir_pub.publish(String(data=run_dir))
+                else:
+                    self.best_view_collector = None
+            except Exception as err:  # noqa: BLE001 — a bad request must not kill the node
+                # Roll back so the node keeps detecting with the prompts it had.
+                self.prompt_table = previous_table
+                self.best_view_collector = previous_collector
+                try:
+                    self.backend.set_prompts(previous_table.prompts)
+                except Exception as restore_err:  # noqa: BLE001
+                    self.get_logger().error(
+                        f'could not restore previous prompts: {restore_err}')
+                self._nack_prompts(f'{type(err).__name__}: {err}')
+                return
 
         ack = {
             "ok": True,

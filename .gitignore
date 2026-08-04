@@ -5,9 +5,14 @@
 *.bag
 *.db3
 *.mcap
-bags/*
-!bags/README.md
-!bags/scenes.yaml
+# host data/ is bind-mounted at /data in the containers (see docker/compose.yml).
+# Only the bag manifest and the benchmark QA files are tracked.
+data/bags/*
+!data/bags/README.md
+!data/bags/scenes.yaml
+data/crops/
+data/captions/
+data/runs/
 
 *.ply
 *.onnx

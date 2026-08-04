@@ -48,7 +48,7 @@ objects:
 save_best_target_view_images:
   enabled: true
   top_n: 3
-  output_dir: /data/bags/_best_views   # host-visible, same convention as sam-frames
+  output_dir: /data/crops   # host-visible, same convention as sam-frames
   save_annotated_copy: true            # also write a masks/boxes/labels overlay per image
   # Score = (mask px / frame px) x confidence, so real values sit near 1e-3, not near 1.
   min_instance_score: 0.0005

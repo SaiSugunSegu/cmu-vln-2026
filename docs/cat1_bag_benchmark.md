@@ -15,7 +15,7 @@ data/benchmark/
 Each QA file includes `question`, integer `answer`, `difficulty`, and `target_objects`
 (for audit / scoring only — the live pipeline extracts targets with Qwen).
 
-Scene bags live under `bags/<scene>/` (auto-fetched via `bags/scenes.yaml` if missing).
+Scene bags live under `data/bags/<scene>/` (auto-fetched via `data/bags/scenes.yaml` if missing).
 
 ## How it works
 
@@ -58,7 +58,7 @@ For each question:
 └────────────────────┘                    └──────────┬──────────┘
                                                      │
                                                      ▼
-                              bags/_best_views/<run_id>_<targets>/
+                              data/crops/<run_id>_<targets>/
                                 best_rank*.png
                                 manifest.json  (+ labels, attributes)
                                                      │
@@ -156,7 +156,7 @@ Full scene (all 30 questions):
 just cat1-bag-bench arabic_room 0
 ```
 
-Other scenes (must have a bag in `bags/scenes.yaml` and a QA JSON under `data/benchmark/`):
+Other scenes (must have a bag in `data/bags/scenes.yaml` and a QA JSON under `data/benchmark/`):
 
 ```bash
 just cat1-bag-bench japanese_room 3
@@ -169,9 +169,9 @@ just cat1-bag-bench livingroom_1 0 "Q01"
 docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc '
   source /home/docker/ai_module/install/setup.bash &&
   python3 /home/ubuntu/myspace/cmu-vln-2026/scripts/eval/run_cat1_bag_bench.py \
-    --qa /data/workspace/benchmark/arabic_room/category_1/arabic_room_category1_qa.json \
+    --qa /data/benchmark/arabic_room/category_1/arabic_room_category1_qa.json \
     --scene arabic_room \
-    --out /data/workspace/runs/cat1_arabic_room \
+    --out /data/runs/cat1_arabic_room \
     --ids Q01 Q02 Q03 \
     --speed 1.0 \
     --post-bag-wait 45
@@ -184,8 +184,8 @@ Useful flags: `--speed`, `--post-bag-wait` (SAM drain after bag), `--sam-ready-t
 
 | Output | Host path | Container path |
 |--------|-----------|----------------|
-| Best-view images + `manifest.json` | `bags/_best_views/cat1_<run>_…/` | `/data/bags/_best_views/…` |
-| Per-question scores | `data/runs/cat1_<scene>/` | `/data/workspace/runs/cat1_<scene>/` |
+| Best-view images + `manifest.json` | `data/crops/cat1_<run>_…/` | `/data/crops/…` |
+| Per-question scores | `data/runs/cat1_<scene>/` | `/data/runs/cat1_<scene>/` |
 
 Default score dir for `just cat1-bag-bench`: `data/runs/cat1_<scene>/`.
 

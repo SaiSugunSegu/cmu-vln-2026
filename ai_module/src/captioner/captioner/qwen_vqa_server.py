@@ -10,16 +10,19 @@ ROS topics
   /qwen_vqa/response (std_msgs/String JSON)
       {"id": "…", "answer": "4", "number": 4, "error": null, "seconds": 0.5}
 
+Requests are served by a single worker thread: one GPU, one generate() at a time.
+Extra requests queue up to QUEUE_DEPTH and are rejected with error="busy" beyond
+that, so a client republishing at 1 Hz cannot grow the backlog without bound.
+
 Keep this node running; ask with `qwen_vqa_ask` / `just vqa-ask`.
 """
 from __future__ import annotations
 
 import json
+import queue
 import threading
 import time
-from pathlib import Path
 from typing import Optional
-from urllib.parse import unquote
 
 import imageio.v3 as iio
 import numpy as np
@@ -29,41 +32,18 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from std_msgs.msg import String
 
 from captioner.models.captioning import load_qwen_backend
+from captioner.paths import secure_image_path
 from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
 
 # Tiny RGB placeholder so VL backends accept text-only extract / planning prompts.
 _BLANK_RGB = np.zeros((64, 64, 3), dtype=np.uint8)
 
-def _allowed_roots() -> tuple[Path, ...]:
-    """Roots visible via compose mounts (bags/, data/, ai_module, ${HOME}:${HOME})."""
-    candidates = [
-        Path("/data/bags"),
-        Path("/data/workspace"),
-        Path("/home/docker"),
-        Path.home(),
-    ]
-    # Host HOME is bind-mounted at the same absolute path; container HOME is
-    # usually /home/docker, so also accept other /home/<user> mounts that exist.
-    home = Path("/home")
-    if home.is_dir():
-        candidates.extend(p for p in home.iterdir() if p.is_dir())
-    return tuple(p.resolve() for p in candidates if p.exists())
+# Deep enough to absorb a burst from the reasoner (extract + answer + attribute
+# captions), shallow enough that a stuck client is rejected rather than queued.
+QUEUE_DEPTH = 16
 
-
-def _secure_image_path(user_path: str) -> Path:
-    decoded = unquote(user_path)
-    if ".." in Path(decoded).parts:
-        raise ValueError("Path traversal rejected")
-    path = Path(decoded).expanduser().resolve()
-    if not path.is_file():
-        raise FileNotFoundError(f"Image not found: {path}")
-    allowed = any(
-        str(path) == str(root) or str(path).startswith(str(root) + "/")
-        for root in _allowed_roots()
-    )
-    if not allowed:
-        raise PermissionError(f"Image path not under allowed mounts: {path}")
-    return path
+# A malformed or hostile request must not be able to pin the GPU for minutes.
+MAX_NEW_TOKENS_LIMIT = 512
 
 
 class QwenVQAServer(Node):
@@ -90,22 +70,40 @@ class QwenVQAServer(Node):
         )
         self.status_pub = self.create_publisher(String, STATUS_TOPIC, status_qos)
         self.response_pub = self.create_publisher(String, RESPONSE_TOPIC, 10)
-        self.create_subscription(String, REQUEST_TOPIC, self._on_request, 10)
 
         self._publish_status("loading")
         self.get_logger().info(
             f"Loading {captioning_model} (quantization={quantization})…")
         t0 = time.time()
-        self.model = load_qwen_backend(
-            captioning_model,
-            quantization=quantization,
-            model_id=model_id,
-            batch_size=1,
-            max_new_tokens=max_new_tokens,
-            max_pixels=max_pixels,
-        )
+        try:
+            self.model = load_qwen_backend(
+                captioning_model,
+                quantization=quantization,
+                model_id=model_id,
+                batch_size=1,
+                max_new_tokens=max_new_tokens,
+                max_pixels=max_pixels,
+            )
+        except Exception as exc:
+            # Without this, a load failure (OOM, missing offline checkpoint) kills
+            # the node while `qwen_vqa_wait_ready` blocks for its full timeout.
+            self.get_logger().error(f"Model load failed: {type(exc).__name__}: {exc}")
+            self._publish_status(f"error:{type(exc).__name__}")
+            # Let the transient-local sample reach subscribers before we die.
+            rclpy.spin_once(self, timeout_sec=0.5)
+            raise
+
         self.max_new_tokens = max_new_tokens
-        self._lock = threading.Lock()
+
+        # One worker: the GPU serialises generate() anyway, and a thread per
+        # request would grow without bound while they all waited their turn.
+        self._requests: queue.Queue[str] = queue.Queue(maxsize=QUEUE_DEPTH)
+        self._worker = threading.Thread(
+            target=self._worker_loop, name="vqa_worker", daemon=True)
+        self._worker.start()
+
+        self.create_subscription(String, REQUEST_TOPIC, self._on_request, 10)
+
         self.get_logger().info(
             f"Ready: {self.model.model_id} in {time.time() - t0:.1f}s "
             f"(ask on {REQUEST_TOPIC})")
@@ -114,55 +112,100 @@ class QwenVQAServer(Node):
     def _publish_status(self, text: str):
         self.status_pub.publish(String(data=text))
 
+    def _publish_response(self, payload: dict):
+        self.response_pub.publish(String(data=json.dumps(payload)))
+
+    def _publish_error(self, req_id: Optional[str], error: str):
+        self._publish_response({
+            "id": req_id,
+            "answer": None,
+            "number": None,
+            "error": error,
+            "seconds": 0.0,
+        })
+
     def _on_request(self, msg: String):
-        threading.Thread(
-            target=self._handle_request, args=(msg.data,), daemon=True
-        ).start()
+        try:
+            self._requests.put_nowait(msg.data)
+        except queue.Full:
+            # Recover the id if we can, so the client fails fast instead of
+            # waiting out its own timeout.
+            req_id = None
+            try:
+                req_id = json.loads(msg.data).get("id")
+            except (json.JSONDecodeError, AttributeError):
+                pass
+            self.get_logger().warn(f"request queue full ({QUEUE_DEPTH}); rejecting id={req_id}")
+            self._publish_error(req_id, "busy")
+
+    def _worker_loop(self):
+        while rclpy.ok():
+            try:
+                raw = self._requests.get(timeout=0.5)
+            except queue.Empty:
+                continue
+            try:
+                self._handle_request(raw)
+            finally:
+                self._requests.task_done()
+
+    @staticmethod
+    def _parse_request(raw: str) -> tuple[Optional[str], str, Optional[str], bool, Optional[int]]:
+        """(id, question, image_path, freeform, max_new_tokens) or raise ValueError."""
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise ValueError("payload must be a JSON object")
+
+        req_id = payload.get("id")
+        if "image" not in payload or "question" not in payload:
+            raise ValueError("need keys: id, question, image (image may be null)")
+
+        question = payload["question"]
+        if not isinstance(question, str) or not question.strip():
+            raise ValueError("question must be a non-empty string")
+
+        image_path = payload["image"]
+        if image_path is not None and not isinstance(image_path, str):
+            raise ValueError("image must be a string path or null")
+
+        mode = str(payload.get("mode") or "numerical").lower()
+        freeform = mode in ("freeform", "text", "extract")
+
+        max_new_tokens = payload.get("max_new_tokens")
+        if max_new_tokens is not None:
+            max_new_tokens = int(max_new_tokens)
+            if not 1 <= max_new_tokens <= MAX_NEW_TOKENS_LIMIT:
+                raise ValueError(
+                    f"max_new_tokens must be in 1..{MAX_NEW_TOKENS_LIMIT}")
+
+        return req_id, question, image_path, freeform, max_new_tokens
 
     def _handle_request(self, raw: str):
         req_id = None
         try:
-            payload = json.loads(raw)
-            req_id = payload.get("id")
-            if "image" not in payload or "question" not in payload:
-                raise KeyError("image")
-            image_path = payload["image"]
-            question = payload["question"]
-            if not isinstance(question, str) or not question.strip():
-                raise ValueError("question must be a non-empty string")
-        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
-            self._publish_response({
-                "id": req_id,
-                "answer": None,
-                "number": None,
-                "error": "invalid request JSON (need id, image, question; image may be null)",
-                "seconds": 0.0,
-            })
+            req_id, question, image_path, freeform, max_new_tokens = \
+                self._parse_request(raw)
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            self.get_logger().warn(f"rejected request: {exc}")
+            self._publish_error(req_id, f"invalid request: {exc}")
             return
 
         try:
-            if image_path is None or image_path == "":
+            if not image_path:
                 image = _BLANK_RGB
             else:
-                path = _secure_image_path(str(image_path))
+                path = secure_image_path(image_path)
                 image = iio.imread(str(path))
                 if image is None:
                     raise RuntimeError(f"Failed to read image: {path}")
 
-            max_new_tokens = self.max_new_tokens
-            if payload.get("max_new_tokens") is not None:
-                max_new_tokens = int(payload["max_new_tokens"])
-            mode = str(payload.get("mode") or "numerical").lower()
-            freeform = mode in ("freeform", "text", "extract")
-
-            with self._lock:
-                t0 = time.time()
-                answers = self.model.answer_questions(
-                    [image], [question],
-                    max_new_tokens=max_new_tokens,
-                    freeform=freeform,
-                )
-                elapsed = time.time() - t0
+            t0 = time.time()
+            answers = self.model.answer_questions(
+                [image], [question],
+                max_new_tokens=max_new_tokens or self.max_new_tokens,
+                freeform=freeform,
+            )
+            elapsed = time.time() - t0
 
             raw_answer = answers[0]
             number = self.model.extract_integer(raw_answer)
@@ -173,37 +216,28 @@ class QwenVQAServer(Node):
                 "error": None,
                 "seconds": round(elapsed, 3),
             })
-            self.get_logger().info(
-                f"id={req_id} number={number} ({elapsed:.2f}s)")
-        except Exception as exc:  # noqa: BLE001 — keep server alive
+            self.get_logger().info(f"id={req_id} number={number} ({elapsed:.2f}s)")
+        except Exception as exc:  # noqa: BLE001 — one bad request must not kill the server
+            # Report the exception type only: the message can carry filesystem
+            # paths, and requests arrive from other processes.
             self.get_logger().error(
-                f"VQA failed ({type(exc).__name__}) id={req_id}")
-            self._publish_response({
-                "id": req_id,
-                "answer": None,
-                "number": None,
-                "error": type(exc).__name__,
-                "seconds": 0.0,
-            })
-
-    def _publish_response(self, payload: dict):
-        self.response_pub.publish(String(data=json.dumps(payload)))
+                f"VQA failed ({type(exc).__name__}: {exc}) id={req_id}")
+            self._publish_error(req_id, type(exc).__name__)
 
 
 def main(args: Optional[list] = None):
     from rclpy.executors import ExternalShutdownException
 
     rclpy.init(args=args)
-    node = QwenVQAServer()
+    node = None
     try:
+        node = QwenVQAServer()
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        try:
+        if node is not None:
             node.destroy_node()
-        except Exception:  # noqa: BLE001 — best-effort teardown
-            pass
         if rclpy.ok():
             rclpy.shutdown()
 

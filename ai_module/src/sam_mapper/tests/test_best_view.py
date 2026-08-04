@@ -3,14 +3,11 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from sam_mapper.best_view import BestViewCollector, BestViewConfig  # noqa: E402
-from sam_mapper.detections import PromptTable  # noqa: E402
+from sam_mapper.best_view import BestViewCollector, BestViewConfig
+from sam_mapper.detections import PromptTable
 
 
 def _collector(tmp_path, run_id=None):

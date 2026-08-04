@@ -7,8 +7,8 @@
   <arg name="use_bag" default="false"/>   <!-- true = also replay a bag instead of the live sim -->
   <arg name="bag"     default="scene_0"/>  <!-- scene name under /data/bags -->
   <arg name="use_qwen_numerical" default="true"/>
-  <arg name="captioning_model" default="qwen3vl"/>
-  <arg name="quantization" default="int4"/>
+  <arg name="vqa_timeout_s" default="120.0"/>
+  <arg name="server_wait_s" default="600.0"/>
   <!-- When Qwen owns numerical answers, disable dummy's random Int32 publisher. -->
   <arg name="dummy_answer_numerical" default="false"/>
 
@@ -20,11 +20,14 @@
   <!-- 1. Supervisor: mission clock, question handling, exploration control -->
   <node pkg="smart_vlm" exec="supervisor" name="smart_vlm_supervisor" output="screen"/>
 
-  <!-- 2. Qwen-VL int4 numerical head: How many / Count → /numerical_response -->
+  <!-- 2. Qwen numerical head: How many / Count → /numerical_response.
+       Inference happens in qwen_vqa_server, NOT in this node — start it first
+       (`just vqa-up`), or the head waits server_wait_s and gives up. Model and
+       quantization are the server's parameters, not this node's. -->
   <group if="$(var use_qwen_numerical)">
     <node pkg="smart_vlm" exec="qwen_numerical" name="qwen_numerical" output="screen">
-      <param name="captioning_model" value="$(var captioning_model)"/>
-      <param name="quantization" value="$(var quantization)"/>
+      <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
+      <param name="server_wait_s" value="$(var server_wait_s)"/>
     </node>
   </group>
 

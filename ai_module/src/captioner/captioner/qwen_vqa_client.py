@@ -14,6 +14,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC
+from captioner.ros_utils import wait_for_subscriber
 
 
 class VQAClient(Node):
@@ -33,10 +34,8 @@ class VQAClient(Node):
             self._response = payload
 
     def ask(self, image: str, question: str, timeout_s: float) -> dict:
-        # Give the subscription time to connect before publishing.
-        deadline_connect = time.time() + 2.0
-        while time.time() < deadline_connect and self.pub.get_subscription_count() == 0:
-            rclpy.spin_once(self, timeout_sec=0.05)
+        wait_for_subscriber(
+            self.pub, spin=lambda t: rclpy.spin_once(self, timeout_sec=t))
 
         req = {"id": self._req_id, "image": image, "question": question}
         self.pub.publish(String(data=json.dumps(req)))
@@ -48,11 +47,11 @@ class VQAClient(Node):
         if self._response is None:
             raise TimeoutError(
                 f"No response on {RESPONSE_TOPIC} within {timeout_s:.0f}s "
-                f"(is qwen_vqa_server running?)")
+                f"(is qwen_vqa_server running? try `just vqa-status`)")
         return self._response
 
 
-def main(argv: Optional[list] = None):
+def main(argv: Optional[list] = None) -> int:
     parser = argparse.ArgumentParser(
         description="Ask the persistent Qwen VQA server (model already loaded).")
     parser.add_argument("--question", "-q", required=True)
@@ -70,16 +69,21 @@ def main(argv: Optional[list] = None):
         client = VQAClient()
         try:
             result = client.ask(args.image, args.question, args.timeout)
+        except TimeoutError as exc:
+            # This is a CLI — a traceback adds nothing the message doesn't say.
+            print(str(exc), file=sys.stderr)
+            return 1
         finally:
             client.destroy_node()
     finally:
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
     if result.get("error"):
         print(result["error"], file=sys.stderr)
         if args.json:
             print(json.dumps(result, indent=2))
-        raise SystemExit(1)
+        return 1
 
     if args.json:
         print(json.dumps(result, indent=2))
@@ -88,9 +92,12 @@ def main(argv: Optional[list] = None):
     else:
         print(result["number"])
 
+    # Exit 2 means "answered, but the reply held no integer" — distinct from a
+    # failure (1), so scripted numeric questions can tell the two apart.
     if result.get("number") is None and not args.raw and not args.json:
-        raise SystemExit(2)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

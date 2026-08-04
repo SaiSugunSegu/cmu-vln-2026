@@ -1,48 +1,45 @@
-from transformers import (
-    AutoProcessor,
-    AutoModelForImageTextToText,
-    PaliGemmaProcessor, 
-    PaliGemmaForConditionalGeneration,
-    GemmaTokenizerFast,
-    SiglipVisionModel,
-    SiglipImageProcessor,
-    SiglipModel,
-    SiglipTextModel,
-    SiglipTokenizer,
-    StopStringCriteria,
-    StoppingCriteriaList,
-    BitsAndBytesConfig
-)
+"""Image-captioning and VQA backends (PaliGemma, Qwen2.5-VL, Qwen3-VL)."""
+import json
+import logging
+import os
+from time import time
+from typing import List, Optional
+
+import imageio.v3 as iio
 import torch
 from PIL import Image
-import requests
-from typing import List, Optional
-import cv2
-import imageio.v3 as iio
-import json
-import os
-import re
-from time import time
+from transformers import (
+    AutoProcessor,
+    BitsAndBytesConfig,
+    PaliGemmaForConditionalGeneration,
+    PaliGemmaProcessor,
+    StoppingCriteriaList,
+    StopStringCriteria,
+)
+
+from captioner.text_utils import extract_integer
+
+logger = logging.getLogger(__name__)
+
 try:
-    from vllm import LLM, SamplingParams, RequestOutput
-except ImportError as e:
-    print("VLLM not installed, ignoring dependency.")
+    from vllm import LLM, RequestOutput
+except ImportError:
+    # Only PaliGemmaVLLMBackend needs vllm, and it is not on the robot's path.
+    # A print() here would fire on every ROS node that imports the captioner.
+    logger.debug("vllm not installed; PaliGemmaVLLMBackend is unavailable.")
 
 
 def _hub_offline() -> bool:
-    '''True when we must not touch the network (robot / offline deploy).'''
-    for key in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "CAPTIONER_OFFLINE"):
-        if os.environ.get(key, "").strip().lower() in {"1", "true", "yes"}:
-            return True
-    return False
+    """True when we must not touch the network (robot / offline deploy)."""
+    return os.environ.get("HF_HUB_OFFLINE", "").strip().lower() in {"1", "true", "yes"}
 
 
 def _from_pretrained_kwargs() -> dict:
-    '''
+    """
     Hugging Face from_pretrained("org/name") still contacts the Hub by default
     to resolve the latest revision, even when weights are cached. On a robot with
     no internet that hangs or fails — force local-only loads.
-    '''
+    """
     kwargs = {}
     if _hub_offline():
         kwargs["local_files_only"] = True
@@ -50,11 +47,18 @@ def _from_pretrained_kwargs() -> dict:
 
 
 class CaptioningModel:
-    def __init__(self):
-        pass
+    def generate_captions(
+            self,
+            images: list[torch.Tensor] | torch.Tensor,
+            names: Optional[list[str]] = None,
+            ) -> list[str]:
+        """One caption per image. `names` supplies the object label per crop.
 
-    def generate_captions(self, images: list[torch.Tensor] | torch.Tensor) -> list[str]:
-        pass
+        Every backend must accept both arguments: Captioner.generate_captions()
+        (captioning_backend.py) calls this as `generate_captions(crops, names)`
+        regardless of which backend was selected.
+        """
+        raise NotImplementedError
 
     @staticmethod
     def split_into_batches(lst, batch_size: int):
@@ -104,23 +108,22 @@ class PaliGemmaHFBackend(CaptioningModel):
 
         self.prompt = "<image>caption en "
 
-    def generate_captions(self, images):
+    def generate_captions(self, images, names: Optional[list[str]] = None):
+        # `names` is part of the shared CaptioningModel contract; PaliGemma's
+        # "caption en" prompt is not object-conditioned, so it is ignored here.
 
         captions = []
 
-        for batch in self.split_into_batches(images, self.batch_size): 
-
-            start_time = time()  
+        for batch in self.split_into_batches(images, self.batch_size):
 
             inputs = self.processor(
-                batch, 
-                [self.prompt]*len(batch), 
-                self.prompt,
+                batch,
+                [self.prompt] * len(batch),
                 return_tensors="pt").to("cuda")
 
 
             output = self.model.generate(
-                **inputs, 
+                **inputs,
                 # max_new_tokens=200
                 stopping_criteria=self.stopping_criteria
                 )
@@ -135,13 +138,13 @@ class PaliGemmaHFBackend(CaptioningModel):
 
 
 class QwenVLHFBackend(CaptioningModel):
-    '''
+    """
     Shared HF generate path for the Qwen-VL family. Qwen2.5-VL and Qwen3-VL differ
     only in checkpoint and model class, so keeping one implementation means the two
     backends are directly comparable (same prompt, pixel budget, and decode).
-    '''
+    """
 
-    default_model_id: str = None
+    default_model_id: Optional[str] = None
 
     def __init__(
             self,
@@ -230,25 +233,19 @@ class QwenVLHFBackend(CaptioningModel):
 
     @staticmethod
     def to_pil(image) -> Image.Image:
-        '''
+        """
         Crops arrive as HWC uint8 RGB tensors on the GPU. Converting explicitly avoids
         relying on the image processor to infer the channel dimension and device.
-        '''
+        """
         if isinstance(image, Image.Image):
             return image
         if isinstance(image, torch.Tensor):
             image = image.detach().contiguous().cpu().numpy()
         return Image.fromarray(image)
 
-    @staticmethod
-    def extract_integer(text: str) -> Optional[int]:
-        '''Parse the first integer from a VLM reply (handles "4", "There are 4 pillows").'''
-        if text is None:
-            return None
-        match = re.search(r"-?\d+", text.replace(",", ""))
-        if match is None:
-            return None
-        return int(match.group(0))
+    # Kept as a method so existing `model.extract_integer(...)` call sites (the VQA
+    # server, the CLI) keep working; captioner.text_utils owns the implementation.
+    extract_integer = staticmethod(extract_integer)
 
     def build_prompts(self, pil_images, names: list[str]) -> list[str]:
         messages = [[
@@ -304,11 +301,11 @@ class QwenVLHFBackend(CaptioningModel):
             *,
             freeform: bool = False,
             ) -> list[str]:
-        '''Visual question answering for one image/question pair each.
+        """Visual question answering for one image/question pair each.
 
         freeform=False (default): wrap with the integer-only challenge prompt.
         freeform=True: send the question text as-is (extract / attribute captions).
-        '''
+        """
         if len(images) != len(questions):
             raise ValueError(
                 f"images ({len(images)}) and questions ({len(questions)}) length mismatch")
@@ -331,7 +328,7 @@ class QwenVLHFBackend(CaptioningModel):
             questions: list[str],
             max_new_tokens: int = 16,
             ) -> list[Optional[int]]:
-        '''VQA that returns parsed integers (None when the model reply has no digit).'''
+        """VQA that returns parsed integers (None when the model reply has no digit)."""
         answers = self.answer_questions(
             images, questions, max_new_tokens=max_new_tokens)
         return [self.extract_integer(a) for a in answers]
@@ -361,10 +358,10 @@ class QwenVLHFBackend(CaptioningModel):
         return [caption.strip() for caption in caption_batch], inputs, generated
 
     def warmup(self, images, names: list[str], max_new_tokens: int = 8):
-        '''
+        """
         The first generate call pays for CUDA kernel selection and cuBLAS workspace
         allocation, which would otherwise be charged to the first timed batch.
-        '''
+        """
         if not images:
             return
         pil_images = [self.to_pil(images[0])]
@@ -483,7 +480,7 @@ def load_qwen_backend(
         max_new_tokens: int = 32,
         max_pixels: int = 1280 * 28 * 28,
         ):
-    '''Construct a Qwen-VL HF backend by name (shared by CLI / ROS nodes).'''
+    """Construct a Qwen-VL HF backend by name (shared by CLI / ROS nodes)."""
     if captioning_model not in QWEN_BACKENDS:
         raise ValueError(
             f"Unknown captioning_model={captioning_model!r}. "
@@ -518,11 +515,8 @@ class PaliGemmaVLLMBackend(CaptioningModel):
         self.sampling_params = self.llm.get_default_sampling_params()
         self.sampling_params.stop = '.'
 
-
-
-    def generate_captions(self, images):
-
-    
+    def generate_captions(self, images, names: Optional[list[str]] = None):
+        # `names` is unused: the "caption en" prompt is not object-conditioned.
         inputs = [{
             "prompt": self.prompt,
             "multi_modal_data": {
@@ -530,12 +524,10 @@ class PaliGemmaVLLMBackend(CaptioningModel):
             }
         } for image in images]
 
-        outputs: List[RequestOutput] = self.llm.generate(inputs, sampling_params=self.sampling_params)
+        outputs: List[RequestOutput] = self.llm.generate(
+            inputs, sampling_params=self.sampling_params)
 
-        for o in outputs:
-            generated_text = o.outputs[0].text
-            print(generated_text)
-
+        return [o.outputs[0].text for o in outputs]
 
 
 def main(argv: Optional[List[str]] = None):
@@ -623,13 +615,18 @@ def main(argv: Optional[List[str]] = None):
     stats['crops_path'] = args.crops_path
     stats['warmup'] = not args.no_warmup
 
+    # peak_gpu_memory_gb is None on a CPU-only host — formatting it as a float
+    # would crash after the whole run had already completed.
+    peak_gpu = stats["peak_gpu_memory_gb"]
+    peak_gpu_text = f'{peak_gpu:.1f} GB' if peak_gpu is not None else 'n/a (no CUDA)'
+
     print(
         f'\n{args.captioning_model} ({stats["model_id"]}, quantization={stats["quantization"]}): '
         f'{stats["generation_seconds"]:.1f}s for {stats["images"]} crops '
         f'({stats["seconds_per_image"]:.2f}s/crop, '
         f'{stats["tokens_per_second"]:.1f} tok/s, '
         f'{stats["generated_tokens"]} tokens generated, '
-        f'peak GPU {stats["peak_gpu_memory_gb"]:.1f} GB)\n')
+        f'peak GPU {peak_gpu_text})\n')
 
     if args.output_dir is not None:
         os.makedirs(args.output_dir, exist_ok=True)

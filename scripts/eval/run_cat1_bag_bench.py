@@ -18,16 +18,16 @@ Prerequisites (separate terminals):
 
 Usage (from host via just, or inside the container):
   python3 scripts/eval/run_cat1_bag_bench.py \
-    --qa /data/workspace/benchmark/arabic_room/category_1/arabic_room_category1_qa.json \
+    --qa /data/benchmark/arabic_room/category_1/arabic_room_category1_qa.json \
     --scene arabic_room \
-    --out /data/workspace/runs/cat1_arabic_room \
+    --out /data/runs/cat1_arabic_room \
     --limit 3
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
+import shlex
 import subprocess
 import sys
 import threading
@@ -39,20 +39,21 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Int32, String
 
+# Paths this script may read/write. Host data/ is bind-mounted 1:1 at /data, so
+# a container path is just the host path with the repo prefix removed — no
+# guessing required (see docker/compose.yml).
+_CONTAINER_ROOTS = ("/data", "/home/docker")
 
-def _rewrite_host_data_path(path: Path) -> Path:
-    """Map host repo data/ paths to the container /data/workspace mount when present."""
+
+def _require_container_path(path: Path, flag: str) -> Path:
+    """Reject host paths early, with the mount spelled out."""
     text = str(path)
-    if text.startswith("/data/"):
-        return path
-    # Common host layout: <repo>/data/...
-    parts = path.resolve().parts if path.exists() or path.is_absolute() else path.parts
-    if "data" in parts:
-        idx = parts.index("data")
-        rel = Path(*parts[idx + 1 :])
-        candidate = Path("/data/workspace") / rel
-        if candidate.exists() or not path.exists():
-            return candidate
+    if not any(text == root or text.startswith(root + "/") for root in _CONTAINER_ROOTS):
+        raise SystemExit(
+            f"{flag}={text} is not a container path. This script runs inside "
+            f"iros2026_ai_module; use a path under {' or '.join(_CONTAINER_ROOTS)} "
+            f"(host <repo>/data/x is /data/x)."
+        )
     return path
 
 
@@ -68,7 +69,7 @@ class Cat1BagDriver(Node):
         self._ack_event = threading.Event()
         self._answer: int | None = None
         self._answer_event = threading.Event()
-        self._best_view_dir: str | None = None
+        self._crop_dir: str | None = None
         self._tick_on = False
         self._sam_status: str | None = None
 
@@ -106,11 +107,16 @@ class Cat1BagDriver(Node):
             return
         self._ack = payload
         if payload.get("run_dir"):
-            self._best_view_dir = payload["run_dir"]
+            self._crop_dir = payload["run_dir"]
         self._ack_event.set()
 
     def _on_dir(self, msg: String):
-        self._best_view_dir = msg.data
+        self._crop_dir = msg.data
+
+    @property
+    def best_view_dir(self) -> str | None:
+        """Latest /sam3/best_view_dir, or the run_dir carried by the prompts ack."""
+        return self._crop_dir
 
     def _on_answer(self, msg: Int32):
         if self._answer is None:
@@ -171,10 +177,13 @@ class Cat1BagDriver(Node):
 
 def play_bag(scene: str, bags_dir: str, speed: float) -> None:
     """Single-pass bag play via the existing launch file."""
+    # scene / bags_dir come from argv and land in a shell string, so quote them.
     cmd = (
-        f"source /home/docker/ai_module/install/setup.bash && "
-        f"ros2 launch smart_vlm bag_replay.launch "
-        f"scene:={scene} bags_dir:={bags_dir} speed:={speed} loop:=false"
+        "source /home/docker/ai_module/install/setup.bash && "
+        "ros2 launch smart_vlm bag_replay.launch "
+        f"scene:={shlex.quote(scene)} "
+        f"bags_dir:={shlex.quote(bags_dir)} "
+        f"speed:={float(speed)} loop:=false"
     )
     print(f"[cat1-bench] playing bag scene={scene} speed={speed}", flush=True)
     proc = subprocess.run(
@@ -232,7 +241,7 @@ def run_one(args, entry: dict, scene: str) -> dict:
         }
         result["extracted_targets"] = ack.get("prompts") or entry.get("target_objects")
         result["gt_target_objects"] = entry.get("target_objects")
-        result["best_view_dir"] = ack.get("run_dir") or driver._best_view_dir
+        result["best_view_dir"] = ack.get("run_dir") or driver.best_view_dir
         print(f"[cat1-bench] prompts ack: {ack.get('prompts')} -> {ack.get('run_dir')}",
               flush=True)
 
@@ -260,7 +269,7 @@ def run_one(args, entry: dict, scene: str) -> dict:
         predicted = driver.wait_answer()
         result["predicted"] = predicted
         result["correct"] = predicted == gt
-        result["best_view_dir"] = driver._best_view_dir or result["best_view_dir"]
+        result["best_view_dir"] = driver.best_view_dir or result["best_view_dir"]
         print(
             f"[cat1-bench] {qid}: predicted={predicted} gt={gt} "
             f"{'OK' if result['correct'] else 'WRONG'}",
@@ -304,8 +313,8 @@ def main(argv=None):
                          "before publishing /pipeline/explore_done")
     args = ap.parse_args(argv)
 
-    qa_path = _rewrite_host_data_path(args.qa)
-    out_dir = _rewrite_host_data_path(args.out)
+    qa_path = _require_container_path(args.qa, "--qa")
+    out_dir = _require_container_path(args.out, "--out")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     with open(qa_path, "r", encoding="utf-8") as handle:
@@ -354,10 +363,19 @@ def main(argv=None):
         f"({n_ok}/{len(results)} correct, {n_ans} answered)",
         flush=True,
     )
-    return 0 if n_ok == len(results) and results else 1
+
+    # Exit status reports whether the HARNESS ran, not how accurate the model was
+    # — otherwise every run below 100% looks like a broken benchmark. A run where
+    # nothing answered at all does mean the pipeline is down, so that is a failure.
+    if not results:
+        print("[cat1-bench] no questions selected", file=sys.stderr)
+        return 2
+    if n_ans == 0:
+        print("[cat1-bench] no question produced an answer — is the pipeline up?",
+              file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    # Avoid unused import warnings when linting without ROS env.
-    _ = os.environ
     raise SystemExit(main())

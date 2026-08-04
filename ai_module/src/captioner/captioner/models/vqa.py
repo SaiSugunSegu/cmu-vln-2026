@@ -1,7 +1,10 @@
 """Standalone Qwen-VL visual question answering CLI.
 
+Loads the model on every invocation (~60 s). For repeated questions prefer the
+persistent server: `just vqa-up` then `just vqa-ask "…" /data/img.png`.
+
 Example:
-  python -m captioner.models.vqa /path/to/image.png \\
+  python -m captioner.models.vqa /data/crops/3_bed/crop.png \\
     --question "How many pillows are on the bed?" \\
     --quantization int4
 """
@@ -9,24 +12,12 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 from typing import List, Optional
-from urllib.parse import unquote
 
 import imageio.v3 as iio
 
 from captioner.models.captioning import load_qwen_backend
-
-
-def _secure_image_path(user_path: str) -> Path:
-    """Resolve a user-supplied image path and reject traversal / missing files."""
-    decoded = unquote(user_path)
-    path = Path(decoded).expanduser().resolve()
-    if ".." in Path(decoded).parts:
-        raise ValueError(f"Path traversal rejected: {user_path}")
-    if not path.is_file():
-        raise FileNotFoundError(f"Image not found: {path}")
-    return path
+from captioner.paths import secure_image_path, secure_output_path
 
 
 def main(argv: Optional[List[str]] = None):
@@ -58,7 +49,11 @@ def main(argv: Optional[List[str]] = None):
         help="Optional path to write {question, answer, raw, …} as JSON.")
     args = parser.parse_args(argv)
 
-    image_path = _secure_image_path(args.image)
+    # Validate every path before the ~60 s model load, so a typo or an
+    # out-of-mount path fails now rather than after inference has already run.
+    image_path = secure_image_path(args.image)
+    out_path = secure_output_path(args.output_json) if args.output_json else None
+
     image = iio.imread(str(image_path))
     if image is None:
         raise SystemExit(f"Failed to read image: {image_path}")
@@ -74,8 +69,7 @@ def main(argv: Optional[List[str]] = None):
         f"Loaded {model.model_id} (quantization={model.quantization}) "
         f"in {model.load_seconds:.1f}s")
 
-    raw_answers = model.answer_questions([image], [args.question])
-    raw = raw_answers[0]
+    raw = model.answer_questions([image], [args.question])[0]
     number = model.extract_integer(raw)
 
     if args.raw or number is None:
@@ -83,10 +77,7 @@ def main(argv: Optional[List[str]] = None):
     else:
         print(number)
 
-    if args.output_json is not None:
-        out_path = Path(unquote(args.output_json)).expanduser().resolve()
-        if ".." in Path(args.output_json).parts:
-            raise ValueError(f"Path traversal rejected: {args.output_json}")
+    if out_path is not None:
         payload = {
             "image": str(image_path),
             "question": args.question,
@@ -96,11 +87,13 @@ def main(argv: Optional[List[str]] = None):
             "quantization": model.quantization,
             "backend": args.captioning_model,
         }
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            json.dump(payload, f, indent=2)
+        with open(out_path, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+            handle.write("\n")
         print(f"Wrote {out_path}")
 
+    # Exit 2 means "ran fine, but produced no integer", so a caller scripting a
+    # numeric question can tell that apart from a crash (exit 1).
     if number is None:
         raise SystemExit(2)
 

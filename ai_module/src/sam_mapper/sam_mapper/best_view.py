@@ -32,7 +32,18 @@ import numpy as np
 from sam_mapper.annotate import annotate_frame
 from sam_mapper.detections import PromptTable
 
-_SAFE_RUN_ID = re.compile(r"[^a-zA-Z0-9._-]+")
+_UNSAFE_RUN_ID_CHARS = re.compile(r"[^a-zA-Z0-9._-]+")
+
+
+def sanitize_run_id(run_id: str, fallback: str = "run") -> str:
+    """Reduce a caller-supplied run id to characters that are safe in a dir name.
+
+    Run ids reach us over ROS (`/sam3/set_prompts`) carrying question text, so
+    they can hold spaces, slashes, and punctuation. Callers that build paths from
+    a run id (sam_mapper here, smart_vlm's category-1 reasoner) must agree on the
+    transform or they compute different directories for the same run.
+    """
+    return _UNSAFE_RUN_ID_CHARS.sub("_", run_id.strip()).strip("_") or fallback
 
 
 @dataclass(frozen=True)
@@ -64,7 +75,7 @@ class BestViewConfig:
         return BestViewConfig(
             targets=targets,
             top_n=top_n,
-            output_dir=raw.get("output_dir", "/data/bags/_best_views"),
+            output_dir=raw.get("output_dir", "/data/crops"),
             save_annotated_copy=bool(raw.get("save_annotated_copy", True)),
             # An object covers well under 1% of a 1920x640 panorama, so real scores land
             # around 1e-3 to 1e-2, not near 1. This floor only rejects near-empty masks.
@@ -127,8 +138,7 @@ class BestViewCollector:
         self._target_tag = "+".join(sorted(self.targets))
 
         if run_id:
-            safe_id = _SAFE_RUN_ID.sub("_", run_id.strip()).strip("_") or "run"
-            run_name = f"{safe_id}_{self._target_tag}"
+            run_name = f"{sanitize_run_id(run_id)}_{self._target_tag}"
         else:
             run_name = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{self._target_tag}"
         self.run_dir = os.path.join(config.output_dir, run_name)

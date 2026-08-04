@@ -18,13 +18,11 @@ answer from best_rank1 image (+ manifest) → caption instance attributes into m
 from __future__ import annotations
 
 import json
-import re
 import threading
 import time
 import uuid
 from pathlib import Path
 from typing import Optional
-from urllib.parse import unquote
 
 import cv2
 import rclpy
@@ -34,6 +32,9 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Int32, String
 
+from captioner.paths import secure_path
+from captioner.ros_utils import wait_for_subscriber
+from sam_mapper.best_view import sanitize_run_id
 from smart_vlm.category1_utils import (
     extract_integer,
     heuristic_targets,
@@ -54,42 +55,12 @@ ATTRIBUTE_PROMPT = (
     "Reply in one short sentence starting with \"The {label} is\"."
 )
 
-_SAFE_RUN_ID = re.compile(r"[^a-zA-Z0-9._-]+")
-
-
-def _secure_under_roots(path: Path, roots: tuple[Path, ...]) -> Path:
-    resolved = path.expanduser().resolve()
-    if ".." in Path(unquote(str(path))).parts:
-        raise ValueError("Path traversal rejected")
-    allowed = any(
-        str(resolved) == str(root) or str(resolved).startswith(str(root) + "/")
-        for root in roots
-    )
-    if not allowed:
-        raise PermissionError(f"Path not under allowed mounts: {resolved}")
-    return resolved
-
-
-def _allowed_roots() -> tuple[Path, ...]:
-    candidates = [
-        Path("/data/bags"),
-        Path("/data/workspace"),
-        Path("/home/docker"),
-        Path.home(),
-    ]
-    home = Path("/home")
-    if home.is_dir():
-        candidates.extend(p for p in home.iterdir() if p.is_dir())
-    return tuple(p.resolve() for p in candidates if p.exists())
-
-
 class Category1Reasoner(Node):
     PHASE_IDLE = "idle"
     PHASE_EXTRACT = "extract"
     PHASE_PROMPTS = "prompts"
     PHASE_EXPLORE = "explore"
     PHASE_ANSWER = "answer"
-    PHASE_DONE = "done"
 
     def __init__(self):
         super().__init__("category1_reasoner")
@@ -109,7 +80,7 @@ class Category1Reasoner(Node):
         self._question: Optional[str] = None
         self._run_id: Optional[str] = None
         self._extracted: list[str] = []
-        self._best_view_dir: Optional[str] = None
+        self._crop_dir: Optional[str] = None
         self._pending_ack_run_id: Optional[str] = None
         self._ack_event = threading.Event()
         self._ack_payload: Optional[dict] = None
@@ -134,7 +105,7 @@ class Category1Reasoner(Node):
                                  callback_group=cb)
         self.create_subscription(String, "/sam3/prompts_ack", self._on_prompts_ack, 10,
                                  callback_group=cb)
-        self.create_subscription(String, "/sam3/best_view_dir", self._on_best_view_dir, latch_qos,
+        self.create_subscription(String, "/sam3/best_view_dir", self._on_crop_dir, latch_qos,
                                  callback_group=cb)
         self.create_subscription(String, "/qwen_vqa/response", self._on_vqa_response, 10,
                                  callback_group=cb)
@@ -156,9 +127,9 @@ class Category1Reasoner(Node):
     def _on_vqa_status(self, msg: String) -> None:
         self._qwen_ready = msg.data.strip() == "ready"
 
-    def _on_best_view_dir(self, msg: String) -> None:
+    def _on_crop_dir(self, msg: String) -> None:
         with self._lock:
-            self._best_view_dir = msg.data
+            self._crop_dir = msg.data
 
     def _on_prompts_ack(self, msg: String) -> None:
         try:
@@ -193,7 +164,9 @@ class Category1Reasoner(Node):
             self._phase = self.PHASE_EXTRACT
             self._question = msg.data.strip()
             qid = uuid.uuid4().hex[:8]
-            safe_q = _SAFE_RUN_ID.sub("_", self._question[:48]).strip("_")
+            # Same sanitiser sam_mapper applies when it turns run_id into a
+            # directory name, so the path we log matches the one it creates.
+            safe_q = sanitize_run_id(self._question[:48], fallback="q")
             self._run_id = f"{self.run_id_prefix}_{qid}_{safe_q}"[:80]
             self._extracted = []
             self._ack_payload = None
@@ -211,7 +184,7 @@ class Category1Reasoner(Node):
             self._phase = self.PHASE_ANSWER
             question = self._question
             run_id = self._run_id
-            best_dir = self._best_view_dir
+            best_dir = self._crop_dir
             extracted = list(self._extracted)
 
         self.get_logger().info(f"explore_done ({msg.data or 'ok'}) — answering")
@@ -252,10 +225,8 @@ class Category1Reasoner(Node):
             self._vqa_response = None
             self._vqa_event.clear()
 
-        # Give the subscription time to connect before publishing.
-        deadline_connect = time.time() + 2.0
-        while time.time() < deadline_connect and self.pub_vqa_req.get_subscription_count() == 0:
-            time.sleep(0.05)
+        # On a MultiThreadedExecutor our callbacks keep running, so this can sleep.
+        wait_for_subscriber(self.pub_vqa_req)
 
         self.pub_vqa_req.publish(String(data=json.dumps(payload)))
         if not self._vqa_event.wait(timeout=timeout_s):
@@ -299,10 +270,7 @@ class Category1Reasoner(Node):
             self.get_logger().info(f"extracted targets: {targets}")
 
             set_payload = {"prompts": targets, "run_id": run_id}
-            deadline_connect = time.time() + 2.0
-            while (time.time() < deadline_connect
-                   and self.pub_prompts.get_subscription_count() == 0):
-                time.sleep(0.05)
+            wait_for_subscriber(self.pub_prompts)
             self.pub_prompts.publish(String(data=json.dumps(set_payload)))
 
             if not self._ack_event.wait(timeout=self.prompts_ack_timeout_s):
@@ -313,7 +281,7 @@ class Category1Reasoner(Node):
 
             with self._lock:
                 if ack.get("run_dir"):
-                    self._best_view_dir = ack["run_dir"]
+                    self._crop_dir = ack["run_dir"]
                 self._phase = self.PHASE_EXPLORE
                 self._pending_ack_run_id = None
 
@@ -340,7 +308,7 @@ class Category1Reasoner(Node):
         try:
             if not question:
                 raise RuntimeError("No question latched")
-            run_dir = self._resolve_best_view_dir(best_dir)
+            run_dir = self._resolve_crop_dir(best_dir)
             manifest_path = run_dir / "manifest.json"
             manifest: dict = {"targets": extracted, "selected": []}
             if manifest_path.is_file():
@@ -390,30 +358,28 @@ class Category1Reasoner(Node):
                     json.dump(manifest, handle, indent=2)
                     handle.write("\n")
 
-            with self._lock:
-                self._phase = self.PHASE_DONE
-            self._publish_status("done")
         except Exception as exc:  # noqa: BLE001
             self.get_logger().error(f"answer failed: {type(exc).__name__}: {exc}")
-            with self._lock:
-                self._phase = self.PHASE_IDLE
-                self._question = None
-                self._run_id = None
-            self._publish_status("error")
+            self._reset_to_idle("error")
             return
 
         # Soft reset so the next question can start (bag harness relaunches per Q).
+        self._reset_to_idle("idle")
+
+    def _reset_to_idle(self, status: str) -> None:
+        """Drop the current question so the next one is accepted."""
         with self._lock:
             self._phase = self.PHASE_IDLE
             self._question = None
             self._run_id = None
             self._extracted = []
-        self._publish_status("idle")
+            self._pending_ack_run_id = None
+        self._publish_status(status)
 
-    def _resolve_best_view_dir(self, best_dir: Optional[str]) -> Path:
+    def _resolve_crop_dir(self, best_dir: Optional[str]) -> Path:
         if not best_dir:
             raise RuntimeError("No /sam3/best_view_dir available")
-        return _secure_under_roots(Path(best_dir), _allowed_roots())
+        return secure_path(best_dir)
 
     def _append_attributes(
         self,
@@ -427,12 +393,13 @@ class Category1Reasoner(Node):
         manifest["extracted_targets"] = extracted
         manifest["predicted_answer"] = predicted
 
-        roots = _allowed_roots()
         count = 0
         for entry in manifest.get("selected") or []:
             if count >= self.attribute_max_instances:
                 break
-            image_path = _secure_under_roots(run_dir / entry["file"], roots)
+            # entry["file"] comes from a manifest on disk, so it is still
+            # untrusted input as far as path construction is concerned.
+            image_path = secure_path(run_dir / entry["file"])
             image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
             if image is None:
                 continue

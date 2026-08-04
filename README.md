@@ -46,7 +46,7 @@
 
 **M2 · Perception** — pixels + points → labeled 3D instances
 - In: 360° images, lidar scans, odometry · Out: instances (label, 3D box, color, caption)
-- SAM 3 text-prompted masks + tracking → lidar projected through masks → 3D box; SigLIP 2 re-ID for dedup (correct counts); Qwen2.5-VL captions
+- SAM 3 text-prompted masks carry track IDs across frames (no separate re-ID stage) → lidar projected through masks → 3D box; Qwen3-VL captions (Qwen2.5-VL and PaliGemma selectable via `--captioning_model`); CLIP/SigLIP embeddings match crops to query text
 
 **M3 · Scene graph** — instances → queryable spatial facts
 - In: instance stream · Out: `filter(label, color, relation, anchor)` query API
@@ -60,74 +60,85 @@
 - In: ordered grounded constraints, terrain map · Out: dense waypoint sequence
 - Costmap with avoid zones, ~1 m waypoint spacing so base planner can't shortcut, replan on violation
 
-**M6 · Eval bench** (`scripts/eval/`) — 15 scenes × 5 questions, challenge-style scoring; every change measured
+**M6 · Eval bench** (`scripts/eval/`) — 15 scenes × 5 questions, challenge-style scoring; every change measured. `just cat1-bag-bench` scores category-1 offline against recorded bags
 
 Full plan: [TEAM_PLAN.md](TEAM_PLAN.md) · deep dives: [docs/](docs/)
 
 ## Team quickstart
 
-### 1 · Setup — repo + containers ([troubleshooting → docs/M0_infra.md](docs/M0_infra.md))
+Everything runs through [`just`](https://github.com/casey/just). Run `just` with no
+arguments for the full grouped command list.
+
+### 1 · First run — once per machine
+
 ```bash
 git clone --recurse-submodules git@github.com:SaiSugunSegu/cmu-vln-2026.git && cd cmu-vln-2026
 # existing clone:  git pull && git submodule update --init --recursive
 
 xhost +local:
-just up    # build + start GPU containers (requires just: https://github.com/casey/just)
+just up          # build + start containers (the `init` one-shot fixes mount perms; Exited (0) = ok)
+just hf-fetch    # ONE-TIME ~15-20 GB weights — nothing loads until this finishes
 ```
 
-### 2 · Dev run — sim + smart_vlm ([details → docs/M0_infra.md](docs/M0_infra.md))
+`hf-fetch` is the only command that goes online. It needs `HF_TOKEN=hf_…` in the
+repo-root `.env` (**not** `hf auth login`), plus the gated `facebook/sam3` licence
+accepted once at <https://huggingface.co/facebook/sam3> with that same account.
+[docker/README.md](docker/README.md) · troubleshooting [docs/M0_infra.md](docs/M0_infra.md)
 
-#### Step A: Launch Simulator
+### 2 · Live sim — three terminals
+
 ```bash
-just sim          # standard — all topics + rviz2
-# just sim-noviz  # no rviz — use with Foxglove (§3)
-# just challenge  # eval-realistic 6-topic firewall (domain 42, no rviz)
+just sim                                     # A — or sim-noviz (Foxglove) / challenge (6-topic firewall)
+just vqa-up && just ai                       # B — vqa-up MUST come first: the numerical head is its client
+just ask "How many books are on the sofa"    # C — add `42` as a 2nd arg in challenge mode
 ```
-Offline (no Unity/GPU): replay a recorded bag instead — `ros2 launch smart_vlm bag_replay.launch scene:=scene_0`
-([docs/M0.5_rosbag_infra.md](docs/M0.5_rosbag_infra.md)).
 
-#### Step B: Launch AI Module & Questions
+### 3 · Offline bags — no Unity, no sim GPU
+
+Replays the 15 recorded scenes in `data/bags/`. Plain replay: `just bag-play scene_0`.
+The category-1 loop — the one that runs today — needs four terminals:
+
 ```bash
-just ai                                                 # Terminal B — supervisor + dummy VLM + TARE
-just ask "How many books are on the sofa"               # Terminal C
-# just ask "How many books are on the sofa" 42          # if using just challenge
+just vqa-up                          # A — load Qwen once, stays resident
+just run-sam                         # B — SAM 3 detector
+just cat1-reasoner                   # C — extract targets → prompt SAM → answer
+just cat1-bag-bench arabic_room 3    # D — score 3 questions; results in data/runs/
 ```
+[docs/cat1_bag_benchmark.md](docs/cat1_bag_benchmark.md) · [docs/M0.5_rosbag_infra.md](docs/M0.5_rosbag_infra.md)
 
-### 3 · Remote Visualization (Foxglove over SSH)
-To visualize simulator camera feeds, maps, and point clouds on your local laptop without lagging X11/VNC:
+### 4 · Full challenge-style bench (sim)
 
-1. **Start the sim without rviz2** — `just sim-noviz` (or `just challenge`).
-2. **On the remote machine:** launch the Foxglove bridge. Use domain `42` in challenge
-   mode so the bridge sees the full simulator rather than just the 6 firewalled inputs
-   (the `ai_module` container runs with `network_mode: host`, so container port 8765 *is* host port 8765):
-   ```bash
-   just foxglove       # domain 0 — matches sim-noviz
-   # just foxglove 42  # challenge mode
-   ```
-
-3. **On your laptop:** open an SSH tunnel forwarding that port:
-   ```bash
-   ssh -N -L 8765:localhost:8765 <user>@<remote-machine-ip>
-   ```
-4. Open the Foxglove desktop app, choose **Open connection → Foxglove WebSocket**, and connect to `ws://localhost:8765`.
-5. Import the ready-made panel layout — copy it to your laptop and load it via **Layouts → Import from file**:
-   ```bash
-   scp <user>@<remote-machine-ip>:<path-to-repo>/scripts/foxglove/vln_layout.json .
-   ```
-
-### 3.5 · Keyboard teleop (drive while watching Foxglove)
-```bash
-just sim-noviz    # Terminal A
-just foxglove     # Terminal B — then tunnel + connect from your laptop (above)
-just teleop       # Terminal C — needs keyboard focus; see scripts/keyboard_teleop.py for keys
-```
-Requires [`just`](https://github.com/casey/just). For challenge mode use `just challenge` and `just foxglove 42` / `just teleop 42`.
-
-### 4 · Test bench — 15 scenes × 5 questions → scores ([details → scripts/eval/README.md](scripts/eval/README.md))
 ```bash
 python3 scripts/eval/run_bench.py --repo . --scenes-dir ~/vln_scenes --out ~/vln_eval/$(date +%Y%m%d_%H%M) --smoke
 python3 scripts/eval/score.py --results ~/vln_eval/<run> --gt scripts/eval/gt/gt.json
 ```
+`--ai-launch` still defaults to `dummy_vlm`. [scripts/eval/README.md](scripts/eval/README.md)
+
+### 5 · Foxglove over SSH (camera + clouds on your laptop, no X11 lag)
+
+```bash
+just sim-noviz                                  # remote — or `just challenge`
+just foxglove                                   # remote — `just foxglove 42` in challenge mode
+ssh -N -L 8765:localhost:8765 <user>@<remote>   # laptop
+```
+Connect Foxglove desktop to `ws://localhost:8765` (**Open connection → Foxglove
+WebSocket**); import `scripts/foxglove/vln_layout.json` via **Layouts → Import from
+file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
+
+### 6 · Command reference
+
+| Group | Commands |
+|---|---|
+| **setup** | `up` · `up-dev` (live code edits) · `up-dev-fast` · `down` · `hf-fetch` · `build [pkg]` · `test` |
+| **sim** | `sim` · `sim-noviz` · `challenge` · `ask "…"` · `teleop` |
+| **bags** | `bag-play <scene>` · `bag <name>` (record) · `list-scenes` |
+| **run** | `ai` · `run-sam` · `run-map` |
+| **perception** | `sam-status` · `sam-map-json` · `sam-frames` · `sam-probe` · `sam-prompts` |
+| **debug** | `foxglove` · `topics` · `shell-ai` · `shell-sys` |
+| **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `vqa-status` · `vqa-down` · `caption` |
+| **cat1** | `cat1-reasoner` · `cat1-bag-bench <scene> [limit]` |
+
+Run `just` for this list with descriptions and default arguments.
 
 -----------------------
 

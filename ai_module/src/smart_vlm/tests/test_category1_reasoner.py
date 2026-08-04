@@ -1,12 +1,7 @@
 """Pure-python tests for category1 helpers (no ROS / GPU)."""
 from __future__ import annotations
 
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from smart_vlm.category1_utils import (  # noqa: E402
+from smart_vlm.category1_utils import (
     extract_integer,
     heuristic_targets,
     parse_target_list,

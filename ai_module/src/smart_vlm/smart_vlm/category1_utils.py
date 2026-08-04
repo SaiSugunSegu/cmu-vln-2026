@@ -1,10 +1,20 @@
-"""Pure helpers for category-1 reasoner (no ROS / GPU imports)."""
+"""Pure helpers for category-1 reasoner (no ROS / GPU imports).
+
+captioner.text_utils is stdlib-only for exactly this reason, so importing it
+here does not drag torch or rclpy into the unit tests.
+"""
 from __future__ import annotations
 
 import ast
 import json
 import re
-from typing import Optional
+
+# Re-exported: the reasoner parses integers both from its own fallback path and
+# from the VQA server's reply, and two implementations drifted apart before
+# (one stripped thousands separators, the other did not).
+from captioner.text_utils import extract_integer
+
+__all__ = ["extract_integer", "heuristic_targets", "parse_target_list"]
 
 _JSON_LIST_RE = re.compile(r"\[[^\[\]]*\]", re.DOTALL)
 
@@ -39,13 +49,6 @@ def parse_target_list(text: str) -> list[str]:
                 if out:
                     return out
     return []
-
-
-def extract_integer(text: Optional[str]) -> Optional[int]:
-    if not text:
-        return None
-    match = re.search(r"-?\d+", text)
-    return int(match.group(0)) if match else None
 
 
 def heuristic_targets(question: str) -> list[str]:
