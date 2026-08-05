@@ -2,600 +2,330 @@
   "scene": "japanese_room",
   "category": 1,
   "category_name": "numerical",
-  "description": "Category 1 (numerical) evaluation questions with integer answers. Grounded in scene-graph relations and object color attributes. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "benchmark": "benchmark_2",
+  "description": "Category 1 (numerical) questions with integer answers, authored from the challenge sample questions and reference images in questions/japanese_room/questions.pdf. Objects are restricted to salient, visually verifiable furniture and decor so a human can confirm every answer from the scene. Each question carries a machine-readable spec that scripts/eval/verify_benchmark2.py re-evaluates against the iref_vla object bounding boxes.",
   "notes": [
-    "difficulty: easy = attribute or single relation; medium = relation+attribute or non-unique anchors; hard = nested relations (e.g. near X with Y on it).",
-    "raw_label is preferred for SAM prompts when more specific than nyu_label.",
-    "Structural classes (wall/floor/ceiling) are excluded from counted answers and noisy on/near anchors.",
-    "object_ids lists supporting scene-graph ids for auditing; SAM3 should use target_objects."
+    "Q01 is the official Category 1 sample question from questions/japanese_room/questions.pdf; its answer (3) is the answer printed in the PDF.",
+    "difficulty: easy = single salient object class; medium = one relation; hard = two chained relations.",
+    "Only large, unambiguous objects are counted. Structural classes (wall/floor/ceiling) and the many small tableware items are excluded except where a relation makes them unambiguous.",
+    "'Potted plant' is avoided as a count target because the scene separately labels three 'flowers' objects that are also planted in pots, so a human would count them inconsistently.",
+    "The room is a tatami room with a low dining table and four floor cushions, a display alcove with a ledge under three calligraphy scrolls, and two side stands holding a vase and a jar.",
+    "object_ids lists supporting iref_vla scene-graph ids for auditing; SAM3 should use target_objects."
   ],
   "difficulty_counts": {
-    "easy": 10,
-    "medium": 12,
-    "hard": 8
+    "easy": 4,
+    "medium": 5,
+    "hard": 1
   },
   "target_object_coverage": [
     "calligraphy painting",
-    "ceiling",
     "ceiling lamp",
     "chopsticks",
     "column",
-    "dish",
     "display ledge",
-    "door",
-    "entrance door",
-    "fan decoration",
-    "floor",
-    "flowers",
     "glass",
-    "jar",
     "lantern",
-    "painting",
     "pillow",
     "placemat",
-    "potted plant",
-    "sake bottle",
-    "sauce bowl",
     "table",
     "tatami",
     "teapot",
-    "vase",
-    "wardrobe door",
-    "zen stone decoration"
+    "wardrobe door"
   ],
   "questions": [
     {
       "id": "Q01",
-      "question": "How many calligraphy paintings are near the display ledge?",
+      "question": "How many calligraphy paintings are above the display ledge?",
       "answer": 3,
-      "difficulty": "easy",
+      "difficulty": "medium",
       "type": "relational",
+      "source": "challenge sample question (questions/japanese_room/questions.pdf, Category 1)",
       "target_objects": [
         "calligraphy painting",
         "display ledge"
       ],
-      "evidence": "near[16:display ledge] -> ['8', '9', '10']",
+      "evidence": "Three framed calligraphy scrolls (8, 9, 10) hang on the alcove wall above display ledge 16.",
       "object_ids": [
         "8",
         "9",
         "10",
         "16"
-      ]
+      ],
+      "spec": {
+        "label": [
+          "calligraphy painting"
+        ],
+        "filters": [
+          {
+            "rel": "above",
+            "target": {
+              "label": [
+                "display ledge"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "id": "Q02",
-      "question": "How many ceiling lamps are near the display ledge?",
-      "answer": 3,
+      "question": "How many wooden columns are in the room?",
+      "answer": 5,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "ceiling lamp",
-        "display ledge"
+        "column"
       ],
-      "evidence": "near[16:display ledge] -> ['36', '56', '57']",
+      "evidence": "Five square wooden posts (22, 47, 48, 49, 50).",
       "object_ids": [
-        "36",
-        "56",
-        "57",
-        "16"
-      ]
+        "22",
+        "47",
+        "48",
+        "49",
+        "50"
+      ],
+      "spec": {
+        "label": [
+          "column"
+        ]
+      }
     },
     {
       "id": "Q03",
-      "question": "How many ceiling lamps are near the jar?",
+      "question": "How many lanterns are in the room?",
       "answer": 3,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "ceiling lamp",
-        "jar"
+        "lantern"
       ],
-      "evidence": "near[60:jar] -> ['52', '56', '57']",
+      "evidence": "Two paper lanterns on the display ledge (56, 57) and one on the floor by the fan decoration (61).",
       "object_ids": [
-        "52",
         "56",
         "57",
-        "60"
-      ]
+        "61"
+      ],
+      "spec": {
+        "label": [
+          "lantern"
+        ]
+      }
     },
     {
       "id": "Q04",
-      "question": "How many flowers are near the dish?",
-      "answer": 3,
+      "question": "How many ceiling lamps are in the room?",
+      "answer": 2,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "flowers",
-        "dish"
+        "ceiling lamp"
       ],
-      "evidence": "near[33:dish] -> ['4', '6', '53']",
+      "evidence": "Two square ceiling lamps above the tatami (36, 52).",
       "object_ids": [
-        "4",
-        "6",
-        "53",
-        "33"
-      ]
+        "36",
+        "52"
+      ],
+      "spec": {
+        "label": [
+          "ceiling lamp"
+        ]
+      }
     },
     {
       "id": "Q05",
-      "question": "How many flowers are near the sake bottle?",
-      "answer": 3,
+      "question": "How many wardrobe doors are in the room?",
+      "answer": 2,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "flowers",
-        "sake bottle"
+        "wardrobe door"
       ],
-      "evidence": "near[38:sake bottle] -> ['4', '6', '53']",
+      "evidence": "Two sliding wardrobe panels on the north wall (0, 1).",
       "object_ids": [
-        "4",
-        "6",
-        "53",
-        "38"
-      ]
+        "0",
+        "1"
+      ],
+      "spec": {
+        "label": [
+          "wardrobe door"
+        ]
+      }
     },
     {
       "id": "Q06",
-      "question": "How many glasses are near the dish?",
-      "answer": 3,
-      "difficulty": "easy",
+      "question": "How many pillows are on the tatami mat?",
+      "answer": 4,
+      "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "glass",
-        "dish"
+        "pillow",
+        "tatami"
       ],
-      "evidence": "near[33:dish] -> ['34', '35', '42']",
+      "evidence": "Four red floor cushions (40, 43, 44, 46) sit on tatami 27 around the low table.",
       "object_ids": [
-        "34",
-        "35",
-        "42",
-        "33"
-      ]
+        "40",
+        "43",
+        "44",
+        "46",
+        "27"
+      ],
+      "spec": {
+        "label": [
+          "pillow"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "tatami"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "id": "Q07",
-      "question": "How many glasses are near the tatami?",
-      "answer": 3,
-      "difficulty": "easy",
+      "question": "How many lanterns are on the display ledge?",
+      "answer": 2,
+      "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "glass",
-        "tatami"
+        "lantern",
+        "display ledge"
       ],
-      "evidence": "near[27:tatami] -> ['34', '35', '42']",
+      "evidence": "Lanterns 56 and 57 stand on display ledge 16; the third lantern (61) is on the floor across the room.",
       "object_ids": [
-        "34",
-        "35",
-        "42",
-        "27"
-      ]
+        "56",
+        "57",
+        "16"
+      ],
+      "spec": {
+        "label": [
+          "lantern"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "display ledge"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "id": "Q08",
-      "question": "How many paintings are near the dish?",
-      "answer": 3,
-      "difficulty": "easy",
+      "question": "How many placemats are on the low dining table?",
+      "answer": 2,
+      "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "painting",
-        "dish"
+        "placemat",
+        "table"
       ],
-      "evidence": "near[33:dish] -> ['7', '8', '9']",
+      "evidence": "Two placemats (37, 45) are laid on low table 26.",
       "object_ids": [
-        "7",
-        "8",
-        "9",
-        "33"
-      ]
+        "37",
+        "45",
+        "26"
+      ],
+      "spec": {
+        "label": [
+          "placemat"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "table"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "id": "Q09",
-      "question": "How many tables are near the dish?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "table",
-        "dish"
-      ],
-      "evidence": "near[33:dish] -> ['26', '58', '59']",
-      "object_ids": [
-        "26",
-        "58",
-        "59",
-        "33"
-      ]
-    },
-    {
-      "id": "Q10",
-      "question": "How many tables are near the teapot?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "table",
-        "teapot"
-      ],
-      "evidence": "near[32:teapot] -> ['26', '58', '59']",
-      "object_ids": [
-        "26",
-        "58",
-        "59",
-        "32"
-      ]
-    },
-    {
-      "id": "Q11",
-      "question": "How many black ceiling lamps are near the chopsticks?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "ceiling lamp",
-        "chopsticks"
-      ],
-      "evidence": "near[41] colored black: ['36', '52']",
-      "object_ids": [
-        "36",
-        "52",
-        "41"
-      ]
-    },
-    {
-      "id": "Q12",
-      "question": "How many black doors are near the potted plant?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "door",
-        "potted plant"
-      ],
-      "evidence": "near[24] colored black: ['2', '3']",
-      "object_ids": [
-        "2",
-        "3",
-        "24"
-      ]
-    },
-    {
-      "id": "Q13",
-      "question": "How many black paintings are above the floor?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "painting",
-        "floor"
-      ],
-      "evidence": "above[14] colored black: ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "14"
-      ]
-    },
-    {
-      "id": "Q14",
-      "question": "How many black paintings are below the ceiling?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "painting",
-        "ceiling"
-      ],
-      "evidence": "below[11] colored black: ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "11"
-      ]
-    },
-    {
-      "id": "Q15",
-      "question": "How many calligraphy paintings are near the column?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "calligraphy painting",
-        "column"
-      ],
-      "evidence": "near[22:column] -> ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "22"
-      ]
-    },
-    {
-      "id": "Q16",
-      "question": "How many chopsticks are near the placemat?",
+      "question": "How many pairs of chopsticks are on the low dining table?",
       "answer": 2,
       "difficulty": "medium",
       "type": "relational",
       "target_objects": [
         "chopsticks",
-        "placemat"
+        "table"
       ],
-      "evidence": "near[37:placemat] -> ['41', '51']",
+      "evidence": "Two pairs of chopsticks (41, 51) lie on the placemats on low table 26.",
       "object_ids": [
         "41",
         "51",
-        "37"
-      ]
-    },
-    {
-      "id": "Q17",
-      "question": "How many columns are near the door?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "column",
-        "door"
+        "26"
       ],
-      "evidence": "near[2:door] -> ['48', '49', '50']",
-      "object_ids": [
-        "48",
-        "49",
-        "50",
-        "2"
-      ]
+      "spec": {
+        "label": [
+          "chopsticks"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "table"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
-      "id": "Q18",
-      "question": "How many columns are near the entrance door?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "column",
-        "entrance door"
-      ],
-      "evidence": "near[21:entrance door] -> ['22', '47', '48']",
-      "object_ids": [
-        "22",
-        "47",
-        "48",
-        "21"
-      ]
-    },
-    {
-      "id": "Q19",
-      "question": "How many lanterns are below the black ceiling?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "lantern",
-        "ceiling"
-      ],
-      "evidence": "below[11 black ceiling] -> ['56', '57', '61']",
-      "object_ids": [
-        "56",
-        "57",
-        "61",
-        "11"
-      ]
-    },
-    {
-      "id": "Q20",
-      "question": "How many pillows are near the calligraphy painting?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "pillow",
-        "calligraphy painting"
-      ],
-      "evidence": "near[8:calligraphy painting] -> ['40', '43', '44']",
-      "object_ids": [
-        "40",
-        "43",
-        "44",
-        "8"
-      ]
-    },
-    {
-      "id": "Q21",
-      "question": "How many pillows are near the fan decoration?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "pillow",
-        "fan decoration"
-      ],
-      "evidence": "near[62:fan decoration] -> ['40', '44', '46']",
-      "object_ids": [
-        "40",
-        "44",
-        "46",
-        "62"
-      ]
-    },
-    {
-      "id": "Q22",
-      "question": "How many wardrobe doors are near the door?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "wardrobe door",
-        "door"
-      ],
-      "evidence": "near[2:door] -> ['0', '1', '3']",
-      "object_ids": [
-        "0",
-        "1",
-        "3",
-        "2"
-      ]
-    },
-    {
-      "id": "Q23",
-      "question": "How many black calligraphy paintings are near the display ledge with a lantern on it?",
-      "answer": 3,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "calligraphy painting",
-        "display ledge",
-        "lantern"
-      ],
-      "evidence": "colored black near nested: ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "16",
-        "56"
-      ]
-    },
-    {
-      "id": "Q24",
-      "question": "How many black calligraphy paintings are near the display ledge with a vase on it?",
-      "answer": 3,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "calligraphy painting",
-        "display ledge",
-        "vase"
-      ],
-      "evidence": "colored black near nested: ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "16",
-        "28"
-      ]
-    },
-    {
-      "id": "Q25",
-      "question": "How many black calligraphy paintings are near the display ledge with a zen stone decoration on it?",
-      "answer": 3,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "calligraphy painting",
-        "display ledge",
-        "zen stone decoration"
-      ],
-      "evidence": "colored black near nested: ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "16",
-        "23"
-      ]
-    },
-    {
-      "id": "Q26",
-      "question": "How many black calligraphy paintings are near the display ledge with flowers on it?",
-      "answer": 3,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "calligraphy painting",
-        "display ledge",
-        "flowers"
-      ],
-      "evidence": "colored black near nested: ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "16",
-        "6"
-      ]
-    },
-    {
-      "id": "Q27",
-      "question": "How many black paintings are near the table with a dish on it?",
-      "answer": 3,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "painting",
-        "table",
-        "dish"
-      ],
-      "evidence": "colored black near nested: ['8', '9', '10']",
-      "object_ids": [
-        "8",
-        "9",
-        "10",
-        "26",
-        "33"
-      ]
-    },
-    {
-      "id": "Q28",
-      "question": "How many flowers are near the display ledge with a vase on it?",
-      "answer": 3,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "flowers",
-        "display ledge",
-        "vase"
-      ],
-      "evidence": "near[16:display ledge with 28:vase on] -> ['4', '6', '53']",
-      "object_ids": [
-        "4",
-        "6",
-        "53",
-        "16",
-        "28"
-      ]
-    },
-    {
-      "id": "Q29",
-      "question": "How many glasses are near the display ledge with a zen stone decoration on it?",
-      "answer": 3,
+      "id": "Q10",
+      "question": "How many glasses are on the table with the teapot on it?",
+      "answer": 4,
       "difficulty": "hard",
       "type": "relational",
       "target_objects": [
         "glass",
-        "display ledge",
-        "zen stone decoration"
-      ],
-      "evidence": "near[16:display ledge with 23:zen stone decoration on] -> ['34', '35', '42']",
-      "object_ids": [
-        "34",
-        "35",
-        "42",
-        "16",
-        "23"
-      ]
-    },
-    {
-      "id": "Q30",
-      "question": "How many sauce bowls are on the table near the chopsticks?",
-      "answer": 3,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "sauce bowl",
         "table",
-        "chopsticks"
+        "teapot"
       ],
-      "evidence": "on[26] near 41:chopsticks tops=['34', '35', '42']",
+      "evidence": "Teapot 32 rests on low table 26, which also holds glasses 34, 35, 39 and 54; the other two tables are small side stands.",
       "object_ids": [
         "34",
         "35",
-        "42",
+        "39",
+        "54",
         "26",
-        "41"
-      ]
+        "32"
+      ],
+      "spec": {
+        "label": [
+          "glass"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "table"
+              ],
+              "filters": [
+                {
+                  "rel": "supports",
+                  "target": {
+                    "label": [
+                      "teapot"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
 }

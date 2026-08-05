@@ -2,577 +2,320 @@
   "scene": "hotel_room_1",
   "category": 1,
   "category_name": "numerical",
-  "description": "Category 1 (numerical) evaluation questions with integer answers. Grounded in scene-graph relations and object color attributes. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "benchmark": "benchmark_2",
+  "description": "Category 1 (numerical) questions with integer answers, authored from the challenge sample questions and reference images in questions/hotel_room_1/questions.pdf. Objects are restricted to salient, visually verifiable furniture and decor so a human can confirm every answer from the scene. Each question carries a machine-readable spec that scripts/eval/verify_benchmark2.py re-evaluates against the iref_vla object bounding boxes.",
   "notes": [
-    "difficulty: easy = attribute or single relation; medium = relation+attribute or non-unique anchors; hard = nested relations (e.g. near X with Y on it).",
-    "raw_label is preferred for SAM prompts when more specific than nyu_label.",
-    "Structural classes (wall/floor/ceiling) are excluded from counted answers and noisy on/near anchors.",
-    "object_ids lists supporting scene-graph ids for auditing; SAM3 should use target_objects."
+    "Q01 is the official Category 1 sample question from questions/hotel_room_1/questions.pdf; its answer (4) is the answer printed in the PDF.",
+    "difficulty: easy = single salient object class; medium = one relation or a room-region restriction; hard = two chained relations.",
+    "The scene is split into iref regions: region 0 is the bathroom, region 2 is the bedroom. Region-scoped questions use that split.",
+    "Only large, unambiguous objects are counted. Focus lights, light switches, papers and structural classes (wall/floor/ceiling) are excluded because they are too small or too abstract to ground reliably.",
+    "The two vases on the top shelf of the desk unit (2.65 m up) are deliberately not used: they sit above the robot's useful viewing height.",
+    "object_ids lists supporting iref_vla scene-graph ids for auditing; SAM3 should use target_objects."
   ],
   "difficulty_counts": {
-    "easy": 10,
-    "medium": 12,
-    "hard": 8
+    "easy": 4,
+    "medium": 5,
+    "hard": 1
   },
   "target_object_coverage": [
     "bed",
     "bedside table",
-    "bench",
-    "blanket",
-    "book",
-    "ceiling",
-    "ceiling lamp",
     "chair",
     "curtains",
-    "desk cabinet",
-    "eye glasses",
-    "floor",
-    "focus light",
     "lamp",
-    "light switch",
-    "magazine",
-    "paper",
-    "phone",
     "picture",
     "pillow",
     "sink",
     "soap",
-    "suitcase",
     "towel",
     "towel rack",
-    "trash can",
-    "tv",
-    "vase"
+    "window"
   ],
   "questions": [
     {
       "id": "Q01",
-      "question": "How many black lamps are in the scene?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "attribute",
-      "target_objects": [
-        "lamp"
-      ],
-      "evidence": "3 lamp with primary color black: ['74', '80', '82']",
-      "object_ids": [
-        "74",
-        "80",
-        "82"
-      ]
-    },
-    {
-      "id": "Q02",
-      "question": "How many papers are near the eye glasses?",
-      "answer": 2,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "paper",
-        "eye glasses"
-      ],
-      "evidence": "near[66:eye glasses] -> ['33', '35']",
-      "object_ids": [
-        "33",
-        "35",
-        "66"
-      ]
-    },
-    {
-      "id": "Q03",
-      "question": "How many papers are near the suitcase?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "paper",
-        "suitcase"
-      ],
-      "evidence": "near[84:suitcase] -> ['33', '34', '35']",
-      "object_ids": [
-        "33",
-        "34",
-        "35",
-        "84"
-      ]
-    },
-    {
-      "id": "Q04",
-      "question": "How many pictures are near the eye glasses?",
-      "answer": 2,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "picture",
-        "eye glasses"
-      ],
-      "evidence": "near[66:eye glasses] -> ['6', '19']",
-      "object_ids": [
-        "6",
-        "19",
-        "66"
-      ]
-    },
-    {
-      "id": "Q05",
-      "question": "How many pillows are near the blanket?",
-      "answer": 4,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "pillow",
-        "blanket"
-      ],
-      "evidence": "near[2:blanket] -> ['0', '29', '50', '83']",
-      "object_ids": [
-        "0",
-        "29",
-        "50",
-        "83",
-        "2"
-      ]
-    },
-    {
-      "id": "Q06",
-      "question": "How many pillows are near the book?",
-      "answer": 2,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "pillow",
-        "book"
-      ],
-      "evidence": "near[1:book] -> ['0', '50']",
-      "object_ids": [
-        "0",
-        "50",
-        "1"
-      ]
-    },
-    {
-      "id": "Q07",
       "question": "How many pillows are on the bed?",
       "answer": 4,
-      "difficulty": "easy",
+      "difficulty": "medium",
       "type": "relational",
+      "source": "challenge sample question (questions/hotel_room_1/questions.pdf, Category 1)",
       "target_objects": [
         "pillow",
         "bed"
       ],
-      "evidence": "on[11:bed] -> ['0', '29', '50', '83']",
+      "evidence": "Two white pillows (0, 29) and two dark pillows (50, 83) lie on bed 11.",
       "object_ids": [
         "0",
         "29",
         "50",
         "83",
         "11"
-      ]
-    },
-    {
-      "id": "Q08",
-      "question": "How many towels are in the scene?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "attribute",
-      "target_objects": [
-        "towel"
       ],
-      "evidence": "Count of towel: ['24', '64', '17']",
-      "object_ids": [
-        "24",
-        "64",
-        "17"
-      ]
+      "spec": {
+        "label": [
+          "pillow"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "bed"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
-      "id": "Q09",
-      "question": "How many vases are near the desk cabinet?",
+      "id": "Q02",
+      "question": "How many bedside tables are in the bedroom?",
       "answer": 2,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "vase",
-        "desk cabinet"
+        "bedside table"
       ],
-      "evidence": "near[38:desk cabinet] -> ['20', '21']",
+      "evidence": "One bedside table on each side of the bed (72, 85).",
       "object_ids": [
-        "20",
-        "21",
-        "38"
-      ]
+        "72",
+        "85"
+      ],
+      "spec": {
+        "label": [
+          "bedside table"
+        ]
+      }
     },
     {
-      "id": "Q10",
-      "question": "How many vases are near the tv?",
+      "id": "Q03",
+      "question": "How many chairs are in the bedroom?",
       "answer": 2,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "vase",
-        "tv"
-      ],
-      "evidence": "near[10:tv] -> ['20', '21']",
-      "object_ids": [
-        "20",
-        "21",
-        "10"
-      ]
-    },
-    {
-      "id": "Q11",
-      "question": "How many bedside tables are near the lamp?",
-      "answer": 1,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "bedside table",
-        "lamp"
-      ],
-      "evidence": "near[74:lamp] -> ['85']",
-      "object_ids": [
-        "85",
-        "74"
-      ]
-    },
-    {
-      "id": "Q12",
-      "question": "How many benches are near the towel?",
-      "answer": 1,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "bench",
-        "towel"
-      ],
-      "evidence": "near[17:towel] -> ['81']",
-      "object_ids": [
-        "81",
-        "17"
-      ]
-    },
-    {
-      "id": "Q13",
-      "question": "How many black eye glasses are near the chair?",
-      "answer": 1,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "eye glasses",
         "chair"
       ],
-      "evidence": "near[15] colored black: ['66']",
+      "evidence": "A white desk chair (15) and a brown egg chair by the window (36).",
       "object_ids": [
-        "66",
-        "15"
-      ]
+        "15",
+        "36"
+      ],
+      "spec": {
+        "label": [
+          "chair"
+        ]
+      }
     },
     {
-      "id": "Q14",
-      "question": "How many black lamps are above the floor?",
+      "id": "Q04",
+      "question": "How many framed pictures are hanging on the wall?",
       "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
+      "difficulty": "easy",
+      "type": "count",
       "target_objects": [
-        "lamp",
-        "floor"
+        "picture"
       ],
-      "evidence": "above[62] colored black: ['74', '80']",
+      "evidence": "Two framed pictures hang above the desk (6, 19).",
       "object_ids": [
-        "74",
-        "80",
-        "62"
-      ]
+        "6",
+        "19"
+      ],
+      "spec": {
+        "label": [
+          "picture"
+        ]
+      }
     },
     {
-      "id": "Q15",
-      "question": "How many black light switches are above the floor?",
+      "id": "Q05",
+      "question": "How many curtains are in the bedroom?",
       "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
+      "difficulty": "easy",
+      "type": "count",
       "target_objects": [
-        "light switch",
-        "floor"
+        "curtains"
       ],
-      "evidence": "above[43] colored black: ['30', '31']",
-      "object_ids": [
-        "30",
-        "31",
-        "43"
-      ]
-    },
-    {
-      "id": "Q16",
-      "question": "How many black towel racks are below the ceiling?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "towel rack",
-        "ceiling"
-      ],
-      "evidence": "below[51] colored black: ['18', '25']",
-      "object_ids": [
-        "18",
-        "25",
-        "51"
-      ]
-    },
-    {
-      "id": "Q17",
-      "question": "How many ceiling lamps are above the floor?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "ceiling lamp",
-        "floor"
-      ],
-      "evidence": "above[43:floor] -> ['7', '68']",
-      "object_ids": [
-        "7",
-        "68",
-        "43"
-      ]
-    },
-    {
-      "id": "Q18",
-      "question": "How many curtains are below the ceiling?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "curtains",
-        "ceiling"
-      ],
-      "evidence": "below[77:ceiling] -> ['8', '45']",
+      "evidence": "One curtain panel at each end of the window wall (8, 45).",
       "object_ids": [
         "8",
-        "45",
-        "77"
-      ]
+        "45"
+      ],
+      "spec": {
+        "label": [
+          "curtains"
+        ]
+      }
     },
     {
-      "id": "Q19",
-      "question": "How many focus lights are above the floor?",
-      "answer": 4,
+      "id": "Q06",
+      "question": "How many sinks are in the bathroom?",
+      "answer": 2,
       "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "focus light",
-        "floor"
+        "sink"
       ],
-      "evidence": "above[62:floor] -> ['26', '40', '41', '44']",
-      "object_ids": [
-        "26",
-        "40",
-        "41",
-        "44",
-        "62"
-      ]
-    },
-    {
-      "id": "Q20",
-      "question": "How many gray sinks are below the ceiling?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "sink",
-        "ceiling"
-      ],
-      "evidence": "below[51] colored gray: ['48', '67']",
+      "evidence": "The bathroom (region 0) has a twin vanity with sinks 48 and 67.",
       "object_ids": [
         "48",
-        "67",
-        "51"
-      ]
-    },
-    {
-      "id": "Q21",
-      "question": "How many gray sinks are near the soap?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "sink",
-        "soap"
+        "67"
       ],
-      "evidence": "near[63] colored gray: ['48', '67']",
-      "object_ids": [
-        "48",
-        "67",
-        "63"
-      ]
+      "spec": {
+        "label": [
+          "sink"
+        ],
+        "regions": [
+          "0"
+        ]
+      }
     },
     {
-      "id": "Q22",
-      "question": "How many lamps are below the ceiling?",
-      "answer": 3,
+      "id": "Q07",
+      "question": "How many towels are hanging in the bathroom?",
+      "answer": 2,
       "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "lamp",
-        "ceiling"
-      ],
-      "evidence": "below[77:ceiling] -> ['74', '80', '82']",
-      "object_ids": [
-        "74",
-        "80",
-        "82",
-        "77"
-      ]
-    },
-    {
-      "id": "Q23",
-      "question": "How many black trash cans are near the towel with a towel rack on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "trash can",
         "towel",
         "towel rack"
       ],
-      "evidence": "colored black near nested: ['69']",
+      "evidence": "Towel 64 hangs on rack 18 and towel 24 on rack 25, both in the bathroom; towel 17 lies on the bench in the bedroom and is not counted.",
       "object_ids": [
-        "69",
         "24",
+        "64",
+        "18",
         "25"
-      ]
+      ],
+      "spec": {
+        "label": [
+          "towel"
+        ],
+        "regions": [
+          "0"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "towel rack"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
-      "id": "Q24",
-      "question": "How many gray phones are near the desk cabinet with a vase on it?",
+      "id": "Q08",
+      "question": "How many soap dispensers are on the sinks?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "soap",
+        "sink"
+      ],
+      "evidence": "One soap dispenser sits on each bathroom sink (63 on sink 67, 79 on sink 48).",
+      "object_ids": [
+        "63",
+        "79",
+        "48",
+        "67"
+      ],
+      "spec": {
+        "label": [
+          "soap"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "sink"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q09",
+      "question": "How many lamps are on the bedside tables?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "lamp",
+        "bedside table"
+      ],
+      "evidence": "Lamp 80 stands on bedside table 72 and lamp 74 on bedside table 85; the third lamp (82) is a floor lamp.",
+      "object_ids": [
+        "74",
+        "80",
+        "72",
+        "85"
+      ],
+      "spec": {
+        "label": [
+          "lamp"
+        ],
+        "filters": [
+          {
+            "rel": "on",
+            "target": {
+              "label": [
+                "bedside table"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q10",
+      "question": "How many lamps are on the bedside table closest to the window?",
       "answer": 1,
       "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "phone",
-        "desk cabinet",
-        "vase"
-      ],
-      "evidence": "colored gray near nested: ['65']",
-      "object_ids": [
-        "65",
-        "38",
-        "20"
-      ]
-    },
-    {
-      "id": "Q25",
-      "question": "How many pillows are on the bed near the blanket?",
-      "answer": 4,
-      "difficulty": "hard",
       "type": "relational",
       "target_objects": [
-        "pillow",
-        "bed",
-        "blanket"
+        "lamp",
+        "bedside table",
+        "window"
       ],
-      "evidence": "on[11] near 2:blanket tops=['0', '29', '50', '83']",
+      "evidence": "Bedside table 85 is 3.97 m from window 58 while table 72 is 7.0 m away; only lamp 74 stands on table 85.",
       "object_ids": [
-        "0",
-        "29",
-        "50",
-        "83",
-        "11",
-        "2"
-      ]
-    },
-    {
-      "id": "Q26",
-      "question": "How many vases are on the desk cabinet near the chair?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "vase",
-        "desk cabinet",
-        "chair"
+        "74",
+        "85",
+        "58"
       ],
-      "evidence": "on[38] near 15:chair tops=['20', '21']",
-      "object_ids": [
-        "20",
-        "21",
-        "38",
-        "15"
-      ]
-    },
-    {
-      "id": "Q27",
-      "question": "How many vases are on the desk cabinet near the eye glasses?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "vase",
-        "desk cabinet",
-        "eye glasses"
-      ],
-      "evidence": "on[38] near 66:eye glasses tops=['20', '21']",
-      "object_ids": [
-        "20",
-        "21",
-        "38",
-        "66"
-      ]
-    },
-    {
-      "id": "Q28",
-      "question": "How many vases are on the desk cabinet near the magazine?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "vase",
-        "desk cabinet",
-        "magazine"
-      ],
-      "evidence": "on[38] near 23:magazine tops=['20', '21']",
-      "object_ids": [
-        "20",
-        "21",
-        "38",
-        "23"
-      ]
-    },
-    {
-      "id": "Q29",
-      "question": "How many vases are on the desk cabinet near the phone?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "vase",
-        "desk cabinet",
-        "phone"
-      ],
-      "evidence": "on[38] near 65:phone tops=['20', '21']",
-      "object_ids": [
-        "20",
-        "21",
-        "38",
-        "65"
-      ]
-    },
-    {
-      "id": "Q30",
-      "question": "How many vases are on the desk cabinet near the picture?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "vase",
-        "desk cabinet",
-        "picture"
-      ],
-      "evidence": "on[38] near 6:picture tops=['20', '21']",
-      "object_ids": [
-        "20",
-        "21",
-        "38",
-        "6"
-      ]
+      "spec": {
+        "label": [
+          "lamp"
+        ],
+        "filters": [
+          {
+            "rel": "near",
+            "max_dist": 1.0,
+            "target": {
+              "label": [
+                "bedside table"
+              ],
+              "filters": [
+                {
+                  "rel": "near",
+                  "max_dist": 4.5,
+                  "target": {
+                    "label": [
+                      "window"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
 }

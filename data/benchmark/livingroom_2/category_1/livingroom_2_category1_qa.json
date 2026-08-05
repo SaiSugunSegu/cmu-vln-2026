@@ -2,426 +2,141 @@
   "scene": "livingroom_2",
   "category": 1,
   "category_name": "numerical",
-  "description": "Category 1 (numerical) evaluation questions with integer answers. Grounded in scene-graph relations and object color attributes. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "benchmark": "benchmark_2",
+  "description": "Category 1 (numerical) questions with integer answers, authored from the challenge sample questions and reference images in questions/livingroom_2/questions.pdf. Objects are restricted to salient, visually verifiable furniture and decor so a human can confirm every answer from the scene. Each question carries a machine-readable spec that scripts/eval/verify_benchmark2.py re-evaluates against the iref_vla object bounding boxes.",
   "notes": [
-    "difficulty: easy = attribute or single relation; medium = relation+attribute or non-unique anchors; hard = nested relations (e.g. near X with Y on it).",
-    "raw_label is preferred for SAM prompts when more specific than nyu_label.",
-    "Structural classes (wall/floor/ceiling) are excluded from counted answers and noisy on/near anchors.",
-    "object_ids lists supporting scene-graph ids for auditing; SAM3 should use target_objects."
+    "Q01 is the official Category 1 sample question from questions/livingroom_2/questions.pdf; its answer (2) is the answer printed in the PDF.",
+    "difficulty: easy = single salient object class; medium = one relation or a room-region restriction; hard = two chained relations.",
+    "The scene is split into iref regions: region 0 is the apartment (kitchen + living area), region 1 is the outdoor terrace. Region-scoped questions use that split.",
+    "Q03 and Q06 are deliberately paired: three of the four lamps are on the terrace, so a model that ignores the location qualifier gets one of them wrong.",
+    "Only large, unambiguous objects are counted. Spot lights, candles, small decorations and structural classes (wall/floor/ceiling) are excluded because they are too small or too abstract to ground reliably.",
+    "The TV is annotated twice (8 and 9) in the iref data, so no question counts televisions.",
+    "object_ids lists supporting iref_vla scene-graph ids for auditing; SAM3 should use target_objects."
   ],
   "difficulty_counts": {
-    "easy": 10,
-    "medium": 12,
-    "hard": 8
+    "easy": 3,
+    "medium": 6,
+    "hard": 1
   },
   "target_object_coverage": [
-    "basket",
     "beer bottle",
     "books",
-    "bottle",
-    "bread",
-    "can of coke",
-    "candle",
-    "carpet",
-    "ceiling",
-    "ceiling lamp",
-    "clock",
     "coffee cup",
     "coffee table",
-    "crystal ball decoration",
+    "couch",
     "cup",
-    "dice decoration",
-    "dish",
-    "door",
-    "floor",
-    "fridge",
-    "handle",
-    "kitchen counter",
     "kitchen island",
-    "microwave",
+    "lamp",
     "pillow",
+    "potted plant",
     "shelf",
-    "sink",
     "sliced bread",
     "sofa",
-    "spot light",
     "stool",
     "table",
-    "tap",
-    "tv",
-    "tv cabinet",
-    "tv remote",
     "wine bottle"
   ],
   "questions": [
     {
       "id": "Q01",
-      "question": "How many beer bottles are near the can of coke?",
-      "answer": 2,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "beer bottle",
-        "can of coke"
-      ],
-      "evidence": "near[84:can of coke] -> ['13', '27']",
-      "object_ids": [
-        "13",
-        "27",
-        "84"
-      ]
-    },
-    {
-      "id": "Q02",
-      "question": "How many beer bottles are near the table?",
-      "answer": 2,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "beer bottle",
-        "table"
-      ],
-      "evidence": "near[41:table] -> ['13', '27']",
-      "object_ids": [
-        "13",
-        "27",
-        "41"
-      ]
-    },
-    {
-      "id": "Q03",
-      "question": "How many black doors are in the scene?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "attribute",
-      "target_objects": [
-        "door"
-      ],
-      "evidence": "3 door with primary color black: ['0', '19', '54']",
-      "object_ids": [
-        "0",
-        "19",
-        "54"
-      ]
-    },
-    {
-      "id": "Q04",
-      "question": "How many books are near the bottle?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "books",
-        "bottle"
-      ],
-      "evidence": "near[38:bottle] -> ['16', '33', '45']",
-      "object_ids": [
-        "16",
-        "33",
-        "45",
-        "38"
-      ]
-    },
-    {
-      "id": "Q05",
-      "question": "How many books are near the shelf?",
-      "answer": 4,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "books",
-        "shelf"
-      ],
-      "evidence": "near[29:shelf] -> ['14', '16', '33', '45']",
-      "object_ids": [
-        "14",
-        "16",
-        "33",
-        "45",
-        "29"
-      ]
-    },
-    {
-      "id": "Q06",
-      "question": "How many breads are near the fridge?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "bread",
-        "fridge"
-      ],
-      "evidence": "near[79:fridge] -> ['36', '46', '47']",
-      "object_ids": [
-        "36",
-        "46",
-        "47",
-        "79"
-      ]
-    },
-    {
-      "id": "Q07",
-      "question": "How many breads are near the kitchen island?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "bread",
-        "kitchen island"
-      ],
-      "evidence": "near[61:kitchen island] -> ['36', '46', '47']",
-      "object_ids": [
-        "36",
-        "46",
-        "47",
-        "61"
-      ]
-    },
-    {
-      "id": "Q08",
-      "question": "How many candles are near the bottle?",
-      "answer": 2,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "candle",
-        "bottle"
-      ],
-      "evidence": "near[38:bottle] -> ['75', '76']",
-      "object_ids": [
-        "75",
-        "76",
-        "38"
-      ]
-    },
-    {
-      "id": "Q09",
-      "question": "How many candles are near the tv cabinet?",
-      "answer": 2,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "candle",
-        "tv cabinet"
-      ],
-      "evidence": "near[78:tv cabinet] -> ['67', '75']",
-      "object_ids": [
-        "67",
-        "75",
-        "78"
-      ]
-    },
-    {
-      "id": "Q10",
-      "question": "How many pillows are near the clock?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "pillow",
-        "clock"
-      ],
-      "evidence": "near[53:clock] -> ['5', '22', '39']",
-      "object_ids": [
-        "5",
-        "22",
-        "39",
-        "53"
-      ]
-    },
-    {
-      "id": "Q11",
-      "question": "How many black ceiling lamps are below the ceiling?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "ceiling lamp",
-        "ceiling"
-      ],
-      "evidence": "below[69] colored black: ['11', '81']",
-      "object_ids": [
-        "11",
-        "81",
-        "69"
-      ]
-    },
-    {
-      "id": "Q12",
-      "question": "How many black handles are above the floor?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "handle",
-        "floor"
-      ],
-      "evidence": "above[77] colored black: ['1', '20']",
-      "object_ids": [
-        "1",
-        "20",
-        "77"
-      ]
-    },
-    {
-      "id": "Q13",
-      "question": "How many black spot lights are near the clock?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "spot light",
-        "clock"
-      ],
-      "evidence": "near[53] colored black: ['32', '65']",
-      "object_ids": [
-        "32",
-        "65",
-        "53"
-      ]
-    },
-    {
-      "id": "Q14",
-      "question": "How many books are below the dice decoration?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "books",
-        "dice decoration"
-      ],
-      "evidence": "below[30:dice decoration] -> ['14', '16', '33']",
-      "object_ids": [
-        "14",
-        "16",
-        "33",
-        "30"
-      ]
-    },
-    {
-      "id": "Q15",
-      "question": "How many breads are above the floor?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "bread",
-        "floor"
-      ],
-      "evidence": "above[77:floor] -> ['36', '46', '47']",
-      "object_ids": [
-        "36",
-        "46",
-        "47",
-        "77"
-      ]
-    },
-    {
-      "id": "Q16",
-      "question": "How many candles are below the black ceiling?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "candle",
-        "ceiling"
-      ],
-      "evidence": "below[69 black ceiling] -> ['67', '75', '76']",
-      "object_ids": [
-        "67",
-        "75",
-        "76",
-        "69"
-      ]
-    },
-    {
-      "id": "Q17",
-      "question": "How many coffee cups are above the carpet?",
+      "question": "How many cups are on the coffee table?",
       "answer": 2,
       "difficulty": "medium",
       "type": "relational",
+      "source": "challenge sample question (questions/livingroom_2/questions.pdf, Category 1)",
       "target_objects": [
-        "coffee cup",
-        "carpet"
-      ],
-      "evidence": "above[57:carpet] -> ['12', '48']",
-      "object_ids": [
-        "12",
-        "48",
-        "57"
-      ]
-    },
-    {
-      "id": "Q18",
-      "question": "How many coffee cups are near the gray coffee table?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
+        "cup",
         "coffee cup",
         "coffee table"
       ],
-      "evidence": "near[83 gray coffee table] -> ['12', '48']",
+      "evidence": "A white mug (48) and a coffee cup (12) stand on coffee table 83.",
       "object_ids": [
         "12",
         "48",
         "83"
-      ]
-    },
-    {
-      "id": "Q19",
-      "question": "How many dice decorations are near the tv?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "dice decoration",
-        "tv"
       ],
-      "evidence": "near[8:tv] -> ['30', '59']",
-      "object_ids": [
-        "30",
-        "59",
-        "8"
-      ]
+      "spec": {
+        "label": [
+          "cup",
+          "coffee cup"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "coffee table"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
-      "id": "Q20",
-      "question": "How many gray sliced breads are near the bread?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "sliced bread",
-        "bread"
-      ],
-      "evidence": "near[36] colored gray: ['46', '47']",
-      "object_ids": [
-        "46",
-        "47",
-        "36"
-      ]
-    },
-    {
-      "id": "Q21",
-      "question": "How many pillows are near the coffee cup?",
+      "id": "Q02",
+      "question": "How many couches are on the terrace?",
       "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
+      "difficulty": "easy",
+      "type": "count",
       "target_objects": [
-        "pillow",
-        "coffee cup"
+        "couch"
       ],
-      "evidence": "near[12:coffee cup] -> ['5', '22', '39']",
+      "evidence": "Three outdoor couches (6, 24, 60) form a U around the terrace table.",
       "object_ids": [
-        "5",
-        "22",
-        "39",
-        "12"
-      ]
+        "6",
+        "24",
+        "60"
+      ],
+      "spec": {
+        "label": [
+          "couch"
+        ]
+      }
     },
     {
-      "id": "Q22",
+      "id": "Q03",
+      "question": "How many lamps are in the scene in total?",
+      "answer": 4,
+      "difficulty": "easy",
+      "type": "count",
+      "target_objects": [
+        "lamp"
+      ],
+      "evidence": "Three terrace lamps (15, 17, 72) plus the tall standing lamp indoors (81).",
+      "object_ids": [
+        "15",
+        "17",
+        "72",
+        "81"
+      ],
+      "spec": {
+        "label": [
+          "lamp"
+        ]
+      }
+    },
+    {
+      "id": "Q04",
+      "question": "How many stools are at the kitchen island?",
+      "answer": 2,
+      "difficulty": "easy",
+      "type": "count",
+      "target_objects": [
+        "stool"
+      ],
+      "evidence": "Two red bar stools (25, 56) are pulled up to the island.",
+      "object_ids": [
+        "25",
+        "56"
+      ],
+      "spec": {
+        "label": [
+          "stool"
+        ]
+      }
+    },
+    {
+      "id": "Q05",
       "question": "How many pillows are on the sofa?",
       "answer": 3,
       "difficulty": "medium",
@@ -430,162 +145,185 @@
         "pillow",
         "sofa"
       ],
-      "evidence": "on[71:sofa] -> ['5', '22', '39']",
+      "evidence": "Three pillows (5, 22, 39) lie on the indoor sofa 71.",
       "object_ids": [
         "5",
         "22",
         "39",
         "71"
-      ]
+      ],
+      "spec": {
+        "label": [
+          "pillow"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "sofa"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
-      "id": "Q23",
-      "question": "How many baskets are near the sofa with a pillow on it?",
-      "answer": 1,
-      "difficulty": "hard",
+      "id": "Q06",
+      "question": "How many lamps are on the terrace?",
+      "answer": 3,
+      "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "basket",
-        "sofa",
-        "pillow"
+        "lamp"
       ],
-      "evidence": "near[71:sofa with 5:pillow on] -> ['42']",
+      "evidence": "Lamps 15, 17 and 72 are outside on the terrace (iref region 1); lamp 81 is indoors.",
       "object_ids": [
-        "42",
-        "71",
-        "5"
-      ]
+        "15",
+        "17",
+        "72"
+      ],
+      "spec": {
+        "label": [
+          "lamp"
+        ],
+        "regions": [
+          "1"
+        ]
+      }
     },
     {
-      "id": "Q24",
-      "question": "How many black kitchen counters are near the sink with a tap on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational+attribute",
+      "id": "Q07",
+      "question": "How many potted plants are on the terrace?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational",
       "target_objects": [
-        "kitchen counter",
-        "sink",
-        "tap"
+        "potted plant"
       ],
-      "evidence": "colored black near nested: ['74']",
+      "evidence": "Two large planted trees (34, 58) stand on the terrace; the third potted plant (64) is indoors beside the TV cabinet.",
       "object_ids": [
-        "74",
-        "43",
-        "44"
-      ]
+        "34",
+        "58"
+      ],
+      "spec": {
+        "label": [
+          "potted plant"
+        ],
+        "regions": [
+          "1"
+        ]
+      }
     },
     {
-      "id": "Q25",
-      "question": "How many crystal ball decorations are on the shelf near the bottle?",
+      "id": "Q08",
+      "question": "How many shelves of the bookcase are filled with books?",
+      "answer": 4,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "books",
+        "shelf"
+      ],
+      "evidence": "Bookcase 29 has four stacked rows of books (14, 33, 16, 45).",
+      "object_ids": [
+        "14",
+        "16",
+        "33",
+        "45",
+        "29"
+      ],
+      "spec": {
+        "label": [
+          "books"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "shelf"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q09",
+      "question": "How many beer bottles are on the terrace table?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "beer bottle",
+        "table"
+      ],
+      "evidence": "Beer bottles 13 and 27 stand on terrace table 41, alongside a can of coke that is not counted.",
+      "object_ids": [
+        "13",
+        "27",
+        "41"
+      ],
+      "spec": {
+        "label": [
+          "beer bottle"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "table"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q10",
+      "question": "How many slices of bread are on the counter with the wine bottle on it?",
       "answer": 2,
       "difficulty": "hard",
       "type": "relational",
       "target_objects": [
-        "crystal ball decoration",
-        "shelf",
-        "bottle"
-      ],
-      "evidence": "on[29] near 38:bottle tops=['30', '59']",
-      "object_ids": [
-        "30",
-        "59",
-        "29",
-        "38"
-      ]
-    },
-    {
-      "id": "Q26",
-      "question": "How many crystal ball decorations are on the shelf near the stool?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "crystal ball decoration",
-        "shelf",
-        "stool"
-      ],
-      "evidence": "on[29] near 56:stool tops=['30', '59']",
-      "object_ids": [
-        "30",
-        "59",
-        "29",
-        "56"
-      ]
-    },
-    {
-      "id": "Q27",
-      "question": "How many cups are on the coffee table near the carpet?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "cup",
-        "coffee table",
-        "carpet"
-      ],
-      "evidence": "on[83] near 57:carpet tops=['12', '48']",
-      "object_ids": [
-        "12",
-        "48",
-        "83",
-        "57"
-      ]
-    },
-    {
-      "id": "Q28",
-      "question": "How many cups are on the coffee table near the tv remote?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "cup",
-        "coffee table",
-        "tv remote"
-      ],
-      "evidence": "on[83] near 82:tv remote tops=['12', '48']",
-      "object_ids": [
-        "12",
-        "48",
-        "83",
-        "82"
-      ]
-    },
-    {
-      "id": "Q29",
-      "question": "How many dishes are near the kitchen counter with a microwave on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "dish",
-        "kitchen counter",
-        "microwave"
-      ],
-      "evidence": "near[74:kitchen counter with 85:microwave on] -> ['18']",
-      "object_ids": [
-        "18",
-        "74",
-        "85"
-      ]
-    },
-    {
-      "id": "Q30",
-      "question": "How many gray stools are near the kitchen island with a wine bottle on it?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "stool",
+        "sliced bread",
         "kitchen island",
         "wine bottle"
       ],
-      "evidence": "colored gray near nested: ['25', '56']",
+      "evidence": "Wine bottle 66 stands on kitchen island 61, which also holds the two bread slices 46 and 47; the whole loaf (36) is not a slice.",
       "object_ids": [
-        "25",
-        "56",
+        "46",
+        "47",
         "61",
         "66"
-      ]
+      ],
+      "spec": {
+        "label": [
+          "sliced bread"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "kitchen island"
+              ],
+              "filters": [
+                {
+                  "rel": "supports",
+                  "target": {
+                    "label": [
+                      "wine bottle"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
 }
