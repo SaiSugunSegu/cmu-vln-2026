@@ -2,590 +2,344 @@
   "scene": "livingroom_1",
   "category": 1,
   "category_name": "numerical",
-  "description": "Category 1 (numerical) evaluation questions with integer answers. Grounded in scene-graph relations and object color attributes. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "benchmark": "benchmark_2",
+  "description": "Category 1 (numerical) questions with integer answers, authored from the challenge sample questions and reference images in questions/livingroom_1/questions.pdf. Objects are restricted to salient, visually verifiable furniture and decor so a human can confirm every answer from the scene. Each question carries a machine-readable spec that scripts/eval/verify_benchmark2.py re-evaluates against the iref_vla object bounding boxes.",
   "notes": [
-    "difficulty: easy = attribute or single relation; medium = relation+attribute or non-unique anchors; hard = nested relations (e.g. near X with Y on it).",
-    "raw_label is preferred for SAM prompts when more specific than nyu_label.",
-    "Structural classes (wall/floor/ceiling) are excluded from counted answers and noisy on/near anchors.",
-    "object_ids lists supporting scene-graph ids for auditing; SAM3 should use target_objects."
+    "Q01 is the official Category 1 sample question from questions/livingroom_1/questions.pdf; its answer (8) is the answer printed in the PDF.",
+    "difficulty: easy = single salient object class; medium = one relation or a room-region restriction; hard = two chained relations.",
+    "Q01 and Q02 are deliberately paired: the dining set has eight chairs but the scene contains nine, so a model that ignores the vase anchor gets Q01 wrong.",
+    "Only large, unambiguous objects are counted. Air vents, candle holders, small decorations and structural classes (wall/floor/ceiling) are excluded because they are too small or too abstract to ground reliably.",
+    "The iref color labels for this scene's pillows disagree with the rendered colors (the throw pillows read pink, teal and green), so no question in this scene filters on color.",
+    "'Potted plant' is avoided as a count target: six are labelled but several are tabletop succulents that a human would not count alongside the floor planters.",
+    "object_ids lists supporting iref_vla scene-graph ids for auditing; SAM3 should use target_objects."
   ],
   "difficulty_counts": {
-    "easy": 10,
-    "medium": 12,
-    "hard": 8
+    "easy": 4,
+    "medium": 5,
+    "hard": 1
   },
   "target_object_coverage": [
-    "air vent",
-    "ball candle holder",
-    "bird decoration",
-    "book",
-    "books",
-    "bottle",
-    "bowl",
-    "cabinet",
-    "carpet",
-    "ceiling",
     "ceiling lamp",
     "chair",
     "curtain",
+    "deck chair",
     "dish",
-    "door",
-    "floor",
-    "focus light",
-    "lamp",
-    "light switch",
-    "ottoman",
-    "pen",
     "picture",
     "pillow",
-    "plant stand",
-    "potted plant",
-    "pyramid candle holder",
     "round table",
-    "shelf",
     "sofa",
-    "sofa pillows",
     "table",
-    "trophy decoration",
-    "tv cabinet",
-    "tv remote",
-    "vase"
+    "vase",
+    "window"
   ],
   "questions": [
     {
       "id": "Q01",
-      "question": "How many ball candle holders are near the bowl?",
-      "answer": 2,
-      "difficulty": "easy",
+      "question": "How many chairs are near the table with a vase on it?",
+      "answer": 8,
+      "difficulty": "medium",
       "type": "relational",
+      "source": "challenge sample question (questions/livingroom_1/questions.pdf, Category 1)",
       "target_objects": [
-        "ball candle holder",
-        "bowl"
+        "chair",
+        "table",
+        "vase"
       ],
-      "evidence": "near[68:bowl] -> ['89', '99']",
+      "evidence": "Vase 71 (with orchids) stands on dining table 84; eight chairs (8, 54, 61, 64, 74, 81, 90, 98) surround it within 1.3 m. The living-room armchair 22 is 8.4 m away.",
       "object_ids": [
-        "89",
-        "99",
-        "68"
-      ]
+        "8",
+        "54",
+        "61",
+        "64",
+        "74",
+        "81",
+        "90",
+        "98",
+        "84",
+        "71"
+      ],
+      "spec": {
+        "label": [
+          "chair"
+        ],
+        "filters": [
+          {
+            "rel": "near",
+            "max_dist": 1.5,
+            "target": {
+              "label": [
+                "table"
+              ],
+              "filters": [
+                {
+                  "rel": "supports",
+                  "target": {
+                    "label": [
+                      "vase"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "id": "Q02",
-      "question": "How many ball candle holders are near the light switch?",
-      "answer": 2,
+      "question": "How many chairs are in the scene in total?",
+      "answer": 9,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "ball candle holder",
-        "light switch"
+        "chair"
       ],
-      "evidence": "near[80:light switch] -> ['89', '99']",
+      "evidence": "Eight dining chairs plus the black leather armchair (22) in the living area.",
       "object_ids": [
-        "89",
-        "99",
-        "80"
-      ]
+        "8",
+        "22",
+        "54",
+        "61",
+        "64",
+        "74",
+        "81",
+        "90",
+        "98"
+      ],
+      "spec": {
+        "label": [
+          "chair"
+        ]
+      }
     },
     {
       "id": "Q03",
-      "question": "How many books are near the bottle?",
-      "answer": 3,
+      "question": "How many windows are in the living room?",
+      "answer": 2,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "book",
-        "bottle"
+        "window"
       ],
-      "evidence": "near[96:bottle] -> ['30', '31', '32']",
+      "evidence": "Two windows in the brick wall behind the sofa (9, 39).",
       "object_ids": [
-        "30",
-        "31",
-        "32",
-        "96"
-      ]
+        "9",
+        "39"
+      ],
+      "spec": {
+        "label": [
+          "window"
+        ]
+      }
     },
     {
       "id": "Q04",
-      "question": "How many books are near the carpet?",
-      "answer": 3,
+      "question": "How many ceiling lamps are hanging in the scene?",
+      "answer": 4,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "book",
-        "carpet"
+        "ceiling lamp"
       ],
-      "evidence": "near[27:carpet] -> ['30', '31', '32']",
+      "evidence": "Two drum pendants over the living area (35, 75) and two over the dining table (12, 94).",
       "object_ids": [
-        "30",
-        "31",
-        "32",
-        "27"
-      ]
+        "12",
+        "35",
+        "75",
+        "94"
+      ],
+      "spec": {
+        "label": [
+          "ceiling lamp"
+        ]
+      }
     },
     {
       "id": "Q05",
-      "question": "How many doors are near the ottoman?",
+      "question": "How many curtains are next to the windows?",
       "answer": 2,
       "difficulty": "easy",
-      "type": "relational",
+      "type": "count",
       "target_objects": [
-        "door",
-        "ottoman"
+        "curtain"
       ],
-      "evidence": "near[51:ottoman] -> ['37', '48']",
+      "evidence": "One roller blind above each window (17, 45).",
       "object_ids": [
-        "37",
-        "48",
-        "51"
-      ]
+        "17",
+        "45"
+      ],
+      "spec": {
+        "label": [
+          "curtain"
+        ]
+      }
     },
     {
       "id": "Q06",
-      "question": "How many doors are near the plant stand?",
-      "answer": 2,
-      "difficulty": "easy",
+      "question": "How many pictures are hanging above the sofa?",
+      "answer": 4,
+      "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "door",
-        "plant stand"
+        "picture",
+        "sofa"
       ],
-      "evidence": "near[25:plant stand] -> ['5', '6']",
+      "evidence": "Four framed flower prints (50, 69, 83, 87) hang on the brick wall directly above sofa 0; the other three pictures are on different walls.",
       "object_ids": [
-        "5",
-        "6",
-        "25"
-      ]
+        "50",
+        "69",
+        "83",
+        "87",
+        "0"
+      ],
+      "spec": {
+        "label": [
+          "picture"
+        ],
+        "filters": [
+          {
+            "rel": "above",
+            "target": {
+              "label": [
+                "sofa"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "id": "Q07",
-      "question": "How many focus lights are near the shelf?",
-      "answer": 2,
-      "difficulty": "easy",
+      "question": "How many pillows are on the sofa?",
+      "answer": 3,
+      "difficulty": "medium",
       "type": "relational",
       "target_objects": [
-        "focus light",
-        "shelf"
+        "pillow",
+        "sofa"
       ],
-      "evidence": "near[73:shelf] -> ['76', '79']",
+      "evidence": "Three throw pillows (16, 34, 41) sit on sofa 0.",
       "object_ids": [
-        "76",
-        "79",
-        "73"
-      ]
+        "16",
+        "34",
+        "41",
+        "0"
+      ],
+      "spec": {
+        "label": [
+          "pillow"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "sofa"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "id": "Q08",
-      "question": "How many gray potted plants are in the scene?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "attribute",
-      "target_objects": [
-        "potted plant"
-      ],
-      "evidence": "3 potted plant with primary color gray: ['21', '24', '33']",
-      "object_ids": [
-        "21",
-        "24",
-        "33"
-      ]
-    },
-    {
-      "id": "Q09",
-      "question": "How many gray vases are in the scene?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "attribute",
-      "target_objects": [
-        "vase"
-      ],
-      "evidence": "3 vase with primary color gray: ['11', '42', '71']",
-      "object_ids": [
-        "11",
-        "42",
-        "71"
-      ]
-    },
-    {
-      "id": "Q10",
-      "question": "How many pillows are near the bottle?",
-      "answer": 3,
-      "difficulty": "easy",
-      "type": "relational",
-      "target_objects": [
-        "pillow",
-        "bottle"
-      ],
-      "evidence": "near[96:bottle] -> ['16', '20', '41']",
-      "object_ids": [
-        "16",
-        "20",
-        "41",
-        "96"
-      ]
-    },
-    {
-      "id": "Q11",
-      "question": "How many air vents are above the floor?",
-      "answer": 4,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "air vent",
-        "floor"
-      ],
-      "evidence": "above[70:floor] -> ['58', '62', '67', '93']",
-      "object_ids": [
-        "58",
-        "62",
-        "67",
-        "93",
-        "70"
-      ]
-    },
-    {
-      "id": "Q12",
-      "question": "How many black ceiling lamps are above the table?",
+      "question": "How many round tables are in front of the sofa?",
       "answer": 2,
       "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "ceiling lamp",
-        "table"
-      ],
-      "evidence": "above[84] colored black: ['12', '94']",
-      "object_ids": [
-        "12",
-        "94",
-        "84"
-      ]
-    },
-    {
-      "id": "Q13",
-      "question": "How many black ceiling lamps are near the dish?",
-      "answer": 2,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "ceiling lamp",
-        "dish"
-      ],
-      "evidence": "near[92] colored black: ['12', '94']",
-      "object_ids": [
-        "12",
-        "94",
-        "92"
-      ]
-    },
-    {
-      "id": "Q14",
-      "question": "How many books are above the floor?",
-      "answer": 3,
-      "difficulty": "medium",
       "type": "relational",
-      "target_objects": [
-        "book",
-        "floor"
-      ],
-      "evidence": "above[70:floor] -> ['30', '31', '32']",
-      "object_ids": [
-        "30",
-        "31",
-        "32",
-        "70"
-      ]
-    },
-    {
-      "id": "Q15",
-      "question": "How many chairs are near the cabinet?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "chair",
-        "cabinet"
-      ],
-      "evidence": "near[2:cabinet] -> ['54', '74', '98']",
-      "object_ids": [
-        "54",
-        "74",
-        "98",
-        "2"
-      ]
-    },
-    {
-      "id": "Q16",
-      "question": "How many chairs are near the picture?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "chair",
-        "picture"
-      ],
-      "evidence": "near[57:picture] -> ['61', '64', '90']",
-      "object_ids": [
-        "61",
-        "64",
-        "90",
-        "57"
-      ]
-    },
-    {
-      "id": "Q17",
-      "question": "How many focus lights are near the ceiling lamp?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "focus light",
-        "ceiling lamp"
-      ],
-      "evidence": "near[35:ceiling lamp] -> ['53', '66', '100']",
-      "object_ids": [
-        "53",
-        "66",
-        "100",
-        "35"
-      ]
-    },
-    {
-      "id": "Q18",
-      "question": "How many gray potted plants are below the ceiling?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational+attribute",
-      "target_objects": [
-        "potted plant",
-        "ceiling"
-      ],
-      "evidence": "below[59] colored gray: ['21', '24', '33']",
-      "object_ids": [
-        "21",
-        "24",
-        "33",
-        "59"
-      ]
-    },
-    {
-      "id": "Q19",
-      "question": "How many pillows are near the round table?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "pillow",
-        "round table"
-      ],
-      "evidence": "near[60:round table] -> ['16', '20', '41']",
-      "object_ids": [
-        "16",
-        "20",
-        "41",
-        "60"
-      ]
-    },
-    {
-      "id": "Q20",
-      "question": "How many pyramid candle holders are above the floor?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "pyramid candle holder",
-        "floor"
-      ],
-      "evidence": "above[70:floor] -> ['65', '89', '99']",
-      "object_ids": [
-        "65",
-        "89",
-        "99",
-        "70"
-      ]
-    },
-    {
-      "id": "Q21",
-      "question": "How many pyramid candle holders are near the tv remote?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "pyramid candle holder",
-        "tv remote"
-      ],
-      "evidence": "near[91:tv remote] -> ['65', '89', '99']",
-      "object_ids": [
-        "65",
-        "89",
-        "99",
-        "91"
-      ]
-    },
-    {
-      "id": "Q22",
-      "question": "How many sofa pillows are near the pillow?",
-      "answer": 3,
-      "difficulty": "medium",
-      "type": "relational",
-      "target_objects": [
-        "sofa pillows",
-        "pillow"
-      ],
-      "evidence": "near[16:pillow] -> ['20', '34', '41']",
-      "object_ids": [
-        "20",
-        "34",
-        "41",
-        "16"
-      ]
-    },
-    {
-      "id": "Q23",
-      "question": "How many bird decorations are above the tv cabinet with a pyramid candle holder on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "bird decoration",
-        "tv cabinet",
-        "pyramid candle holder"
-      ],
-      "evidence": "above[103] with on=65 -> ['99']",
-      "object_ids": [
-        "99",
-        "103",
-        "65"
-      ]
-    },
-    {
-      "id": "Q24",
-      "question": "How many black lamps are near the cabinet with a vase on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "lamp",
-        "cabinet",
-        "vase"
-      ],
-      "evidence": "colored black near nested: ['105']",
-      "object_ids": [
-        "105",
-        "2",
-        "23"
-      ]
-    },
-    {
-      "id": "Q25",
-      "question": "How many books are above the shelf with a vase on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "books",
-        "shelf",
-        "vase"
-      ],
-      "evidence": "above[73] with on=11 -> ['101']",
-      "object_ids": [
-        "101",
-        "73",
-        "11"
-      ]
-    },
-    {
-      "id": "Q26",
-      "question": "How many curtains are near the shelf with a potted plant on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "curtain",
-        "shelf",
-        "potted plant"
-      ],
-      "evidence": "near[73:shelf with 33:potted plant on] -> ['17']",
-      "object_ids": [
-        "17",
-        "73",
-        "33"
-      ]
-    },
-    {
-      "id": "Q27",
-      "question": "How many gray round tables are near the sofa with a pillow on it?",
-      "answer": 2,
-      "difficulty": "hard",
-      "type": "relational+attribute",
       "target_objects": [
         "round table",
-        "sofa",
-        "pillow"
+        "sofa"
       ],
-      "evidence": "colored gray near nested: ['60', '102']",
+      "evidence": "A white and a wooden round coffee table (60, 102) stand on the carpet in front of sofa 0.",
       "object_ids": [
         "60",
         "102",
-        "0",
-        "16"
-      ]
+        "0"
+      ],
+      "spec": {
+        "label": [
+          "round table"
+        ],
+        "filters": [
+          {
+            "rel": "near",
+            "max_dist": 2.0,
+            "target": {
+              "label": [
+                "sofa"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
-      "id": "Q28",
-      "question": "How many gray tv remotes are near the tv cabinet with a pyramid candle holder on it?",
+      "id": "Q09",
+      "question": "How many deck chairs are on the balcony?",
+      "answer": 2,
+      "difficulty": "medium",
+      "type": "relational",
+      "target_objects": [
+        "deck chair"
+      ],
+      "evidence": "Two loungers (1, 19) are outside on the balcony (iref region 1), not in the room.",
+      "object_ids": [
+        "1",
+        "19"
+      ],
+      "spec": {
+        "label": [
+          "deck chair"
+        ],
+        "regions": [
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "Q10",
+      "question": "How many dishes are on the table with the vase on it?",
       "answer": 2,
       "difficulty": "hard",
-      "type": "relational+attribute",
-      "target_objects": [
-        "tv remote",
-        "tv cabinet",
-        "pyramid candle holder"
-      ],
-      "evidence": "colored gray near nested: ['72', '91']",
-      "object_ids": [
-        "72",
-        "91",
-        "103",
-        "65"
-      ]
-    },
-    {
-      "id": "Q29",
-      "question": "How many sofa pillows are on the sofa near the pen?",
-      "answer": 4,
-      "difficulty": "hard",
       "type": "relational",
       "target_objects": [
-        "sofa pillows",
-        "sofa",
-        "pen"
+        "dish",
+        "table",
+        "vase"
       ],
-      "evidence": "on[0] near 63:pen tops=['16', '20', '34', '41']",
+      "evidence": "Dining table 84 carries vase 71; the stack of plates on it consists of dishes 92 and 95.",
       "object_ids": [
-        "16",
-        "20",
-        "34",
-        "41",
-        "0",
-        "63"
-      ]
-    },
-    {
-      "id": "Q30",
-      "question": "How many trophy decorations are near the tv cabinet with a pyramid candle holder on it?",
-      "answer": 1,
-      "difficulty": "hard",
-      "type": "relational",
-      "target_objects": [
-        "trophy decoration",
-        "tv cabinet",
-        "pyramid candle holder"
+        "92",
+        "95",
+        "84",
+        "71"
       ],
-      "evidence": "near[103:tv cabinet with 65:pyramid candle holder on] -> ['104']",
-      "object_ids": [
-        "104",
-        "103",
-        "65"
-      ]
+      "spec": {
+        "label": [
+          "dish"
+        ],
+        "filters": [
+          {
+            "rel": "inside_xy",
+            "target": {
+              "label": [
+                "table"
+              ],
+              "filters": [
+                {
+                  "rel": "supports",
+                  "target": {
+                    "label": [
+                      "vase"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
 }
