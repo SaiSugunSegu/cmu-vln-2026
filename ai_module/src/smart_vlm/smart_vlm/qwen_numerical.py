@@ -15,8 +15,17 @@ the checkpoint in-process too would put a second full copy of the weights on the
 GPU whenever the category-1 flow (which requires the server) is also running.
 Start the server first — `just vqa-up`.
 
-Only handles questions classified as numerical ("How many…", "Count…").
-Find / instruction questions are left to dummy_vlm (or later reasoner heads).
+Only handles questions classified as numerical ("How many…", "Count…"); find and
+instruction questions are simply ignored here.
+
+NOT part of `smart_vlm.launch` — run it by hand:
+
+    ros2 run smart_vlm qwen_numerical
+
+It is the SAM-independent counterpart to `numerical_reasoner`, which is the head the
+launch and the eval harness actually use. That one answers from SAM best-view crops; this
+one asks Qwen about the whole 360° panorama, so it still produces something when the
+detector finds nothing at all.
 """
 from __future__ import annotations
 
@@ -39,7 +48,7 @@ from std_msgs.msg import Int32, String
 
 from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
 from captioner.ros_utils import wait_for_subscriber
-from smart_vlm.supervisor import classify
+from smart_vlm.question import QuestionType, classify
 
 
 def image_msg_to_rgb(msg: Image) -> np.ndarray:
@@ -198,7 +207,7 @@ class QwenNumericalNode(Node):
         # Eval repeats the question at 1 Hz — answer only once.
         if self._answered or self._busy or self._question is not None:
             return
-        if classify(msg.data) != "numerical":
+        if classify(msg.data) is not QuestionType.NUMERICAL:
             return
 
         self._question = msg.data
@@ -266,6 +275,8 @@ def main(args=None):
     executor.add_node(node)
     try:
         executor.spin()
+    except KeyboardInterrupt:
+        pass
     finally:
         executor.shutdown()
         node.destroy_node()

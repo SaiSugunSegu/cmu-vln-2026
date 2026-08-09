@@ -16,6 +16,9 @@ simulator**, so the AI module can run offline (no Unity, no GPU).
 # inside the ai_module container — auto-downloads scene_0 if missing, then plays
 ros2 launch smart_vlm bag_replay.launch scene:=scene_0            # bag only
 ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=scene_0 # smart_vlm + bag
+# ^ the bag waits for /pipeline/armed, so it only starts once you ask a question
+#   (`just ask "How many ..."`) and SAM has that question's prompts. Use `just bag-play`
+#   above for a plain replay with no gate.
 ```
 
 Downloading a scene is one-time per host (bags persist here across container restarts). `gdown`

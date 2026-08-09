@@ -10,6 +10,9 @@ docs/M0.5_rosbag_infra.md.
   ros2 launch smart_vlm bag_replay.launch scene:=scene_0 loop:=true  # loop playback (default: single pass)
   ros2 launch smart_vlm bag_replay.launch scene:=scene_0 speed:=0.5  # half speed (ros2 bag play --rate)
 
+Standalone it plays immediately. smart_vlm.launch sets wait_for_armed:=true, which holds
+playback until SAM has the question's prompts — see that launch file's ordering notes.
+
 (Python launch file with a .launch name, matching the repo's other launch files.)
 """
 import os
@@ -25,7 +28,19 @@ def _play(context, *args, **kwargs):
     extra = LaunchConfiguration("args").perform(context)
     speed = LaunchConfiguration("speed").perform(context)
     loop = LaunchConfiguration("loop").perform(context)
+    wait_for_armed = LaunchConfiguration("wait_for_armed").perform(context)
+    armed_timeout = LaunchConfiguration("armed_timeout").perform(context)
     scene_dir = os.path.join(bags_dir, scene)
+
+    # Hold playback until SAM holds this question's real prompts. Without this the bag
+    # streams while the detector is still loading weights, so it only ever sees the tail
+    # of the scene. `wait_ready` rather than `ros2 topic echo --once`: the gate is
+    # latched, and echo's VOLATILE subscriber would miss a sample published before it
+    # started and then hang.
+    gate = ""
+    if wait_for_armed.lower() in ("true", "1"):
+        gate = (f"ros2 run smart_vlm wait_ready --topic /pipeline/armed "
+                f"--timeout {armed_timeout} && ")
 
     # --rate is ros2 bag play's own playback-speed flag; kept as a dedicated launch arg
     # (rather than folding it into `args`) since it's the one knob people reach for often.
@@ -38,6 +53,7 @@ def _play(context, *args, **kwargs):
     # isn't exactly one .mcap. `exec` so Ctrl-C reaches the player.
     cmd = (
         f"ros2 run smart_vlm bag_fetch {scene} --bags-dir {bags_dir} && "
+        f"{gate}"
         f'{{ mcap="$(ls {scene_dir}/*.mcap 2>/dev/null | head -n1)"; '
         f'if [ -n "$mcap" ]; then exec ros2 bag play "$mcap" -s mcap {rate} {loop_flag} {extra}; '
         f"else exec ros2 bag play {scene_dir} {rate} {loop_flag} {extra}; fi; }}"
@@ -57,5 +73,14 @@ def generate_launch_description():
         DeclareLaunchArgument("loop", default_value="false",
                               description="loop playback (ros2 bag play --loop); "
                                           "default is a single pass"),
+        DeclareLaunchArgument("wait_for_armed", default_value="false",
+                              description="block until smart_vlm publishes "
+                                          "/pipeline/armed before playing, so SAM never "
+                                          "misses the front of the scene. Set true by "
+                                          "smart_vlm.launch; false keeps standalone "
+                                          "`just bag-play` working"),
+        DeclareLaunchArgument("armed_timeout", default_value="300.0",
+                              description="seconds to wait on /pipeline/armed before "
+                                          "giving up (when wait_for_armed)"),
         OpaqueFunction(function=_play),
     ])

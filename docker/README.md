@@ -149,33 +149,37 @@ ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'Go to the
 
 You should see the vehicle following waypoints and the selected object being highlighted in RVIZ.
 
-### Qwen numerical answers (smart_vlm)
+### Numerical answers (smart_vlm)
 
-`ros2 launch smart_vlm smart_vlm.launch` starts `qwen_numerical`. It answers
-**How many / Count** questions from `/camera/image` and publishes an `Int32` on
-`/numerical_response`. Dummy’s random numerical publisher is disabled in that
-launch (`dummy_answer_numerical:=false`).
+`ros2 launch smart_vlm smart_vlm.launch` brings up the whole per-question pipeline:
+`sam_node` (booted unarmed — it loads weights but detects nothing until the question
+supplies prompts), the `smart_vlm` supervisor, `numerical_reasoner`, and the scene
+source (bag replay with `use_bag:=true`, else TARE exploration).
 
-**Start `qwen_vqa_server` first.** `qwen_numerical` does not load a checkpoint of
-its own — it sends the frame to the shared server, so one copy of the weights
-serves this head, the category-1 reasoner, and `just vqa-ask`. Without the server
-running, the head waits `server_wait_s` (default 600 s) and then errors.
+`numerical_reasoner` answers **How many / Count** questions and publishes an `Int32` on
+`/numerical_response`. It works from SAM's best-view crops rather than raw frames:
+question → target nouns → `/sam3/set_prompts` → wait for `/pipeline/explore_done` →
+ask Qwen about the best crop.
+
+**Start `qwen_vqa_server` first.** Nothing in this launch loads a checkpoint of its own —
+requests go to the shared server, so one copy of the weights serves the reasoner, the
+target extractor, and `just vqa-ask`. Without it, the reasoner waits `vqa_timeout_s` and
+then errors.
 
 ```bash
-# after colcon build --packages-select captioner smart_vlm dummy_vlm
+# after colcon build --packages-select captioner smart_vlm sam_mapper
 just vqa-up                      # loads Qwen once; blocks until ready
-ros2 launch smart_vlm smart_vlm.launch
-# elsewhere:
+ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=arabic_room
+# elsewhere — the bag is held at /pipeline/armed until this arrives:
 ros2 topic pub --once /challenge_question std_msgs/msg/String \
   "{data: 'How many pillows are on the bed?'}"
 ros2 topic echo /numerical_response --once
 ```
 
-Model and quantization are the **server's** parameters now:
-`just vqa-up qwen2_5vl int8`.
+Model and quantization are the **server's** parameters: `just vqa-up qwen2_5vl int8`.
 
-Disable the Qwen head and restore dummy random ints with:
-`use_qwen_numerical:=false dummy_answer_numerical:=true`.
+To score this across the benchmark instead of asking by hand, use `just eval-cat1`, which
+relaunches the pipeline per question (README §3.5).
 
 ## Run the captioner (offline crop CLI)
 

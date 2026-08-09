@@ -13,12 +13,19 @@ Publishes:
     /sam3/detections     std_msgs/String     JSON {stamp, entries: [{id, label, confidence, bbox}]}
                                              (String has no header, so the stamp is embedded here,
                                               matching /sam3/instance_map's)
-    /sam3/status         std_msgs/String     latched "loading" | "ready" | "setting_prompts"
+    /sam3/status         std_msgs/String     latched "loading" | "awaiting_prompts" |
+                                             "ready" | "setting_prompts"
     /sam3/prompts_ack    std_msgs/String     JSON ack after /sam3/set_prompts
     /sam3/best_view_dir  std_msgs/String     latched path of current best-view run dir
 
 Subscribes:
     /sam3/set_prompts    std_msgs/String     JSON {"prompts": [...], "run_id": "..."}
+
+With `wait_for_prompts:=true` the node ignores the config's `objects:` and boots UNARMED:
+weights still load (the slow part, ~60 s), but no frame is processed and no best-view run
+directory is created until the first /sam3/set_prompts arrives. The category-1 pipeline
+needs this — its prompts come from the question, so anything detected beforehand would be
+against the config's placeholder objects and pollute the run.
 
 map_node (map_node.py) subscribes to the latter two and reconstructs each object's mask via
 `id_map == encode_instance_id(id)` — the existing 5-key to_detections() contract, unchanged,
@@ -31,8 +38,10 @@ from __future__ import annotations
 import json
 import threading
 import time
+import traceback
 
 import numpy as np
+import rclpy
 from cv_bridge import CvBridge
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.node import Node
@@ -64,8 +73,20 @@ class SamNode(WorkerNodeMixin, Node):
         self.log_every_n = int(runtime.get('log_every_n_frames', 20))
         self.verbose_objects = bool(runtime.get('verbose_objects', False))
 
-        self.prompt_table = PromptTable(config['objects'])
-        self.log(f"prompts ({len(self.prompt_table.prompts)}): {self.prompt_table.prompts}")
+        self.declare_parameter('wait_for_prompts', False)
+        self.wait_for_prompts = bool(self.get_parameter('wait_for_prompts').value)
+
+        # `armed` == "has prompts worth spending inference on". Unarmed, the node holds
+        # loaded weights and an empty session, and drops every frame.
+        if self.wait_for_prompts:
+            self.prompt_table = None
+            self.armed = False
+            self.log("wait_for_prompts: ignoring config objects, waiting for "
+                     "/sam3/set_prompts before processing any frame")
+        else:
+            self.prompt_table = PromptTable(config['objects'])
+            self.armed = True
+            self.log(f"prompts ({len(self.prompt_table.prompts)}): {self.prompt_table.prompts}")
 
         self.best_view_cfg = config.get('save_best_target_view_images', {})
         self.best_view_collector = None
@@ -84,14 +105,17 @@ class SamNode(WorkerNodeMixin, Node):
         self.status_pub = self.create_publisher(String, '/sam3/status', latch_qos)
         self._publish_status('loading')
 
-        if self.best_view_cfg.get('enabled', False):
+        # Unarmed: no collector yet, so no stray boot-time run dir under output_dir.
+        if self.armed and self.best_view_cfg.get('enabled', False):
             self.best_view_collector = BestViewCollector(
                 BestViewConfig.from_dict(self.best_view_cfg, self.prompt_table), log=self.log)
 
         self.log("loading SAM 3 (first run downloads weights, this can take a while) ...")
         self.backend = Sam3Backend(config['sam3'], log=self.log)
-        self.backend.set_prompts(self.prompt_table.prompts)
-        self.log("SAM 3 ready")
+        # Empty prompts are fine: Sam3Backend.reset() only calls add_text_prompt when the
+        # list is non-empty, so this opens a valid, promptless session.
+        self.backend.set_prompts(self.prompt_table.prompts if self.armed else [])
+        self.log("SAM 3 ready" if self.armed else "SAM 3 weights loaded — awaiting prompts")
 
         # -- buffers ---------------------------------------------------------
         self.frame_lock = threading.Lock()
@@ -125,7 +149,7 @@ class SamNode(WorkerNodeMixin, Node):
         self.create_timer(self.HEARTBEAT_S, self._heartbeat, callback_group=group())
 
         self._start_worker(self._worker_loop)
-        self._publish_status('ready')
+        self._publish_status('ready' if self.armed else 'awaiting_prompts')
         self.log('sam_node started')
 
     def log(self, msg):
@@ -139,6 +163,10 @@ class SamNode(WorkerNodeMixin, Node):
     def image_callback(self, msg: Image):
         """Store the raw message; decode later, in the worker. We drop most frames, so
         decoding on arrival would waste CPU on images that get thrown away."""
+        if not self.armed:
+            # Not even buffered: the first frame after arming must be a fresh one, not a
+            # stale panorama captured before this question's prompts existed.
+            return
         with self.frame_lock:
             if self.latest_frame is not None:
                 self.frames_dropped += 1
@@ -161,7 +189,9 @@ class SamNode(WorkerNodeMixin, Node):
         self.prompts_ack_pub.publish(String(data=json.dumps({
             "ok": False, "error": error, "prompts": [], "run_dir": None,
         })))
-        self._publish_status('ready')
+        # 'ready' would be a lie for a node that was never armed: it drops every frame,
+        # and clients gate on this status before releasing their sensor stream.
+        self._publish_status('ready' if self.armed else 'awaiting_prompts')
 
     def _on_set_prompts(self, msg: String) -> None:
         """Replace SAM text prompts and start a fresh best-view run for the next bag pass.
@@ -198,6 +228,7 @@ class SamNode(WorkerNodeMixin, Node):
         with self.prompt_lock:
             previous_table = self.prompt_table
             previous_collector = self.best_view_collector
+            previous_armed = self.armed
             try:
                 # PromptTable validates, backend.set_prompts() re-inits the SAM
                 # session, and BestViewConfig.from_dict() parses config — any of
@@ -221,12 +252,17 @@ class SamNode(WorkerNodeMixin, Node):
                     self.best_view_dir_pub.publish(String(data=run_dir))
                 else:
                     self.best_view_collector = None
+                # Last, so a raise above can never leave us armed with a half-built table.
+                self.armed = True
             except Exception as err:  # noqa: BLE001 — a bad request must not kill the node
-                # Roll back so the node keeps detecting with the prompts it had.
+                # Roll back so the node keeps detecting with the prompts it had — or
+                # stays unarmed, if it never had any.
                 self.prompt_table = previous_table
                 self.best_view_collector = previous_collector
+                self.armed = previous_armed
                 try:
-                    self.backend.set_prompts(previous_table.prompts)
+                    self.backend.set_prompts(
+                        previous_table.prompts if previous_table is not None else [])
                 except Exception as restore_err:  # noqa: BLE001
                     self.get_logger().error(
                         f'could not restore previous prompts: {restore_err}')
@@ -272,7 +308,17 @@ class SamNode(WorkerNodeMixin, Node):
     # -- worker ---------------------------------------------------------------
 
     def _worker_loop(self):
-        while self.running:
+        # rclpy.ok() as well as self.running: SIGINT invalidates the context before
+        # destroy_node() gets to clear the flag, and publishing into a dead context
+        # raises RCLError mid-frame.
+        while self.running and rclpy.ok():
+            if not self.armed:
+                # Set the stage once, not every 50 ms, so stage_since keeps meaning
+                # "how long we have been here" for the heartbeat.
+                if self.stage != 'awaiting prompts':
+                    self._set_stage('awaiting prompts')
+                time.sleep(0.05)
+                continue
             self._set_stage('waiting')
             msg = self._take_frame()
             if msg is None:
@@ -286,13 +332,24 @@ class SamNode(WorkerNodeMixin, Node):
                 try:
                     self._process(image, stamp)
                 except Exception as err:              # noqa: BLE001 — one bad frame must not kill the node
+                    # A frame takes seconds (SAM3 inference), so SIGINT routinely lands
+                    # mid-_process and the publish fails on a dead context. That is a
+                    # normal shutdown, not a frame error — leave quietly rather than
+                    # logging a traceback nobody should act on.
+                    if not rclpy.ok():
+                        break
+                    # rclpy's logger takes none of logging's kwargs (only throttle /
+                    # skip_first / once), so exc_info=True made the handler itself raise
+                    # TypeError and kill this thread. Format the traceback into the text.
                     self.get_logger().error(
-                        f'frame at {stamp:.3f} failed: {type(err).__name__}: {err}',
-                        exc_info=True)
+                        f'frame at {stamp:.3f} failed: {type(err).__name__}: {err}\n'
+                        f'{traceback.format_exc()}')
 
     def _heartbeat(self):
         held = time.monotonic() - self.stage_since
-        if self.stage == 'waiting' and not self.frames_done:
+        if not self.armed:
+            self.log('awaiting prompts — publish /sam3/set_prompts to arm')
+        elif self.stage == 'waiting' and not self.frames_done:
             hint = ('no /camera/image — is the bag playing / sim running?' if not self.frames_in
                     else 'inputs present, waiting on worker')
             self.log(f'waiting: {self.frames_in} images; {hint}')

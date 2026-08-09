@@ -1,7 +1,7 @@
-"""Pure-python tests for category1 helpers (no ROS / GPU)."""
+"""Pure-python tests for numerical helpers (no ROS / GPU)."""
 from __future__ import annotations
 
-from smart_vlm.category1_utils import (
+from smart_vlm.numerical_utils import (
     extract_integer,
     heuristic_targets,
     parse_target_list,

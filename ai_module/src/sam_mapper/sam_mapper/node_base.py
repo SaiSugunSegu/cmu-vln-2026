@@ -58,7 +58,11 @@ def run_node(node_cls, bootstrap_name: str, required_keys: tuple, launch_hint: s
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        # executor.spin() already tears the context down on SIGINT; calling shutdown a
+        # second time raises RCLError and turns a clean Ctrl-C into exit code 1, which
+        # makes the eval harness's teardown look like a crash.
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 class WorkerNodeMixin:

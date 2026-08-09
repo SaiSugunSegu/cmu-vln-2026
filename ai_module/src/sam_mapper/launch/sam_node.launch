@@ -24,6 +24,7 @@ def _launch(context, *args, **kwargs):
     config = LaunchConfiguration("config").perform(context)
     if not os.path.isabs(config):
         config = os.path.join(get_package_share_directory("sam_mapper"), "config", config)
+    wait_for_prompts = LaunchConfiguration("wait_for_prompts").perform(context)
 
     return [Node(
         package="sam_mapper",
@@ -31,7 +32,10 @@ def _launch(context, *args, **kwargs):
         name="sam_node",
         output="screen",
         emulate_tty=True,
-        parameters=[{"config": config}],
+        parameters=[{
+            "config": config,
+            "wait_for_prompts": wait_for_prompts.lower() in ("true", "1"),
+        }],
     )]
 
 
@@ -40,5 +44,11 @@ def generate_launch_description():
         DeclareLaunchArgument("config", default_value="sam3_mecanum_sim.yaml",
                               description="Config file name (resolved against the package "
                                           "config/ dir) or an absolute path"),
+        DeclareLaunchArgument("wait_for_prompts", default_value="false",
+                              description="Boot unarmed: load weights but ignore the "
+                                          "config's objects: and process no frame until "
+                                          "/sam3/set_prompts arrives. Used by the "
+                                          "category-1 pipeline, whose prompts come from "
+                                          "the question"),
         OpaqueFunction(function=_launch),
     ])

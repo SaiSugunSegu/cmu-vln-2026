@@ -1,6 +1,6 @@
 """Make smart_vlm and its captioner dependency importable outside a colcon install.
 
-smart_vlm.category1_utils re-exports from captioner.text_utils (both stdlib-only),
+smart_vlm.numerical_utils re-exports from captioner.text_utils (both stdlib-only),
 so the sibling package has to be on sys.path for the pure-python tests too.
 """
 import os

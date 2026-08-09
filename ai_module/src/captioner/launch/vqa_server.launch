@@ -1,0 +1,10 @@
+<launch>
+  <!-- vqa_server: Persistent Qwen-VL VQA server (loads weights once) -->
+  <arg name="model" default="qwen3vl"/>
+  <arg name="quantization" default="int4"/>
+
+  <node pkg="captioner" exec="qwen_vqa_server" name="qwen_vqa_server" output="screen">
+    <param name="captioning_model" value="$(var model)"/>
+    <param name="quantization" value="$(var quantization)"/>
+  </node>
+</launch>

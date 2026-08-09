@@ -106,6 +106,69 @@ just cat1-bag-bench arabic_room 3    # D — score 3 questions; results in data/
 ```
 [docs/cat1_bag_benchmark.md](docs/cat1_bag_benchmark.md) · [docs/M0.5_rosbag_infra.md](docs/M0.5_rosbag_infra.md)
 
+### 3.5 · End-to-End Orchestrated Evaluation
+
+Iterates every scene × every question. `smart_vlm.launch` is a **disposable unit** — SAM,
+supervisor, reasoner and the scene source all start and die together, once per question —
+so nothing carries over, exactly as the challenge relaunches the system per command. Model
+load therefore counts against the same 10-minute budget it will on the real evaluation,
+which makes the reported `time_taken_s` honest.
+
+```bash
+just vqa-up                    # A — Qwen stays resident (too big to reload per question)
+just eval-cat1 arabic_room 2   # B — dev loop: one scene, two questions
+just eval-cat1 all 0           # B — full sweep (75 questions, several hours)
+```
+
+Results are rewritten atomically after every question to `/data/runs/challenge_report.json`,
+so an interrupted sweep is still valid JSON with a per-scene summary.
+
+Ordering is enforced by two latched gates, not by sleeps. `sam_node` boots **unarmed**: it
+loads weights but processes no frame until the reasoner sends this question's prompts, and
+the bag is held until then — so the detector never burns the front of a scene on the config's
+placeholder objects.
+
+```text
+┌────────────────────────┐        ┌────────────────────────────────────────────────┐
+│    EVAL ORCHESTRATOR   │        │   smart_vlm.launch  (spawned PER QUESTION)     │
+│   [load QA + targets]  │        │                                                │
+│                        │ ── /gt_target_objects (latched) ──────────┐             │
+│                        │        │  ┌──────────────────────────┐    │             │
+│  [spawn launch] ──────────────▶ │  │  sam_node (UNARMED)      │    │             │
+│                        │        │  │  loads weights ~60s      │    │             │
+│                        │        │  └────────────┬─────────────┘    │             │
+│                        │        │   /sam3/status: awaiting_prompts │             │
+│                        │        │               ▼                  ▼             │
+│                        │ ◀── /pipeline/ready ── ┌───────────────────────────┐    │
+│  [publish Q @ 1 Hz] ─────────── /challenge_question ─▶│ TARGET EXTRACTION   │    │
+│                        │        │               │  GT targets, else Qwen    │    │
+│                        │        │               └─────────────┬─────────────┘    │
+│                        │        │                             │ /sam3/set_prompts│
+│                        │        │                             ▼                  │
+│                        │        │               ┌───────────────────────────┐    │
+│                        │        │               │  sam_node ARMS            │    │
+│                        │        │               │  fresh session + run_dir  │    │
+│                        │        │               └─────────────┬─────────────┘    │
+│                        │ ◀── /pipeline/armed ─────────────────┤                  │
+│                        │        │                             ▼   releases ──▶   │
+│                        │        │               ┌───────────────────────────┐    │
+│                        │        │               │  SCENE PLAYS              │    │
+│                        │        │               │  bag replay │ TARE explore│    │
+│                        │        │               └─────────────┬─────────────┘    │
+│                        │        │      /pipeline/explore_done │  (bag end, or    │
+│                        │        │       from smart_vlm        │   T-90 / timeout)│
+│                        │        │                             ▼                  │
+│                        │        │               ┌───────────────────────────┐    │
+│                        │        │               │  VQA ANSWERING            │    │
+│                        │        │               │  Qwen(question + crops)   │    │
+│  [score vs GT]         │ ◀── /numerical_response ─────────────┘                  │
+│  [write report.json]   │        │        (or smart_vlm's T-30 fallback guess)    │
+│                        │        │                                                │
+│  [SIGINT process group]│ ─────▶ │  every node dies together — clean slate         │
+│  [next question]       │        │                                                │
+└────────────────────────┘        └────────────────────────────────────────────────┘
+```
+
 ### 4 · Full challenge-style bench (sim)
 
 ```bash
@@ -135,8 +198,9 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 | **run** | `ai` · `run-sam` · `run-map` |
 | **perception** | `sam-status` · `sam-map-json` · `sam-frames` · `sam-probe` · `sam-prompts` |
 | **debug** | `foxglove` · `topics` · `shell-ai` · `shell-sys` |
-| **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `vqa-status` · `vqa-down` · `caption` |
+| **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `caption` |
 | **cat1** | `cat1-reasoner` · `cat1-bag-bench <scene> [limit]` |
+| **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` |
 
 Run `just` for this list with descriptions and default arguments.
 

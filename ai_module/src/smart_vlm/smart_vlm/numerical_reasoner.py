@@ -6,14 +6,19 @@ Challenge-facing topics:
   /numerical_response   (pub)  std_msgs/Int32    — once per question
 
 Internal orchestration:
-  /sam3/set_prompts     (pub)  JSON {prompts, run_id}
-  /sam3/prompts_ack     (sub)
+  /gt_target_objects    (sub, latched) — benchmark targets; skips the Qwen extract step
+  /sam3/set_prompts     (pub)  JSON {prompts, run_id} — the ONLY thing that arms sam_node
   /sam3/best_view_dir   (sub, latched)
-  /pipeline/explore_done (sub) — bag driver signals exploration finished
+  /pipeline/explore_done (sub) — smart_vlm signals exploration finished
   /qwen_vqa/{request,response,status}
 
 Phases per question: extract targets → set SAM prompts → wait explore_done →
-answer from best_rank1 image (+ manifest) → caption instance attributes into manifest.
+answer from best_rank1 image (+ manifest).
+
+The answer is published and written to the run's manifest.json before anything optional
+runs: the harness tears this pipeline down the instant it sees /numerical_response, so
+work queued after the publish never finishes. Instance captioning
+(`attribute_max_instances`, default 0) is debug tooling layered on after that point.
 """
 from __future__ import annotations
 
@@ -35,12 +40,12 @@ from std_msgs.msg import Int32, String
 from captioner.paths import secure_path
 from captioner.ros_utils import wait_for_subscriber
 from sam_mapper.best_view import sanitize_run_id
-from smart_vlm.category1_utils import (
+from smart_vlm.numerical_utils import (
     extract_integer,
     heuristic_targets,
     parse_target_list,
 )
-from smart_vlm.supervisor import classify
+from smart_vlm.question import QuestionType, classify
 
 EXTRACT_PROMPT = (
     "Return ONLY a JSON list of short object noun phrases that a detector should "
@@ -55,7 +60,7 @@ ATTRIBUTE_PROMPT = (
     "Reply in one short sentence starting with \"The {label} is\"."
 )
 
-class Category1Reasoner(Node):
+class NumericalReasoner(Node):
     PHASE_IDLE = "idle"
     PHASE_EXTRACT = "extract"
     PHASE_PROMPTS = "prompts"
@@ -63,27 +68,27 @@ class Category1Reasoner(Node):
     PHASE_ANSWER = "answer"
 
     def __init__(self):
-        super().__init__("category1_reasoner")
+        super().__init__("numerical_reasoner")
 
-        self.declare_parameter("run_id_prefix", "cat1")
+        self.declare_parameter("run_id_prefix", "num_reasoner")
         self.declare_parameter("vqa_timeout_s", 120.0)
-        self.declare_parameter("prompts_ack_timeout_s", 30.0)
-        self.declare_parameter("attribute_max_instances", 12)
+        # 0 = off. Instance captioning is debug metadata (written to the manifest, read
+        # by nothing) and costs one Qwen call each, spent AFTER the answer is already
+        # published — pure budget burn in a scored run. Raise it when inspecting a scene.
+        self.declare_parameter("attribute_max_instances", 0)
 
         self.run_id_prefix = str(self.get_parameter("run_id_prefix").value)
         self.vqa_timeout_s = float(self.get_parameter("vqa_timeout_s").value)
-        self.prompts_ack_timeout_s = float(self.get_parameter("prompts_ack_timeout_s").value)
         self.attribute_max_instances = int(self.get_parameter("attribute_max_instances").value)
 
         self._lock = threading.Lock()
         self._phase = self.PHASE_IDLE
         self._question: Optional[str] = None
+        self._current_gt_targets: Optional[list[str]] = None
+        self._active_gt_targets: Optional[list[str]] = None
         self._run_id: Optional[str] = None
         self._extracted: list[str] = []
         self._crop_dir: Optional[str] = None
-        self._pending_ack_run_id: Optional[str] = None
-        self._ack_event = threading.Event()
-        self._ack_payload: Optional[dict] = None
 
         self._vqa_lock = threading.Lock()
         self._vqa_wait_id: Optional[str] = None
@@ -99,11 +104,11 @@ class Category1Reasoner(Node):
         )
 
         cb = MutuallyExclusiveCallbackGroup()
+        self.create_subscription(String, "/gt_target_objects", self._on_gt_targets, latch_qos,
+                                 callback_group=cb)
         self.create_subscription(String, "/challenge_question", self._on_question, 10,
                                  callback_group=cb)
         self.create_subscription(String, "/pipeline/explore_done", self._on_explore_done, 10,
-                                 callback_group=cb)
-        self.create_subscription(String, "/sam3/prompts_ack", self._on_prompts_ack, 10,
                                  callback_group=cb)
         self.create_subscription(String, "/sam3/best_view_dir", self._on_crop_dir, latch_qos,
                                  callback_group=cb)
@@ -115,14 +120,26 @@ class Category1Reasoner(Node):
         self.pub_prompts = self.create_publisher(String, "/sam3/set_prompts", 10)
         self.pub_vqa_req = self.create_publisher(String, "/qwen_vqa/request", 10)
         self.pub_answer = self.create_publisher(Int32, "/numerical_response", 10)
-        self.pub_status = self.create_publisher(String, "/category1_reasoner/status", latch_qos)
+        self.pub_status = self.create_publisher(String, "/numerical_reasoner/status", latch_qos)
 
         self._publish_status("idle")
         self.get_logger().info(
-            "category1_reasoner ready — waiting for How many / Count questions")
+            "numerical_reasoner ready — waiting for How many / Count questions")
 
     def _publish_status(self, text: str) -> None:
+        # Worker threads call this during teardown, after SIGINT has already invalidated
+        # the context — publishing then raises RCLError and kills the thread noisily.
+        if not rclpy.ok():
+            return
         self.pub_status.publish(String(data=text))
+
+    def _on_gt_targets(self, msg: String) -> None:
+        try:
+            targets = json.loads(msg.data)
+            with self._lock:
+                self._current_gt_targets = targets if targets else None
+        except json.JSONDecodeError:
+            pass
 
     def _on_vqa_status(self, msg: String) -> None:
         self._qwen_ready = msg.data.strip() == "ready"
@@ -130,18 +147,6 @@ class Category1Reasoner(Node):
     def _on_crop_dir(self, msg: String) -> None:
         with self._lock:
             self._crop_dir = msg.data
-
-    def _on_prompts_ack(self, msg: String) -> None:
-        try:
-            payload = json.loads(msg.data)
-        except json.JSONDecodeError:
-            return
-        with self._lock:
-            expected = self._pending_ack_run_id
-        if expected is not None and payload.get("run_id") != expected:
-            return
-        self._ack_payload = payload
-        self._ack_event.set()
 
     def _on_vqa_response(self, msg: String) -> None:
         try:
@@ -159,19 +164,20 @@ class Category1Reasoner(Node):
         with self._lock:
             if self._phase != self.PHASE_IDLE:
                 return
-            if classify(msg.data) != "numerical":
+            
+            q_text = msg.data.strip()
+            
+            if classify(q_text) is not QuestionType.NUMERICAL:
                 return
             self._phase = self.PHASE_EXTRACT
-            self._question = msg.data.strip()
+            self._question = q_text
+            self._active_gt_targets = self._current_gt_targets
             qid = uuid.uuid4().hex[:8]
             # Same sanitiser sam_mapper applies when it turns run_id into a
             # directory name, so the path we log matches the one it creates.
             safe_q = sanitize_run_id(self._question[:48], fallback="q")
             self._run_id = f"{self.run_id_prefix}_{qid}_{safe_q}"[:80]
             self._extracted = []
-            self._ack_payload = None
-            self._ack_event.clear()
-            self._pending_ack_run_id = None
 
         self.get_logger().info(f"QUESTION: {self._question}")
         self._publish_status("extract")
@@ -244,58 +250,55 @@ class Category1Reasoner(Node):
             with self._lock:
                 question = self._question
                 run_id = self._run_id
+                gt_targets = self._active_gt_targets
 
-            prompt = EXTRACT_PROMPT.format(question=question)
-            response = self._ask_vqa(
-                prompt, image=None, timeout_s=self.vqa_timeout_s,
-                max_new_tokens=128, mode="freeform")
-            targets = parse_target_list(response.get("answer") or "")
-            if not targets:
-                # Fallback: crude noun guess from "How many X ..."
-                targets = heuristic_targets(question)
-                self.get_logger().warn(
-                    f"extract parse failed ({response.get('answer')!r}); "
-                    f"heuristic targets={targets}")
+            if gt_targets is not None:
+                targets = gt_targets
+            else:
+                prompt = EXTRACT_PROMPT.format(question=question)
+                response = self._ask_vqa(
+                    prompt, image=None, timeout_s=self.vqa_timeout_s,
+                    max_new_tokens=128, mode="freeform")
+                targets = parse_target_list(response.get("answer") or "")
+                if not targets:
+                    # Fallback: crude noun guess from "How many X ..."
+                    targets = heuristic_targets(question)
+                    self.get_logger().warn(
+                        f"extract parse failed ({response.get('answer')!r}); "
+                        f"heuristic targets={targets}")
+            
             if not targets:
                 raise RuntimeError("Could not extract target objects from question")
 
             with self._lock:
                 self._extracted = targets
                 self._phase = self.PHASE_PROMPTS
-                self._pending_ack_run_id = run_id
-                self._ack_event.clear()
-                self._ack_payload = None
 
             self._publish_status("prompts")
-            self.get_logger().info(f"extracted targets: {targets}")
+            self.get_logger().info(
+                f"extracted targets ({'GT' if gt_targets is not None else 'Qwen'}): {targets}")
 
+            # Always publish, GT path included: sam_node boots unarmed, so this is the
+            # only thing that ever gives it prompts. It also gives both paths a per-run
+            # run_id, so /sam3/best_view_dir points at this question's own crop dir
+            # instead of silently reusing SAM's boot-time default.
             set_payload = {"prompts": targets, "run_id": run_id}
             wait_for_subscriber(self.pub_prompts)
             self.pub_prompts.publish(String(data=json.dumps(set_payload)))
 
-            if not self._ack_event.wait(timeout=self.prompts_ack_timeout_s):
-                raise TimeoutError("No /sam3/prompts_ack within timeout")
-            ack = self._ack_payload or {}
-            if not ack.get("ok", False):
-                raise RuntimeError(f"set_prompts failed: {ack.get('error')}")
-
             with self._lock:
-                if ack.get("run_dir"):
-                    self._crop_dir = ack["run_dir"]
                 self._phase = self.PHASE_EXPLORE
-                self._pending_ack_run_id = None
 
             self._publish_status("explore")
             self.get_logger().info(
                 f"prompts applied; waiting for /pipeline/explore_done "
-                f"(run_dir={ack.get('run_dir')})")
+                f"(and final best_view crops)")
         except Exception as exc:  # noqa: BLE001 — keep node alive
             self.get_logger().error(f"extract/set_prompts failed: {type(exc).__name__}: {exc}")
             with self._lock:
                 self._phase = self.PHASE_IDLE
                 self._question = None
                 self._run_id = None
-                self._pending_ack_run_id = None
             self._publish_status("error")
 
     def _run_answer(
@@ -327,13 +330,7 @@ class Category1Reasoner(Node):
                 # does not hang; score will mark incorrect.
                 self.get_logger().error(
                     f"No best-view image in {run_dir}; publishing 0")
-                self.pub_answer.publish(Int32(data=0))
-                manifest["question"] = question
-                manifest["extracted_targets"] = extracted
-                manifest["predicted_answer"] = 0
-                with open(manifest_path, "w", encoding="utf-8") as handle:
-                    json.dump(manifest, handle, indent=2)
-                    handle.write("\n")
+                answer = 0
             else:
                 # mode=numerical wraps with the integer-only template in the VQA server.
                 response = self._ask_vqa(
@@ -348,15 +345,28 @@ class Category1Reasoner(Node):
                     number = extract_integer(response.get("answer"))
                 if number is None:
                     raise RuntimeError("Could not parse integer answer from VQA")
+                answer = int(number)
 
-                self.pub_answer.publish(Int32(data=int(number)))
-                self.get_logger().info(f"Published /numerical_response={number}")
+            # Publish, then persist the record, before anything optional runs. The
+            # harness tears the pipeline down the moment it sees /numerical_response,
+            # so any work after the publish is work that will be killed mid-flight.
+            self.pub_answer.publish(Int32(data=answer))
+            self.get_logger().info(f"Published /numerical_response={answer}")
 
-                self._append_attributes(
-                    manifest, run_dir, question, extracted, int(number))
-                with open(manifest_path, "w", encoding="utf-8") as handle:
-                    json.dump(manifest, handle, indent=2)
-                    handle.write("\n")
+            manifest["question"] = question
+            manifest["extracted_targets"] = extracted
+            manifest["predicted_answer"] = answer
+            self._save_manifest(manifest_path, manifest)
+
+            # Debug metadata only — nothing downstream reads it, and it costs one Qwen
+            # call per instance. Best-effort: the answer is already out and on disk.
+            if image_path is not None and self.attribute_max_instances > 0:
+                try:
+                    self._append_attributes(manifest, run_dir)
+                    self._save_manifest(manifest_path, manifest)
+                except Exception as exc:  # noqa: BLE001 — never lose a published answer
+                    self.get_logger().warn(
+                        f"attribute captioning skipped: {type(exc).__name__}: {exc}")
 
         except Exception as exc:  # noqa: BLE001
             self.get_logger().error(f"answer failed: {type(exc).__name__}: {exc}")
@@ -373,7 +383,6 @@ class Category1Reasoner(Node):
             self._question = None
             self._run_id = None
             self._extracted = []
-            self._pending_ack_run_id = None
         self._publish_status(status)
 
     def _resolve_crop_dir(self, best_dir: Optional[str]) -> Path:
@@ -381,18 +390,17 @@ class Category1Reasoner(Node):
             raise RuntimeError("No /sam3/best_view_dir available")
         return secure_path(best_dir)
 
-    def _append_attributes(
-        self,
-        manifest: dict,
-        run_dir: Path,
-        question: str,
-        extracted: list[str],
-        predicted: int,
-    ) -> None:
-        manifest["question"] = question
-        manifest["extracted_targets"] = extracted
-        manifest["predicted_answer"] = predicted
+    @staticmethod
+    def _save_manifest(manifest_path: Path, manifest: dict) -> None:
+        """Write atomically — a reader must never see a half-serialised manifest."""
+        tmp = manifest_path.with_suffix(".json.tmp")
+        with open(tmp, "w", encoding="utf-8") as handle:
+            json.dump(manifest, handle, indent=2)
+            handle.write("\n")
+        tmp.replace(manifest_path)
 
+    def _append_attributes(self, manifest: dict, run_dir: Path) -> None:
+        """Caption each detected instance into the manifest. Debug metadata only."""
         count = 0
         for entry in manifest.get("selected") or []:
             if count >= self.attribute_max_instances:
@@ -440,11 +448,15 @@ class Category1Reasoner(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = Category1Reasoner()
+    node = NumericalReasoner()
     executor = MultiThreadedExecutor(num_threads=4)
     executor.add_node(node)
     try:
         executor.spin()
+    except KeyboardInterrupt:
+        # The harness SIGINTs this pipeline after every question; that is the normal
+        # exit, not a crash. Without this it propagates as a traceback and exit -2.
+        pass
     finally:
         executor.shutdown()
         node.destroy_node()

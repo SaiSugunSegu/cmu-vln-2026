@@ -119,6 +119,21 @@ own GIL, immune to `semantic_mapper`'s (or its own) high-frequency ROS callbacks
                                                                                         ▼  M3 scene graph → M4 reasoner
 ```
 
+### `wait_for_prompts` — booting unarmed
+
+`sam_node` normally starts with the prompts in its config's `objects:` list. Pass
+`wait_for_prompts:=true` (`sam_node.launch`, set by `smart_vlm.launch`) and it instead boots
+**unarmed**: weights still load — the slow part, ~60 s — but `prompt_table` stays `None`, every
+`/camera/image` is dropped without buffering, and no best-view run directory is created.
+`/sam3/status` reports `awaiting_prompts` rather than `ready`.
+
+The first `/sam3/set_prompts` arms it through the existing path: fresh `PromptTable`, fresh SAM 3
+session, fresh `BestViewCollector` with its own `run_dir`. The category-1 pipeline needs this,
+because its prompts are derived from the question — anything detected before they arrive would be
+against the config's placeholder objects and would pollute the run's crops. A rejected
+`set_prompts` rolls `armed` back to whatever it was, so a bad request can never leave the node
+armed with no prompt table.
+
 **Bag and live sim are interchangeable.** Both publish the same three source topics; the nodes
 subscribe and cannot tell them apart. `just bag-play scene_0` and `just sim-noviz` are drop-in
 alternatives. There is no bag-specific code path anywhere in perception.
