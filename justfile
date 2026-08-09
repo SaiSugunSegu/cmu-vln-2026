@@ -220,8 +220,13 @@ sam-status seconds="15":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.status --seconds {{seconds}}"
 
 # ---------- Persistent Qwen VQA (model stays loaded) --------------------
-#   just vqa-up
-#   just vqa-ask "How many pillows?" /data/img.png
+#   just up-dev-fast          # pick up /data/eval_bench mount + live captioner
+#   just build captioner      # install multi-image client/server
+#   just vqa-up               # load weights once (~60s)
+#   just vqa-ask-dir bags/eval_bench/eval-crops/num_reasoner_871be12b_…
+#   just vqa-ask-dir … instruction='Count each object once across views'
+#   just vqa-ask-dir … annotated=true
+#   VQA_INSTRUCTION='…' just vqa-ask "How many?" /data/img1.png /data/img2.png
 #   just vqa-down
 
 # Starts the Qwen VQA server process. Run it before `just ai` or the evaluation.
@@ -231,30 +236,165 @@ vqa-up model="qwen3vl" quantization="int4":
     docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && ros2 launch captioner vqa_server.launch model:={{model}} quantization:={{quantization}}"
 
-# Image path: container-absolute under /data (host data/x is /data/x).
+# Rewrite a host or relative path to a container path under /data.
+#   data/x.png                         -> /data/x.png
+#   bags/eval_bench/eval-crops/…       -> /data/eval_bench/eval-crops/…
+#   /abs/…/bags/eval_bench/…           -> /data/eval_bench/…
+#   /abs/…/data/…                      -> /data/…
+#   /data/…                            -> unchanged
+# Optional instruction / freeform via env (just forbids defaults before +images):
+#   VQA_INSTRUCTION='Count each sofa once across views' just vqa-ask "…" img1 img2
+#   VQA_FREEFORM=true just vqa-ask "Describe…" img1
 [group('vqa')]
-[doc('Ask the running server a question about an image (fast; no reload)')]
-vqa-ask q image:
+[doc('Ask the running server (1+ images; no model reload)')]
+vqa-ask q +images:
     #!/usr/bin/env bash
     set -euo pipefail
     q="{{q}}"
-    image="{{image}}"
     q="${q#q=}"
-    image="${image#image=}"
-    # Rewrite repo-relative data/ paths to the container mount.
-    if [[ "$image" != /* ]]; then
-      image="/data/${image#data/}"
-    else
-      image="${image/#$PWD\/data//data}"
+    instruction="${VQA_INSTRUCTION:-}"
+    freeform="${VQA_FREEFORM:-false}"
+    repo="$(cd "{{ justfile_directory() }}" && pwd)"
+    map_path() {
+      local p="$1"
+      p="${p#image=}"
+      if [[ "$p" == /data/* ]]; then
+        printf '%s' "$p"
+        return
+      fi
+      if [[ "$p" == /* ]]; then
+        case "$p" in
+          "$repo"/data/*) printf '/data/%s' "${p#"$repo"/data/}" ;;
+          "$repo"/bags/eval_bench/*) printf '/data/eval_bench/%s' "${p#"$repo"/bags/eval_bench/}" ;;
+          *) printf '%s' "$p" ;;
+        esac
+        return
+      fi
+      case "$p" in
+        data/*) printf '/data/%s' "${p#data/}" ;;
+        bags/eval_bench/*) printf '/data/eval_bench/%s' "${p#bags/eval_bench/}" ;;
+        eval-crops/*) printf '/data/eval_bench/eval-crops/%s' "${p#eval-crops/}" ;;
+        *) printf '/data/%s' "$p" ;;
+      esac
+    }
+    remote="{{capt_env}} && qwen_vqa_ask --question $(printf '%q' "$q")"
+    if [[ -n "$instruction" ]]; then
+      remote+=" --instruction $(printf '%q' "$instruction")"
+    fi
+    case "$(printf '%s' "$freeform" | tr '[:upper:]' '[:lower:]')" in
+      1|true|yes|on) remote+=" --freeform" ;;
+    esac
+    count=0
+    for raw in {{images}}; do
+      mapped="$(map_path "$raw")"
+      remote+=" --image $(printf '%q' "$mapped")"
+      count=$((count + 1))
+    done
+    if [[ "$count" -eq 0 ]]; then
+      echo 'Usage: just vqa-ask "question" image [image…]' >&2
+      echo 'Optional env: VQA_INSTRUCTION="…"  VQA_FREEFORM=true' >&2
+      exit 1
     fi
     docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
       if ! pgrep -f '[q]wen_vqa_server' >/dev/null; then
         echo 'VQA server is not running. Start it with: just vqa-up' >&2
         exit 1
       fi
-      {{capt_env}} &&
-      qwen_vqa_ask --question $(printf '%q' "$q") --image $(printf '%q' "$image")
+      $remote
     "
+
+# Crop-dir path: host bags/eval_bench/… or container /data/eval_bench/…
+# Default uses clean best_rank*.png; pass annotated=true for overlays.
+# Optional instruction= adds extra textual guidance for Qwen.
+[group('vqa')]
+[doc('Ask with all crops in an eval-crops folder (question from folder name)')]
+vqa-ask-dir dir annotated="false" instruction="" freeform="false":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dir="{{dir}}"
+    annotated="{{annotated}}"
+    instruction="{{instruction}}"
+    freeform="{{freeform}}"
+    dir="${dir#dir=}"
+    annotated="${annotated#annotated=}"
+    instruction="${instruction#instruction=}"
+    freeform="${freeform#freeform=}"
+    repo="$(cd "{{ justfile_directory() }}" && pwd)"
+    map_dir() {
+      local p="$1"
+      if [[ "$p" == /data/* ]]; then
+        printf '%s' "$p"
+        return
+      fi
+      if [[ "$p" == /* ]]; then
+        case "$p" in
+          "$repo"/data/*) printf '/data/%s' "${p#"$repo"/data/}" ;;
+          "$repo"/bags/eval_bench/*) printf '/data/eval_bench/%s' "${p#"$repo"/bags/eval_bench/}" ;;
+          *) printf '%s' "$p" ;;
+        esac
+        return
+      fi
+      case "$p" in
+        data/*) printf '/data/%s' "${p#data/}" ;;
+        bags/eval_bench/*) printf '/data/eval_bench/%s' "${p#bags/eval_bench/}" ;;
+        eval-crops/*) printf '/data/eval_bench/eval-crops/%s' "${p#eval-crops/}" ;;
+        *) printf '/data/eval_bench/eval-crops/%s' "${p#/}" ;;
+      esac
+    }
+    cdir="$(map_dir "$dir")"
+    extra_flags=""
+    case "$(printf '%s' "$annotated" | tr '[:upper:]' '[:lower:]')" in
+      1|true|yes|on) extra_flags+=" --annotated" ;;
+    esac
+    if [[ -n "$instruction" ]]; then
+      extra_flags+=" --instruction $(printf '%q' "$instruction")"
+    fi
+    case "$(printf '%s' "$freeform" | tr '[:upper:]' '[:lower:]')" in
+      1|true|yes|on) extra_flags+=" --freeform" ;;
+    esac
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
+      if ! pgrep -f '[q]wen_vqa_server' >/dev/null; then
+        echo 'VQA server is not running. Start it with: just vqa-up' >&2
+        exit 1
+      fi
+      if [[ ! -d $(printf '%q' "$cdir") ]]; then
+        echo \"crop-dir not found in container: $cdir\" >&2
+        echo 'Recreate the AI container so /data/eval_bench is mounted:' >&2
+        echo '  just up-dev-fast' >&2
+        exit 1
+      fi
+      {{capt_env}} &&
+      qwen_vqa_ask --crop-dir $(printf '%q' "$cdir") ${extra_flags}
+    "
+
+[group('vqa')]
+[doc('Show whether the persistent VQA server is running / ready')]
+vqa-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc '
+      if ! pgrep -f "[q]wen_vqa_server" >/dev/null; then
+        echo "VQA server: not running (just vqa-up)"
+        exit 1
+      fi
+      echo "VQA server: process up"
+      {{capt_env}} &&
+      timeout 3s ros2 topic echo /qwen_vqa/status --once 2>/dev/null || true
+    '
+
+[group('vqa')]
+[doc('Stop the persistent VQA server')]
+vqa-down:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    docker exec iros2026_ai_module bash -lc '
+      if pgrep -f "[q]wen_vqa_server" >/dev/null; then
+        pkill -f "[q]wen_vqa_server" || true
+        echo "VQA server stopped"
+      else
+        echo "VQA server was not running"
+      fi
+    '
 
 # Host data/ <-> /data, so `just caption crops captions` reads data/crops and
 # writes data/captions. Weights come from the mounted ~/.cache/huggingface.

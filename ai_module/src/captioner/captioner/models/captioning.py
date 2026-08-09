@@ -18,6 +18,13 @@ from transformers import (
 )
 
 from captioner.text_utils import extract_integer
+from captioner.vqa_prompt import (
+    FREEFORM_VQA_PROMPT,
+    VQA_PROMPT_MULTI,
+    VQA_PROMPT_SINGULAR,
+    multi_image_user_content,
+    numerical_vqa_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -220,12 +227,10 @@ class QwenVLHFBackend(CaptioningModel):
 
         self.prompt = "Describe the {obj} in this image, using properties like color, material, shape, affordances, and other meaningful attributes. Provide the response in this format: “The <object name> is <color>, <material>, <shape>."
         # Ask for a bare integer so challenge numerical answers need minimal parsing.
-        self.vqa_prompt = (
-            "Answer the question about this image with a single integer only. "
-            "Do not include units, words, or explanation.\nQuestion: {question}"
-        )
+        self.vqa_prompt = VQA_PROMPT_SINGULAR
+        self.vqa_prompt_multi = VQA_PROMPT_MULTI
         # Pass-through text for extract / attribute prompts (no integer constraint).
-        self.freeform_vqa_prompt = "{question}"
+        self.freeform_vqa_prompt = FREEFORM_VQA_PROMPT
 
     @staticmethod
     def model_class():
@@ -271,8 +276,8 @@ class QwenVLHFBackend(CaptioningModel):
             questions: list[str],
             *,
             freeform: bool = False,
+            instruction: Optional[str] = None,
             ) -> list[str]:
-        template = self.freeform_vqa_prompt if freeform else self.vqa_prompt
         messages = [[
             {
                 "role": "user",
@@ -283,7 +288,11 @@ class QwenVLHFBackend(CaptioningModel):
                     },
                     {
                         "type": "text",
-                        "text": template.format(question=question),
+                        "text": numerical_vqa_text(
+                            question, 1,
+                            freeform=freeform,
+                            instruction=instruction,
+                        ),
                     },
                 ],
             }
@@ -293,6 +302,21 @@ class QwenVLHFBackend(CaptioningModel):
             message, tokenize=False, add_generation_prompt=True
         ) for message in messages]
 
+    def build_multi_image_vqa_prompt(
+            self,
+            pil_images,
+            question: str,
+            *,
+            freeform: bool = False,
+            instruction: Optional[str] = None,
+            ) -> str:
+        """One chat turn with N image blocks followed by the question text."""
+        content = multi_image_user_content(
+            pil_images, question, freeform=freeform, instruction=instruction)
+        messages = [{"role": "user", "content": content}]
+        return self.processor.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True)
+
     def answer_questions(
             self,
             images,
@@ -300,18 +324,21 @@ class QwenVLHFBackend(CaptioningModel):
             max_new_tokens: Optional[int] = None,
             *,
             freeform: bool = False,
+            instruction: Optional[str] = None,
             ) -> list[str]:
         """Visual question answering for one image/question pair each.
 
         freeform=False (default): wrap with the integer-only challenge prompt.
         freeform=True: send the question text as-is (extract / attribute captions).
+        instruction: optional extra guidance inserted into the prompt.
         """
         if len(images) != len(questions):
             raise ValueError(
                 f"images ({len(images)}) and questions ({len(questions)}) length mismatch")
 
         pil_images = [self.to_pil(image) for image in images]
-        prompts = self.build_vqa_prompts(pil_images, questions, freeform=freeform)
+        prompts = self.build_vqa_prompts(
+            pil_images, questions, freeform=freeform, instruction=instruction)
         token_budget = self.max_new_tokens if max_new_tokens is None else max_new_tokens
 
         answers = []
@@ -321,6 +348,28 @@ class QwenVLHFBackend(CaptioningModel):
             answer_batch, _, _ = self.run_batch(image_batch, prompt_batch, token_budget)
             answers.extend(answer_batch)
         return answers
+
+    def answer_multi_image(
+            self,
+            images,
+            question: str,
+            max_new_tokens: Optional[int] = None,
+            *,
+            freeform: bool = False,
+            instruction: Optional[str] = None,
+            ) -> str:
+        """Visual question answering with multiple images as context for one question."""
+        if not images:
+            raise ValueError("answer_multi_image requires at least one image")
+        if not isinstance(question, str) or not question.strip():
+            raise ValueError("question must be a non-empty string")
+
+        pil_images = [self.to_pil(image) for image in images]
+        prompt = self.build_multi_image_vqa_prompt(
+            pil_images, question, freeform=freeform, instruction=instruction)
+        token_budget = self.max_new_tokens if max_new_tokens is None else max_new_tokens
+        answers, _, _ = self.run_multi_image(pil_images, prompt, token_budget)
+        return answers[0]
 
     def answer_numerical(
             self,
@@ -355,6 +404,30 @@ class QwenVLHFBackend(CaptioningModel):
             skip_special_tokens=True,
             clean_up_tokenization_spaces=False)
 
+        return [caption.strip() for caption in caption_batch], inputs, generated
+
+    def run_multi_image(self, pil_images, prompt: str, max_new_tokens: int):
+        """Generate for one prompt that references multiple images.
+
+        The processor expects the flat image list to align with the image tokens
+        that apply_chat_template inserted for this single sequence.
+        """
+        inputs = self.processor(
+            images=list(pil_images),
+            text=[prompt],
+            padding=True,
+            return_tensors="pt").to("cuda")
+
+        output = self.model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            )
+
+        generated = output[:, inputs.input_ids.shape[1]:]
+        caption_batch = self.processor.batch_decode(
+            generated,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False)
         return [caption.strip() for caption in caption_batch], inputs, generated
 
     def warmup(self, images, names: list[str], max_new_tokens: int = 8):

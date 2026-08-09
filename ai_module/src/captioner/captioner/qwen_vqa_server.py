@@ -5,8 +5,12 @@ ROS topics
   /qwen_vqa/status   (std_msgs/String, TRANSIENT_LOCAL)  "loading" | "ready" | "error:…"
   /qwen_vqa/request  (std_msgs/String JSON)
       {"id": "<uuid>", "image": "/abs/path.png", "question": "How many…"}
+      {"id": "<uuid>", "images": ["/a.png", "/b.png"], "question": "How many…",
+       "instruction": "Count each object once across views."}
       {"id": "<uuid>", "image": null, "question": "…", "mode": "freeform"}
       mode: "numerical" (default) | "freeform" (no integer-only wrapper)
+      Prefer "images" when present and non-empty; else fall back to "image".
+      Optional "instruction" adds extra textual guidance to the prompt.
   /qwen_vqa/response (std_msgs/String JSON)
       {"id": "…", "answer": "4", "number": 4, "error": null, "seconds": 0.5}
 
@@ -34,6 +38,7 @@ from std_msgs.msg import String
 from captioner.models.captioning import load_qwen_backend
 from captioner.paths import secure_image_path
 from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
+from captioner.vqa_request import parse_vqa_request
 
 # Tiny RGB placeholder so VL backends accept text-only extract / planning prompts.
 _BLANK_RGB = np.zeros((64, 64, 3), dtype=np.uint8)
@@ -41,9 +46,6 @@ _BLANK_RGB = np.zeros((64, 64, 3), dtype=np.uint8)
 # Deep enough to absorb a burst from the reasoner (extract + answer + attribute
 # captions), shallow enough that a stuck client is rejected rather than queued.
 QUEUE_DEPTH = 16
-
-# A malformed or hostile request must not be able to pin the GPU for minutes.
-MAX_NEW_TOKENS_LIMIT = 512
 
 
 class QwenVQAServer(Node):
@@ -150,40 +152,31 @@ class QwenVQAServer(Node):
                 self._requests.task_done()
 
     @staticmethod
-    def _parse_request(raw: str) -> tuple[Optional[str], str, Optional[str], bool, Optional[int]]:
-        """(id, question, image_path, freeform, max_new_tokens) or raise ValueError."""
-        payload = json.loads(raw)
-        if not isinstance(payload, dict):
-            raise ValueError("payload must be a JSON object")
+    def _parse_request(
+            raw: str,
+            ) -> tuple[
+                Optional[str], str, list[Optional[str]], bool, Optional[int],
+                Optional[str]]:
+        """(id, question, image_paths, freeform, max_new_tokens, instruction)."""
+        return parse_vqa_request(raw)
 
-        req_id = payload.get("id")
-        if "image" not in payload or "question" not in payload:
-            raise ValueError("need keys: id, question, image (image may be null)")
-
-        question = payload["question"]
-        if not isinstance(question, str) or not question.strip():
-            raise ValueError("question must be a non-empty string")
-
-        image_path = payload["image"]
-        if image_path is not None and not isinstance(image_path, str):
-            raise ValueError("image must be a string path or null")
-
-        mode = str(payload.get("mode") or "numerical").lower()
-        freeform = mode in ("freeform", "text", "extract")
-
-        max_new_tokens = payload.get("max_new_tokens")
-        if max_new_tokens is not None:
-            max_new_tokens = int(max_new_tokens)
-            if not 1 <= max_new_tokens <= MAX_NEW_TOKENS_LIMIT:
-                raise ValueError(
-                    f"max_new_tokens must be in 1..{MAX_NEW_TOKENS_LIMIT}")
-
-        return req_id, question, image_path, freeform, max_new_tokens
+    def _load_images(self, image_paths: list[Optional[str]]):
+        loaded = []
+        for image_path in image_paths:
+            if not image_path:
+                loaded.append(_BLANK_RGB)
+                continue
+            path = secure_image_path(image_path)
+            image = iio.imread(str(path))
+            if image is None:
+                raise RuntimeError(f"Failed to read image: {path}")
+            loaded.append(image)
+        return loaded
 
     def _handle_request(self, raw: str):
         req_id = None
         try:
-            req_id, question, image_path, freeform, max_new_tokens = \
+            req_id, question, image_paths, freeform, max_new_tokens, instruction = \
                 self._parse_request(raw)
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             self.get_logger().warn(f"rejected request: {exc}")
@@ -191,23 +184,26 @@ class QwenVQAServer(Node):
             return
 
         try:
-            if not image_path:
-                image = _BLANK_RGB
-            else:
-                path = secure_image_path(image_path)
-                image = iio.imread(str(path))
-                if image is None:
-                    raise RuntimeError(f"Failed to read image: {path}")
+            images = self._load_images(image_paths)
+            token_budget = max_new_tokens or self.max_new_tokens
 
             t0 = time.time()
-            answers = self.model.answer_questions(
-                [image], [question],
-                max_new_tokens=max_new_tokens or self.max_new_tokens,
-                freeform=freeform,
-            )
+            if len(images) == 1:
+                raw_answer = self.model.answer_questions(
+                    images, [question],
+                    max_new_tokens=token_budget,
+                    freeform=freeform,
+                    instruction=instruction,
+                )[0]
+            else:
+                raw_answer = self.model.answer_multi_image(
+                    images, question,
+                    max_new_tokens=token_budget,
+                    freeform=freeform,
+                    instruction=instruction,
+                )
             elapsed = time.time() - t0
 
-            raw_answer = answers[0]
             number = self.model.extract_integer(raw_answer)
             self._publish_response({
                 "id": req_id,

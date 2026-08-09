@@ -3,30 +3,75 @@
 Loads the model on every invocation (~60 s). For repeated questions prefer the
 persistent server: `just vqa-up` then `just vqa-ask "…" /data/img.png`.
 
-Example:
+Examples:
   python -m captioner.models.vqa /data/crops/3_bed/crop.png \\
     --question "How many pillows are on the bed?" \\
     --quantization int4
+
+  # Multi-image from an eval-crops folder (clean crops; question from folder name):
+  python -m captioner.models.vqa --crop-dir \\
+    /data/eval_bench/eval-crops/num_reasoner_871be12b_How_many_carpets_are_on_the_floor_carpet
+
+  # Same folder, but use annotated overlays:
+  python -m captioner.models.vqa --crop-dir .../num_reasoner_… --annotated
+
+  # Ad-hoc multi-image:
+  python -m captioner.models.vqa img1.png img2.png -q "How many carpets?"
 """
 from __future__ import annotations
 
 import argparse
 import json
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Sequence
 
 import imageio.v3 as iio
 
+from captioner.crop_dir import list_crop_images, question_from_crop_dir
 from captioner.models.captioning import load_qwen_backend
-from captioner.paths import secure_image_path, secure_output_path
+from captioner.paths import secure_image_path, secure_output_path, secure_path
+
+
+def _roots_for_paths(paths: Sequence[Path]) -> tuple[Path, ...]:
+    """Allowed roots for offline host paths (crop dir + parents of image files)."""
+    roots: list[Path] = []
+    for path in paths:
+        resolved = path.expanduser().resolve()
+        roots.append(resolved if resolved.is_dir() else resolved.parent)
+    # Deduplicate while preserving order.
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for root in roots:
+        if root not in seen:
+            seen.add(root)
+            unique.append(root)
+    return tuple(unique)
 
 
 def main(argv: Optional[List[str]] = None):
     parser = argparse.ArgumentParser(
-        description="Ask a Qwen-VL model a question about an image (int4 by default).")
-    parser.add_argument("image", help="Path to an RGB image (png/jpg/…).")
+        description="Ask a Qwen-VL model a question about one or more images "
+                    "(int4 by default).")
     parser.add_argument(
-        "--question", "-q", required=True,
-        help='Natural-language question, e.g. "How many pillows are on the bed?"')
+        "images", nargs="*",
+        help="Path(s) to RGB image(s). Omit when using --crop-dir.")
+    parser.add_argument(
+        "--crop-dir", default=None,
+        help="Eval-crops run directory: load best_rank*.png (or annotated/ "
+             "with --annotated) and derive the question from the folder name.")
+    parser.add_argument(
+        "--annotated", action="store_true",
+        help="With --crop-dir, use annotated/*.png overlays instead of clean crops.")
+    parser.add_argument(
+        "--instruction", "-I", default=None,
+        help="Extra textual guidance added to the prompt "
+             "(e.g. counting rules across views).")
+    parser.add_argument(
+        "--freeform", action="store_true",
+        help="Do not wrap with the integer-only numerical prompt.")
+    parser.add_argument(
+        "--question", "-q", default=None,
+        help='Natural-language question (required unless --crop-dir).')
     parser.add_argument(
         "--captioning_model", default="qwen3vl",
         choices=["qwen3vl", "qwen2_5vl"])
@@ -49,14 +94,46 @@ def main(argv: Optional[List[str]] = None):
         help="Optional path to write {question, answer, raw, …} as JSON.")
     args = parser.parse_args(argv)
 
+    if args.crop_dir and args.images:
+        raise SystemExit("Pass either --crop-dir or image path(s), not both.")
+    if not args.crop_dir and not args.images:
+        raise SystemExit("Provide image path(s) or --crop-dir.")
+
+    image_paths: list[Path]
+    question: str
+    roots: tuple[Path, ...]
+
+    if args.crop_dir:
+        crop_root = Path(args.crop_dir).expanduser().resolve()
+        if not crop_root.is_dir():
+            raise SystemExit(f"crop-dir is not a directory: {crop_root}")
+        roots = (crop_root,)
+        crop_dir = secure_path(str(crop_root), roots=roots)
+        image_paths = list_crop_images(crop_dir, annotated=args.annotated)
+        question = args.question or question_from_crop_dir(crop_dir)
+    else:
+        if not args.question or not str(args.question).strip():
+            raise SystemExit("--question is required when not using --crop-dir.")
+        question = args.question
+        raw_paths = [Path(p).expanduser().resolve() for p in args.images]
+        roots = _roots_for_paths(raw_paths)
+        image_paths = [secure_image_path(str(p), roots=roots) for p in raw_paths]
+
+    out_path = None
+    if args.output_json:
+        out_candidate = Path(args.output_json).expanduser().resolve()
+        out_roots = roots + (out_candidate.parent,)
+        out_path = secure_output_path(str(out_candidate), roots=out_roots)
+
     # Validate every path before the ~60 s model load, so a typo or an
     # out-of-mount path fails now rather than after inference has already run.
-    image_path = secure_image_path(args.image)
-    out_path = secure_output_path(args.output_json) if args.output_json else None
-
-    image = iio.imread(str(image_path))
-    if image is None:
-        raise SystemExit(f"Failed to read image: {image_path}")
+    validated = [secure_image_path(str(p), roots=roots) for p in image_paths]
+    arrays = []
+    for path in validated:
+        image = iio.imread(str(path))
+        if image is None:
+            raise SystemExit(f"Failed to read image: {path}")
+        arrays.append(image)
 
     model = load_qwen_backend(
         args.captioning_model,
@@ -68,25 +145,42 @@ def main(argv: Optional[List[str]] = None):
     print(
         f"Loaded {model.model_id} (quantization={model.quantization}) "
         f"in {model.load_seconds:.1f}s")
+    print(f"Question: {question}")
+    print(f"Images ({len(validated)}): " + ", ".join(p.name for p in validated))
 
-    raw = model.answer_questions([image], [args.question])[0]
+    if len(arrays) == 1:
+        raw = model.answer_questions(
+            arrays, [question],
+            freeform=args.freeform,
+            instruction=args.instruction,
+        )[0]
+    else:
+        raw = model.answer_multi_image(
+            arrays, question,
+            freeform=args.freeform,
+            instruction=args.instruction,
+        )
     number = model.extract_integer(raw)
 
-    if args.raw or number is None:
+    if args.raw or args.freeform or number is None:
         print(raw)
     else:
         print(number)
 
     if out_path is not None:
         payload = {
-            "image": str(image_path),
-            "question": args.question,
+            "images": [str(p) for p in validated],
+            "question": question,
+            "instruction": args.instruction,
+            "freeform": bool(args.freeform),
             "raw_answer": raw,
             "integer_answer": number,
             "model_id": model.model_id,
             "quantization": model.quantization,
             "backend": args.captioning_model,
         }
+        if args.crop_dir:
+            payload["crop_dir"] = str(Path(args.crop_dir).expanduser().resolve())
         with open(out_path, "w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2)
             handle.write("\n")
@@ -94,7 +188,7 @@ def main(argv: Optional[List[str]] = None):
 
     # Exit 2 means "ran fine, but produced no integer", so a caller scripting a
     # numeric question can tell that apart from a crash (exit 1).
-    if number is None:
+    if number is None and not args.freeform:
         raise SystemExit(2)
 
 

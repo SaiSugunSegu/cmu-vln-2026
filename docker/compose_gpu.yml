@@ -76,6 +76,8 @@ services:
       # Host data/ maps 1:1 to /data — bags, benchmark, crops, captions, runs.
       # Put caption input under data/crops, read results from data/captions.
       - ../data:/data
+      # Offline eval-crops for multi-image VQA (`just vqa-ask-dir`).
+      - ../bags/eval_bench:/data/eval_bench:ro
       # Ground-truth QA files are tracked in git; nothing in the container writes them.
       - ../data/benchmark:/data/benchmark:ro
       # Repo scripts (eval drivers) at a fixed container path.
