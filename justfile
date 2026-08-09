@@ -111,8 +111,10 @@ bag-play scene="scene_0" speed="1.0" loop="false":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
 
 # Needs the VQA server up first (`just vqa-up`): the numerical head is a client of it.
+# Brings up sam_node too (unarmed until a question supplies prompts) -- no separate
+# `just run-sam` terminal needed for this flow.
 [group('run')]
-[doc('smart_vlm: supervisor + answer heads + TARE (blocks; terminal B)')]
+[doc('smart_vlm: SAM + supervisor + reasoner + TARE (blocks; terminal B)')]
 ai:
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
 
@@ -222,37 +224,12 @@ sam-status seconds="15":
 #   just vqa-ask "How many pillows?" /data/img.png
 #   just vqa-down
 
-# Starts compose (dev mount), rebuilds captioner, then loads Qwen once. Every other
-# component that needs a VLM talks to this one process, so run it before `just ai`
-# and before the cat1 flow.
+# Starts the Qwen VQA server process. Run it before `just ai` or the evaluation.
 [group('vqa')]
 [doc('Load Qwen once and keep it resident (~60s first time)')]
 vqa-up model="qwen3vl" quantization="int4":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    model="{{model}}"
-    quantization="{{quantization}}"
-    model="${model#model=}"
-    quantization="${quantization#quantization=}"
-    just up-dev-fast
-    just build captioner
-    # [q]wen… so pkill's cmdline does not match itself.
-    docker exec iros2026_ai_module bash -lc \
-      "pkill -f '[q]wen_vqa_server --ros-args' || true" >/dev/null 2>&1 || true
-    sleep 1
-    docker exec -d -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
-      {{capt_env}} &&
-      : > /tmp/qwen_vqa_server.log &&
-      setsid nohup qwen_vqa_server --ros-args \
-        -p captioning_model:=${model} \
-        -p quantization:=${quantization} \
-        >> /tmp/qwen_vqa_server.log 2>&1 < /dev/null &
-    "
-    echo "Waiting for Qwen VQA server (loading weights)…"
-    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
-      {{capt_env}} &&
-      qwen_vqa_wait_ready --timeout 600
-    "
+    docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
+      "source {{ai_src}}/install/setup.bash && ros2 launch captioner vqa_server.launch model:={{model}} quantization:={{quantization}}"
 
 # Image path: container-absolute under /data (host data/x is /data/x).
 [group('vqa')]
@@ -271,37 +248,13 @@ vqa-ask q image:
       image="${image/#$PWD\/data//data}"
     fi
     docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
-      if ! pgrep -f '[q]wen_vqa_server --ros-args' >/dev/null; then
+      if ! pgrep -f '[q]wen_vqa_server' >/dev/null; then
         echo 'VQA server is not running. Start it with: just vqa-up' >&2
         exit 1
       fi
       {{capt_env}} &&
       qwen_vqa_ask --question $(printf '%q' "$q") --image $(printf '%q' "$image")
     "
-
-[group('vqa')]
-[doc('Is the VQA server up? Shows ready / loading without reloading')]
-vqa-status:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
-      if ! pgrep -f '[q]wen_vqa_server --ros-args' >/dev/null; then
-        echo 'VQA server is not running. Start it with: just vqa-up' >&2
-        echo 'Last log lines:' >&2
-        tail -n 20 /tmp/qwen_vqa_server.log 2>/dev/null >&2 || true
-        exit 1
-      fi
-      source {{ai_src}}/install/setup.bash
-      timeout 5 ros2 topic echo /qwen_vqa/status std_msgs/msg/String --once
-    "
-
-[group('vqa')]
-[doc('Stop the VQA server (container keeps running)')]
-vqa-down:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    docker exec iros2026_ai_module bash -lc "pkill -f '[q]wen_vqa_server --ros-args' || true"
-    echo "VQA server stopped."
 
 # Host data/ <-> /data, so `just caption crops captions` reads data/crops and
 # writes data/captions. Weights come from the mounted ~/.cache/huggingface.
@@ -355,8 +308,18 @@ cat1-reasoner:
     just build "captioner smart_vlm sam_mapper"
     docker exec -it iros2026_ai_module bash -lc "
       source {{ai_src}}/install/setup.bash &&
-      ros2 launch smart_vlm category1_reasoner.launch
+      ros2 run smart_vlm numerical_reasoner
     "
+
+# Needs `just vqa-up` running first. The whole pipeline (SAM included) is relaunched per
+# question, so model load lands inside the measured budget exactly as it will on the real
+# evaluation -- a full sweep is 75 questions and takes hours. Use a scene + limit as the
+# dev loop:  just eval-cat1 arabic_room 2
+# target_source=vlm exercises the Qwen target-extraction path instead of benchmark GT.
+[group('eval')]
+[doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
+eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1":
+    docker exec -it iros2026_ai_module bash -lc "source /home/docker/ai_module/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3

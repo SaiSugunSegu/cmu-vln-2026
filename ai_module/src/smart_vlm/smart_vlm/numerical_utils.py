@@ -1,4 +1,4 @@
-"""Pure helpers for category-1 reasoner (no ROS / GPU imports).
+"""Pure helpers for numerical reasoner (no ROS / GPU imports).
 
 captioner.text_utils is stdlib-only for exactly this reason, so importing it
 here does not drag torch or rclpy into the unit tests.

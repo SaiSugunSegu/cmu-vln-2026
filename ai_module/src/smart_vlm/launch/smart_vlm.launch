@@ -1,48 +1,97 @@
 <launch>
-  <!-- smart_vlm: supervisor + Qwen numerical head + dummy answer heads + exploration.
-       Replaces dummy_vlm.launch. Launch:  ros2 launch smart_vlm smart_vlm.launch
+  <!-- smart_vlm: the complete AI module for ONE question.
 
-       Optional offline mode: set use_bag:=true to also replay a recorded scene
-         ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=scene_0 -->
-  <arg name="use_bag" default="false"/>   <!-- true = also replay a bag instead of the live sim -->
-  <arg name="bag"     default="scene_0"/>  <!-- scene name under /data/bags -->
-  <arg name="use_qwen_numerical" default="true"/>
-  <arg name="vqa_timeout_s" default="120.0"/>
-  <arg name="server_wait_s" default="600.0"/>
-  <!-- When Qwen owns numerical answers, disable dummy's random Int32 publisher. -->
-  <arg name="dummy_answer_numerical" default="false"/>
+       This launch is a disposable unit. The challenge relaunches the system for every
+       language command so nothing carries over between questions (README "Evaluation"),
+       and eval_orchestrator does the same: it spawns this launch, waits for the answer,
+       then SIGINTs the whole process group. Every node here therefore starts fresh and
+       dies together — there is no in-process reset path anywhere, by design.
 
-  <!-- 0. Optional bag replay (offline dev; default off leaves live-sim runs untouched) -->
+       Startup ordering matters, and is enforced by two latched gates rather than sleeps:
+
+         sam_node boots UNARMED (wait_for_prompts) and loads weights   ~60 s
+           -> smart_vlm sees sam + qwen ready      -> /pipeline/ready   (harness may ask)
+           -> numerical_reasoner extracts targets  -> /sam3/set_prompts
+           -> sam_node arms, fresh session+run_dir -> /sam3/prompts_ack
+           -> smart_vlm                            -> /pipeline/armed   (bag may play)
+
+       The bag blocks on /pipeline/armed, so the detector never streams frames while it
+       is still loading weights or still holding the config's placeholder prompts.
+
+       Offline (default):  ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=arabic_room
+       Live sim:           ros2 launch smart_vlm smart_vlm.launch use_bag:=false
+
+       Needs the Qwen VQA server already resident (`just vqa-up`) — it is deliberately
+       NOT in here, because reloading a 15 GB model per question would dominate the
+       10-minute budget for no benefit. -->
+
+  <!-- Scene source -->
+  <arg name="use_bag" default="false"/>   <!-- true = replay a recorded bag instead of the live sim -->
+  <arg name="bag"     default="scene_0"/> <!-- scene name under /data/bags (when use_bag) -->
+  <arg name="speed"   default="1.0"/>     <!-- rosbag playback rate multiplier -->
+
+  <!-- Perception -->
+  <arg name="sam_config" default="sam3_mecanum_sim.yaml"/> <!-- sam_mapper config file name -->
+
+  <!-- Mission budget (README "Timing": 10 minutes per question, from startup) -->
+  <arg name="question_budget_s"  default="600.0"/> <!-- hard limit, includes model load -->
+  <arg name="explore_timeout_s"  default="120.0"/> <!-- exploration window, from first sensor data -->
+  <arg name="answer_reserve_s"   default="90.0"/>  <!-- T-90: stop exploring no matter what -->
+  <arg name="fallback_reserve_s" default="30.0"/>  <!-- T-30: publish a guess rather than nothing -->
+  <arg name="fallback_count"     default="1"/>     <!-- the numerical guess of last resort -->
+  <arg name="ready_timeout_s"    default="300.0"/> <!-- give up waiting on models, run degraded -->
+
+  <!-- Reasoning -->
+  <arg name="vqa_timeout_s" default="180.0"/>            <!-- max wait for a Qwen reply -->
+  <arg name="attribute_max_instances" default="0"/>      <!-- debug instance captioning; 0 = off (costs 1 Qwen call each, after the answer) -->
+
+  <!-- 1. SAM 3 detector — FIRST, so weights load while everything else comes up.
+          Boots unarmed: this pipeline's prompts come from the question, so anything
+          detected before /sam3/set_prompts would be against placeholder objects.
+       Input:   /camera/image
+       Output:  /sam3/{detections,instance_map,status,prompts_ack,best_view_dir} -->
+  <include file="$(find-pkg-share sam_mapper)/launch/sam_node.launch">
+    <arg name="config" value="$(var sam_config)"/>
+    <arg name="wait_for_prompts" value="true"/>
+  </include>
+
+  <!-- 2. Supervisor — mission clock, readiness/arming gates, guaranteed answer.
+       Input:   /challenge_question, /sam3/{status,prompts_ack}, /qwen_vqa/status,
+                /state_estimation, /numerical_response, /selected_object_marker
+       Output:  /pipeline/{ready,armed,explore_done}, /smart_vlm/status,
+                /numerical_response (T-30 fallback only) -->
+  <node pkg="smart_vlm" exec="smart_vlm" name="smart_vlm_node" output="screen">
+    <param name="question_budget_s"  value="$(var question_budget_s)"/>
+    <param name="explore_timeout_s"  value="$(var explore_timeout_s)"/>
+    <param name="answer_reserve_s"   value="$(var answer_reserve_s)"/>
+    <param name="fallback_reserve_s" value="$(var fallback_reserve_s)"/>
+    <param name="fallback_count"     value="$(var fallback_count)"/>
+    <param name="ready_timeout_s"    value="$(var ready_timeout_s)"/>
+  </node>
+
+  <!-- 3. Numerical reasoner — question to targets to count.
+       Input:   /challenge_question, /gt_target_objects, /pipeline/explore_done,
+                /sam3/best_view_dir, /qwen_vqa/response
+       Output:  /sam3/set_prompts, /qwen_vqa/request, /numerical_response -->
+  <node pkg="smart_vlm" exec="numerical_reasoner" name="numerical_reasoner" output="screen">
+    <param name="run_id_prefix" value="num_reasoner"/>
+    <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
+    <param name="attribute_max_instances" value="$(var attribute_max_instances)"/>
+  </node>
+
+  <!-- 4a. Bag replay (offline) — held at the gate until SAM is armed.
+       Output:  the 6 allowed sensor topics, + /tf -->
   <include file="$(find-pkg-share smart_vlm)/launch/bag_replay.launch" if="$(var use_bag)">
     <arg name="scene" value="$(var bag)"/>
+    <arg name="speed" value="$(var speed)"/>
+    <arg name="loop" value="false"/>
+    <arg name="wait_for_armed" value="true"/>
   </include>
 
-  <!-- 1. Supervisor: mission clock, question handling, exploration control -->
-  <node pkg="smart_vlm" exec="supervisor" name="smart_vlm_supervisor" output="screen"/>
-
-  <!-- 2. Qwen numerical head: How many / Count → /numerical_response.
-       Inference happens in qwen_vqa_server, NOT in this node — start it first
-       (`just vqa-up`), or the head waits server_wait_s and gives up. Model and
-       quantization are the server's parameters, not this node's. -->
-  <group if="$(var use_qwen_numerical)">
-    <node pkg="smart_vlm" exec="qwen_numerical" name="qwen_numerical" output="screen">
-      <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
-      <param name="server_wait_s" value="$(var server_wait_s)"/>
-    </node>
-  </group>
-
-  <!-- 3. Dummy VLM: Find / navigation heads until real M2-M4 replace them.
-       Pass dummy_answer_numerical:=true only if use_qwen_numerical:=false.
-       NOTE: dummyVLM also publishes waypoints on question receipt; while TARE
-       and dummyVLM both run, two writers exist on /way_point_with_heading.
-       For today that's acceptable (dummy only reacts to questions); the
-       supervisor becomes the single writer once the waypoint mux is in. -->
-  <include file="$(find-pkg-share dummy_vlm)/launch/dummy_vlm.launch">
-    <arg name="answer_numerical" value="$(var dummy_answer_numerical)"/>
-  </include>
-
-  <!-- 4. TARE exploration planner (vendored) -->
-  <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
+  <!-- 4b. TARE exploration (live sim) — drives the robot to cover the scene.
+       Input:   /terrain_map_ext, /state_estimation
+       Output:  /way_point_with_heading -->
+  <include file="$(find-pkg-share tare_planner)/launch/explore.launch" unless="$(var use_bag)">
     <arg name="scenario" value="indoor_small"/>
   </include>
 

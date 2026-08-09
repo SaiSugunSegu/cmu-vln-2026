@@ -32,9 +32,11 @@ from __future__ import annotations
 import json
 import threading
 import time
+import traceback
 from bisect import bisect_left
 
 import numpy as np
+import rclpy
 from cv_bridge import CvBridge
 from nav_msgs.msg import Odometry
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
@@ -348,7 +350,10 @@ class MapNode(WorkerNodeMixin, Node):
         }
 
     def _worker_loop(self):
-        while self.running:
+        # rclpy.ok() as well as self.running: SIGINT invalidates the context before
+        # destroy_node() clears the flag, and publishing into a dead context raises
+        # RCLError mid-frame (same guard as sam_node).
+        while self.running and rclpy.ok():
             self._set_stage('waiting')
             pair = self._take_detection_frame()
             if pair is None:
@@ -371,8 +376,15 @@ class MapNode(WorkerNodeMixin, Node):
                 detections = self._reconstruct_detections(id_map_msg, detections_payload)
                 self._process(detections, stamp, odom, cloud)
             except Exception as err:                  # noqa: BLE001 — one bad frame must not kill the node
-                self.get_logger().error(f'frame at {stamp:.3f} failed: {type(err).__name__}: {err}',
-                                        exc_info=True)
+                # SIGINT can land mid-frame and kill the context under us; that is a
+                # normal shutdown, not a frame error (same guard as sam_node).
+                if not rclpy.ok():
+                    break
+                # rclpy's logger rejects logging's kwargs, so exc_info=True would make
+                # this handler raise TypeError and kill the worker (same bug as sam_node).
+                self.get_logger().error(
+                    f'frame at {stamp:.3f} failed: {type(err).__name__}: {err}\n'
+                    f'{traceback.format_exc()}')
 
     def _heartbeat(self):
         """Report what the worker is doing. Runs on a ROS timer, not in the worker.

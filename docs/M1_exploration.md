@@ -12,7 +12,7 @@
 
 ## DECISION (Jul 22): TARE engine + supervisor on top
 
-TARE (already in the organizer's stack) drives coverage; our `smart_vlm` supervisor owns every scoring decision. Files: `ai_module/src/smart_vlm/` (supervisor + launch), `scripts/challenge_simulation.sh` (domain-firewall eval mimic). Vendoring steps: comments in `smart_vlm.launch` (submodule init → copy `tare_planner` into ai_module → verify build in AI container).
+TARE (already in the organizer's stack) drives coverage; our `smart_vlm` supervisor owns every scoring decision — it gates when exploration starts (`/pipeline/armed`) and when it ends (`/pipeline/explore_done`, on bag end, explore timeout, or T-90), and guarantees an answer at T-30. Files: `ai_module/src/smart_vlm/` (supervisor + launch), `scripts/challenge_simulation.sh` (domain-firewall eval mimic). Vendoring steps: comments in `smart_vlm.launch` (submodule init → copy `tare_planner` into ai_module → verify build in AI container).
 
 Rationale vs alternatives: benchmarks favor TARE over GBPlanner-class planners for ground-robot indoor work, but at room scale ALL planners converge — the ecosystem match (same CMU stack, pre-integrated) is the real argument. Fallback if vendoring fights us: sparse viewpoint sweep — the 360° camera sees a full disk per pose, so "observed" = within ~4 m of a past pose; single rooms ≈ 3–6 viewpoints; nearest-frontier over that, optionally mini-TSP (5–10 nodes) for route quality.
 

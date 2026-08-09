@@ -17,14 +17,16 @@ setup(
     zip_safe=True,
     maintainer='CMU-VLN Team',
     maintainer_email='team@example.com',
-    description='Team AI module: supervisor + exploration + reasoning.',
+    description='Team AI module: mission supervisor, numerical reasoner, eval harness.',
     license='MIT',
     entry_points={
         'console_scripts': [
-            'supervisor = smart_vlm.supervisor:main',
+            'smart_vlm = smart_vlm.smart_vlm:main',
             'bag_fetch = smart_vlm.bag_fetch:main',
             'qwen_numerical = smart_vlm.qwen_numerical:main',
-            'category1_reasoner = smart_vlm.category1_reasoner:main',
+            'numerical_reasoner = smart_vlm.numerical_reasoner:main',
+            'eval_orchestrator = smart_vlm.eval_orchestrator:main',
+            'wait_ready = smart_vlm.wait_ready:main',
         ],
     },
 )
