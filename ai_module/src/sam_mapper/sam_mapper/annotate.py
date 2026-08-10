@@ -28,14 +28,63 @@ def _color_for(obj_id: int) -> tuple[int, int, int]:
     return (int(b), int(g), int(r))
 
 
-def _draw_caption(out: np.ndarray, x: int, y: int, text: str, color: tuple) -> None:
-    """Filled colour tab with black text, anchored above (x, y)."""
-    (tw, th), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-    # Keep the caption inside the frame when the box touches the top edge.
-    ty = max(y, th + baseline + 1)
-    cv2.rectangle(out, (x, ty - th - baseline - 1), (x + tw + 2, ty), color, -1)
-    cv2.putText(out, text, (x + 1, ty - baseline),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+_FONT = cv2.FONT_HERSHEY_SIMPLEX
+_FONT_SCALE = 0.5
+_FONT_THICKNESS = 1
+
+
+class _CaptionLayout:
+    """Collects captions, then draws them so that no two tabs overlap.
+
+    A caption wants to sit just above its object's top-left corner. Objects in one crop
+    routinely stack — a tv in front of a cabinet, two chairs at the same depth — and two
+    tabs at the same spot leave both unreadable, which defeats the point of the overlay.
+    So a caption whose slot is taken slides straight down in tab-height steps until it
+    finds clear space, staying in its own object's column.
+    """
+
+    def __init__(self) -> None:
+        self._pending: list[tuple] = []
+
+    def add(self, x: float, y: float, text: str, color: tuple) -> None:
+        self._pending.append((int(round(x)), int(round(y)), str(text), color))
+
+    def draw(self, out: np.ndarray) -> None:
+        """Draw every collected caption. Call once, after the masks and boxes."""
+        height, width = out.shape[:2]
+        placed: list[tuple] = []
+        # Top-to-bottom, left-to-right, so which caption keeps its preferred slot depends
+        # on the geometry and not on the order detections happen to arrive in.
+        for x, y, text, color in sorted(self._pending, key=lambda c: (c[1], c[0])):
+            (tw, th), baseline = cv2.getTextSize(text, _FONT, _FONT_SCALE, _FONT_THICKNESS)
+            tab_w, tab_h = tw + 2, th + baseline + 1
+            # Keep the tab inside the frame: shifted right at the left edge, left at the
+            # right edge, and pushed below the anchor when the object touches the top.
+            x0 = min(max(x, 0), max(width - tab_w, 0))
+            top = self._free_top(max(y - tab_h, 0), tab_h, x0, tab_w, height, placed)
+
+            placed.append((x0, top, x0 + tab_w, top + tab_h))
+            cv2.rectangle(out, (x0, top), (x0 + tab_w, top + tab_h), color, -1)
+            cv2.putText(out, text, (x0 + 1, top + th + 1),
+                        _FONT, _FONT_SCALE, (0, 0, 0), _FONT_THICKNESS, cv2.LINE_AA)
+
+    @staticmethod
+    def _free_top(top: int, tab_h: int, x0: int, tab_w: int, height: int,
+                  placed: list[tuple]) -> int:
+        """First y at or below `top` where this tab clears every tab already placed.
+
+        Falls back to `top` when the column is full all the way down: overlapping one
+        caption beats dropping it, and a crop that dense is degenerate anyway.
+        """
+        candidate = top
+        step = tab_h + 2
+        while candidate + tab_h <= height:
+            if not any(x0 < px1 and px0 < x0 + tab_w
+                       and candidate < py1 and py0 < candidate + tab_h
+                       for px0, py0, px1, py1 in placed):
+                return candidate
+            candidate += step
+        return top
 
 
 def annotate_frame(image: np.ndarray, detections: dict, mask_alpha: float = 0.45) -> np.ndarray:
@@ -58,13 +107,15 @@ def annotate_frame(image: np.ndarray, detections: dict, mask_alpha: float = 0.45
         overlay[mask] = _color_for(int(obj_id))
     cv2.addWeighted(overlay, mask_alpha, out, 1 - mask_alpha, 0, out)
 
+    captions = _CaptionLayout()
     for box, label, obj_id, score in zip(boxes, labels, ids, scores):
         color = _color_for(int(obj_id))
         x1, y1, x2, y2 = (int(round(v)) for v in box)
         cv2.rectangle(out, (x1, y1), (x2, y2), color, 2)
+        captions.add(x1, y1, f'{label}#{int(obj_id)} {float(score):.2f}', color)
 
-        _draw_caption(out, x1, y1, f'{label}#{int(obj_id)} {float(score):.2f}', color)
-
+    # Last, so no box can land on top of a caption.
+    captions.draw(out)
     return out
 
 
@@ -84,6 +135,7 @@ def silhouette_frame(image: np.ndarray, detections: dict, thickness: int = 2) ->
     if len(ids) == 0:
         return out
 
+    captions = _CaptionLayout()
     for mask, box, label, obj_id in zip(masks, boxes, labels, ids):
         if mask.shape[:2] != out.shape[:2]:
             continue
@@ -91,9 +143,9 @@ def silhouette_frame(image: np.ndarray, detections: dict, thickness: int = 2) ->
         contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL,
                                        cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(out, contours, -1, color, thickness)
-
         # The box positions the caption only; it is never drawn.
-        x1, y1 = (int(round(v)) for v in box[:2])
-        _draw_caption(out, x1, y1, str(label), color)
+        captions.add(box[0], box[1], str(label), color)
 
+    # Last, so no outline can land on top of a caption.
+    captions.draw(out)
     return out

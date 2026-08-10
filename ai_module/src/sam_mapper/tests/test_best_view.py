@@ -7,7 +7,7 @@ import os
 import cv2
 import numpy as np
 
-from sam_mapper.annotate import silhouette_frame
+from sam_mapper.annotate import _CaptionLayout, silhouette_frame
 from sam_mapper.best_view import BestViewCollector, BestViewConfig
 from sam_mapper.detections import PromptTable
 
@@ -104,3 +104,24 @@ def test_silhouette_frame_outlines_without_filling():
     assert np.array_equal(out[45:55, 45:55], image[45:55, 45:55])   # interior not filled
     assert out[50, 30:32].any()                                    # left edge outlined
     assert not out[68, 30:32].any()                                # no bbox border drawn
+
+
+def _tab_bbox(image, color):
+    """(y0, y1) rows covered by a caption tab of this colour, or None."""
+    rows = np.flatnonzero(np.all(image == np.array(color, dtype=np.uint8), axis=2).any(axis=1))
+    return None if rows.size == 0 else (int(rows[0]), int(rows[-1]))
+
+
+def test_captions_never_overlap_each_other():
+    canvas = np.zeros((200, 200, 3), dtype=np.uint8)
+    red, green, blue = (0, 0, 255), (0, 255, 0), (255, 0, 0)
+
+    layout = _CaptionLayout()
+    for color in (red, green, blue):
+        layout.add(40, 60, "cabinet", color)     # three objects, one anchor point
+    layout.draw(canvas)
+
+    spans = sorted(filter(None, (_tab_bbox(canvas, c) for c in (red, green, blue))))
+    assert len(spans) == 3                        # none was painted over by a later tab
+    for (_, lower_end), (upper_start, _) in zip(spans, spans[1:]):
+        assert lower_end < upper_start            # and they occupy separate rows
