@@ -10,7 +10,7 @@ import rclpy
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
 
-from captioner.qwen_vqa_topics import STATUS_TOPIC
+from captioner.qwen_vqa_protocol import STATUS_TOPIC
 
 
 def main(argv=None):

@@ -226,6 +226,22 @@ class QwenVLHFBackend(CaptioningModel):
         )
         # Pass-through text for extract / attribute prompts (no integer constraint).
         self.freeform_vqa_prompt = "{question}"
+        # Several views of ONE room, not several rooms. Without saying so the model
+        # counts sightings rather than objects: the same sofa photographed from two
+        # sides reads as two sofas, which is the dominant error mode on this data.
+        self.multi_image_vqa_prompt = (
+            "The {n} images are different views of the SAME room, taken by a robot "
+            "as it moved around. An object may appear in more than one view.\n"
+            "Count each physical object ONCE across all views, no matter how many "
+            "views it appears in.\n"
+            "Answer with a single integer only. Do not include units, words, or "
+            "explanation.\nQuestion: {question}"
+        )
+        self.multi_image_freeform_prompt = (
+            "The {n} images are different views of the SAME room. An object may "
+            "appear in more than one view; treat repeated appearances as one "
+            "object.\n{question}"
+        )
 
     @staticmethod
     def model_class():
@@ -321,6 +337,62 @@ class QwenVLHFBackend(CaptioningModel):
             answer_batch, _, _ = self.run_batch(image_batch, prompt_batch, token_budget)
             answers.extend(answer_batch)
         return answers
+
+    def build_multi_image_prompt(
+            self,
+            pil_images,
+            question: str,
+            *,
+            freeform: bool = False,
+            ) -> str:
+        """One chat turn holding every view, then the question.
+
+        Images first and the question last: the question is what the model should
+        still have in front of it when it starts generating.
+        """
+        template = (self.multi_image_freeform_prompt if freeform
+                    else self.multi_image_vqa_prompt)
+        content = [{"type": "image", "image": image} for image in pil_images]
+        content.append({
+            "type": "text",
+            "text": template.format(n=len(pil_images), question=question),
+        })
+        return self.processor.apply_chat_template(
+            [{"role": "user", "content": content}],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+
+    def answer_multi_image(
+            self,
+            images,
+            question: str,
+            max_new_tokens: Optional[int] = None,
+            *,
+            freeform: bool = False,
+            ) -> str:
+        """One question asked once against several views of the same scene.
+
+        Distinct from `answer_questions`, which pairs N images with N questions and
+        batches them: here the N images are context for a single answer, so the model
+        can reconcile what it sees across views instead of being asked N times.
+
+        Cost scales with the view count — each view is capped at `max_pixels`
+        independently — so callers should keep the list short and the server enforces
+        its own limit.
+        """
+        if not images:
+            raise ValueError("answer_multi_image needs at least one image")
+
+        pil_images = [self.to_pil(image) for image in images]
+        prompt = self.build_multi_image_prompt(
+            pil_images, question, freeform=freeform)
+        token_budget = self.max_new_tokens if max_new_tokens is None else max_new_tokens
+
+        # A single-element batch whose one prompt carries several image placeholders;
+        # the processor consumes the flat image list in placeholder order.
+        answers, _, _ = self.run_batch(pil_images, [prompt], token_budget)
+        return answers[0]
 
     def answer_numerical(
             self,
