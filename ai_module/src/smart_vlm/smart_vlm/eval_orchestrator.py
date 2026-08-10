@@ -26,6 +26,12 @@ question's targets ever reached it.
 `vlm_backend` picks where the reasoner runs inference (a hosted model, whichever
 VLM_PROVIDER names, or the resident local Qwen). The report format is identical either
 way, so a local sweep and a cloud sweep are directly comparable.
+
+Crops are saved under `<crops root>/<run_id>/<scene>/<question id>-<question>` and every
+row records the `best_view_dir` they went to, which turns the report into a cache index:
+`views_bench` replays the answering step over those saved crops in minutes instead of
+hours. Build one with `crops_only:=true`, which runs target extraction and the whole
+perception half but skips the counting call.
 """
 from __future__ import annotations
 
@@ -36,7 +42,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Callable, Iterator, Optional
+from typing import Callable, Iterator, Optional
 
 import rclpy
 import yaml
@@ -45,6 +51,7 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from std_msgs.msg import Int32, String
 
 from captioner.vlm_backends.constants import VLM_BACKEND
+from smart_vlm.report_utils import summarise, write_report
 
 LATCHED = QoSProfile(
     depth=1,
@@ -66,6 +73,11 @@ class EvalOrchestratorNode(Node):
 
         self.scene = str(self._param("scene", "all"))
         self.report_file = str(self._param("report_file", "/data/runs/challenge_report.json"))
+        # Top level of the crop layout, so one sweep's crops sit together and the next
+        # sweep cannot overwrite them question by question. Defaults to the report's own
+        # name because the report is the index into these directories: keeping the two
+        # named alike is what stops a cache from being paired with the wrong crops.
+        self.run_id = str(self._param("run_id", "")).strip() or Path(self.report_file).stem
         self.question_limit = int(self._param("question_limit", 0))
         self.target_source = str(self._param("target_source", "gt"))
         # A real double, like every other numeric param here. ROS matches override types
@@ -79,6 +91,14 @@ class EvalOrchestratorNode(Node):
         self.vlm_backend = str(self._param("vlm_backend", "auto"))
         self.resolved_backend = (
             VLM_BACKEND if self.vlm_backend in ("", "auto") else self.vlm_backend)
+        # Build the best-view cache: run the expensive perception half and skip the
+        # counting call. Accuracy in the resulting report is meaningless by design —
+        # it exists to record where each question's crops went.
+        self.crops_only = bool(self._param("crops_only", False))
+        # Skip questions the report beside these crops already covers. A sweep of every
+        # scene runs for hours, so an interruption in hour five must not mean starting
+        # over. Off by default: a scored run has to answer every question itself.
+        self.resume = bool(self._param("resume", False))
         self.benchmark_dir = Path(str(self._param("benchmark_dir", "/data/benchmark")))
         self.bags_dir = Path(str(self._param("bags_dir", "/data/bags")))
         # Phase budgets. Generous, because a first run may download weights; a phase that
@@ -93,6 +113,7 @@ class EvalOrchestratorNode(Node):
         self.armed_prompts: Optional[list] = None
         self.predicted: Optional[int] = None
         self.sam_status: Optional[str] = None
+        self.best_view_dir: Optional[str] = None
 
         self.pub_question = self.create_publisher(String, "/challenge_question", 10)
         self.pub_gt_targets = self.create_publisher(String, "/gt_target_objects", LATCHED)
@@ -100,6 +121,11 @@ class EvalOrchestratorNode(Node):
         self.create_subscription(String, "/pipeline/armed", self._on_armed, LATCHED)
         self.create_subscription(String, "/sam3/status", self._on_sam_status, LATCHED)
         self.create_subscription(Int32, "/numerical_response", self._on_answer, 10)
+        # Recorded per question so the crops this run wrote stay addressable afterwards:
+        # the directory name carries a random run id, so nothing else can reconstruct
+        # which one belongs to which question. views_bench replays from exactly this.
+        self.create_subscription(String, "/sam3/best_view_dir", self._on_best_view_dir,
+                                 LATCHED)
 
     def _param(self, name: str, default):
         self.declare_parameter(name, default)
@@ -123,12 +149,16 @@ class EvalOrchestratorNode(Node):
     def _on_answer(self, msg: Int32) -> None:
         self.predicted = int(msg.data)
 
+    def _on_best_view_dir(self, msg: String) -> None:
+        self.best_view_dir = (msg.data or "").strip() or None
+
     def reset_for_question(self) -> None:
         self.pipeline_ready = False
         self.pipeline_armed = False
         self.armed_prompts = None
         self.predicted = None
         self.sam_status = None
+        self.best_view_dir = None
 
     # -- helpers -----------------------------------------------------------
 
@@ -161,7 +191,7 @@ class EvalOrchestratorNode(Node):
 
 # -- process control --------------------------------------------------------
 
-def spawn_pipeline(node: EvalOrchestratorNode, scene: str) -> subprocess.Popen:
+def spawn_pipeline(node: EvalOrchestratorNode, scene: str, run_id: str) -> subprocess.Popen:
     cmd = [
         "ros2", "launch", "smart_vlm", "smart_vlm.launch",
         "use_bag:=true",
@@ -169,9 +199,11 @@ def spawn_pipeline(node: EvalOrchestratorNode, scene: str) -> subprocess.Popen:
         f"speed:={node.speed}",
         f"sam_config:={node.sam_config}",
         f"vlm_backend:={node.vlm_backend}",
-        # A cloud run never publishes to /qwen_vqa, so making the supervisor wait for a
-        # server nobody started costs ready_timeout_s of the budget per question.
-        f"require_vqa_ready:={'false' if node.resolved_backend == 'cloud' else 'true'}",
+        f"run_id:={run_id}",
+        f"crops_only:={'true' if node.crops_only else 'false'}",
+        # Only the local backend publishes to /qwen_vqa; for cloud and none, making the
+        # supervisor wait for a server nobody started costs ready_timeout_s per question.
+        f"require_vqa_ready:={'true' if node.resolved_backend == 'local' else 'false'}",
     ]
     log(f"launching: {' '.join(cmd)}")
     # Own process group, so one killpg reclaims every node it started — including the
@@ -207,9 +239,19 @@ def teardown(node: EvalOrchestratorNode, proc: Optional[subprocess.Popen]) -> No
 
 # -- benchmark discovery ----------------------------------------------------
 
+def has_bag(scene_dir: Path) -> bool:
+    """A directory counts only if there is something in it ros2 bag play can open.
+
+    Several scenes ship a metadata-only stub directory with no recording. Treating the
+    directory itself as proof of a bag let those scenes through, and each of their
+    questions then burned the full warmup timeout waiting for /camera/image.
+    """
+    return any(scene_dir.glob("*.mcap")) or (scene_dir / "metadata.yaml").is_file()
+
+
 def available_scenes(node: EvalOrchestratorNode) -> set[str]:
     """Scenes we can actually replay: already on disk, or fetchable via scenes.yaml."""
-    scenes = {p.name for p in node.bags_dir.iterdir() if p.is_dir()} \
+    scenes = {p.name for p in node.bags_dir.iterdir() if p.is_dir() and has_bag(p)} \
         if node.bags_dir.is_dir() else set()
     manifest = node.bags_dir / "scenes.yaml"
     if manifest.is_file():
@@ -270,7 +312,10 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         targets = entry.get("target_objects", []) if node.target_source == "gt" else []
         node.pub_gt_targets.publish(String(data=json.dumps(targets)))
 
-        proc = spawn_pipeline(node, scene)
+        # <sweep>/<scene>/<question id>-<question>, so a directory says what it holds
+        # without opening its manifest. sam_mapper scrubs each level; the question is
+        # capped only to stay clear of the filesystem's per-component length limit.
+        proc = spawn_pipeline(node, scene, f"{node.run_id}/{scene}/{qid}-{question[:80]}")
 
         # 2. Models up.
         log("waiting for /pipeline/ready (SAM weights ~60s) ...")
@@ -328,43 +373,36 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         "target_source": node.target_source,
         "vlm_backend": node.resolved_backend,
         "prompts": node.armed_prompts,
+        "best_view_dir": node.best_view_dir,
         "error": error,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
 
-# -- report -----------------------------------------------------------------
+def cached_rows(report_path: Path) -> dict[tuple[str, str], dict]:
+    """Rows of an earlier report we can adopt instead of replaying the scene.
 
-def summarise(results: list[dict]) -> dict[str, Any]:
-    def accuracy(rows: list[dict]) -> float:
-        return round(sum(1 for r in rows if r["correct"]) / len(rows), 4) if rows else 0.0
+    A row only counts if its crops are still on disk and its question text still matches
+    the benchmark, so an edited QA file or a half-written directory re-runs rather than
+    quietly answering from the wrong images.
+    """
+    if not report_path.is_file():
+        return {}
+    try:
+        with open(report_path, "r", encoding="utf-8") as handle:
+            rows = json.load(handle).get("results") or []
+    except (OSError, json.JSONDecodeError) as err:
+        log(f"could not read {report_path} to resume: {err}", err=True)
+        return {}
 
-    scenes = sorted({r["scene"] for r in results})
-    timed = [r["time_taken_s"] for r in results if r["error"] is None]
-    return {
-        "total_run": len(results),
-        "correct": sum(1 for r in results if r["correct"]),
-        "accuracy": accuracy(results),
-        "errors": sum(1 for r in results if r["error"]),
-        "mean_time_s": round(sum(timed) / len(timed), 2) if timed else None,
-        "per_scene": {
-            scene: {
-                "run": len([r for r in results if r["scene"] == scene]),
-                "correct": sum(1 for r in results if r["scene"] == scene and r["correct"]),
-                "accuracy": accuracy([r for r in results if r["scene"] == scene]),
-            }
-            for scene in scenes
-        },
-    }
-
-
-def write_report(path: Path, results: list[dict]) -> None:
-    """Rewrite the whole report after every question, so an interrupted sweep is usable."""
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    with open(tmp, "w", encoding="utf-8") as handle:
-        json.dump({"summary": summarise(results), "results": results}, handle, indent=2)
-        handle.write("\n")
-    tmp.replace(path)  # atomic, so the file is never observed half-written
+    keep: dict[tuple[str, str], dict] = {}
+    for row in rows:
+        crop_dir = row.get("best_view_dir")
+        if not crop_dir or row.get("error") or not row.get("question"):
+            continue
+        if any(Path(crop_dir).glob("best_rank*.png")):
+            keep[(row.get("scene"), row.get("id"))] = row
+    return keep
 
 
 # -- driver -----------------------------------------------------------------
@@ -380,18 +418,31 @@ def run_orchestration(node: EvalOrchestratorNode) -> int:
     scenes = sorted({s for s, _ in questions})
     log(f"{len(questions)} question(s) across {len(scenes)} scene(s): {scenes}")
 
+    # So a cache report cannot be mistaken for a scored one: with crops_only every
+    # prediction is a placeholder, and the accuracy beside it means nothing.
+    extra = {"crops_only": node.crops_only}
+
+    cached = cached_rows(report_path) if node.resume else {}
+    if cached:
+        log(f"resume: {len(cached)} question(s) already have crops — keeping their rows")
+
     results: list[dict] = []
     interrupted = False
     try:
         for scene, entry in questions:
-            results.append(run_question(node, scene, entry))
-            write_report(report_path, results)
+            row = cached.get((scene, entry["id"]))
+            if row and row["question"] == entry["question"]:
+                log(f"=== {scene} {entry['id']} === already cached, skipping")
+                results.append({**row, "resumed": True})
+            else:
+                results.append(run_question(node, scene, entry))
+            write_report(report_path, results, extra)
     except KeyboardInterrupt:
         interrupted = True
         log("interrupted — writing the partial report", err=True)
 
     if results:
-        write_report(report_path, results)
+        write_report(report_path, results, extra)
     summary = summarise(results)
     log(f"done: {summary['correct']}/{summary['total_run']} correct "
         f"(accuracy {summary['accuracy']}, errors {summary['errors']}) -> {report_path}")

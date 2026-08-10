@@ -15,6 +15,11 @@ Internal orchestration:
 Phases per question: extract targets → set SAM prompts → wait explore_done →
 answer from the top `max_context_views` best-view images (+ manifest).
 
+`crops_only:=true` stops after saving the crops and publishes a placeholder answer.
+That is how the best-view cache is built: extraction still runs on a real model, so SAM
+is armed exactly as it would be on a scored run, and `views_bench` replays the counting
+step over the saved images afterwards, once per model instead of once per sweep.
+
 Both model steps go through `captioner.vlm_backends`, so the same pipeline runs against
 a hosted model over its OpenAI-compatible endpoint (`backend:=cloud`, the scored path,
 provider chosen by VLM_PROVIDER) or the resident Qwen server (`backend:=local`, which
@@ -33,6 +38,8 @@ import uuid
 from pathlib import Path
 from typing import Optional, Sequence
 
+from typing import NamedTuple
+
 import rclpy
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
@@ -47,26 +54,31 @@ from captioner.vlm_backends import VLMError, make_backend
 from captioner.vlm_backends.constants import VLM_BACKEND
 from captioner.vlm_backends.schemas import CountAnswer, TargetList
 from sam_mapper.best_view import sanitize_run_id
-from smart_vlm.numerical_utils import clean_targets, heuristic_targets
+from smart_vlm.numerical_utils import (
+    ANSWER_SYSTEM,
+    EXTRACT_SYSTEM,
+    clean_targets,
+    heuristic_targets,
+    select_context_views,
+)
 from smart_vlm.question import QuestionType, classify
 
-EXTRACT_SYSTEM = (
-    "You list the objects a detector should look for in order to answer a counting "
-    "question. Include EVERY referenced object: the things being counted and any "
-    "landmark they are described relative to, such as a jar or a table. Bare nouns "
-    "only, no colours and no other adjectives."
-)
+# Only for a run with no run_id of its own: a random id keeps two manual runs of the
+# same question from writing over each other, at the cost of being unfindable later.
+ADHOC_RUN_PREFIX = "num_reasoner"
 
-# Several views of one room, said explicitly. The local server prepends its own
-# version of this for multi-image requests; the cloud backend has no such wrapper,
-# so the instruction has to live in the prompt to reach both.
-ANSWER_SYSTEM = (
-    "You answer counting questions about a room from photographs of it. The images "
-    "are different views of the SAME room, taken by a robot as it moved around, so "
-    "an object can appear in more than one of them — count each physical object "
-    "once, however many views it shows up in. Count only what you can see, and "
-    "answer 0 rather than guessing when nothing matches."
-)
+
+class TargetChoice(NamedTuple):
+    """How this question's SAM prompts were arrived at, kept for the manifest.
+
+    Wrong prompts are the failure the crops cannot recover from, and the count they
+    produce looks like an ordinary miss. Recording the model's untouched reply next to
+    what SAM was finally armed with is what separates "the model named the wrong
+    objects" from "the cleanup dropped the right ones" when reading a bad result back.
+    """
+    prompts: list[str]                 # exactly what went to /sam3/set_prompts
+    source: str                        # "gt" | the backend's name | "heuristic"
+    extract_reply: list[str] | None    # the model's raw list, before clean_targets
 
 
 class NumericalReasoner(Node):
@@ -79,7 +91,15 @@ class NumericalReasoner(Node):
     def __init__(self):
         super().__init__("numerical_reasoner")
 
-        self.declare_parameter("run_id_prefix", "num_reasoner")
+        # Where this question's crops go, under the crops root. The eval harness passes
+        # "<sweep>/<scene>/<question id>-<question>", which is what makes a run findable
+        # afterwards; empty falls back to a name with a random id in it, which is fine
+        # for a one-off manual run.
+        self.declare_parameter("run_id", "")
+        # Produce the crops and stop: extract targets, arm SAM, then publish a
+        # placeholder answer instead of paying a model to count. This is how the
+        # best-view cache is built; views_bench does the counting later, once per model.
+        self.declare_parameter("crops_only", False)
         self.declare_parameter("vqa_timeout_s", 120.0)
         # local | cloud | auto (auto defers to VLM_BACKEND in the environment).
         self.declare_parameter("backend", "auto")
@@ -88,7 +108,8 @@ class NumericalReasoner(Node):
         # objects that rank 1 happens not to frame.
         self.declare_parameter("max_context_views", 3)
 
-        self.run_id_prefix = str(self.get_parameter("run_id_prefix").value)
+        self.fixed_run_id = str(self.get_parameter("run_id").value).strip()
+        self.crops_only = bool(self.get_parameter("crops_only").value)
         self.vqa_timeout_s = float(self.get_parameter("vqa_timeout_s").value)
         backend_param = str(self.get_parameter("backend").value).strip().lower()
         self.backend_name = (
@@ -101,7 +122,7 @@ class NumericalReasoner(Node):
         self._current_gt_targets: Optional[list[str]] = None
         self._active_gt_targets: Optional[list[str]] = None
         self._run_id: Optional[str] = None
-        self._extracted: list[str] = []
+        self._targets: Optional[TargetChoice] = None
         self._crop_dir: Optional[str] = None
 
         self._vqa_lock = threading.Lock()
@@ -145,7 +166,8 @@ class NumericalReasoner(Node):
         self._publish_status("idle")
         self.get_logger().info(
             f"numerical_reasoner ready (backend={self.backend.name}, "
-            f"max_context_views={self.max_context_views}) — waiting for "
+            f"max_context_views={self.max_context_views}"
+            f"{', crops_only' if self.crops_only else ''}) — waiting for "
             "How many / Count questions")
 
     def _publish_status(self, text: str) -> None:
@@ -194,12 +216,14 @@ class NumericalReasoner(Node):
             self._phase = self.PHASE_EXTRACT
             self._question = q_text
             self._active_gt_targets = self._current_gt_targets
-            qid = uuid.uuid4().hex[:8]
             # Same sanitiser sam_mapper applies when it turns run_id into a
             # directory name, so the path we log matches the one it creates.
-            safe_q = sanitize_run_id(self._question[:48], fallback="q")
-            self._run_id = f"{self.run_id_prefix}_{qid}_{safe_q}"[:80]
-            self._extracted = []
+            if self.fixed_run_id:
+                self._run_id = sanitize_run_id(self.fixed_run_id)
+            else:
+                safe_q = sanitize_run_id(self._question[:48], fallback="q")
+                self._run_id = f"{ADHOC_RUN_PREFIX}_{uuid.uuid4().hex[:8]}_{safe_q}"[:80]
+            self._targets = None
 
         self.get_logger().info(f"QUESTION: {self._question}")
         self._publish_status("extract")
@@ -213,13 +237,13 @@ class NumericalReasoner(Node):
             question = self._question
             run_id = self._run_id
             best_dir = self._crop_dir
-            extracted = list(self._extracted)
+            targets = self._targets
 
         self.get_logger().info(f"explore_done ({msg.data or 'ok'}) — answering")
         self._publish_status("answer")
         threading.Thread(
             target=self._run_answer,
-            args=(question, run_id, best_dir, extracted),
+            args=(question, run_id, best_dir, targets),
             daemon=True,
         ).start()
 
@@ -267,15 +291,17 @@ class NumericalReasoner(Node):
             raise RuntimeError(f"VQA error: {response['error']}")
         return response.get("answer") or ""
 
-    def _extract_targets(self, question: str) -> list[str]:
+    def _extract_targets(self, question: str) -> TargetChoice:
         """The nouns SAM gets armed with. Never raises: an empty list is caught upstream."""
+        reply: list[str] | None = None
         try:
             result = self.backend.ask(
                 EXTRACT_SYSTEM, f"Question: {question}", [], TargetList, lite=True)
+            reply = list(result.targets)
             targets = clean_targets(result.targets)
             if targets:
-                return targets
-            self.get_logger().warn(f"extract returned nothing usable: {result.targets!r}")
+                return TargetChoice(targets, self.backend.name, reply)
+            self.get_logger().warn(f"extract returned nothing usable: {reply!r}")
         except VLMError as exc:
             self.get_logger().warn(f"extract failed: {exc}")
 
@@ -283,7 +309,7 @@ class NumericalReasoner(Node):
         # a question answerable instead of failing the whole run on one bad reply.
         targets = heuristic_targets(question)
         self.get_logger().warn(f"falling back to heuristic targets={targets}")
-        return targets
+        return TargetChoice(targets, "heuristic", reply)
 
     def _run_extract_and_set_prompts(self) -> None:
         try:
@@ -293,27 +319,26 @@ class NumericalReasoner(Node):
                 gt_targets = self._active_gt_targets
 
             if gt_targets is not None:
-                targets = gt_targets
+                choice = TargetChoice(gt_targets, "gt", None)
             else:
-                targets = self._extract_targets(question)
+                choice = self._extract_targets(question)
 
-            if not targets:
+            if not choice.prompts:
                 raise RuntimeError("Could not extract target objects from question")
 
             with self._lock:
-                self._extracted = targets
+                self._targets = choice
                 self._phase = self.PHASE_PROMPTS
 
             self._publish_status("prompts")
             self.get_logger().info(
-                f"extracted targets "
-                f"({'GT' if gt_targets is not None else self.backend.name}): {targets}")
+                f"extracted targets ({choice.source}): {choice.prompts}")
 
             # Always publish, GT path included: sam_node boots unarmed, so this is the
             # only thing that ever gives it prompts. It also gives both paths a per-run
             # run_id, so /sam3/best_view_dir points at this question's own crop dir
             # instead of silently reusing SAM's boot-time default.
-            set_payload = {"prompts": targets, "run_id": run_id}
+            set_payload = {"prompts": choice.prompts, "run_id": run_id}
             wait_for_subscriber(self.pub_prompts)
             self.pub_prompts.publish(String(data=json.dumps(set_payload)))
 
@@ -337,19 +362,19 @@ class NumericalReasoner(Node):
         question: Optional[str],
         run_id: Optional[str],
         best_dir: Optional[str],
-        extracted: list[str],
+        targets: Optional[TargetChoice],
     ) -> None:
         try:
             if not question:
                 raise RuntimeError("No question latched")
             run_dir = self._resolve_crop_dir(best_dir)
             manifest_path = run_dir / "manifest.json"
-            manifest: dict = {"targets": extracted, "selected": []}
+            manifest: dict = {"selected": []}
             if manifest_path.is_file():
                 with open(manifest_path, "r", encoding="utf-8") as handle:
                     manifest = json.load(handle)
 
-            image_paths = self._context_views(run_dir, manifest)
+            image_paths = select_context_views(run_dir, manifest, self.max_context_views)
 
             if not image_paths:
                 # No detections / empty best-view run — still answer so the harness
@@ -357,21 +382,41 @@ class NumericalReasoner(Node):
                 self.get_logger().error(
                     f"No best-view image in {run_dir}; publishing 0")
                 answer = 0
+            elif self.crops_only:
+                # The crops are the product of this run. Answering would cost a call per
+                # question for a number the report is about to record as meaningless.
+                self.get_logger().info(
+                    f"crops_only: {len(image_paths)} view(s) saved to {run_dir}, "
+                    "publishing a placeholder answer")
+                answer = 0
             else:
                 answer = self._count_from_views(question, image_paths)
 
-            # Publish first, record second. The harness tears the pipeline down the
-            # moment it sees /numerical_response, so any work after the publish is work
-            # that will be killed mid-flight.
-            self.pub_answer.publish(Int32(data=answer))
-            self.get_logger().info(f"Published /numerical_response={answer}")
-
-            manifest["question"] = question
-            manifest["extracted_targets"] = extracted
-            manifest["predicted_answer"] = answer
+            # Record first, publish second. The harness tears the pipeline down the
+            # moment it sees /numerical_response, and it gets there before a file write
+            # does — publishing first cost us the manifest on every single question.
+            # Question first, then how SAM came to be looking for what it looked for.
+            # This file is read by hand at least as often as by code, and those are the
+            # things you need before any of the geometry below makes sense.
+            manifest = {
+                "question": question,
+                "sam_prompts": targets.prompts if targets else [],
+                "target_source": targets.source if targets else "unknown",
+                "extract_reply": targets.extract_reply if targets else None,
+                **{k: v for k, v in manifest.items()
+                   if k not in ("question", "sam_prompts", "target_source",
+                                "extract_reply")},
+            }
+            # None rather than the placeholder 0: a cached directory that claims an
+            # answer nobody computed is a trap for whoever reads it next.
+            manifest["predicted_answer"] = None if self.crops_only else answer
             manifest["context_views"] = [p.name for p in image_paths]
             manifest["backend"] = self.backend.name
+            manifest["crops_only"] = self.crops_only
             self._save_manifest(manifest_path, manifest)
+
+            self.pub_answer.publish(Int32(data=answer))
+            self.get_logger().info(f"Published /numerical_response={answer}")
 
         except Exception as exc:  # noqa: BLE001
             self.get_logger().error(f"answer failed: {type(exc).__name__}: {exc}")
@@ -380,25 +425,6 @@ class NumericalReasoner(Node):
 
         # Soft reset so the next question can start (bag harness relaunches per Q).
         self._reset_to_idle("idle")
-
-    def _context_views(self, run_dir: Path, manifest: dict) -> list[Path]:
-        """The best-view images to answer from, best-ranked first.
-
-        More than one because rank 1 is the single frame SAM scored highest, not a
-        frame that necessarily contains every instance: objects on the far side of a
-        room routinely never appear in it, and no amount of prompting recovers a
-        count from an image that does not show the things being counted.
-        """
-        paths: list[Path] = []
-        for entry in (manifest.get("selected") or [])[:self.max_context_views]:
-            name = entry.get("file")
-            if not name:
-                continue
-            # From a manifest on disk, so untrusted as far as path building goes.
-            candidate = secure_path(run_dir / name)
-            if candidate.is_file():
-                paths.append(candidate)
-        return paths
 
     def _count_from_views(self, question: str, image_paths: list[Path]) -> int:
         """Ask the backend for a count over every view at once."""
@@ -413,7 +439,7 @@ class NumericalReasoner(Node):
             self._phase = self.PHASE_IDLE
             self._question = None
             self._run_id = None
-            self._extracted = []
+            self._targets = None
         self._publish_status(status)
 
     def _resolve_crop_dir(self, best_dir: Optional[str]) -> Path:
