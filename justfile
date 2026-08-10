@@ -10,6 +10,7 @@
 # Then pick a flow:
 #   scored eval   just eval-cat1 arabic_room 2 gt 0.1 cloud   # one command, per-question relaunch
 #   free dev loop just vqa-up, then the same with `local` instead of `cloud`
+#   compare VLMs  just cache-views   (once, hours) then just bench-views  (per model, minutes)
 #   live sim      just sim          | just vqa-up && just ai | just ask "How many …"
 #   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
 
@@ -330,10 +331,41 @@ cat1-reasoner backend="auto" views="3":
 # points at; backend=local runs the same sweep for free against the resident Qwen and
 # needs `just vqa-up` first. Give a separate report= when A/B-ing two configurations, or
 # the second sweep overwrites the first.
+# Crops land in data/crops/<report name>/<scene>/<question id>-<question>/ and the report
+# records the directory, so any sweep's report doubles as the cache index that
+# `just bench-views` replays from -- and a second sweep with its own report= keeps its
+# own crops rather than overwriting the first one's question by question.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
 eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" report="/data/runs/challenge_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p report_file:={{report}}"
+
+# Phase 1 of the two-phase VLM comparison: eval-cat1 minus the counting call, so it
+# costs one cheap text-only extraction per question instead of a 3-image one.
+# Hours for all 15 scenes -- run it in tmux. Accuracy in the report it writes is
+# meaningless (every prediction is a placeholder); the report is a cache index.
+# target_source=vlm is the point: the model picks the SAM prompts, as it must on a
+# scored run where there is no ground truth to hand it.
+# Resumable: re-running keeps every question whose crops are already on disk, so an
+# interruption costs one question rather than the whole sweep. To force a full rebuild,
+# delete the cache= report first.
+[group('eval')]
+[doc('Generate and save best-view crops per question, without answering (cache builder)')]
+cache-views scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+
+# Phase 2: answer-only replay over those crops. No TARE, no SAM, no bag -- minutes per
+# model instead of hours, and every model sees byte-identical images, which is what
+# makes the comparison about the model. cache= is any sweep's report, cache-views or not.
+#   just bench-views /data/runs/views_cache.json 3 all 0 /data/runs/bench_gemini.json
+# Which model answers comes from VLM_PROVIDER / VLM_MODEL in .env, so comparing two
+# providers is: edit .env, re-run with a different report=. The summary records which
+# model produced the numbers. Only the counting step is replayed -- a model that would
+# have extracted different SAM targets needs a full `just cache-views` of its own.
+[group('eval')]
+[doc('Benchmark a VLM against the cached best views (no SAM, no bag)')]
+bench-views cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/views_bench_report.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm views_bench --cache {{cache}} --views {{views}} --scene {{scene}} --limit {{limit}} --report {{report}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3
