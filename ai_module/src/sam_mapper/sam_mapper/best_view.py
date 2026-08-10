@@ -36,14 +36,26 @@ _UNSAFE_RUN_ID_CHARS = re.compile(r"[^a-zA-Z0-9._-]+")
 
 
 def sanitize_run_id(run_id: str, fallback: str = "run") -> str:
-    """Reduce a caller-supplied run id to characters that are safe in a dir name.
+    """Reduce a caller-supplied run id to a safe relative path under the output dir.
 
-    Run ids reach us over ROS (`/sam3/set_prompts`) carrying question text, so
-    they can hold spaces, slashes, and punctuation. Callers that build paths from
-    a run id (sam_mapper here, smart_vlm's category-1 reasoner) must agree on the
-    transform or they compute different directories for the same run.
+    Run ids reach us over ROS (`/sam3/set_prompts`) carrying question text, so they can
+    hold spaces, punctuation and slashes. Callers that build paths from a run id
+    (sam_mapper here, smart_vlm's category-1 reasoner) must agree on the transform or
+    they compute different directories for the same run.
+
+    A slash is kept as a level, which is what gives the eval sweep its
+    `<scene>/<question>/` layout, but only as a separator: every component is scrubbed
+    to `[a-zA-Z0-9._-]`, and a component made only of dots becomes the fallback, so
+    `../..` cannot walk out of the crops root.
     """
-    return _UNSAFE_RUN_ID_CHARS.sub("_", run_id.strip()).strip("_") or fallback
+    parts = []
+    for raw in str(run_id).split("/"):
+        part = _UNSAFE_RUN_ID_CHARS.sub("_", raw.strip()).strip("_")
+        # ".." survives the character filter above — dots are legal in a name.
+        if not part or set(part) == {"."}:
+            continue
+        parts.append(part)
+    return "/".join(parts) or fallback
 
 
 @dataclass(frozen=True)
@@ -140,11 +152,15 @@ class BestViewCollector:
         self._target_tag = "+".join(sorted(self.targets))
 
         if run_id:
-            run_name = f"{sanitize_run_id(run_id)}_{self._target_tag}"
+            # Verbatim: the caller owns the layout, and an eval sweep needs the same
+            # question to land in the same directory every time it is rebuilt. The
+            # target tag stays in the filenames, where it costs no predictability.
+            run_name = sanitize_run_id(run_id)
         else:
             run_name = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{self._target_tag}"
         self.run_dir = os.path.join(config.output_dir, run_name)
         os.makedirs(self.run_dir, exist_ok=True)
+        self._clear_stale_crops()
 
         # subdir -> renderer, for every overlay copy this run writes next to the raw crops.
         # One dict drives the mkdir, the per-flush write and the stale-file cleanup.
@@ -162,6 +178,25 @@ class BestViewCollector:
 
         self.log(f"best-view collector: targets={sorted(self.targets)} "
                  f"top_n={config.top_n} -> {self.run_dir}")
+
+    def _clear_stale_crops(self) -> None:
+        """Empty a reused run directory before writing into it.
+
+        A stable run id means a rebuild lands on top of the previous attempt, and the
+        per-flush cleanup only drops ranks of the CURRENT target tag. Different targets
+        for the same question would otherwise leave both sets side by side, and a reader
+        taking the top few files would mix two runs.
+        """
+        # Recursive, so the overlay copies go too without naming their subdirectories
+        # here — one of which may not even be enabled on this run.
+        for stale in glob.glob(os.path.join(self.run_dir, "**", "best_rank*.png"),
+                               recursive=True):
+            os.remove(stale)
+        # The manifest too, or the merge on flush would carry the previous attempt's
+        # answer over onto this attempt's images.
+        manifest = os.path.join(self.run_dir, "manifest.json")
+        if os.path.exists(manifest):
+            os.remove(manifest)
 
     # -- bag-loop handling ----------------------------------------------------
 
@@ -426,7 +461,19 @@ class BestViewCollector:
                 for rank, cand, new_count in written
             ],
         }
-        with open(os.path.join(self.run_dir, "manifest.json"), "w") as handle:
+        # Merge, never replace: the reasoner adds the question, the prompts it armed us
+        # with and its answer to this same file, and frames keep arriving after it does
+        # that — a plain overwrite silently threw all of it away on every later flush.
+        path = os.path.join(self.run_dir, "manifest.json")
+        if os.path.exists(path):
+            try:
+                with open(path) as handle:
+                    foreign = {k: v for k, v in json.load(handle).items()
+                               if k not in manifest}
+            except (OSError, json.JSONDecodeError):
+                foreign = {}
+            manifest = {**foreign, **manifest}
+        with open(path, "w") as handle:
             json.dump(manifest, handle, indent=2)
 
         covered_ids = {tid for _, cand, _ in written for tid in cand.instance_scores}
