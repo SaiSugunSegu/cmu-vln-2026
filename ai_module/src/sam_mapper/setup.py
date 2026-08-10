@@ -8,6 +8,11 @@ setup(
     name=package_name,
     version='0.1.0',
     packages=[package_name, f'{package_name}.tools'],
+    # dimension_priors.json is read at runtime by mapping_config, so it must be installed
+    # alongside the modules rather than into share/ — it is generated data belonging to the
+    # code, not user-editable config.
+    package_data={package_name: ['*.json']},
+    include_package_data=True,
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
@@ -15,7 +20,7 @@ setup(
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
-    zip_safe=True,
+    zip_safe=False,   # mapping_config reads dimension_priors.json by path
     maintainer='CMU-VLN Team',
     maintainer_email='team@example.com',
     description='SAM 3 / SAM 3.1 driven 3D open-vocabulary instance mapping.',

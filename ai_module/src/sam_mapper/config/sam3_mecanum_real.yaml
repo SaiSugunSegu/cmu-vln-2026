@@ -46,6 +46,75 @@ objects:
   # - {prompt: "floor",      instance: false}
   # - {prompt: "ceiling",    instance: false}
 
+# 3D mapping stage (map_node). Every filter in docs/map_node_pipeline.md stages B-E, with
+# an on/off switch and its thresholds. Omitted keys fall back to the defaults in
+# sam_mapper/mapping_config.py, which are the values the 13-scene bench was measured at.
+# `just map3d-replay` loads this same file, so tuning is a config edit, not a code edit.
+mapping:
+  # -- B: which lidar points belong to which mask, in EXECUTION order -----------------
+  confidence_threshold: 0.30       # B1; sam_node already gates harder (score_threshold_detection)
+  erosion:                         # B2; shrink masks away from the silhouette
+    enabled: false                 #     OFF: recall@0.50 0.138 -> 0.186 on the 13-scene bench
+    fraction: 0.10                 #     iterations = clip(round(fraction * mask short side), min, max)
+    min_iterations: 1
+    max_iterations: 5
+  range_filter:                    # B3; runs BEFORE the projection - see docs, it is equivalent
+    enabled: true                  #     and saves one cloud pass per mask
+    max_distance: 5.0
+                                   # B4 is the projection itself; no tunables
+  bounds_mode: clip                # B5; clip | reject. "clip" pins out-of-FOV points to row
+                                   #     0/639 where an edge mask swallows them (ceiling
+                                   #     returns inside tall objects). "reject" drops them.
+                                   # B6 is the mask lookup; no tunables (and no z-buffer)
+  range_gap:                       # B7; drop points sitting far BEHIND their mask's object.
+    enabled: true                  #     The principled replacement for erosion: costs no
+    min_points: 6                  #     pixels, and catches occlusion bleed too.
+    min_gap: 0.35                  #     metres; smaller gaps are within-object structure
+    max_depth_scale: 0.0           #     0 disables; else ceiling = front + scale * apparent width
+  min_points_per_detection: 5      # B8; absolute gate, falls hardest on small objects
+  voxel_downsample:                # B9; voxel_size also sets the accumulation grid
+    enabled: true
+    voxel_size: 0.05
+  outlier_removal:                 # B10; nb_neighbors cannot function on a 3-point detection
+    enabled: true
+    nb_neighbors: 20
+    std_ratio: 1.0
+
+  # -- C: association ------------------------------------------------------------------
+  num_angle_bins: 20               # C4; observation-diversity bins per voxel
+
+  # -- D: per-object geometry ----------------------------------------------------------
+  dbscan:                          # D1; rejects stray points ON ONE OBJECT, not instances
+    eps_voxels: 3.0                #     eps = eps_voxels * voxel_size
+    min_points: 3
+  cluster_weight_min: 10.0         # D2
+  dimension_priors:                # D3; CAPS for rejecting bled clusters, not expected sizes
+    enabled: true                  #     263 classes DERIVED from VLA-3D ground truth over 15
+                                   #     scenes - see sam_mapper/dimension_priors.json,
+                                   #     regenerate with scripts/eval/build_dimension_priors.py.
+                                   #     Add a `priors: {class: [h1, h2, z]}` block here only
+                                   #     to override individual classes; it MERGES, it does
+                                   #     not replace the derived table.
+  percentile_threshold: 0.8        # D4 accept-stop AND D5 diversity trim
+  prune:                           # D6; both conditions must hold
+    enabled: true
+    min_valid_voxels: 20
+    min_inactive_frames: 5
+  world_merge:                     # D8; absolute_distance fires unconditionally and is the
+    enabled: true                  #     known cause of 0.44 m-spaced pillows fusing
+    extent_scale: 0.5
+    absolute_distance: 0.5
+    block_covisible: true          #     two ids seen in the SAME frame are distinct objects
+                                   #     at any distance - the criterion distance cannot make
+    covisible_overlap: 0.7         #     ...unless they overlap more than this (intersection
+                                   #     over SMALLER volume), which means one object split
+                                   #     across two track ids, not two objects. 0.7 sits in
+                                   #     the empty band: distinct objects reach 0.48 even
+                                   #     with 2x-inflated boxes, fragments start at 0.91
+
+  # -- E: output -----------------------------------------------------------------------
+  publish_oriented_box: false      # measured: oriented LOSES (cat2 0.473 -> 0.366)
+
 runtime:
   # Read by both sam_node and map_node. MultiThreadedExecutor defaults to
   # cpu_count() threads, all spinning in rclpy's Python wait loop and holding the GIL — the
@@ -57,3 +126,6 @@ runtime:
   cloud_window_before: 0.5         # gather clouds in [stamp - before, stamp + after]
   cloud_window_after: 0.1
   verbose_objects: false           # print every 2D detection + 3D map object per frame
+  save_obj_map: true               # dump the final 3D map as readable JSON on shutdown
+  obj_map_dir: ""                  # empty = follow sam_node's run dir (/sam3/best_view_dir),
+                                   # so obj_map.json lands beside that question's crops
