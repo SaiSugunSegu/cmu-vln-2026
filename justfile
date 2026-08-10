@@ -86,9 +86,12 @@ test pkgs="captioner sam_mapper smart_vlm":
     set -euo pipefail
     dirs=""
     for p in {{pkgs}}; do dirs="$dirs {{ai_src}}/src/$p/tests"; done
+    # -p no:cacheprovider: the source tree is root-owned in the container, so pytest's
+    # .pytest_cache write fails and emits three Permission-denied warnings per run. The
+    # cache buys nothing here (no --lf/--sw usage), so turn it off rather than chmod.
     docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
       source {{ai_src}}/install/setup.bash &&
-      python3 -m pytest $dirs -q
+      python3 -m pytest $dirs -q -p no:cacheprovider
     "
 
 # Override display: just sim :0
@@ -163,7 +166,7 @@ ask q domain="0":
 [group('debug')]
 [doc('Foxglove bridge on host port 8765 (blocks; tunnel from laptop)')]
 foxglove domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0"
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8090 address:=0.0.0.0"
 
 # Default domain 0 matches sim-noviz. Challenge mode: just teleop 42
 [group('sim')]
@@ -221,6 +224,57 @@ sam-map-json:
 [doc('Is sam_mapper working? Topic rates + a summary of the 3D map')]
 sam-status seconds="15":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.status --seconds {{seconds}}"
+
+# ---------- 3D map benchmark (map3d) -----------------------------------
+# Record SAM 3 output once per scene on GPU, then replay the 3D mapper on CPU
+# deterministically in ~30 s/scene. Guide: docs/map3d_bench.md
+
+# The ONLY GPU step. stride=5 is still 2.6x denser than sam_node achieves in production.
+# Resume an interrupted sweep with:  just map3d-record all 5 "--skip-existing"
+[group('map3d')]
+[doc('Record companion /sam3/* bag for a scene (GPU, one-time). scene=all for every scene')]
+map3d-record scene="arabic_room" stride="5" args="":
+    docker exec -it -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.record_companion --scene {{scene}} --stride {{stride}} {{args}}"
+# Splits no-coverage-where-the-mask-sits (sensor geometry) from coverage-beside-it
+# (alignment). Opposite fixes.
+[group('map3d')]
+[doc('Why do masked detections receive zero lidar points?')]
+map3d-zeropoints scene="livingroom_1" variant="" args="":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/diagnose_zero_points.py --scene {{scene}} {{ if variant != '' { '--variant ' + variant } else { '' } }} {{args}}"
+
+# Writes /data/runs/map3d/<run-id>/<scene>.json. run-id is the HOST git sha (the container
+# has no .git), so A/B diffs are a git-keyed table.
+[group('map3d')]
+[doc('Replay the 3D mapper offline against recorded SAM 3 output (CPU, deterministic)')]
+map3d-replay scene="arabic_room" jobs="1" args="":
+    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/replay_map3d.py --scene {{scene}} --jobs {{jobs}} {{args}}"
+
+# Two replays must give an identical digest, or every later A/B is measuring noise.
+[group('map3d')]
+[doc('Assert the offline replay is byte-reproducible')]
+map3d-determinism scene="arabic_room":
+    just map3d-replay {{scene}} 1 "--determinism-check --quiet"
+
+# In the container so replay and score write /data/runs as the same uid. Defaults to the
+# newest run. Read A/Bs against bestIoU/claimed — precision-recall at a fixed IoU is a step
+# function and reads 0.00 until something crosses it.
+[group('map3d')]
+[doc('Score a replayed 3D map against IRef-VLA ground truth')]
+map3d-score run="" args="":
+    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_ai_module bash -c "python3 /home/docker/scripts/eval/score_map3d.py {{ if run != '' { '--run ' + run } else { '' } }} {{args}}"
+
+# A sloppy prompt->GT-label map silently invalidates every number above.
+[group('map3d')]
+[doc('Which prompts / predicted labels fail to resolve to a GT label?')]
+map3d-audit run="":
+    just map3d-score "{{run}}" --audit-labels
+
+# Regenerates sam_mapper/dimension_priors.json (D3 caps) from VLA-3D ground truth. Needed
+# only when new scene GT lands. Runs on the HOST — it reads ../IRef-VLA.
+[group('map3d')]
+[doc('Regenerate the per-class size caps from VLA-3D ground truth')]
+map3d-priors args="":
+    python3 scripts/eval/build_dimension_priors.py {{args}}
 
 # ---------- Persistent Qwen VQA (model stays loaded) --------------------
 #   just vqa-up

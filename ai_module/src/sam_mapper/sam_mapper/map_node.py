@@ -31,10 +31,11 @@ Design notes (full write-up in docs/M2_perception.md 3.6):
 from __future__ import annotations
 
 import json
+import os
+import re
 import threading
 import time
 import traceback
-from bisect import bisect_left
 
 import numpy as np
 import rclpy
@@ -43,20 +44,37 @@ from nav_msgs.msg import Odometry
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.node import Node
 from rclpy.time import Time
-from scipy.spatial.transform import Rotation, Slerp
 from sensor_msgs.msg import Image, PointCloud2
 from sensor_msgs_py import point_cloud2
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker, MarkerArray
 
+from sam_mapper import frame_sync
 from sam_mapper.cloud_image_fusion import CloudImageFusion
-from sam_mapper.detections import PromptTable, encode_instance_id
+from sam_mapper.detections import PromptTable
+from sam_mapper.mapping_config import MappingConfig
 from sam_mapper.node_base import WorkerNodeMixin, run_node
 from sam_mapper.object_mapper import ObjMapper
 
 
+def _pretty_json(payload: dict) -> str:
+    """
+
+Indented JSON with numeric vectors kept on one line.
+
+    Plain indent=2 puts every coordinate on its own row, turning a 30-object map into
+    600 lines nobody reads. Only all-numeric arrays are collapsed.
+    """
+    text = json.dumps(payload, indent=2, default=_jsonable)
+    return re.sub(r"\[\s*\n\s*(-?[\d.eE+-]+(?:,\s*\n\s*-?[\d.eE+-]+)*)\s*\n\s*\]",
+                  lambda m: "[" + ", ".join(m.group(1).split()).replace(",,", ",") + "]",
+                  text) + "\n"
+
+
 def _jsonable(value):
-    """serialize_map_to_dict returns numpy arrays; json cannot encode those."""
+    """
+
+serialize_map_to_dict returns numpy arrays; json cannot encode those."""
     if isinstance(value, np.ndarray):
         return value.tolist()
     if isinstance(value, (np.floating, np.integer)):
@@ -64,14 +82,9 @@ def _jsonable(value):
     return str(value)
 
 
-def _find_neighbouring_stamps(stamp_list, q):
-    """The two stamps in stamp_list bracketing q (clamped at the ends)."""
-    i = bisect_left(stamp_list, q)
-    if i == 0:
-        return stamp_list[0], stamp_list[0]
-    if i == len(stamp_list):
-        return stamp_list[-1], stamp_list[-1]
-    return stamp_list[i - 1], stamp_list[i]
+# The sync arithmetic itself lives in frame_sync so the offline benchmark harness runs
+# the same code path this node does, rather than a reimplementation of it. What stays
+# here is the part that is genuinely this node's: locks, warn counters, buffer trimming.
 
 
 class MapNode(WorkerNodeMixin, Node):
@@ -87,6 +100,15 @@ class MapNode(WorkerNodeMixin, Node):
         self.cloud_window_after = float(runtime.get('cloud_window_after', 0.1))
         self.verbose_objects = bool(runtime.get('verbose_objects', False))
 
+        # Write the map beside the crops it came from, on every publish. sam_node publishes
+        # its per-question run dir on /sam3/best_view_dir (save_best_target_view_images);
+        # until that arrives there is nowhere to write and the dump is skipped.
+        self.save_obj_map = bool(runtime.get('save_obj_map', False))
+        self.obj_map_dir = runtime.get('obj_map_dir') or ''
+        self.latest_objects: dict = {}
+        self._obj_map_logged = False
+        self._obj_map_write_failed = False
+
         self.linear_time_bias = config.get('detection_linear_state_time_bias', 0.0)
         self.angular_time_bias = config.get('detection_angular_state_time_bias', 0.0)
 
@@ -94,12 +116,18 @@ class MapNode(WorkerNodeMixin, Node):
         self.prompt_table = PromptTable(config['objects'])
 
         # -- 3D mapping stage --------------------------------------------------
-        self.cloud_img_fusion = CloudImageFusion(platform=config['platform'])
+        # Every filter/threshold in stages B-E; omitted keys fall back to the measured
+        # defaults in mapping_config.py. replay_map3d loads the same yaml, so a tuning
+        # change is a config edit rather than a code edit.
+        mapping_config = MappingConfig.from_dict(config.get('mapping', {}))
+        self.cloud_img_fusion = CloudImageFusion(platform=config['platform'],
+                                                 bounds_mode=mapping_config.bounds_mode)
         self.obj_mapper = ObjMapper(
             cloud_image_fusion=self.cloud_img_fusion,
             label_template=self.prompt_table.label_template(),
             captioner=None,  # TODO (docs backlog §6 item 3): wire up a real Captioner
             log_info=self.log,
+            config=mapping_config,
         )
 
         # -- buffers ---------------------------------------------------------
@@ -145,6 +173,9 @@ class MapNode(WorkerNodeMixin, Node):
                                  callback_group=group())
         self.create_subscription(String, '/sam3/prompts_ack', self.prompts_ack_callback, 10,
                                  callback_group=group())
+        if self.save_obj_map and not self.obj_map_dir:
+            self.create_subscription(String, '/sam3/best_view_dir', self._on_run_dir, 10,
+                                     callback_group=group())
 
         self.obj_cloud_pub = self.create_publisher(PointCloud2, '/obj_points', 10)
         self.obj_box_pub = self.create_publisher(MarkerArray, '/obj_boxes', 10)
@@ -223,7 +254,9 @@ class MapNode(WorkerNodeMixin, Node):
     TIME_JUMP_TOLERANCE = 1.0        # seconds backwards before we call it a new lap
 
     def _handle_time_jump(self, stamp: float) -> None:
-        """Detect a bag loop and reset this node's own sync buffers.
+        """
+
+Detect a bag loop and reset this node's own sync buffers.
 
         Only the odom/cloud ring buffers need resetting here — they still hold the
         previous lap's newer stamps otherwise, and every frame fails sync as "older than
@@ -245,72 +278,53 @@ class MapNode(WorkerNodeMixin, Node):
         self._sync_warn_count = 0
 
     def _interpolate_odom(self, stamp: float):
-        """Pose at exactly `stamp`, interpolated from the bracketing odom samples.
-
-        Linear for position/velocity, SLERP for orientation. Ported from
-        semantic_mapper's mapping_ros2_node.py:514-570.
-
-        Returns None when the frame cannot be synced yet (too old, or odom has not
-        caught up) — the caller should skip the frame.
         """
-        with self.odom_lock:
-            if not self.odom_stamps:
-                return None
 
+Pose at exactly `stamp` (see frame_sync.interpolate_odom), or None if the
+        frame cannot be synced yet — the caller should skip it. Adds this node's
+        locking, rate-limited warning and buffer trimming around the pure math."""
+        with self.odom_lock:
             target = stamp + self.linear_time_bias
-            left, right = _find_neighbouring_stamps(self.odom_stamps, target)
-            if left > target:
+            odom, status = frame_sync.interpolate_odom(self.odom_stack, self.odom_stamps,
+                                                       target)
+            if status == frame_sync.TOO_OLD:
                 # Normal for the first frames (odom buffer not yet spanning the image
                 # stamp). Rate-limited: if it never stops, something is actually wrong.
                 self._sync_warn_count += 1
                 if self._sync_warn_count in (1, 10) or self._sync_warn_count % 100 == 0:
-                    self.log(f'frame {target:.2f} older than oldest odom {left:.2f} '
+                    self.log(f'frame {target:.2f} older than oldest odom '
+                             f'{self.odom_stamps[0]:.2f} '
                              f'(skipped {self._sync_warn_count}); normal at startup, '
                              f'but persistent means /state_estimation is lagging or absent')
+            if odom is None:
                 return None
-            if right < target:
-                return None                      # odom has not caught up yet; retry later
             self._sync_warn_count = 0
 
-            left_odom = self.odom_stack[self.odom_stamps.index(left)]
-            right_odom = self.odom_stack[self.odom_stamps.index(right)]
-            ratio = (target - left) / (right - left) if right != left else 0.5
-            ratio = float(np.clip(ratio, 0.0, 1.0))
-
-            odom = {
-                'position': np.array(right_odom['position']) * ratio
-                            + np.array(left_odom['position']) * (1 - ratio),
-                'linear_velocity': np.array(right_odom['linear_velocity']) * ratio
-                                   + np.array(left_odom['linear_velocity']) * (1 - ratio),
-                'angular_velocity': np.array(right_odom['angular_velocity']) * ratio
-                                    + np.array(left_odom['angular_velocity']) * (1 - ratio),
-            }
-            rotations = Rotation.from_quat([left_odom['orientation'], right_odom['orientation']])
-            odom['orientation'] = Slerp([0, 1], rotations)(ratio).as_quat()
-
+            left, _right = frame_sync.find_neighbouring_stamps(self.odom_stamps, target)
             while self.odom_stamps and self.odom_stamps[0] < left:
                 self.odom_stack.pop(0)
                 self.odom_stamps.pop(0)
             return odom
 
     def _gather_cloud(self, stamp: float):
-        """Concatenate the lidar scans that fall in a window around the image stamp."""
+        """
+
+Concatenate the lidar scans that fall in a window around the image stamp."""
         with self.cloud_lock:
             while self.cloud_stamps and self.cloud_stamps[0] < stamp - 1.0:
                 self.cloud_stack.pop(0)
                 self.cloud_stamps.pop(0)
             if not self.cloud_stamps:
                 return None
-            window = [
-                cloud for cloud, t in zip(self.cloud_stack, self.cloud_stamps)
-                if stamp - self.cloud_window_before <= t <= stamp + self.cloud_window_after
-            ]
-        return np.concatenate(window, axis=0) if window else None
+            return frame_sync.gather_cloud(self.cloud_stack, self.cloud_stamps, stamp,
+                                           self.cloud_window_before, self.cloud_window_after)
 
     # -- worker ---------------------------------------------------------------
 
     def _take_detection_frame(self):
-        """Both messages only ever advance together (published back-to-back by sam_node
+        """
+
+Both messages only ever advance together (published back-to-back by sam_node
         with the same stamp — embedded in the JSON itself, since std_msgs/String has no
         header), so a stamp mismatch just means the pair hasn't landed yet — wait for the
         next callback rather than processing a torn pair."""
@@ -326,36 +340,12 @@ class MapNode(WorkerNodeMixin, Node):
             return id_map_msg, detections
 
     def _reconstruct_detections(self, id_map_msg: Image, detections: dict) -> dict:
-        """/sam3/instance_map + parsed /sam3/detections -> the same 5-key dict
+        """
+
+/sam3/instance_map + parsed /sam3/detections -> the same 5-key dict
         to_detections() would have produced — ObjMapper.update_map needs no changes."""
         id_map = self.bridge.imgmsg_to_cv2(id_map_msg, desired_encoding='mono16')
-        entries = detections['entries']
-
-        if not entries:
-            return {
-                'bboxes': np.zeros((0, 4), dtype=float),
-                'confidences': np.zeros(0, dtype=float),
-                'labels': np.zeros(0, dtype=object),
-                'ids': np.zeros(0, dtype=int),
-                'masks': np.zeros((0, *id_map.shape), dtype=bool),
-            }
-
-        bboxes, confidences, labels, ids, masks = [], [], [], [], []
-        for entry in entries:
-            obj_id = int(entry['id'])
-            bboxes.append(entry['bbox'])
-            confidences.append(entry['confidence'])
-            labels.append(entry['label'])
-            ids.append(obj_id)
-            masks.append(id_map == encode_instance_id(obj_id))
-
-        return {
-            'bboxes': np.asarray(bboxes, dtype=float),
-            'confidences': np.asarray(confidences, dtype=float),
-            'labels': np.asarray(labels, dtype=object),
-            'ids': np.asarray(ids, dtype=int),
-            'masks': np.asarray(masks, dtype=bool),
-        }
+        return frame_sync.reconstruct_detections(id_map, detections['entries'])
 
     def prompts_ack_callback(self, msg: String) -> None:
         """A new run id means sam_node re-armed with a fresh SAM 3 session.
@@ -435,7 +425,9 @@ class MapNode(WorkerNodeMixin, Node):
                     f'{traceback.format_exc()}')
 
     def _heartbeat(self):
-        """Report what the worker is doing. Runs on a ROS timer, not in the worker.
+        """
+
+Report what the worker is doing. Runs on a ROS timer, not in the worker.
 
         Two failure modes look identical from outside — a pipeline waiting on a missing
         input, and one blocked inside a slow stage — so name both the stage and how long
@@ -496,7 +488,9 @@ class MapNode(WorkerNodeMixin, Node):
         )
 
     def _log_verbose(self, detections: dict, objects_3d: dict) -> None:
-        """Every 2D detection and every 3D map object, one line each — validation only."""
+        """
+
+Every 2D detection and every 3D map object, one line each — validation only."""
         for label, score, obj_id, bbox in zip(detections['labels'], detections['confidences'],
                                               detections['ids'], detections['bboxes']):
             x0, y0, x1, y1 = (round(float(v)) for v in bbox)
@@ -533,9 +527,42 @@ class MapNode(WorkerNodeMixin, Node):
 
         # Published unconditionally, even when empty — an empty map is itself the answer
         # when nothing else is coming out. `just sam-status` decodes it.
-        objects = self.obj_mapper.serialize_map_to_dict(stamp)
+        objects = self.obj_mapper.serialize_map_to_dict()
         self.map_json_pub.publish(String(data=json.dumps(objects, default=_jsonable)))
+        self.latest_objects = objects
+        self.write_obj_map()
         return objects
+
+    def _on_run_dir(self, msg: String) -> None:
+        if msg.data and msg.data != self.obj_map_dir:
+            self.obj_map_dir = msg.data
+            self.log(f'obj_map will be saved to {os.path.join(msg.data, "obj_map.json")}')
+
+    def write_obj_map(self) -> str | None:
+        """Dump the current map to <run_dir>/obj_map.json, on every publish.
+
+        Not on shutdown: the harness may kill the process without SIGINT. Temp file plus
+        os.replace, so a kill mid-write leaves the previous complete map, not a truncated one.
+        """
+        if not self.save_obj_map or not self.obj_map_dir:
+            return None
+        path = os.path.join(self.obj_map_dir, 'obj_map.json')
+        tmp = path + '.tmp'
+        try:
+            os.makedirs(self.obj_map_dir, exist_ok=True)
+            with open(tmp, 'w') as handle:
+                handle.write(_pretty_json(self.latest_objects))
+            os.replace(tmp, path)
+        except OSError as exc:
+            # Once, not per frame: a full or read-only disk would otherwise flood the log.
+            if not self._obj_map_write_failed:
+                self._obj_map_write_failed = True
+                self.get_logger().error(f'could not write {path}: {exc}')
+            return None
+        if not self._obj_map_logged:
+            self._obj_map_logged = True
+            self.log(f'writing obj_map to {path} on every publish')
+        return path
 
 def main(args=None):
     run_node(MapNode, 'map_node_bootstrap', ('platform', 'objects'),

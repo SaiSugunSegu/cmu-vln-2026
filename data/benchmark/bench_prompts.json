@@ -1,0 +1,599 @@
+{
+  "_comment": "Target objects per scene, read from that scene's five official questions in questions/questions.json. Capped at 10 per scene: SAM 3's cost scales steeply with prompt count (2 prompts ~1.8 s/frame, 4 ~6.5, 19 ~18). Priority when cutting: everything the NUMERICAL and OBJECT_REFERENCE questions name comes first, since those are the question types this bench scores; instruction_following anchors fill the remaining slots. wall/floor/ceiling are never included - questions reference them only as spatial datums ('furthest from the floor' = maximum height) and they are the most expensive prompts SAM 3 can be given. Hand-curated: edit directly.",
+  "scenes": {
+    "arabic_room": {
+      "scene": "arabic_room",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "sofa",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        },
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "book",
+          "instance": true
+        },
+        {
+          "prompt": "stool",
+          "instance": true
+        },
+        {
+          "prompt": "wall lamp",
+          "instance": true
+        },
+        {
+          "prompt": "door frame",
+          "instance": true
+        },
+        {
+          "prompt": "picture",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "column",
+          "instance": true
+        }
+      ]
+    },
+    "chinese_room": {
+      "scene": "chinese_room",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "chair",
+          "instance": true
+        },
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "bowl",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "folding screen",
+          "instance": true
+        },
+        {
+          "prompt": "tv",
+          "instance": true
+        },
+        {
+          "prompt": "potted plant",
+          "instance": true
+        },
+        {
+          "prompt": "painting",
+          "instance": true
+        },
+        {
+          "prompt": "tea table",
+          "instance": true
+        },
+        {
+          "prompt": "elephant figurine",
+          "instance": true
+        }
+      ]
+    },
+    "hotel_room_1": {
+      "scene": "hotel_room_1",
+      "n_instance_prompts": 9,
+      "objects": [
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "bed",
+          "instance": true
+        },
+        {
+          "prompt": "bedside table",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        },
+        {
+          "prompt": "picture",
+          "instance": true
+        },
+        {
+          "prompt": "suitcase",
+          "instance": true
+        },
+        {
+          "prompt": "chair",
+          "instance": true
+        },
+        {
+          "prompt": "tv",
+          "instance": true
+        },
+        {
+          "prompt": "bench",
+          "instance": true
+        }
+      ]
+    },
+    "hotel_room_2": {
+      "scene": "hotel_room_2",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "picture",
+          "instance": true
+        },
+        {
+          "prompt": "bed",
+          "instance": true
+        },
+        {
+          "prompt": "flowers",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        },
+        {
+          "prompt": "bench",
+          "instance": true
+        },
+        {
+          "prompt": "lamp",
+          "instance": true
+        },
+        {
+          "prompt": "fireplace",
+          "instance": true
+        },
+        {
+          "prompt": "tv cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "curtain",
+          "instance": true
+        },
+        {
+          "prompt": "tv",
+          "instance": true
+        }
+      ]
+    },
+    "japanese_room": {
+      "scene": "japanese_room",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "calligraphy painting",
+          "instance": true
+        },
+        {
+          "prompt": "display ledge",
+          "instance": true
+        },
+        {
+          "prompt": "lantern",
+          "instance": true
+        },
+        {
+          "prompt": "vase",
+          "instance": true
+        },
+        {
+          "prompt": "stone decoration",
+          "instance": true
+        },
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "sushi",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "flowers",
+          "instance": true
+        },
+        {
+          "prompt": "jar",
+          "instance": true
+        }
+      ]
+    },
+    "livingroom_1": {
+      "scene": "livingroom_1",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "chair",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "vase",
+          "instance": true
+        },
+        {
+          "prompt": "cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "picture",
+          "instance": true
+        },
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "sofa",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        },
+        {
+          "prompt": "potted plant",
+          "instance": true
+        },
+        {
+          "prompt": "lamp",
+          "instance": true
+        }
+      ]
+    },
+    "livingroom_2": {
+      "scene": "livingroom_2",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "cup",
+          "instance": true
+        },
+        {
+          "prompt": "coffee table",
+          "instance": true
+        },
+        {
+          "prompt": "stool",
+          "instance": true
+        },
+        {
+          "prompt": "shelf",
+          "instance": true
+        },
+        {
+          "prompt": "tv cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "sofa",
+          "instance": true
+        },
+        {
+          "prompt": "lamp",
+          "instance": true
+        },
+        {
+          "prompt": "chair",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        }
+      ]
+    },
+    "livingroom_3": {
+      "scene": "livingroom_3",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "photo",
+          "instance": true
+        },
+        {
+          "prompt": "tv cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "potted plant",
+          "instance": true
+        },
+        {
+          "prompt": "book",
+          "instance": true
+        },
+        {
+          "prompt": "cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "vase",
+          "instance": true
+        },
+        {
+          "prompt": "stool",
+          "instance": true
+        },
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "bowl",
+          "instance": true
+        }
+      ]
+    },
+    "livingroom_4": {
+      "scene": "livingroom_4",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "sofa",
+          "instance": true
+        },
+        {
+          "prompt": "picture",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        },
+        {
+          "prompt": "fossil decoration",
+          "instance": true
+        },
+        {
+          "prompt": "phone",
+          "instance": true
+        },
+        {
+          "prompt": "chair",
+          "instance": true
+        },
+        {
+          "prompt": "bookcase",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "flowers",
+          "instance": true
+        }
+      ]
+    },
+    "loft": {
+      "scene": "loft",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "pillow",
+          "instance": true
+        },
+        {
+          "prompt": "sofa",
+          "instance": true
+        },
+        {
+          "prompt": "chair",
+          "instance": true
+        },
+        {
+          "prompt": "cup",
+          "instance": true
+        },
+        {
+          "prompt": "potted plant",
+          "instance": true
+        },
+        {
+          "prompt": "vase",
+          "instance": true
+        },
+        {
+          "prompt": "cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "tv",
+          "instance": true
+        },
+        {
+          "prompt": "fireplace",
+          "instance": true
+        },
+        {
+          "prompt": "sphere decoration",
+          "instance": true
+        }
+      ]
+    },
+    "office_1": {
+      "scene": "office_1",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "computer monitor",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "map wall decal",
+          "instance": true
+        },
+        {
+          "prompt": "potted plant",
+          "instance": true
+        },
+        {
+          "prompt": "file cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "paper cup",
+          "instance": true
+        },
+        {
+          "prompt": "projector screen",
+          "instance": true
+        },
+        {
+          "prompt": "water cooler",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        },
+        {
+          "prompt": "shelf",
+          "instance": true
+        }
+      ]
+    },
+    "office_2": {
+      "scene": "office_2",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "potted plant",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "computer monitor",
+          "instance": true
+        },
+        {
+          "prompt": "cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "phone",
+          "instance": true
+        },
+        {
+          "prompt": "box",
+          "instance": true
+        },
+        {
+          "prompt": "whiteboard",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        },
+        {
+          "prompt": "clock",
+          "instance": true
+        },
+        {
+          "prompt": "trash can",
+          "instance": true
+        }
+      ]
+    },
+    "studio": {
+      "scene": "studio",
+      "n_instance_prompts": 10,
+      "objects": [
+        {
+          "prompt": "framed record",
+          "instance": true
+        },
+        {
+          "prompt": "couch",
+          "instance": true
+        },
+        {
+          "prompt": "vase",
+          "instance": true
+        },
+        {
+          "prompt": "guitar",
+          "instance": true
+        },
+        {
+          "prompt": "beer bottle",
+          "instance": true
+        },
+        {
+          "prompt": "cabinet",
+          "instance": true
+        },
+        {
+          "prompt": "tv",
+          "instance": true
+        },
+        {
+          "prompt": "easel",
+          "instance": true
+        },
+        {
+          "prompt": "table",
+          "instance": true
+        },
+        {
+          "prompt": "window",
+          "instance": true
+        }
+      ]
+    }
+  }
+}

@@ -80,6 +80,16 @@
     <arg name="wait_for_prompts" value="true"/>
   </include>
 
+  <!-- 1b. 3D instance mapper — fuses SAM 3 masks with lidar into persistent 3D objects.
+          Separate process from sam_node on purpose: SAM 3 inference and high-frequency ROS
+          callbacks do not share a GIL well (20-80 s/frame when they did).
+          Latest-frame-wins, so it drops under load rather than lagging the map.
+       Input:   /sam3/{instance_map,detections}, /registered_scan, /state_estimation
+       Output:  /obj_points, /obj_boxes, /obj_labels, /obj_map_json -->
+  <include file="$(find-pkg-share sam_mapper)/launch/map_node.launch">
+    <arg name="config" value="$(var sam_config)"/>
+  </include>
+
   <!-- 2. Supervisor — mission clock, readiness/arming gates, guaranteed answer.
        Input:   /challenge_question, /sam3/{status,prompts_ack}, /qwen_vqa/status,
                 /state_estimation, /numerical_response, /selected_object_marker

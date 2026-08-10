@@ -201,8 +201,26 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 | **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `caption` |
 | **cat1** | `cat1-reasoner` · `cat1-bag-bench <scene> [limit]` |
 | **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` |
+| **map3d** | `map3d-record <scene> [stride]` · `map3d-replay <scene> [jobs]` · `map3d-score` · `map3d-determinism` · `map3d-audit` |
 
 Run `just` for this list with descriptions and default arguments.
+
+### 3.6 · 3D box accuracy — measured, deterministic, no GPU
+
+`map_node`'s 3D boxes had no accuracy metric of any kind, and every experiment re-ran SAM 3
+nondeterministically. The `map3d` group fixes both: record SAM 3 output once per scene
+(the only GPU step), then replay the 3D mapper on CPU in ~30 s/scene with byte-identical
+output, and score it against IRef-VLA ground truth.
+
+```bash
+# prompt sets are hand-curated in data/benchmark/bench_prompts.json
+just map3d-record all              # ONE-TIME GPU pass, ~21 min for all 13 scenes
+just map3d-replay all 8            # CPU, deterministic, all scenes in parallel
+just map3d-score                   # vs IRef-VLA GT, incl. the category-2 marker score
+```
+
+Full guide, metric definitions and current numbers: [docs/map3d_bench.md](docs/map3d_bench.md)
+Mapper internals — every stage, threshold and the Tier 1/2/3 backlog: [docs/map_node_pipeline.md](docs/map_node_pipeline.md)
 
 -----------------------
 
