@@ -14,6 +14,11 @@
 
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <!-- captioner.vlm_backends: pydantic defines the structured outputs both backends
+       return. openai, the client for the hosted backend, comes from
+       docker/requirements_captioner.txt rather than rosdep and is imported lazily, so a
+       local-only container still starts without it. -->
+  <exec_depend>python3-pydantic</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
