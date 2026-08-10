@@ -29,7 +29,7 @@ from dataclasses import dataclass
 import cv2
 import numpy as np
 
-from sam_mapper.annotate import annotate_frame
+from sam_mapper.annotate import annotate_frame, silhouette_frame
 from sam_mapper.detections import PromptTable
 
 _UNSAFE_RUN_ID_CHARS = re.compile(r"[^a-zA-Z0-9._-]+")
@@ -52,6 +52,7 @@ class BestViewConfig:
     top_n: int
     output_dir: str
     save_annotated_copy: bool
+    save_silhouette_copy: bool
     min_instance_score: float
     crop_to_roi: bool
     roi_padding_frac: float
@@ -77,6 +78,7 @@ class BestViewConfig:
             top_n=top_n,
             output_dir=raw.get("output_dir", "/data/crops"),
             save_annotated_copy=bool(raw.get("save_annotated_copy", True)),
+            save_silhouette_copy=bool(raw.get("save_silhouette_copy", False)),
             # An object covers well under 1% of a 1920x640 panorama, so real scores land
             # around 1e-3 to 1e-2, not near 1. This floor only rejects near-empty masks.
             min_instance_score=float(raw.get("min_instance_score", 0.0005)),
@@ -143,8 +145,15 @@ class BestViewCollector:
             run_name = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{self._target_tag}"
         self.run_dir = os.path.join(config.output_dir, run_name)
         os.makedirs(self.run_dir, exist_ok=True)
-        if config.save_annotated_copy:
-            os.makedirs(os.path.join(self.run_dir, "annotated"), exist_ok=True)
+
+        # subdir -> renderer, for every overlay copy this run writes next to the raw crops.
+        # One dict drives the mkdir, the per-flush write and the stale-file cleanup.
+        self._overlays = {name: render for name, render, enabled in (
+            ("annotated", annotate_frame, config.save_annotated_copy),
+            ("silhouette", silhouette_frame, config.save_silhouette_copy),
+        ) if enabled}
+        for name in self._overlays:
+            os.makedirs(os.path.join(self.run_dir, name), exist_ok=True)
 
         self.best_for_id: dict[int, Candidate] = {}
         self._selected_key: tuple = ()   # seqs of the last-written selection
@@ -366,9 +375,9 @@ class BestViewCollector:
                 self.log(f"best-view collector: failed to write {name}")
                 continue
             written.append((rank, cand, new_count))
-            if self.config.save_annotated_copy:
-                overlay = annotate_frame(cand.crop, cand.crop_detections)
-                cv2.imwrite(os.path.join(self.run_dir, "annotated", name), overlay)
+            for subdir, render in self._overlays.items():
+                overlay = render(cand.crop, cand.crop_detections)
+                cv2.imwrite(os.path.join(self.run_dir, subdir, name), overlay)
 
         # The pool can shrink (two ids' bests can converge on one cluster), so drop any
         # file past the current selection rather than leaving a stale rank behind.
@@ -376,9 +385,10 @@ class BestViewCollector:
             rank = int(os.path.basename(stale).split("_")[1].removeprefix("rank"))
             if rank > len(selected):
                 os.remove(stale)
-                annotated = os.path.join(self.run_dir, "annotated", os.path.basename(stale))
-                if os.path.exists(annotated):
-                    os.remove(annotated)
+                for subdir in self._overlays:
+                    overlay = os.path.join(self.run_dir, subdir, os.path.basename(stale))
+                    if os.path.exists(overlay):
+                        os.remove(overlay)
 
         def _crop_relative_bbox(cand: Candidate, tid: int) -> list:
             rx0, ry0, _, _ = cand.roi
