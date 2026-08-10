@@ -50,6 +50,7 @@ save_best_target_view_images:
   top_n: 3
   output_dir: /data/crops   # host-visible, same convention as sam-frames
   save_annotated_copy: true            # also write a masks/boxes/labels overlay per image
+  save_silhouette_copy: true           # also write a mask-outline + class-name copy per image
   # Score = (mask px / frame px) x confidence, so real values sit near 1e-3, not near 1.
   min_instance_score: 0.0005
   crop_to_roi: true          # crop to the objects rather than saving the whole panorama
@@ -61,7 +62,7 @@ runtime:
   # Read by both nodes. MultiThreadedExecutor defaults to cpu_count() threads, which all
   # spin holding the GIL; keep it lean (the real fix was the process split, M2 3.6-split).
   executor_threads: 16
-  publish_annotated: true
+  publish_annotated: false
   log_every_n_frames: 5
   cloud_window_before: 0.5         # gather clouds in [stamp - before, stamp + after]
   cloud_window_after: 0.1
