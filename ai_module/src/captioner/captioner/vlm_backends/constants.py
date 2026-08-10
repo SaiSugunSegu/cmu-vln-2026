@@ -10,7 +10,7 @@ a stray run should never bill credits.
 Pick a hosted provider with VLM_PROVIDER (see PROVIDERS below); that only supplies
 defaults, and each one is individually overridable:
 
-  VLM_PROVIDER    gemini | dashscope | openrouter | openai | <anything, with the below>
+  VLM_PROVIDER    gemini | anthropic | dashscope | openrouter | openai | <anything, below>
   VLM_BASE_URL    OpenAI-compatible base URL
   VLM_API_KEY     key, if you would rather not use the provider's own variable
   VLM_MODEL       model id
@@ -38,12 +38,24 @@ if VLM_BACKEND not in ("local", "cloud"):
 # The two aggregators are left without a default model on purpose. Their ids are
 # vendor-namespaced and change constantly, so guessing one would fail at call time with
 # a confusing 404 instead of the clear "set VLM_MODEL" error the backend raises.
+#
+# Anthropic is reached through its OpenAI compatibility layer, which ignores
+# `response_format` outright — the backend notices and falls back to asking for the shape
+# in the prompt, so it costs a retry on the first call of a run, not correctness.
 PROVIDERS = {
     "gemini": (
         "https://generativelanguage.googleapis.com/v1beta/openai/",
         "GEMINI_API_KEY",
         "gemini-3.6-flash",
         "gemini-3.5-flash-lite",
+    ),
+    # Claude ids from the 4.6 generation on are dateless but still pinned snapshots,
+    # so these name one fixed model each, the same as the dated ids elsewhere here.
+    "anthropic": (
+        "https://api.anthropic.com/v1/",
+        "ANTHROPIC_API_KEY",
+        "claude-sonnet-5",
+        "claude-haiku-4-5",
     ),
     "dashscope": (
         "https://dashscope-us.aliyuncs.com/compatible-mode/v1",

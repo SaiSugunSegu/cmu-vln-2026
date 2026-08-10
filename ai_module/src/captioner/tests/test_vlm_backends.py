@@ -5,6 +5,7 @@ and every one of those is a lost call if parsing is strict. These are the shapes
 actually observed from Qwen3-VL.
 """
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -106,6 +107,101 @@ def test_local_backend_retries_once_on_unparseable_reply():
     assert backend.ask("system", "How many?", [], CountAnswer).count == 3
 
 
+class _BadRequest(Exception):
+    """Stands in for openai.BadRequestError, which the host does not have installed."""
+
+
+def _completion(content, parsed=None):
+    message = SimpleNamespace(content=content, parsed=parsed)
+    return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+class _FakeOpenAIClient:
+    def __init__(self, on_parse, create_reply=""):
+        self._on_parse = on_parse
+        self._create_reply = create_reply
+        self.create_calls = []
+        self.beta = SimpleNamespace(
+            chat=SimpleNamespace(completions=SimpleNamespace(parse=self._parse)))
+        self.chat = SimpleNamespace(
+            completions=SimpleNamespace(create=self._create))
+
+    def _parse(self, **kwargs):
+        if isinstance(self._on_parse, Exception):
+            raise self._on_parse
+        return self._on_parse
+
+    def _create(self, **kwargs):
+        self.create_calls.append(kwargs)
+        return _completion(self._create_reply)
+
+
+def _cloud_backend(client):
+    """An OpenAIBackend around a fake client, without importing the openai SDK.
+
+    __init__ builds a real client and reads the environment, neither of which this is
+    about, and the SDK is not installed on the host where these tests run.
+    """
+    from captioner.vlm_backends.openai_backend import OpenAIBackend
+
+    backend = OpenAIBackend.__new__(OpenAIBackend)
+    backend.name = "cloud:test"
+    backend._client = client
+    backend._log = lambda _msg: None
+    backend._bad_request = _BadRequest
+    return backend
+
+
+def test_cloud_backend_returns_constrained_output_without_a_second_call():
+    client = _FakeOpenAIClient(_completion('{"reason": "two", "count": 2}',
+                                           parsed=CountAnswer(reason="two", count=2)))
+    result = _cloud_backend(client).ask("system", "How many?", [], CountAnswer)
+
+    assert result.count == 2
+    assert client.create_calls == []
+
+
+@pytest.mark.parametrize("failure", [
+    # Endpoint ignored response_format and answered in prose: the SDK validates the
+    # reply text itself, so the failure surfaces as a ValidationError from `parse`.
+    CountAnswer.model_validate_json,
+    # Endpoint rejected the json_schema response_format outright.
+    None,
+])
+def test_cloud_backend_falls_back_when_the_schema_is_not_honoured(failure):
+    from pydantic import ValidationError
+
+    if failure is None:
+        error: Exception = _BadRequest("response_format is not supported")
+    else:
+        try:
+            failure("Here are three chairs.")
+            raise AssertionError("expected a ValidationError")
+        except ValidationError as exc:
+            error = exc
+
+    client = _FakeOpenAIClient(error, create_reply='```json\n{"reason": "3", "count": 3}\n```')
+    result = _cloud_backend(client).ask("Count them.", "How many chairs?", [], CountAnswer)
+
+    assert result.count == 3
+    assert len(client.create_calls) == 1
+    # The shape has to reach the model some other way once the parameter is gone, and
+    # the question must still come last — same ordering rule as the local backend.
+    system = client.create_calls[0]["messages"][0]["content"]
+    assert "count" in system and "reason" in system
+
+
+def test_cloud_backend_does_not_retry_an_auth_or_transport_failure():
+    """A second call there would bill twice and fail the same way."""
+    from captioner.vlm_backends.base import VLMError as CloudError
+
+    client = _FakeOpenAIClient(RuntimeError("401 invalid api key"))
+    with pytest.raises(CloudError):
+        _cloud_backend(client).ask("system", "How many?", [], CountAnswer)
+
+    assert client.create_calls == []
+
+
 def test_parses_target_list():
     result = parse_json_object('{"targets": ["glass", "arabic jar"]}', TargetList)
     assert result.targets == ["glass", "arabic jar"]
@@ -130,7 +226,8 @@ def constants_with(monkeypatch):
 
     def load(**env):
         for name in ("VLM_PROVIDER", "VLM_BASE_URL", "VLM_API_KEY", "VLM_MODEL",
-                     "VLM_MODEL_LITE", "GEMINI_API_KEY", "DASHSCOPE_API_KEY"):
+                     "VLM_MODEL_LITE", "GEMINI_API_KEY", "DASHSCOPE_API_KEY",
+                     "ANTHROPIC_API_KEY"):
             monkeypatch.delenv(name, raising=False)
         for name, value in env.items():
             monkeypatch.setenv(name, value)
@@ -146,6 +243,14 @@ def test_provider_preset_supplies_endpoint_and_key(constants_with):
     assert "dashscope" in consts.VLM_BASE_URL
     assert consts.VLM_API_KEY == "k"
     assert consts.MODEL_NAME
+
+
+def test_anthropic_preset_points_at_the_compatibility_layer(constants_with):
+    """Claude is reachable with a key alone — /v1/ is the OpenAI-compatible path."""
+    consts = constants_with(VLM_PROVIDER="anthropic", ANTHROPIC_API_KEY="k")
+    assert consts.VLM_BASE_URL == "https://api.anthropic.com/v1/"
+    assert consts.VLM_API_KEY == "k"
+    assert consts.MODEL_NAME.startswith("claude-")
 
 
 def test_explicit_settings_beat_the_preset(constants_with):
