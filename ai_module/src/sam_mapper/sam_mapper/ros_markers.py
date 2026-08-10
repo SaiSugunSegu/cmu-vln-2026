@@ -52,6 +52,43 @@ def create_wireframe_marker(center, extent, yaw: float, ns: str, box_id: str, co
     return create_wireframe_marker_from_corners(corners, ns, box_id, color, seconds, nanoseconds, frame_id)
 
 
+def create_selected_object_marker(payload: dict, marker_id: int, seconds: int,
+                                  nanoseconds: int, frame_id: str = "map") -> Marker:
+    """The answer Marker for `/selected_object_marker` (category 2), built from
+    challenge_marker.marker_payload — see that module for why this is a CUBE.
+
+    Do NOT answer with create_wireframe_marker: it is a LINE_LIST whose `pose` is left at
+    identity and whose `scale.x` is a 0.05 m line width, so any reader that interprets a
+    Marker box as pose+scale (including this repo's own qa_recorder) sees a 5 cm x 0 x 0
+    box at the origin and scores 0.0. The wireframe stays for RViz/Foxglove only.
+    """
+    marker = Marker()
+    marker.header.frame_id = frame_id
+    marker.header.stamp = Time(seconds=seconds, nanoseconds=nanoseconds).to_msg()
+    marker.ns = "selected_object"
+    marker.id = int(marker_id)
+    marker.type = Marker.CUBE
+    marker.action = Marker.ADD
+
+    px, py, pz = payload["position"]
+    marker.pose.position.x, marker.pose.position.y, marker.pose.position.z = px, py, pz
+    qx, qy, qz, qw = payload["orientation"]
+    marker.pose.orientation.x = qx
+    marker.pose.orientation.y = qy
+    marker.pose.orientation.z = qz
+    marker.pose.orientation.w = qw
+
+    sx, sy, sz = payload["scale"]
+    # A zero extent makes the box degenerate and un-scoreable. Wall-mounted flats
+    # (door, painting) legitimately measure ~0 on one axis, so floor it rather than
+    # publishing something with no volume.
+    marker.scale.x, marker.scale.y, marker.scale.z = max(sx, 1e-3), max(sy, 1e-3), max(sz, 1e-3)
+
+    marker.color.r, marker.color.g, marker.color.b, marker.color.a = 0.0, 1.0, 0.0, 0.6
+    marker.text = payload.get("text", "")
+    return marker
+
+
 def create_text_marker(center, marker_id: int, text: str, color, text_height: float,
                       seconds: int, nanoseconds: int, frame_id: str = "map") -> Marker:
     marker = Marker()

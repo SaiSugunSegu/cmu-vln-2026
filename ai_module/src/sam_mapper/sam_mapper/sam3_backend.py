@@ -108,19 +108,27 @@ class Sam3Backend:
     def _load(self, model_cls, model_id, kwargs):
         """Try the requested attention backend, degrade rather than die."""
         requested = self.cfg.get("attn_implementation", "flash_attention_2")
+        errors = []
         for attn in [requested] + [a for a in ("sdpa", "eager") if a != requested]:
             try:
                 model = model_cls.from_pretrained(model_id, attn_implementation=attn, **kwargs)
                 self.log(f"[sam3] attn: {attn}"
-                         + (f" ('{requested}' unavailable)" if attn != requested else ""))
+                         + (f" ('{requested}' unavailable: {errors[0]})" if attn != requested
+                            else ""))
                 return model
-            except (ImportError, ValueError):
-                continue
-        raise RuntimeError(f"could not load {model_id} with any attention backend")
+            except Exception as err:            # noqa: BLE001 - degrade, then report
+                errors.append(f"{attn}: {type(err).__name__}: {err}")
+        raise RuntimeError(f"could not load {model_id} with any attention backend; "
+                           + " | ".join(errors))
 
     def set_prompts(self, prompts: list[str]) -> None:
         self.prompts = list(prompts)
         self.reset()
+
+    def release(self) -> None:
+        """Drop the current session and everything it holds.
+        """
+        self.session = None
 
     def reset(self) -> None:
         """Start a fresh session. Object ids restart, so callers must renumber."""

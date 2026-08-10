@@ -1,19 +1,7 @@
-"""Per-object 3D representation: voxel voting + DBSCAN shape regularization.
+"""One tracked 3D instance: voxel-voted points, class/id lifecycle, and box fitting.
 
-Owned copy of semantic_mapping/single_object.py (docs/M2_perception.md 3.6-split), trimmed to
-what ObjMapper actually calls (including its dormant TODOs — see object_mapper.py). Dropped:
-reproject_filter (dead, only reproject_obs_angle is called), retrieve_valid_voxels_with_weights
-and retrieve_valid_voxels_clustered (rerun-visualizer-only), get_info_str (only the dropped
-print_obj_info used it), cal_distance (unused anywhere), add_key_frame and the
-key_frames/key_pose/is_active/merged_obj_ids attributes (write-only, never read).
-
-Fixed while porting: compute_valid_indices used to call cal_clusters() a second time
-unconditionally (in addition to the one regularize_shape already triggers), running DBSCAN
-twice per object per frame whenever new data just merged in. The reset of req_clustering now
-lives inside cal_clusters() itself, so it's gated correctly and runs once. Also dropped a dead
-weighted-total computation in retrieve_valid_voxel_indices that indexed self.vote with indices
-sorted from a possibly-smaller filtered array (mismatched even before considering it was unused).
-"""
+Owned copy of semantic_mapping/single_object.py, trimmed to what sam_mapper calls.
+Thresholds live in mapping_config (DbscanConfig, DimensionPriorsConfig, PruneConfig)."""
 from __future__ import annotations
 
 import math
@@ -23,9 +11,13 @@ import open3d as o3d
 from scipy.spatial import ConvexHull, cKDTree
 from scipy.spatial.transform import Rotation
 
+from .mapping_config import MappingConfig
+
 
 def normalize_angles_to_pi(angles):
-    """Wrap radians into [-pi, pi)."""
+    """
+
+Wrap radians into [-pi, pi)."""
     return (angles + np.pi) % (2 * np.pi) - np.pi
 
 
@@ -38,18 +30,29 @@ def discretize_angles(angles, num_bin=20):
     return np.floor((angles + np.pi) / bin_width).astype(int)
 
 
-DIMENSION_PRIORS = {
-    "default": (5.0, 5.0, 2.0),
-    "table": (5.0, 3.0, 2.0),
-    "chair": (1.5, 1.5, 2.0),
-    "sofa": (3.0, 3.0, 2.0),
-    "pottedplant": (1.0, 1.0, 1.0),
-    "fireextinguisher": (0.5, 0.5, 0.5),
-}
+#: Read-only view of the DEFAULT per-class caps, generated from VLA-3D ground truth into
+#: sam_mapper/dimension_priors.json. Code reads `self.config.dimension_priors`, which a yaml
+#: override may change. See mapping_config.DimensionPriorsConfig.
+DIMENSION_PRIORS = MappingConfig().dimension_priors.priors
+
+
+def _fits_prior(extent, prior) -> bool:
+    """Does an oriented box fit its class prior?
+
+    Horizontals are compared SORTED, because get_bbox_3d_oriented returns [edge1, edge2, z] in
+    whatever order the hull produced. Comparing positionally made acceptance depend on hull
+    ordering, so the same box rotated a quarter turn could pass or fail. Z is never permuted."""
+    horizontal = sorted(extent[:2], reverse=True)
+    prior_horizontal = sorted(prior[:2], reverse=True)
+    return (horizontal[0] <= prior_horizontal[0]
+            and horizontal[1] <= prior_horizontal[1]
+            and extent[2] <= prior[2])
 
 
 def percentile_index_search_binary(sorted_weights, percentile):
-    """First index (into ascending-sorted weights) where cumulative weight passes `percentile`."""
+    """
+
+First index (into ascending-sorted weights) where cumulative weight passes `percentile`."""
     total_weight = np.sum(sorted_weights)
     percentile_weight = total_weight * percentile
     current_weight = 0
@@ -60,32 +63,57 @@ def percentile_index_search_binary(sorted_weights, percentile):
     return i
 
 
-def get_box_3d(points):
-    """Axis-aligned box: center, extent, identity quaternion (xyzw)."""
-    min_xyz = points[:, :3].min(axis=0)
-    max_xyz = points[:, :3].max(axis=0)
-    return (min_xyz + max_xyz) / 2, max_xyz - min_xyz, [0.0, 0.0, 0.0, 1.0]
+def get_box_3d(points, weights=None, voxel_size=0.0):
+    """
+
+World-axis-aligned box over `points`, as (centre, extent, identity quaternion).
+
+    `voxel_size` is added to every extent: a voxel is a CELL, not a point, so min/max over
+    centres under-reports each axis by one cell and collapses a one-voxel-thick object to
+    exactly zero volume (windows published [0.0, 0.52, 0.78]).
+
+    `weights` is accepted and ignored — weighting the faces was measured 4x worse."""
+    xyz = points[:, :3]
+    lo, hi = xyz.min(axis=0), xyz.max(axis=0)
+    return (lo + hi) / 2, (hi - lo) + voxel_size, [0.0, 0.0, 0.0, 1.0]
 
 
-def get_bbox_3d_oriented(points):
-    """Minimum-area oriented box in the XY plane, full extent in Z. TODO (docs backlog §6 item
-    5): switch serialize_map_to_dict/to_ros2_msgs to this instead of get_box_3d for better
-    fidelity — needs the ConvexHull-failure case (below) handled first."""
+def get_bbox_3d_oriented(points, voxel_size=0.0):
+    """Yaw-aligned box from a minimum-area rectangle over the XY footprint.
+
+    Falls back to an axis-aligned footprint when ConvexHull degenerates — a window is 4 cm
+    thick, so its projection is collinear and the hull raises. That fallback is why planar
+    objects publish at all. `voxel_size` is added to every extent (see get_box_3d)."""
     bbox2d, _ = minimum_bounding_rectangle(points[:, :2])
     if bbox2d is None:
-        return None, None, None
+        if points.shape[0] == 0:
+            return None, None, None
+        bbox2d = _axis_aligned_footprint(points)
     center2d = np.mean(bbox2d, axis=0)
     edge1, edge2 = bbox2d[1] - bbox2d[0], bbox2d[2] - bbox2d[1]
     edge1_length, edge2_length = np.linalg.norm(edge1), np.linalg.norm(edge2)
     longest_edge = edge1 if edge1_length > edge2_length else edge2
     q = Rotation.from_euler("z", math.atan2(longest_edge[1], longest_edge[0])).as_quat()
-    extent = np.array([edge1_length, edge2_length, points[:, 2].max() - points[:, 2].min()])
-    center = np.array([center2d[0], center2d[1], points[:, 2].max() - extent[2] / 2])
+    z_lo, z_hi = points[:, 2].min(), points[:, 2].max()
+    extent = np.array([edge1_length, edge2_length, z_hi - z_lo]) + voxel_size
+    # Expansion is symmetric, so the centre is the midpoint either way.
+    center = np.array([center2d[0], center2d[1], (z_lo + z_hi) / 2])
     return center, extent, q
 
 
+def _axis_aligned_footprint(points):
+    """
+
+4 corners of the XY axis-aligned rectangle, in the winding get_bbox_3d_oriented
+    expects (edge1 = corner1-corner0 along x, edge2 = corner2-corner1 along y)."""
+    lo, hi = points[:, :2].min(axis=0), points[:, :2].max(axis=0)
+    return np.array([[lo[0], lo[1]], [hi[0], lo[1]], [hi[0], hi[1]], [lo[0], hi[1]]])
+
+
 def minimum_bounding_rectangle(points):
-    """Rotating-calipers minimum-area rectangle around a 2D point set. Returns (None, None) on
+    """
+
+Rotating-calipers minimum-area rectangle around a 2D point set. Returns (None, None) on
     ConvexHull failure (e.g. degenerate/collinear points) — callers must handle that."""
     try:
         hull_points = points[ConvexHull(points).vertices]
@@ -108,7 +136,9 @@ def minimum_bounding_rectangle(points):
 
 
 class VoteStatistics:
-    """Per-voxel observation count + which viewing-angle bins have seen it (confidence signal —
+    """
+
+Per-voxel observation count + which viewing-angle bins have seen it (confidence signal —
     see docs/M2_perception.md 2.6, "voxel voting")."""
 
     def __init__(self, voxels: np.ndarray, voxel_size: float, odom_R, odom_t, num_angle_bin=15):
@@ -118,22 +148,31 @@ class VoteStatistics:
         self.tree = cKDTree(voxels)
         self.vote = np.ones(voxels.shape[0])
         self.observation_angles = np.zeros([voxels.shape[0], num_angle_bin])
-        # Only this initial batch rotates into odom_R first — later calls (update,
-        # reproject_obs_angle) don't. Preserved as-is from the original; unclear if intentional,
-        # but changing it would silently alter the voxel-voting signal this session validated.
-        obs_angles = self._obs_angle_bins(voxels, odom_R, odom_t, apply_rotation=True)
+        # World frame, consistently. The original rotated ONLY this first batch into the
+        # body frame (apply_rotation=True) while update() and reproject_obs_angle() used the
+        # world frame, so an object's first observation landed in a different bin convention
+        # from every subsequent one. Angle-bin diversity is the confidence signal behind
+        # voxel selection, the centroid and (now) the box faces, so a mixed convention
+        # inflates apparent diversity for the founding voxels and understates it after.
+        obs_angles = self._obs_angle_bins(voxels, odom_t)
         self.observation_angles[np.arange(voxels.shape[0]), obs_angles] = 1
         self.regularized_voxel_mask = np.zeros(voxels.shape[0], dtype=bool)
 
-    def _obs_angle_bins(self, voxels, odom_R, odom_t, apply_rotation=False):
+    def _obs_angle_bins(self, voxels, odom_t):
+        """
+
+Which viewing-direction bin each voxel was seen from, in WORLD frame.
+
+        The `apply_rotation` switch this used to carry is gone deliberately: it existed
+        only so the constructor could bin in the body frame while every other caller binned
+        in the world frame, which is the inconsistency described in __init__.
+        """
         voxel_to_odom = voxels - odom_t
-        if apply_rotation:
-            voxel_to_odom = voxel_to_odom @ odom_R
         angles = np.arctan2(voxel_to_odom[:, 1], voxel_to_odom[:, 0])
         return discretize_angles(normalize_angles_to_pi(angles), self.num_angle_bin)
 
     def update(self, voxels, odom_R, odom_t):
-        obs_angles = self._obs_angle_bins(voxels, odom_R, odom_t)
+        obs_angles = self._obs_angle_bins(voxels, odom_t)
         distances, indices = self.tree.query(voxels)
         merge_mask = distances < self.voxel_size
         self.vote[indices[merge_mask]] += 1
@@ -165,7 +204,9 @@ class VoteStatistics:
         self.tree = cKDTree(self.voxels)
 
     def update_through_mask(self, mask):
-        """Keep only the voxels where `mask` is True — used by SingleObject.pop() (dormant
+        """
+
+Keep only the voxels where `mask` is True — used by SingleObject.pop() (dormant
         IoU split/merge path, docs backlog §6 item 4)."""
         self.voxels = self.voxels[mask]
         self.vote = self.vote[mask]
@@ -182,8 +223,8 @@ class VoteStatistics:
         else:
             voxels_mask = mask[voxels_on_image[:, 1], voxels_on_image[:, 0]].astype(bool)
 
-        odom_t, odom_R = -R_w2b.T @ t_w2b, R_w2b.T
-        obs_angles = self._obs_angle_bins(self.voxels[voxels_mask], odom_R, odom_t)
+        odom_t = -R_w2b.T @ t_w2b
+        obs_angles = self._obs_angle_bins(self.voxels[voxels_mask], odom_t)
         self.observation_angles[voxels_mask, obs_angles] = 1
 
     def retrieve_valid_voxel_indices(self, diversity_percentile=0.3, regularized=True):
@@ -198,11 +239,17 @@ class VoteStatistics:
 
 
 class SingleObject:
-    """One tracked 3D instance — a voxel-voted point cluster plus its class/id/lifecycle state."""
+    """
 
-    def __init__(self, class_id, obj_id, voxels, voxel_size, odom_R, odom_t, mask, stamp, num_angle_bin=15):
+One tracked 3D instance — a voxel-voted point cluster plus its class/id/lifecycle state."""
+
+    def __init__(self, class_id, obj_id, voxels, voxel_size, odom_R, odom_t, mask, stamp, num_angle_bin=15,
+                 config=None):
         self.class_id = {class_id: 1}
         self.obj_id = [obj_id]
+        # Defaults match the module-level constants, so a SingleObject built without a
+        # config (tests, ad-hoc tooling) behaves exactly as before.
+        self.config = config if config is not None else MappingConfig()
         self.vote_stat = VoteStatistics(voxels, voxel_size, odom_R, odom_t, num_angle_bin)
 
         self.life = 0
@@ -213,6 +260,8 @@ class SingleObject:
         self.valid_indices = None
         self.valid_indices_regularized = None
         self.clustering_labels = None
+        self.regularize_rejections = {"weight": 0, "hull_failed": 0, "exceeds_prior": 0,
+                                      "accepted": 0}
 
         self.req_clustering = True
         self.req_shape_regularization = True
@@ -242,9 +291,12 @@ class SingleObject:
     def get_dominant_label(self):
         return max(self.class_id, key=self.class_id.get)
 
+    #: Rejects strays attached to ONE object, not instance separation — so err generous.
+    #: Values live in mapping_config.DbscanConfig.
+
     def dbscan_cluster_params(self):
-        min_points = 5 if (self.info_frames_cnt < 3 and self.inactive_frame < 5) else 20
-        return self.vote_stat.voxel_size * 2.0, min_points
+        cfg = self.config.dbscan
+        return self.vote_stat.voxel_size * cfg.eps_voxels, cfg.min_points
 
     def cal_clusters(self):
         if self.req_clustering:
@@ -255,13 +307,16 @@ class SingleObject:
             self.req_clustering = False
 
     def regularize_shape(self, percentile=None):
-        """Cluster voxels (DBSCAN), then keep clusters — largest observation-weight first — that
+        """
+
+Cluster voxels (DBSCAN), then keep clusters — largest observation-weight first — that
         fit the class's DIMENSION_PRIORS, up to `percentile` of total weight."""
         if not self.req_shape_regularization:
             return
         self.cal_clusters()
         unique_labels = np.unique(self.clustering_labels)
-        dim_prior = DIMENSION_PRIORS.get(self.get_dominant_label(), DIMENSION_PRIORS["default"])
+        priors_cfg = self.config.dimension_priors
+        dim_prior = priors_cfg.for_label(self.get_dominant_label())
 
         cluster_masks, cluster_weights = [], []
         for label in unique_labels:
@@ -274,13 +329,27 @@ class SingleObject:
         valid_mask = np.zeros(self.vote_stat.voxels.shape[0], dtype=bool)
         total_weight = np.sum(cluster_weights)
         current_weight = 0
+        # Why clusters get rejected. An object can hold a clean DBSCAN cluster and still end
+        # up with zero regularized voxels — which makes infer_centroid return None and the
+        # object silently unpublished. The three causes need different fixes, so count them
+        # rather than infer: a planar object (a window is 4 cm thick) fails ConvexHull, a
+        # bleeding one exceeds the class prior, a sparse one falls under the weight floor.
+        self.regularize_rejections = {"weight": 0, "hull_failed": 0, "exceeds_prior": 0,
+                                      "accepted": 0}
         for weight_index in reversed(np.argsort(cluster_weights)):
-            if cluster_weights[weight_index] < 10:  # drop tiny clusters (odom noise, bleed-through)
+            # drop tiny clusters (odom noise, bleed-through)
+            if cluster_weights[weight_index] < self.config.cluster_weight_min:
+                self.regularize_rejections["weight"] += 1
                 continue
             attempt = np.logical_or(valid_mask, cluster_masks[weight_index])
             _, extent, _ = get_bbox_3d_oriented(self.vote_stat.voxels[attempt])
-            if extent is None or extent[0] > dim_prior[0] or extent[1] > dim_prior[1] or extent[2] > dim_prior[2]:
+            if extent is None:
+                self.regularize_rejections["hull_failed"] += 1
                 continue
+            if priors_cfg.enabled and not _fits_prior(extent, dim_prior):
+                self.regularize_rejections["exceeds_prior"] += 1
+                continue
+            self.regularize_rejections["accepted"] += 1
             valid_mask = attempt
             if percentile is not None:
                 current_weight += cluster_weights[weight_index]
@@ -292,7 +361,9 @@ class SingleObject:
         self.req_shape_regularization = False
 
     def pop(self, mask):
-        """Split off the voxels NOT in `mask`, for the dormant IoU-overlap voxel-exchange path
+        """
+
+Split off the voxels NOT in `mask`, for the dormant IoU-overlap voxel-exchange path
         (docs backlog §6 item 4, object_mapper.py) — not currently called."""
         voxels_pop = self.vote_stat.voxels[~mask]
         obs_angles_pop = self.vote_stat.observation_angles[~mask]
@@ -302,7 +373,9 @@ class SingleObject:
         return voxels_pop, obs_angles_pop, votes_pop
 
     def add(self, voxels, obs_angles, votes):
-        """Counterpart to pop() — also dormant, same feature."""
+        """
+
+Counterpart to pop() — also dormant, same feature."""
         self.vote_stat.voxels = np.concatenate([self.vote_stat.voxels, voxels])
         self.vote_stat.observation_angles = np.concatenate([self.vote_stat.observation_angles, obs_angles])
         self.vote_stat.vote = np.concatenate([self.vote_stat.vote, votes])
@@ -339,12 +412,19 @@ class SingleObject:
 
     def infer_bbox(self, diversity_percentile, regularized=True):
         self.compute_valid_indices(diversity_percentile)
-        voxels = self.vote_stat.voxels
+        voxels, obs_angles = self.vote_stat.voxels, self.vote_stat.observation_angles
         if regularized:
-            voxels = voxels[self.vote_stat.regularized_voxel_mask][self.valid_indices_regularized]
+            mask = self.vote_stat.regularized_voxel_mask
+            idx = self.valid_indices_regularized
+            voxels, obs_angles = voxels[mask][idx], obs_angles[mask][idx]
         else:
-            voxels = voxels[self.valid_indices]
-        return get_box_3d(voxels) if len(voxels) else None
+            voxels, obs_angles = voxels[self.valid_indices], obs_angles[self.valid_indices]
+        if not len(voxels):
+            return None
+        # Same weight infer_centroid uses: a voxel seen from many directions is more
+        # trustworthy than one glimpsed once, so it should carry more say over the faces.
+        return get_box_3d(voxels, weights=np.sum(obs_angles, axis=1),
+                          voxel_size=self.vote_stat.voxel_size)
 
     def infer_bbox_oriented(self, diversity_percentile, regularized=True):
         self.compute_valid_indices(diversity_percentile)
@@ -353,4 +433,5 @@ class SingleObject:
             voxels = voxels[self.vote_stat.regularized_voxel_mask][self.valid_indices_regularized]
         else:
             voxels = voxels[self.valid_indices]
-        return get_bbox_3d_oriented(voxels) if len(voxels) else None
+        return (get_bbox_3d_oriented(voxels, voxel_size=self.vote_stat.voxel_size)
+                if len(voxels) else None)

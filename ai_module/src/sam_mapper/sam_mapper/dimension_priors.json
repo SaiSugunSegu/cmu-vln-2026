@@ -1,0 +1,1615 @@
+{
+ "_meta": {
+  "generated": "2026-08-10",
+  "generator": "scripts/eval/build_dimension_priors.py",
+  "scenes": [
+   "arabic_room",
+   "chinese_room",
+   "home_building_1",
+   "home_building_2",
+   "hotel_room_1",
+   "hotel_room_2",
+   "japanese_room",
+   "livingroom_1",
+   "livingroom_2",
+   "livingroom_3",
+   "livingroom_4",
+   "loft",
+   "office_1",
+   "office_2",
+   "studio"
+  ],
+  "n_objects": 1725,
+  "n_classes": 263,
+  "rule": "p90 x margin (1.3 at n>=20, 1.45 at n>=5; max x 1.6 below n=5), floored so no axis falls under 0.5 of the largest instance seen; min 0.2 m; plus 0.1 m additive slack for voxel-quantisation inflation of measured clusters",
+  "accepts": "97.6% of the source objects still fit their class cap",
+  "note": "UPPER BOUNDS for rejecting bled clusters, not expected sizes. Generated \u2014 do not hand-edit; rerun the generator."
+ },
+ "default": [
+  6.0,
+  6.0,
+  3.5
+ ],
+ "priors": {
+  "pillow": [
+   1.22,
+   0.67,
+   0.87
+  ],
+  "focuslight": [
+   0.47,
+   0.44,
+   0.3
+  ],
+  "ceilinglight": [
+   0.74,
+   0.73,
+   0.42
+  ],
+  "chair": [
+   1.68,
+   1.06,
+   1.72
+  ],
+  "wall": [
+   14.11,
+   9.49,
+   4.83
+  ],
+  "book": [
+   0.73,
+   0.42,
+   0.44
+  ],
+  "pottedplant": [
+   1.67,
+   1.57,
+   2.53
+  ],
+  "door": [
+   1.73,
+   0.37,
+   3.56
+  ],
+  "lamp": [
+   1.1,
+   1.1,
+   5.72
+  ],
+  "window": [
+   8.7,
+   1.45,
+   4.37
+  ],
+  "doorframe": [
+   2.84,
+   0.36,
+   4.1
+  ],
+  "picture": [
+   1.29,
+   0.3,
+   1.14
+  ],
+  "vase": [
+   0.6,
+   0.57,
+   1.35
+  ],
+  "table": [
+   3.06,
+   1.55,
+   1.15
+  ],
+  "bottle": [
+   0.39,
+   0.39,
+   0.51
+  ],
+  "tree": [
+   11.36,
+   9.48,
+   10.81
+  ],
+  "ceilinglamp": [
+   1.11,
+   0.77,
+   1.54
+  ],
+  "curtain": [
+   3.37,
+   0.74,
+   5.83
+  ],
+  "floor": [
+   20.2,
+   17.25,
+   0.31
+  ],
+  "sofa": [
+   5.39,
+   2.19,
+   1.63
+  ],
+  "winebottle": [
+   0.78,
+   0.3,
+   0.78
+  ],
+  "column": [
+   0.83,
+   0.82,
+   4.25
+  ],
+  "lightswitch": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "carpet": [
+   6.97,
+   6.2,
+   0.3
+  ],
+  "ceiling": [
+   21.98,
+   20.24,
+   1.0
+  ],
+  "box": [
+   0.8,
+   0.57,
+   0.43
+  ],
+  "cup": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "dish": [
+   0.66,
+   0.65,
+   0.3
+  ],
+  "painting": [
+   2.31,
+   0.3,
+   1.96
+  ],
+  "books": [
+   1.89,
+   0.44,
+   0.62
+  ],
+  "bowl": [
+   0.48,
+   0.47,
+   0.3
+  ],
+  "candle": [
+   0.3,
+   0.3,
+   0.4
+  ],
+  "speaker": [
+   0.73,
+   0.5,
+   1.7
+  ],
+  "tv": [
+   2.54,
+   0.52,
+   1.66
+  ],
+  "cabinet": [
+   3.76,
+   1.18,
+   1.58
+  ],
+  "drawer": [
+   1.61,
+   1.2,
+   0.56
+  ],
+  "paper": [
+   0.55,
+   0.45,
+   0.3
+  ],
+  "spoon": [
+   0.34,
+   0.3,
+   0.3
+  ],
+  "computermouse": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "folder": [
+   1.9,
+   0.47,
+   0.6
+  ],
+  "nightstand": [
+   1.72,
+   1.07,
+   1.17
+  ],
+  "phone": [
+   0.64,
+   0.43,
+   0.3
+  ],
+  "windowframe": [
+   1.74,
+   0.39,
+   2.65
+  ],
+  "clock": [
+   0.99,
+   0.3,
+   1.0
+  ],
+  "computermonitor": [
+   0.91,
+   0.38,
+   0.81
+  ],
+  "glass": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "keyboard": [
+   0.76,
+   0.37,
+   0.3
+  ],
+  "mirror": [
+   2.19,
+   0.3,
+   1.67
+  ],
+  "photo": [
+   0.45,
+   0.34,
+   0.52
+  ],
+  "spicejar": [
+   0.3,
+   0.3,
+   0.37
+  ],
+  "marker": [
+   0.31,
+   0.3,
+   0.3
+  ],
+  "stool": [
+   1.15,
+   0.75,
+   1.36
+  ],
+  "towel": [
+   1.0,
+   0.5,
+   1.31
+  ],
+  "coffeecup": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "plate": [
+   0.33,
+   0.32,
+   0.3
+  ],
+  "shelf": [
+   6.9,
+   1.18,
+   3.56
+  ],
+  "tvcabinet": [
+   5.92,
+   1.26,
+   1.31
+  ],
+  "fork": [
+   0.42,
+   0.3,
+   0.3
+  ],
+  "sink": [
+   2.37,
+   1.1,
+   1.28
+  ],
+  "spotlight": [
+   0.33,
+   0.32,
+   0.3
+  ],
+  "trashcan": [
+   0.58,
+   0.57,
+   0.69
+  ],
+  "tvremote": [
+   1.58,
+   0.3,
+   0.83
+  ],
+  "walllamp": [
+   2.21,
+   0.43,
+   0.75
+  ],
+  "bed": [
+   5.09,
+   4.22,
+   2.45
+  ],
+  "bedroomlight": [
+   1.54,
+   1.53,
+   0.89
+  ],
+  "couch": [
+   4.55,
+   1.89,
+   1.68
+  ],
+  "dvd": [
+   1.07,
+   0.72,
+   0.3
+  ],
+  "flowers": [
+   1.0,
+   0.95,
+   1.57
+  ],
+  "lantern": [
+   0.37,
+   0.37,
+   0.78
+  ],
+  "poster": [
+   1.03,
+   0.3,
+   1.44
+  ],
+  "airvent": [
+   1.79,
+   0.48,
+   0.3
+  ],
+  "balconydoor": [
+   2.56,
+   0.81,
+   6.7
+  ],
+  "beerbottle": [
+   0.3,
+   0.3,
+   0.62
+  ],
+  "bench": [
+   2.96,
+   1.3,
+   0.95
+  ],
+  "coffeetable": [
+   4.06,
+   2.51,
+   0.98
+  ],
+  "diningchair": [
+   1.23,
+   1.23,
+   2.06
+  ],
+  "drawers": [
+   1.18,
+   0.86,
+   1.12
+  ],
+  "eyeglasses": [
+   0.39,
+   0.34,
+   0.3
+  ],
+  "facecream": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "file": [
+   0.63,
+   0.49,
+   0.3
+  ],
+  "kettle": [
+   0.51,
+   0.44,
+   0.72
+  ],
+  "magazine": [
+   0.65,
+   0.61,
+   0.3
+  ],
+  "mousepad": [
+   0.58,
+   0.44,
+   0.3
+  ],
+  "quilt": [
+   6.0,
+   2.93,
+   1.15
+  ],
+  "sofacushion": [
+   1.8,
+   0.68,
+   0.93
+  ],
+  "toilet": [
+   1.63,
+   0.96,
+   1.85
+  ],
+  "toiletpaper": [
+   0.83,
+   0.38,
+   0.78
+  ],
+  "tray": [
+   1.87,
+   1.49,
+   0.3
+  ],
+  "wardrobe": [
+   4.82,
+   1.62,
+   5.0
+  ],
+  "wineglass": [
+   0.3,
+   0.3,
+   0.46
+  ],
+  "airconditioner": [
+   2.13,
+   0.89,
+   3.8
+  ],
+  "blanket": [
+   5.41,
+   3.7,
+   1.33
+  ],
+  "calligraphypainting": [
+   0.91,
+   0.3,
+   1.22
+  ],
+  "computer": [
+   0.7,
+   0.68,
+   0.3
+  ],
+  "cupboard": [
+   5.26,
+   1.4,
+   5.04
+  ],
+  "decorativeball": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "desk": [
+   1.82,
+   1.82,
+   1.38
+  ],
+  "desklight": [
+   0.78,
+   0.78,
+   1.15
+  ],
+  "dvdplayer": [
+   1.06,
+   0.91,
+   0.35
+  ],
+  "fireplace": [
+   2.58,
+   0.96,
+   2.02
+  ],
+  "flower": [
+   0.4,
+   0.3,
+   0.91
+  ],
+  "kitchendoor": [
+   2.29,
+   0.44,
+   4.79
+  ],
+  "kitchenknife": [
+   0.69,
+   0.3,
+   0.5
+  ],
+  "lotion": [
+   0.3,
+   0.3,
+   0.51
+  ],
+  "mattress": [
+   4.95,
+   3.94,
+   0.46
+  ],
+  "microwave": [
+   1.34,
+   0.77,
+   0.98
+  ],
+  "paperbox": [
+   0.78,
+   0.55,
+   0.48
+  ],
+  "papercup": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "pen": [
+   0.34,
+   0.3,
+   0.3
+  ],
+  "pottedcactus": [
+   0.3,
+   0.3,
+   0.4
+  ],
+  "rangehood": [
+   2.43,
+   1.11,
+   5.12
+  ],
+  "sculpture": [
+   1.36,
+   0.7,
+   1.12
+  ],
+  "slipper": [
+   0.77,
+   0.67,
+   0.3
+  ],
+  "towelrack": [
+   1.54,
+   0.8,
+   2.15
+  ],
+  "trashbin": [
+   0.73,
+   0.72,
+   0.76
+  ],
+  "windows": [
+   32.69,
+   16.36,
+   3.51
+  ],
+  "ashtray": [
+   0.45,
+   0.44,
+   0.3
+  ],
+  "bedbench": [
+   3.56,
+   1.02,
+   0.74
+  ],
+  "bedsidetable": [
+   1.5,
+   1.37,
+   1.14
+  ],
+  "birddecoration": [
+   0.54,
+   0.3,
+   0.84
+  ],
+  "bookcase": [
+   4.46,
+   0.9,
+   3.31
+  ],
+  "boot": [
+   0.6,
+   0.3,
+   0.55
+  ],
+  "candlestick": [
+   0.3,
+   0.3,
+   0.49
+  ],
+  "chopsticks": [
+   0.52,
+   0.3,
+   0.3
+  ],
+  "circularlight": [
+   0.76,
+   0.75,
+   0.3
+  ],
+  "coffeemachine": [
+   0.9,
+   0.64,
+   0.77
+  ],
+  "cooker": [
+   0.67,
+   0.67,
+   0.71
+  ],
+  "curtains": [
+   1.86,
+   0.3,
+   5.25
+  ],
+  "deckchair": [
+   2.34,
+   1.35,
+   1.64
+  ],
+  "diningtable": [
+   4.19,
+   2.16,
+   1.79
+  ],
+  "dressingchair": [
+   1.0,
+   0.81,
+   1.1
+  ],
+  "dumbbell": [
+   0.81,
+   0.3,
+   0.3
+  ],
+  "fence": [
+   4.32,
+   0.3,
+   1.93
+  ],
+  "fossildecoration": [
+   0.6,
+   0.3,
+   0.68
+  ],
+  "gate": [
+   3.51,
+   0.81,
+   4.36
+  ],
+  "glasswall": [
+   6.16,
+   0.3,
+   4.69
+  ],
+  "handle": [
+   0.59,
+   0.46,
+   0.3
+  ],
+  "horsefigurine": [
+   0.62,
+   0.35,
+   0.61
+  ],
+  "kitchencabinet": [
+   9.22,
+   7.27,
+   6.04
+  ],
+  "kitchenisland": [
+   6.6,
+   1.44,
+   1.76
+  ],
+  "knife": [
+   0.34,
+   0.3,
+   0.49
+  ],
+  "laptop": [
+   0.84,
+   0.68,
+   0.55
+  ],
+  "map": [
+   0.83,
+   0.65,
+   0.3
+  ],
+  "newspaper": [
+   0.89,
+   0.63,
+   0.3
+  ],
+  "notebook": [
+   0.45,
+   0.32,
+   0.3
+  ],
+  "oilbottle": [
+   0.36,
+   0.3,
+   0.76
+  ],
+  "ottoman": [
+   2.64,
+   1.78,
+   0.97
+  ],
+  "outsidedoor": [
+   2.65,
+   0.39,
+   3.46
+  ],
+  "paperholder": [
+   0.37,
+   0.35,
+   0.45
+  ],
+  "placemat": [
+   0.74,
+   0.52,
+   0.3
+  ],
+  "pottedbamboo": [
+   0.58,
+   0.47,
+   3.05
+  ],
+  "roundtable": [
+   1.37,
+   1.37,
+   0.69
+  ],
+  "showerhead": [
+   1.77,
+   0.63,
+   2.6
+  ],
+  "showertap": [
+   1.11,
+   0.5,
+   2.59
+  ],
+  "sidetable": [
+   1.52,
+   1.52,
+   1.16
+  ],
+  "sinkcabinet": [
+   2.57,
+   1.0,
+   1.9
+  ],
+  "slicedbread": [
+   0.47,
+   0.34,
+   0.3
+  ],
+  "soap": [
+   0.32,
+   0.32,
+   0.38
+  ],
+  "stickynotes": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "stove": [
+   1.96,
+   1.15,
+   0.3
+  ],
+  "symboldecoraion": [
+   0.44,
+   0.3,
+   0.9
+  ],
+  "tablecloth": [
+   3.08,
+   0.8,
+   0.37
+  ],
+  "tap": [
+   0.53,
+   0.3,
+   0.47
+  ],
+  "tvstand": [
+   7.87,
+   1.52,
+   1.28
+  ],
+  "wardrobedoor": [
+   2.27,
+   0.3,
+   3.65
+  ],
+  "waterbottle": [
+   0.3,
+   0.3,
+   0.64
+  ],
+  "arabicjar": [
+   0.36,
+   0.3,
+   0.58
+  ],
+  "bag": [
+   0.99,
+   0.61,
+   0.7
+  ],
+  "balconyrailing": [
+   12.76,
+   3.81,
+   1.81
+  ],
+  "ballcandleholder": [
+   0.51,
+   0.49,
+   0.43
+  ],
+  "basket": [
+   0.83,
+   0.83,
+   0.89
+  ],
+  "bathroomcabinet": [
+   0.84,
+   0.4,
+   1.55
+  ],
+  "bathroomwalls": [
+   10.23,
+   4.51,
+   5.37
+  ],
+  "bathtub": [
+   3.0,
+   1.98,
+   1.35
+  ],
+  "bedframe": [
+   4.97,
+   3.11,
+   1.22
+  ],
+  "bowlofapples": [
+   0.56,
+   0.56,
+   0.38
+  ],
+  "bread": [
+   0.47,
+   0.44,
+   0.32
+  ],
+  "buddhadecoration": [
+   0.5,
+   0.47,
+   0.65
+  ],
+  "calendar": [
+   0.92,
+   0.3,
+   1.33
+  ],
+  "camera": [
+   0.31,
+   0.3,
+   0.3
+  ],
+  "canofcoke": [
+   0.3,
+   0.3,
+   0.37
+  ],
+  "celling": [
+   31.91,
+   28.57,
+   0.55
+  ],
+  "chess": [
+   0.66,
+   0.66,
+   0.3
+  ],
+  "circledecoration": [
+   1.83,
+   0.3,
+   1.82
+  ],
+  "clothes": [
+   0.44,
+   0.34,
+   1.49
+  ],
+  "coffeepot": [
+   0.39,
+   0.3,
+   0.32
+  ],
+  "crystalballdecoration": [
+   0.31,
+   0.31,
+   0.31
+  ],
+  "cuttingboard": [
+   0.95,
+   0.72,
+   0.3
+  ],
+  "deskcabinet": [
+   6.43,
+   1.11,
+   4.34
+  ],
+  "dicedecoration": [
+   0.45,
+   0.45,
+   0.45
+  ],
+  "displayledge": [
+   3.71,
+   1.53,
+   0.39
+  ],
+  "drawing": [
+   1.05,
+   0.47,
+   1.41
+  ],
+  "dressingtable": [
+   2.68,
+   1.18,
+   4.32
+  ],
+  "easel": [
+   1.19,
+   1.15,
+   3.52
+  ],
+  "elephantdecoration": [
+   0.49,
+   0.3,
+   0.42
+  ],
+  "elephantfigurine": [
+   0.68,
+   0.33,
+   0.62
+  ],
+  "entrancedoor": [
+   6.42,
+   0.39,
+   4.34
+  ],
+  "eraser": [
+   0.4,
+   0.3,
+   0.3
+  ],
+  "exitsign": [
+   0.64,
+   0.3,
+   0.37
+  ],
+  "exteriorwalls": [
+   13.38,
+   2.67,
+   2.37
+  ],
+  "fandecoration": [
+   1.13,
+   0.3,
+   1.34
+  ],
+  "filecabinet": [
+   3.8,
+   1.04,
+   1.98
+  ],
+  "files": [
+   0.56,
+   0.45,
+   0.3
+  ],
+  "firealarm": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "firehose": [
+   1.06,
+   0.39,
+   1.05
+  ],
+  "firewood": [
+   1.06,
+   0.58,
+   0.51
+  ],
+  "framedrecord": [
+   1.18,
+   0.3,
+   1.39
+  ],
+  "fridge": [
+   1.51,
+   1.42,
+   3.58
+  ],
+  "guitar": [
+   1.18,
+   0.91,
+   2.12
+  ],
+  "gymnasticsdecoration": [
+   0.45,
+   0.3,
+   0.62
+  ],
+  "hanger": [
+   0.83,
+   0.8,
+   2.87
+  ],
+  "hat": [
+   0.61,
+   0.59,
+   0.69
+  ],
+  "headphones": [
+   0.44,
+   0.42,
+   0.3
+  ],
+  "hookah": [
+   0.3,
+   0.3,
+   0.75
+  ],
+  "hookahwire": [
+   0.54,
+   0.52,
+   0.46
+  ],
+  "jar": [
+   0.57,
+   0.57,
+   0.81
+  ],
+  "kitchencounter": [
+   4.37,
+   2.67,
+   1.79
+  ],
+  "kitchendoorframe": [
+   4.86,
+   0.62,
+   5.0
+  ],
+  "kitchenlight": [
+   1.41,
+   0.53,
+   2.22
+  ],
+  "kniferack": [
+   0.83,
+   0.54,
+   1.11
+  ],
+  "mapwalldecal": [
+   2.97,
+   0.3,
+   1.95
+  ],
+  "newtonscradle": [
+   0.63,
+   0.42,
+   0.42
+  ],
+  "notecards": [
+   0.38,
+   0.3,
+   0.3
+  ],
+  "noticeboard": [
+   2.56,
+   0.3,
+   1.73
+  ],
+  "oven": [
+   1.35,
+   1.2,
+   1.45
+  ],
+  "ovendoor": [
+   1.34,
+   0.3,
+   1.44
+  ],
+  "partitionwall": [
+   7.54,
+   0.3,
+   4.37
+  ],
+  "perfumebottle": [
+   0.3,
+   0.3,
+   0.32
+  ],
+  "pillows": [
+   4.92,
+   1.06,
+   0.96
+  ],
+  "plantstand": [
+   0.46,
+   0.46,
+   1.23
+  ],
+  "pottedbranch": [
+   0.75,
+   0.39,
+   1.49
+  ],
+  "pottery": [
+   0.65,
+   0.3,
+   0.73
+  ],
+  "projectorscreen": [
+   4.35,
+   0.35,
+   2.56
+  ],
+  "pyramidcandleholder": [
+   0.47,
+   0.47,
+   0.64
+  ],
+  "refridgerator": [
+   2.51,
+   1.3,
+   4.18
+  ],
+  "roundbox": [
+   0.7,
+   0.69,
+   0.46
+  ],
+  "sakebottle": [
+   0.3,
+   0.3,
+   0.35
+  ],
+  "saucebowl": [
+   0.3,
+   0.3,
+   0.3
+  ],
+  "securitycamera": [
+   0.58,
+   0.3,
+   0.46
+  ],
+  "shoerack": [
+   1.81,
+   0.65,
+   0.66
+  ],
+  "shoes": [
+   0.57,
+   0.53,
+   0.3
+  ],
+  "shower": [
+   3.43,
+   2.18,
+   4.45
+  ],
+  "soapbottle": [
+   0.3,
+   0.3,
+   0.34
+  ],
+  "soapdish": [
+   0.35,
+   0.35,
+   0.3
+  ],
+  "soccerball": [
+   0.68,
+   0.68,
+   0.68
+  ],
+  "sofapillows": [
+   4.55,
+   0.54,
+   0.92
+  ],
+  "spheredecoration": [
+   0.61,
+   0.4,
+   0.41
+  ],
+  "stair": [
+   4.18,
+   1.0,
+   0.3
+  ],
+  "stairs": [
+   4.15,
+   2.95,
+   6.37
+  ],
+  "suitcase": [
+   1.42,
+   0.91,
+   0.52
+  ],
+  "tatami": [
+   5.54,
+   5.54,
+   0.3
+  ],
+  "teapot": [
+   0.32,
+   0.3,
+   0.3
+  ],
+  "teatable": [
+   1.6,
+   1.6,
+   0.65
+  ],
+  "toiletglass": [
+   2.38,
+   0.3,
+   3.19
+  ],
+  "towelrail": [
+   1.21,
+   0.3,
+   0.3
+  ],
+  "towerdecoration": [
+   0.52,
+   0.48,
+   0.61
+  ],
+  "trophydecoration": [
+   0.39,
+   0.3,
+   0.45
+  ],
+  "umbrella": [
+   5.13,
+   4.48,
+   5.62
+  ],
+  "utensils": [
+   1.06,
+   0.3,
+   0.74
+  ],
+  "walldecal": [
+   4.73,
+   0.3,
+   4.1
+  ],
+  "watercooler": [
+   0.7,
+   0.7,
+   1.75
+  ],
+  "whiteboard": [
+   2.95,
+   0.36,
+   1.74
+  ],
+  "zenstonedecoration": [
+   0.43,
+   0.38,
+   0.3
+  ]
+ },
+ "n_samples": {
+  "pottedplant": 56,
+  "shoes": 1,
+  "pillow": 90,
+  "picture": 32,
+  "glass": 9,
+  "wall": 68,
+  "focuslight": 87,
+  "arabicjar": 1,
+  "book": 56,
+  "coffeepot": 1,
+  "hookah": 1,
+  "hookahwire": 1,
+  "tray": 4,
+  "window": 40,
+  "column": 18,
+  "vase": 32,
+  "walllamp": 6,
+  "table": 26,
+  "carpet": 17,
+  "stool": 8,
+  "door": 51,
+  "doorframe": 32,
+  "sofa": 19,
+  "ceilinglamp": 19,
+  "floor": 19,
+  "ceiling": 17,
+  "exteriorwalls": 1,
+  "lantern": 5,
+  "painting": 13,
+  "elephantfigurine": 1,
+  "tablecloth": 2,
+  "towerdecoration": 1,
+  "tv": 12,
+  "pottedbranch": 1,
+  "chair": 74,
+  "partitionwall": 1,
+  "lightswitch": 18,
+  "tvremote": 6,
+  "horsefigurine": 2,
+  "pottedbamboo": 2,
+  "symboldecoraion": 2,
+  "bowl": 12,
+  "teatable": 1,
+  "eyeglasses": 4,
+  "sidetable": 2,
+  "cabinet": 11,
+  "circledecoration": 1,
+  "paperholder": 2,
+  "showertap": 2,
+  "shower": 1,
+  "towelrack": 3,
+  "mirror": 9,
+  "towel": 8,
+  "bathroomwalls": 1,
+  "toilet": 4,
+  "sink": 6,
+  "soap": 2,
+  "trashcan": 6,
+  "blanket": 3,
+  "curtains": 2,
+  "bed": 5,
+  "magazine": 4,
+  "trashbin": 3,
+  "paper": 11,
+  "deskcabinet": 1,
+  "phone": 10,
+  "bedsidetable": 2,
+  "lamp": 43,
+  "bench": 4,
+  "suitcase": 1,
+  "toiletpaper": 4,
+  "soapbottle": 1,
+  "sinkcabinet": 2,
+  "soapdish": 1,
+  "perfumebottle": 1,
+  "bathtub": 1,
+  "tap": 2,
+  "towelrail": 1,
+  "waterbottle": 2,
+  "curtain": 19,
+  "map": 2,
+  "flowers": 5,
+  "fireplace": 3,
+  "bedframe": 1,
+  "camera": 1,
+  "nightstand": 10,
+  "tvcabinet": 7,
+  "bag": 1,
+  "wardrobedoor": 2,
+  "calligraphypainting": 3,
+  "displayledge": 1,
+  "entrancedoor": 1,
+  "zenstonedecoration": 1,
+  "tatami": 1,
+  "teapot": 1,
+  "dish": 15,
+  "placemat": 2,
+  "sakebottle": 1,
+  "chopsticks": 2,
+  "saucebowl": 1,
+  "jar": 1,
+  "fandecoration": 1,
+  "windowframe": 10,
+  "sofapillows": 1,
+  "plantstand": 1,
+  "ottoman": 2,
+  "airvent": 4,
+  "roundtable": 2,
+  "pen": 3,
+  "pyramidcandleholder": 1,
+  "shelf": 7,
+  "books": 12,
+  "ballcandleholder": 1,
+  "bottle": 24,
+  "birddecoration": 2,
+  "trophydecoration": 1,
+  "deckchair": 2,
+  "handle": 2,
+  "spotlight": 6,
+  "coffeecup": 7,
+  "dvd": 5,
+  "dicedecoration": 1,
+  "bread": 1,
+  "rangehood": 3,
+  "utensils": 1,
+  "basket": 1,
+  "slicedbread": 2,
+  "cup": 16,
+  "clock": 9,
+  "crystalballdecoration": 1,
+  "kitchenisland": 2,
+  "winebottle": 19,
+  "candle": 12,
+  "kitchencounter": 1,
+  "fridge": 1,
+  "coffeetable": 4,
+  "microwave": 3,
+  "couch": 5,
+  "beerbottle": 4,
+  "soccerball": 1,
+  "canofcoke": 1,
+  "speaker": 12,
+  "buddhadecoration": 1,
+  "photo": 9,
+  "decorativeball": 3,
+  "box": 16,
+  "elephantdecoration": 1,
+  "walldecal": 1,
+  "newtonscradle": 1,
+  "flower": 3,
+  "chess": 1,
+  "bookcase": 2,
+  "drawer": 11,
+  "firewood": 1,
+  "fossildecoration": 2,
+  "candlestick": 2,
+  "shoerack": 1,
+  "boot": 2,
+  "fence": 2,
+  "wardrobe": 4,
+  "bowlofapples": 1,
+  "newspaper": 2,
+  "spheredecoration": 1,
+  "stairs": 1,
+  "computermonitor": 9,
+  "keyboard": 9,
+  "computermouse": 10,
+  "file": 4,
+  "paperbox": 3,
+  "watercooler": 1,
+  "filecabinet": 1,
+  "laptop": 2,
+  "marker": 8,
+  "coffeemachine": 2,
+  "papercup": 3,
+  "folder": 10,
+  "pottedcactus": 3,
+  "projectorscreen": 1,
+  "mapwalldecal": 1,
+  "mousepad": 4,
+  "poster": 5,
+  "drawers": 4,
+  "firehose": 1,
+  "eraser": 1,
+  "noticeboard": 1,
+  "notebook": 2,
+  "securitycamera": 1,
+  "glasswall": 2,
+  "calendar": 1,
+  "exitsign": 1,
+  "computer": 3,
+  "whiteboard": 1,
+  "firealarm": 1,
+  "files": 1,
+  "headphones": 1,
+  "stickynotes": 2,
+  "windows": 3,
+  "hanger": 1,
+  "drawing": 1,
+  "framedrecord": 1,
+  "pillows": 1,
+  "clothes": 1,
+  "hat": 1,
+  "easel": 1,
+  "guitar": 1,
+  "roundbox": 1,
+  "gymnasticsdecoration": 1,
+  "tree": 20,
+  "umbrella": 1,
+  "outsidedoor": 2,
+  "fork": 6,
+  "celling": 1,
+  "plate": 7,
+  "ceilinglight": 74,
+  "kitchendoorframe": 1,
+  "balconydoor": 4,
+  "spoon": 11,
+  "dvdplayer": 3,
+  "desk": 3,
+  "kitchenlight": 1,
+  "ashtray": 2,
+  "diningtable": 2,
+  "airconditioner": 3,
+  "kettle": 4,
+  "pottery": 1,
+  "spicejar": 9,
+  "kitchenknife": 3,
+  "cupboard": 3,
+  "cooker": 2,
+  "kniferack": 1,
+  "kitchencabinet": 2,
+  "refridgerator": 1,
+  "oilbottle": 2,
+  "cuttingboard": 1,
+  "kitchendoor": 3,
+  "stove": 2,
+  "knife": 2,
+  "oven": 1,
+  "ovendoor": 1,
+  "circularlight": 2,
+  "bedroomlight": 5,
+  "facecream": 4,
+  "sculpture": 3,
+  "slipper": 3,
+  "quilt": 4,
+  "mattress": 3,
+  "tvstand": 2,
+  "lotion": 3,
+  "bedbench": 2,
+  "toiletglass": 1,
+  "showerhead": 2,
+  "bathroomcabinet": 1,
+  "dumbbell": 2,
+  "notecards": 1,
+  "gate": 2,
+  "stair": 1,
+  "diningchair": 4,
+  "desklight": 3,
+  "wineglass": 4,
+  "sofacushion": 4,
+  "balconyrailing": 1,
+  "dressingchair": 2,
+  "dressingtable": 1
+ }
+}

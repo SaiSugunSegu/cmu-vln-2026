@@ -28,6 +28,25 @@ def load_config(path: str, required_keys: tuple) -> dict:
     return config
 
 
+def resolve_config_path(config: str) -> str:
+    """A bare filename resolves against the package config dir; an absolute path is used
+    as given — the same rule sam_node.launch / map_node.launch apply.
+
+    Exists so the offline tools (record_companion, replay_map3d) load the SAME yaml the
+    nodes do. They previously defaulted to an empty dict, which silently gave SAM 3 its
+    library defaults instead of the tuned image_size and detection thresholds — i.e. the
+    recorded companion bag would have come from a different detector than production.
+    """
+    if os.path.isabs(config):
+        return config
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        share = get_package_share_directory("sam_mapper")
+    except Exception:
+        share = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(share, "config", config)
+
+
 def run_node(node_cls, bootstrap_name: str, required_keys: tuple, launch_hint: str, args=None) -> None:
     """Standard main(): resolve config path (ros2 param or env var) -> load -> spin node_cls(config)."""
     rclpy.init(args=args)
