@@ -11,9 +11,13 @@
 
          sam_node boots UNARMED (wait_for_prompts) and loads weights   ~60 s
            -> smart_vlm sees sam + qwen ready      -> /pipeline/ready   (harness may ask)
-           -> numerical_reasoner extracts targets  -> /sam3/set_prompts
+           -> the reasoner extracts targets        -> /sam3/set_prompts
            -> sam_node arms, fresh session+run_dir -> /sam3/prompts_ack
            -> smart_vlm                            -> /pipeline/armed   (bag may play)
+
+       The reasoner is inside that chain, not downstream of it: if it never publishes
+       /sam3/set_prompts the bag never plays and the question times out rather than
+       answering wrongly.
 
        The bag blocks on /pipeline/armed, so the detector never streams frames while it
        is still loading weights or still holding the config's placeholder prompts.
@@ -21,9 +25,10 @@
        Offline (default):  ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=arabic_room
        Live sim:           ros2 launch smart_vlm smart_vlm.launch use_bag:=false
 
-       Needs the Qwen VQA server already resident (`just vqa-up`) — it is deliberately
-       NOT in here, because reloading a 15 GB model per question would dominate the
-       10-minute budget for no benefit. -->
+       With vlm_backend:=local, needs the Qwen VQA server already resident
+       (`just vqa-up`) — it is deliberately NOT in here, because reloading a 15 GB model
+       per question would dominate the 10-minute budget for no benefit. A cloud run
+       needs nothing beyond an API key. -->
 
   <!-- Scene source -->
   <arg name="use_bag" default="false"/>   <!-- true = replay a recorded bag instead of the live sim -->
@@ -42,8 +47,21 @@
   <arg name="ready_timeout_s"    default="300.0"/> <!-- give up waiting on models, run degraded -->
 
   <!-- Reasoning -->
-  <arg name="vqa_timeout_s" default="180.0"/>            <!-- max wait for a Qwen reply -->
-  <arg name="attribute_max_instances" default="0"/>      <!-- debug instance captioning; 0 = off (costs 1 Qwen call each, after the answer) -->
+  <arg name="vqa_timeout_s" default="180.0"/>            <!-- max wait for a VLM reply -->
+
+  <!-- Where the reasoner runs inference, through captioner.vlm_backends.
+       auto = $VLM_BACKEND | cloud (a hosted model over its OpenAI-compatible endpoint,
+       the scored path, picked with VLM_PROVIDER) | local (the resident Qwen server,
+       which costs nothing and so is the dev loop). -->
+  <arg name="vlm_backend"  default="auto"/>
+  <!-- How many best-view ranks the reasoner answers from at once. Rank 1 alone misses
+       objects it does not happen to frame; each extra view costs a full image of
+       visual tokens. -->
+  <arg name="max_context_views" default="3"/>
+  <!-- A cloud run never calls /qwen_vqa, so waiting on it would burn ready_timeout_s
+       per question for a model nobody uses. eval_orchestrator turns this off for
+       backend:=cloud. -->
+  <arg name="require_vqa_ready" default="true"/>
 
   <!-- 1. SAM 3 detector — FIRST, so weights load while everything else comes up.
           Boots unarmed: this pipeline's prompts come from the question, so anything
@@ -67,16 +85,19 @@
     <param name="fallback_reserve_s" value="$(var fallback_reserve_s)"/>
     <param name="fallback_count"     value="$(var fallback_count)"/>
     <param name="ready_timeout_s"    value="$(var ready_timeout_s)"/>
+    <param name="require_vqa_ready"  value="$(var require_vqa_ready)"/>
   </node>
 
-  <!-- 3. Numerical reasoner — question to targets to count.
+  <!-- 3. Numerical reasoner — question to targets to one count question asked of the
+       top max_context_views best views together.
        Input:   /challenge_question, /gt_target_objects, /pipeline/explore_done,
                 /sam3/best_view_dir, /qwen_vqa/response
        Output:  /sam3/set_prompts, /qwen_vqa/request, /numerical_response -->
   <node pkg="smart_vlm" exec="numerical_reasoner" name="numerical_reasoner" output="screen">
+    <param name="backend" value="$(var vlm_backend)"/>
     <param name="run_id_prefix" value="num_reasoner"/>
     <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
-    <param name="attribute_max_instances" value="$(var attribute_max_instances)"/>
+    <param name="max_context_views" value="$(var max_context_views)"/>
   </node>
 
   <!-- 4a. Bag replay (offline) — held at the gate until SAM is armed.

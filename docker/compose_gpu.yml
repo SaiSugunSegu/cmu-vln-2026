@@ -61,6 +61,10 @@ services:
     env_file:
       - path: ../.env
         required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
+    # The reasoner reads VLM_BACKEND (local | cloud) from here too, plus the provider
+    # variables (VLM_PROVIDER and its API key) when it is cloud. Unset means local, so an
+    # unconfigured container answers with the resident Qwen and spends no credits; a
+    # scored run sets VLM_BACKEND=cloud. See captioner/vlm_backends/constants.py.
     # HF_HOME and HF_HUB_OFFLINE=1 come from the image (ai_module/docker/Dockerfile)
     # and are deliberately NOT repeated here. Never hit huggingface.co at runtime
     # (robot has no internet): pre-seed the HF cache mount with Qwen/SAM weights
@@ -76,6 +80,15 @@ services:
       # Host data/ maps 1:1 to /data — bags, benchmark, crops, captions, runs.
       # Put caption input under data/crops, read results from data/captions.
       - ../data:/data
+      # Scene bags are recorded to <repo>/bags (gitignored, tens of GB) but every
+      # consumer looks under /data/bags — bag_fetch even names this mount in its
+      # "manifest not found" error. Without it a scene sitting on disk is invisible and
+      # bag_replay tries to re-download it from Drive.
+      - ../bags:/data/bags
+      # Remounted on top because the line above shadows it: scenes.yaml is tracked in
+      # git under data/bags, while <repo>/bags holds only untracked recordings. Docker
+      # orders bind mounts by destination depth, so the more specific path wins.
+      - ../data/bags/scenes.yaml:/data/bags/scenes.yaml:ro
       # Ground-truth QA files are tracked in git; nothing in the container writes them.
       - ../data/benchmark:/data/benchmark:ro
       # Repo scripts (eval drivers) at a fixed container path.

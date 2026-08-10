@@ -22,6 +22,10 @@ SAM's status is `awaiting_prompts` from boot, so it says nothing about whether t
 question's targets ever reached it.
 
   ros2 run smart_vlm eval_orchestrator --ros-args -p scene:=all -p question_limit:=0
+
+`vlm_backend` picks where the reasoner runs inference (a hosted model, whichever
+VLM_PROVIDER names, or the resident local Qwen). The report format is identical either
+way, so a local sweep and a cloud sweep are directly comparable.
 """
 from __future__ import annotations
 
@@ -39,6 +43,8 @@ import yaml
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Int32, String
+
+from captioner.vlm_backends.constants import VLM_BACKEND
 
 LATCHED = QoSProfile(
     depth=1,
@@ -66,6 +72,13 @@ class EvalOrchestratorNode(Node):
         # against the declared one, so pass it with a decimal point: speed:=2.0, not 2.
         self.speed = float(self._param("speed", 1.0))
         self.sam_config = str(self._param("sam_config", "sam3_mecanum_sim.yaml"))
+        # cloud | local; "auto" leaves it on $VLM_BACKEND. Not "": rcl rejects an empty
+        # parameter override and launch rejects a bare `name:=`, so the sentinel has to
+        # be a real word to survive both hops. The resolved name is what decides whether
+        # the pipeline has to wait for the local VQA server.
+        self.vlm_backend = str(self._param("vlm_backend", "auto"))
+        self.resolved_backend = (
+            VLM_BACKEND if self.vlm_backend in ("", "auto") else self.vlm_backend)
         self.benchmark_dir = Path(str(self._param("benchmark_dir", "/data/benchmark")))
         self.bags_dir = Path(str(self._param("bags_dir", "/data/bags")))
         # Phase budgets. Generous, because a first run may download weights; a phase that
@@ -155,6 +168,10 @@ def spawn_pipeline(node: EvalOrchestratorNode, scene: str) -> subprocess.Popen:
         f"bag:={scene}",
         f"speed:={node.speed}",
         f"sam_config:={node.sam_config}",
+        f"vlm_backend:={node.vlm_backend}",
+        # A cloud run never publishes to /qwen_vqa, so making the supervisor wait for a
+        # server nobody started costs ready_timeout_s of the budget per question.
+        f"require_vqa_ready:={'false' if node.resolved_backend == 'cloud' else 'true'}",
     ]
     log(f"launching: {' '.join(cmd)}")
     # Own process group, so one killpg reclaims every node it started — including the
@@ -309,6 +326,7 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         "correct": correct,
         "time_taken_s": round(elapsed, 2),
         "target_source": node.target_source,
+        "vlm_backend": node.resolved_backend,
         "prompts": node.armed_prompts,
         "error": error,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),

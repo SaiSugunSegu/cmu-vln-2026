@@ -2,24 +2,19 @@
 from __future__ import annotations
 
 from smart_vlm.numerical_utils import (
+    clean_targets,
     extract_integer,
     heuristic_targets,
-    parse_target_list,
 )
 
 
-def test_parse_target_list_json():
-    assert parse_target_list('["carpet", "arabic jar"]') == ["carpet", "arabic jar"]
+def test_clean_targets_normalises_and_dedupes():
+    assert clean_targets(["Glass", " glass ", "Arabic Jar"]) == ["glass", "arabic jar"]
 
 
-def test_parse_target_list_embedded():
-    text = 'Sure, here you go:\n["glass", "coffee pot"]\n'
-    assert parse_target_list(text) == ["glass", "coffee pot"]
-
-
-def test_parse_target_list_rejects_digits():
-    assert parse_target_list('["0"]') == []
-    assert parse_target_list("[0]") == []
+def test_clean_targets_rejects_digits_and_blanks():
+    """A structured reply can still carry the numerical wrapper's stray "0"."""
+    assert clean_targets(["0", "", "  ", "chair"]) == ["chair"]
 
 
 def test_extract_integer():

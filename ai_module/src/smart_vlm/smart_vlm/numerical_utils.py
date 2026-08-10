@@ -5,50 +5,32 @@ here does not drag torch or rclpy into the unit tests.
 """
 from __future__ import annotations
 
-import ast
-import json
 import re
 
-# Re-exported: the reasoner parses integers both from its own fallback path and
-# from the VQA server's reply, and two implementations drifted apart before
-# (one stripped thousands separators, the other did not).
+# Re-exported so anything reading a number out of a model reply shares one
+# implementation with the VQA server: two of them drifted apart before (one
+# stripped thousands separators, the other did not).
 from captioner.text_utils import extract_integer
 
-__all__ = ["extract_integer", "heuristic_targets", "parse_target_list"]
-
-_JSON_LIST_RE = re.compile(r"\[[^\[\]]*\]", re.DOTALL)
+__all__ = ["clean_targets", "extract_integer", "heuristic_targets"]
 
 
-def parse_target_list(text: str) -> list[str]:
-    """Parse a JSON (or Python-literal) list of object noun phrases from model text."""
-    if not text:
-        return []
-    candidates = []
-    stripped = text.strip()
-    candidates.append(stripped)
-    match = _JSON_LIST_RE.search(stripped)
-    if match:
-        candidates.append(match.group(0))
+def clean_targets(items) -> list[str]:
+    """Normalise model-proposed nouns into SAM prompts: lowercased, deduped, no digits.
 
-    for raw in candidates:
-        for loader in (json.loads, ast.literal_eval):
-            try:
-                value = loader(raw)
-            except (json.JSONDecodeError, SyntaxError, ValueError):
-                continue
-            if isinstance(value, list):
-                out = []
-                seen = set()
-                for item in value:
-                    phrase = str(item).strip().lower()
-                    # Reject bare integers ("0") from the numerical VQA wrapper.
-                    if not phrase or phrase.isdigit() or phrase in seen:
-                        continue
-                    seen.add(phrase)
-                    out.append(phrase)
-                if out:
-                    return out
-    return []
+    A structured reply is still model output: it arrives with capitalisation, stray
+    whitespace and the occasional bare "0" left over from a numerical wrapper, none of
+    which SAM should be armed with.
+    """
+    out: list[str] = []
+    seen = set()
+    for item in items:
+        phrase = str(item).strip().lower()
+        if not phrase or phrase.isdigit() or phrase in seen:
+            continue
+        seen.add(phrase)
+        out.append(phrase)
+    return out
 
 
 def heuristic_targets(question: str) -> list[str]:

@@ -9,6 +9,7 @@ shared this node's GIL, vs 1-3 s/frame with SAM3 alone in its own process).
     /sam3/detections    std_msgs/String     JSON {stamp, entries: [{id, label, confidence, bbox}]}
     /registered_scan    PointCloud2         world-frame lidar
     /state_estimation   nav_msgs/Odometry   ~50 Hz pose
+    /sam3/prompts_ack   std_msgs/String     new run_id = fresh SAM session, drop the map
 
 and publishes /obj_points, /obj_boxes, /obj_labels, /obj_map_json.
 Everything is inspected through ROS 2 / Foxglove; rerun is not used.
@@ -124,6 +125,11 @@ class MapNode(WorkerNodeMixin, Node):
         # upstream — ids arriving here are already offset and never collide.)
         self.last_frame_stamp = None
         self._sync_warn_count = 0
+        # Set by the /sam3/prompts_ack callback, consumed by the worker between frames:
+        # rebuilding the mapper underneath an in-flight update_map would tear its object
+        # list in half.
+        self._run_id = None
+        self._reset_pending = False
 
         # -- ROS interface ---------------------------------------------------
         def group():
@@ -136,6 +142,8 @@ class MapNode(WorkerNodeMixin, Node):
         self.create_subscription(PointCloud2, '/registered_scan', self.cloud_callback, 10,
                                  callback_group=group())
         self.create_subscription(Odometry, '/state_estimation', self.odom_callback, 50,
+                                 callback_group=group())
+        self.create_subscription(String, '/sam3/prompts_ack', self.prompts_ack_callback, 10,
                                  callback_group=group())
 
         self.obj_cloud_pub = self.create_publisher(PointCloud2, '/obj_points', 10)
@@ -349,12 +357,52 @@ class MapNode(WorkerNodeMixin, Node):
             'masks': np.asarray(masks, dtype=bool),
         }
 
+    def prompts_ack_callback(self, msg: String) -> None:
+        """A new run id means sam_node re-armed with a fresh SAM 3 session.
+
+        The whole map has to go with it. Track ids restart at that point, so a stale
+        object still holding id 3 would silently absorb the new session's object 3 --
+        `update_map` associates on `obj_id in single_obj.obj_id` and cannot tell the two
+        apart. Nodes that live one question (eval_orchestrator relaunches everything)
+        never hit this; the persistent bench loop re-arms in place and always would.
+        """
+        try:
+            ack = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if not ack.get("ok", True):
+            return
+        run_id = ack.get("run_id")
+        if run_id is None or run_id == self._run_id:
+            return
+        first = self._run_id is None
+        self._run_id = run_id
+        if not first:
+            self._reset_pending = True
+            self.log(f'sam_node re-armed (run {run_id}) — dropping the previous map')
+
+    def _reset_map(self) -> None:
+        self.obj_mapper = ObjMapper(
+            cloud_image_fusion=self.cloud_img_fusion,
+            label_template=self.prompt_table.label_template(),
+            captioner=None,
+            log_info=self.log,
+        )
+        with self.odom_lock:
+            self.odom_stack.clear(); self.odom_stamps.clear()
+        with self.cloud_lock:
+            self.cloud_stack.clear(); self.cloud_stamps.clear()
+        self.last_frame_stamp = None
+
     def _worker_loop(self):
         # rclpy.ok() as well as self.running: SIGINT invalidates the context before
         # destroy_node() clears the flag, and publishing into a dead context raises
         # RCLError mid-frame (same guard as sam_node).
         while self.running and rclpy.ok():
             self._set_stage('waiting')
+            if self._reset_pending:
+                self._reset_pending = False
+                self._reset_map()
             pair = self._take_detection_frame()
             if pair is None:
                 time.sleep(0.005)

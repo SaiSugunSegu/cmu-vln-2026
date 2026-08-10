@@ -8,8 +8,10 @@
 #   just hf-fetch    # ONE-TIME ~15-20 GB weight download (needs HF_TOKEN in .env)
 #
 # Then pick a flow:
+#   scored eval   just eval-cat1 arabic_room 2 gt 0.1 cloud   # one command, per-question relaunch
+#   free dev loop just vqa-up, then the same with `local` instead of `cloud`
 #   live sim      just sim          | just vqa-up && just ai | just ask "How many …"
-#   offline bags  just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
+#   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
 # Container path (compose_dev mounts host ai_module here).
@@ -299,34 +301,48 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
 # Terminals: just vqa-up | just run-sam | just cat1-reasoner | just cat1-bag-bench
 # Bench waits for /sam3/status=ready before (and after) prompts, then starts the bag.
 #
+# backend=cloud answers with a hosted model over its OpenAI-compatible endpoint and is
+# the scored path; pick which one with VLM_PROVIDER + its API key in .env (gemini by
+# default -- see captioner/vlm_backends/constants.py). backend=local uses the resident
+# Qwen server, which costs nothing per call and is the dev loop. auto follows
+# $VLM_BACKEND from .env (default local).
+# views is how many best-view ranks it answers from at once (the VQA server caps at 4).
 [group('cat1')]
 [doc('Rebuild smart_vlm/sam_mapper and launch the category-1 reasoner (blocks)')]
-cat1-reasoner:
+cat1-reasoner backend="auto" views="3":
     #!/usr/bin/env bash
     set -euo pipefail
-    # captioner too: smart_vlm imports captioner.paths / .text_utils / .ros_utils.
+    # captioner too: smart_vlm imports captioner.paths / .text_utils / .ros_utils /
+    # .vlm_backends.
     just build "captioner smart_vlm sam_mapper"
     docker exec -it iros2026_ai_module bash -lc "
       source {{ai_src}}/install/setup.bash &&
-      ros2 run smart_vlm numerical_reasoner
+      ros2 run smart_vlm numerical_reasoner --ros-args \
+        -p backend:={{backend}} -p max_context_views:={{views}}
     "
 
 # Needs `just vqa-up` running first. The whole pipeline (SAM included) is relaunched per
 # question, so model load lands inside the measured budget exactly as it will on the real
 # evaluation -- a full sweep is 75 questions and takes hours. Use a scene + limit as the
 # dev loop:  just eval-cat1 arabic_room 2
-# target_source=vlm exercises the Qwen target-extraction path instead of benchmark GT.
+# target_source=vlm exercises the model target-extraction path instead of benchmark GT.
+# backend=cloud is the scored configuration and spends credits at whatever VLM_PROVIDER
+# points at; backend=local runs the same sweep for free against the resident Qwen and
+# needs `just vqa-up` first. Give a separate report= when A/B-ing two configurations, or
+# the second sweep overwrites the first.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
-eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1":
-    docker exec -it iros2026_ai_module bash -lc "source /home/docker/ai_module/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}}"
+eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" report="/data/runs/challenge_report.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p report_file:={{report}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3
 #   just cat1-bag-bench arabic_room 0 "Q01 Q02 Q03"
+# `tag` suffixes the output dir. The bench does not start the reasoner, so nothing in the
+# results says which backend answered -- tag the run or an A/B overwrites its own baseline.
 [group('cat1')]
 [doc('Score category-1 questions against a recorded scene bag')]
-cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0":
+cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
     #!/usr/bin/env bash
     set -euo pipefail
     # Support both `just cat1-bag-bench arabic_room 3` and key=value forms.
@@ -334,17 +350,19 @@ cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0":
     limit="{{limit}}"
     ids="{{ids}}"
     speed="{{speed}}"
+    tag="{{tag}}"
     scene="${scene#scene=}"
     limit="${limit#limit=}"
     ids="${ids#ids=}"
     speed="${speed#speed=}"
+    tag="${tag#tag=}"
     # If a caller passed ids=... as the positional limit slot, recover.
     if [[ "$limit" == ids=* ]]; then
       ids="${limit#ids=}"
       limit="0"
     fi
     qa="/data/benchmark/${scene}/category_1/${scene}_category1_qa.json"
-    out="/data/runs/cat1_${scene}"
+    out="/data/runs/cat1_${scene}${tag:+_$tag}"
     # Repo scripts/ is bind-mounted read-only at /home/docker/scripts; /data/runs
     # is created and made writable by the init one-shot (docker/compose.yml).
     script="/home/docker/scripts/eval/run_cat1_bag_bench.py"

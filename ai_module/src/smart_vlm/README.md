@@ -26,7 +26,7 @@ harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the v
 | Module | Executable | Role |
 |---|---|---|
 | `smart_vlm.py` | `smart_vlm` | Supervisor. Owns the mission clock, publishes the `/pipeline/{ready,armed,explore_done}` gates, and guarantees an answer at T-30. Spawns no processes and writes no files. |
-| `numerical_reasoner.py` | `numerical_reasoner` | Category-1 answer head: question → target nouns → `/sam3/set_prompts` → wait for `explore_done` → ask Qwen about SAM's best-view crop. Its `set_prompts` publish is the only thing that arms `sam_node`. |
+| `numerical_reasoner.py` | `numerical_reasoner` | Category-1 answer head: question → target nouns → `/sam3/set_prompts` → wait for `explore_done` → count from SAM's top few best-view crops. Its `set_prompts` publish is the only thing that arms `sam_node`. Both model steps go through `captioner.vlm_backends`, so `backend:=cloud\|local` swaps the model without touching the pipeline. |
 
 ### Pure logic — no ROS imports, unit-tested on the host
 
@@ -34,7 +34,7 @@ harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the v
 |---|---|
 | `question.py` | `QuestionType` enum + `classify()`. Lives apart from the nodes so both heads can route a question without importing rclpy. |
 | `mission_clock.py` | The 10-minute budget as arithmetic: `MissionBudget`, `MissionClock`, `Phase`. All deadline decisions live here so they can be tested without a ROS graph. |
-| `numerical_utils.py` | Target-list and integer parsing. Re-exports `extract_integer` from `captioner.text_utils` so the two implementations cannot drift. |
+| `numerical_utils.py` | Target-noun cleanup and integer parsing. Re-exports `extract_integer` from `captioner.text_utils` so the two implementations cannot drift. |
 
 Covered by `tests/test_question.py`, `tests/test_mission_clock.py`,
 `tests/test_numerical_reasoner.py` — these run on a bare host, no container needed:
@@ -54,6 +54,11 @@ python3 -m pytest ai_module/src/captioner/tests ai_module/src/smart_vlm/tests -q
 
 ## Dependencies
 
-`captioner` must already be running (`just vqa-up`) — nothing here loads a model
-checkpoint of its own. Every VQA request goes to that one resident server, so a single
-copy of the weights serves the reasoner, the target extractor and `just vqa-ask`.
+Nothing here loads a model checkpoint of its own.
+
+On the local backend, `captioner` must already be running (`just vqa-up`): every VQA
+request goes to that one resident server, so a single copy of the weights serves the
+reasoner, the target extractor and `just vqa-ask`. On the cloud backend nothing local is
+needed — the reasoner posts the same views to whatever OpenAI-compatible endpoint
+`VLM_PROVIDER` names, and the harness drops the readiness wait on `/qwen_vqa/status`
+accordingly.
