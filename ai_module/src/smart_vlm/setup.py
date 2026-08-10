@@ -26,6 +26,7 @@ setup(
             'qwen_numerical = smart_vlm.qwen_numerical:main',
             'numerical_reasoner = smart_vlm.numerical_reasoner:main',
             'eval_orchestrator = smart_vlm.eval_orchestrator:main',
+            'views_bench = smart_vlm.views_bench:main',
             'wait_ready = smart_vlm.wait_ready:main',
         ],
     },

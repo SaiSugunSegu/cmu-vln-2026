@@ -62,6 +62,13 @@
        per question for a model nobody uses. eval_orchestrator turns this off for
        backend:=cloud. -->
   <arg name="require_vqa_ready" default="true"/>
+  <!-- Where this question's best-view crops are saved, under the crops root from the
+       sam config. The eval harness passes "<sweep>/<scene>/<question id>-<question>";
+       empty falls back to a run name with a random id in it, fine for a one-off. -->
+  <arg name="run_id" default=""/>
+  <!-- Save the crops and skip the counting call — how the best-view cache is built.
+       Target extraction still runs, so SAM is armed exactly as on a scored run. -->
+  <arg name="crops_only" default="false"/>
 
   <!-- 1. SAM 3 detector — FIRST, so weights load while everything else comes up.
           Boots unarmed: this pipeline's prompts come from the question, so anything
@@ -95,7 +102,8 @@
        Output:  /sam3/set_prompts, /qwen_vqa/request, /numerical_response -->
   <node pkg="smart_vlm" exec="numerical_reasoner" name="numerical_reasoner" output="screen">
     <param name="backend" value="$(var vlm_backend)"/>
-    <param name="run_id_prefix" value="num_reasoner"/>
+    <param name="run_id" value="$(var run_id)"/>
+    <param name="crops_only" value="$(var crops_only)"/>
     <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
     <param name="max_context_views" value="$(var max_context_views)"/>
   </node>
