@@ -51,15 +51,15 @@ up-dev-fast:
 down:
     docker compose -f compose_gpu.yml -f compose_dev.yml down
 
-# THE ONLY recipe that goes online — everything else runs with HF_HUB_OFFLINE=1 from
-# the image. Passing it here via -e means the repo-root .env is never edited.
-# Gated sam3 also needs HF_TOKEN in .env and the licence accepted on the model page.
+# Pre-seeds the HF cache so the first real run is not also a ~20 GB download, and warms
+# SAM 3's cv-utils kernel, whose absence silently disables mask NMS. Re-run on a new machine.
+# Gated sam3 needs HF_TOKEN in .env and the licence accepted on the model page.
 #   just hf-fetch                # all defaults
 #   just hf-fetch "qwen3vl sam3" # a subset;  just hf-fetch --list  to see them
 [group('setup')]
-[doc('ONE-TIME ~15-20 GB weight download (sam3, Qwen3-VL, CLIP). Run once after up')]
+[doc('ONE-TIME ~15-20 GB weight download (sam3, Qwen3-VL, CLIP) + SAM 3 kernels')]
 hf-fetch models="":
-    docker exec -e HF_HUB_OFFLINE=0 -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "{{capt_env}} && fetch_weights {{models}}"
 
 # Run this after `up-dev`, after pulling, or whenever a launch reports "package '<name>'
@@ -110,10 +110,10 @@ sim-noviz sim_display=":1":
 challenge sim_display=":1":
     docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./challenge_simulation.sh --noviz"
 
-# Single pass by default; loop:=true to loop (e.g. just bag-play scene_0 1.0 true)
+# Single pass by default; loop:=true to loop (e.g. just bag-play livingroom_1 1.0 true)
 [group('bags')]
 [doc('Replay a recorded scene bag instead of the live sim')]
-bag-play scene="scene_0" speed="1.0" loop="false":
+bag-play scene="livingroom_1" speed="1.0" loop="false":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
 
 # Needs the VQA server up first (`just vqa-up`): the numerical head is a client of it.
@@ -136,25 +136,34 @@ run-map config="sam3_mecanum_sim.yaml":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper map_node.launch config:={{config}}"
 
 # Use out=/data/bags/_frames to see them on the host.
-[group('perception')]
+[group('sam')]
 [doc('Dump /camera/image frames from a bag to PNGs, for the offline probe')]
-sam-frames scene="scene_0" out="/data/bags/_frames" limit="40":
+sam-frames scene="livingroom_1" out="/data/bags/_frames" limit="40":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.dump_frames --bag /data/bags/{{scene}} --out {{out}} --limit {{limit}}"
 
 # Are object IDs stable across frames, and which image_size is fastest?
 # Answers whether dropping ByteTrack was sound.
-[group('perception')]
+[group('sam')]
 [doc('Offline SAM 3 probe on dumped frames: ID stability + image_size sweep')]
-sam-probe frames="/tmp/frames" config="sam3_mecanum_sim.yaml" args="--sweep-image-size":
+sam-probe frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="--sweep-image-size":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.sam3_backend --frames {{frames}} --config /home/docker/ai_module/src/sam_mapper/config/{{config}} {{args}}"
 
-# Times all prompts vs instances-only vs 3 classes. If ms/frame falls with fewer objects
-# while ms/object stays flat, per-object memory attention is the bottleneck -> cut
-# prompts, and SAM 3.1 Object Multiplex is the real fix.
-[group('perception')]
-[doc('Does SAM 3 runtime scale with object count? Prompt-count sweep')]
-sam-prompts frames="/tmp/frames" config="sam3_mecanum_sim.yaml":
-    just sam-probe {{frames}} {{config}} --sweep-prompts
+# Splits the frame into vision encoder / per-prompt detection / tracker / mask transfer, and
+# fits ms ~ fixed + per_object * N per stage. Dump frames first with `just sam-frames`.
+#   just sam-profile <frames> <cfg> "--prompts tv,cabinet,chair"   one prompt regime
+#   just sam-profile <frames> <cfg> --torch-profile                 when residual is >10%
+[group('sam')]
+[doc('Where does a SAM 3 frame actually go? Per-stage breakdown')]
+sam-profile frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="":
+    just sam-probe {{frames}} {{config}} "--profile {{args}}"
+
+# facebook/sam3.1 ships only a native .pt.
+# Run `just hf-fetch sam3.1` first.
+[group('sam')]
+[doc('Convert facebook/sam3.1 to an HF dir, and prove no tensor was left random')]
+sam31-convert out="/data/models/sam3.1_hf" args="":
+    docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
+      "python3 /home/docker/scripts/eval/convert_sam31.py --out {{out}} {{args}}"
 
 # Challenge mode uses domain 42: just ask "…" 42
 [group('sim')]
@@ -215,16 +224,6 @@ shell-sys:
 shell-ai:
     docker exec -it iros2026_ai_module bash
 
-[group('perception')]
-[doc('One-shot JSON dump of every 3D instance the mapper has built')]
-sam-map-json:
-    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic echo /obj_map_json --once"
-
-[group('perception')]
-[doc('Is sam_mapper working? Topic rates + a summary of the 3D map')]
-sam-status seconds="15":
-    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.status --seconds {{seconds}}"
-
 # ---------- 3D map benchmark (map3d) -----------------------------------
 # Record SAM 3 output once per scene on GPU, then replay the 3D mapper on CPU
 # deterministically in ~30 s/scene. Guide: docs/map3d_bench.md
@@ -275,6 +274,11 @@ map3d-audit run="":
 [doc('Regenerate the per-class size caps from VLA-3D ground truth')]
 map3d-priors args="":
     python3 scripts/eval/build_dimension_priors.py {{args}}
+
+[group('map3d')]
+[doc('One-shot JSON dump of every 3D instance the mapper has built')]
+sam-map-json:
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic echo /obj_map_json --once"
 
 # ---------- Persistent Qwen VQA (model stays loaded) --------------------
 #   just vqa-up

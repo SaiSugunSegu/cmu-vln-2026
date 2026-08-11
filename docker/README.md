@@ -70,9 +70,8 @@ exits — `Exited (0)` is success, not an error.
 
 ## First run: download model weights
 
-Everything runs offline (`HF_HUB_OFFLINE=1` is baked into the image), so the models
-must be in the cache before anything will load. This is a **one-time** ~15-20 GB
-download:
+Nothing forces offline mode, so a load can always fetch what it needs. Seed the cache
+anyway, so your first real run is not also a ~15-20 GB download:
 
 ```bash
 just up          # build + start; `init` makes /data and the HF cache writable
@@ -94,9 +93,15 @@ HF_TOKEN=hf_...
 licence once at <https://huggingface.co/facebook/sam3> with the same account —
 otherwise `hf-fetch` reports `GATED` and tells you which of the two is missing.
 
-`just hf-fetch` is the only command that goes online; it passes `HF_HUB_OFFLINE=0`
-for that one invocation via `docker exec -e`, so your `.env` is never modified. If
-you ever need a different model online, set `HF_HUB_OFFLINE=0` in `.env` instead.
+`just hf-fetch` also warms SAM 3's `cv-utils` kernel, which does mask **NMS** as well as
+hole filling. It is fetched lazily on first use and its absence degrades **silently** —
+NMS is skipped entirely, so duplicate detections are never suppressed and `det_nms_thresh`
+does nothing. Re-run `just hf-fetch` on any new machine and confirm with
+`just sam-profile /data/bags/_frames`, which prints `cv-utils kernel: ...`,
+`[sam3] attn effective: ...` and the thresholds actually in force.
+
+Flash attention is deliberately **not** used: on SAM 3 it returns zero detections.
+Re-check with `just sam-probe <frames> <cfg> "--attn kernels-community/flash-attn2"`.
 
 ## Launch base autonomy system
 

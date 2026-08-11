@@ -104,9 +104,9 @@ class SigLIPHF(BaseCLIP):
 def main(argv=None):
     """Score one local image against candidate labels — for tuning clip_threshold.
 
-    Reads from disk rather than a URL: this package ships to a robot with
-    HF_HUB_OFFLINE=1 and no internet, so a demo that fetched a COCO image over
-    HTTP could not run where it matters.
+    Reads from disk rather than a URL: the point is to score the crops this pipeline
+    actually produces, so a demo that fetched a COCO image over HTTP would be tuning
+    against the wrong distribution.
 
       python -m captioner.models.clip /data/crops/3_sofa/crop.png sofa "red sofa"
     """

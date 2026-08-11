@@ -29,21 +29,10 @@ except ImportError:
     logger.debug("vllm not installed; PaliGemmaVLLMBackend is unavailable.")
 
 
-def _hub_offline() -> bool:
-    """True when we must not touch the network (robot / offline deploy)."""
-    return os.environ.get("HF_HUB_OFFLINE", "").strip().lower() in {"1", "true", "yes"}
-
-
 def _from_pretrained_kwargs() -> dict:
-    """
-    Hugging Face from_pretrained("org/name") still contacts the Hub by default
-    to resolve the latest revision, even when weights are cached. On a robot with
-    no internet that hangs or fails — force local-only loads.
-    """
-    kwargs = {}
-    if _hub_offline():
-        kwargs["local_files_only"] = True
-    return kwargs
+    """Extra kwargs for every from_pretrained() here. Empty by design — this deployment
+    always has connectivity. Kept as one seam for a future proxy or revision pin."""
+    return {}
 
 
 class CaptioningModel:
