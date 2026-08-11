@@ -46,7 +46,7 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from sensor_msgs.msg import Image
 from std_msgs.msg import Int32, String
 
-from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
+from captioner.qwen_vqa_protocol import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
 from captioner.ros_utils import wait_for_subscriber
 from smart_vlm.question import QuestionType, classify
 

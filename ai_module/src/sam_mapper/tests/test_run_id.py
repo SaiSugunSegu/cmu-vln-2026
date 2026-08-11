@@ -16,9 +16,28 @@ def test_collapses_unsafe_runs_to_one_underscore():
     assert sanitize_run_id("How many glasses?") == "How_many_glasses"
 
 
-def test_strips_path_separators():
-    # A run id reaches us over ROS and becomes a directory name.
-    assert "/" not in sanitize_run_id("../../etc/passwd")
+def test_keeps_a_slash_as_a_directory_level():
+    """The eval sweep's <scene>/<question id> layout depends on this."""
+    assert sanitize_run_id("arabic_room/Q01") == "arabic_room/Q01"
+
+
+def test_sanitises_each_level_independently():
+    assert sanitize_run_id("arabic room/How many?") == "arabic_room/How_many"
+
+
+def test_cannot_walk_out_of_the_output_directory():
+    """A run id reaches us over ROS and is joined onto the crops root.
+
+    Dots survive the character filter, so `..` has to be dropped as a component or the
+    result would climb a level per pair — the one case where allowing separators would
+    otherwise be worse than stripping them.
+    """
+    result = sanitize_run_id("../../etc/passwd")
+    assert ".." not in result.split("/")
+    assert not result.startswith("/")
+
+    assert not sanitize_run_id("/absolute/path").startswith("/")
+    assert sanitize_run_id("..") == "run"
 
 
 def test_trims_leading_and_trailing_underscores():
@@ -28,3 +47,4 @@ def test_trims_leading_and_trailing_underscores():
 def test_falls_back_when_nothing_survives():
     assert sanitize_run_id("???") == "run"
     assert sanitize_run_id("???", fallback="q") == "q"
+    assert sanitize_run_id("//") == "run"

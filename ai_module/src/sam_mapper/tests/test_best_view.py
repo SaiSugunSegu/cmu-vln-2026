@@ -47,6 +47,62 @@ def _consider_one_cabinet(collector):
     collector.consider(image, detections, stamp=1.0)
 
 
+def _consider_bigger_cabinet(collector):
+    """The same cabinet, more visible — a new best for that track id, so a new flush."""
+    h, w = 200, 800
+    image = np.zeros((h, w, 3), dtype=np.uint8)
+    mask = np.zeros((h, w), dtype=bool)
+    mask[30:170, 250:520] = True
+    detections = {
+        "labels": np.array(["cabinet"], dtype=object),
+        "ids": np.array([7], dtype=int),
+        "masks": np.asarray([mask]),
+        "confidences": np.array([0.95], dtype=float),
+        "bboxes": np.array([[250.0, 30.0, 520.0, 170.0]], dtype=float),
+    }
+    collector.consider(image, detections, stamp=2.0)
+
+
+def test_flush_keeps_keys_written_by_the_reasoner(tmp_path):
+    """Frames keep arriving after the reasoner records its answer in this same file.
+
+    An overwriting flush threw the question, the prompts and the answer away every time,
+    which is how a finished run ended up with a manifest that only described geometry.
+    """
+    collector = _collector(tmp_path, run_id="arabic_room/Q01")
+    _consider_one_cabinet(collector)
+    manifest_path = os.path.join(collector.run_dir, "manifest.json")
+
+    with open(manifest_path, encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    manifest["question"] = "How many cabinets are in the room?"
+    manifest["sam_prompts"] = ["cabinet"]
+    with open(manifest_path, "w", encoding="utf-8") as handle:
+        json.dump(manifest, handle)
+
+    _consider_bigger_cabinet(collector)
+
+    with open(manifest_path, encoding="utf-8") as handle:
+        after = json.load(handle)
+    assert after["question"] == "How many cabinets are in the room?"
+    assert after["sam_prompts"] == ["cabinet"]
+    # And the collector's own keys are still the fresh ones, not the stale copy.
+    assert after["selected"][0]["stamp"] == 2.0
+
+
+def test_reusing_a_run_id_starts_from_an_empty_directory(tmp_path):
+    """A stable run id means a rebuild lands on the previous attempt's files."""
+    first = _collector(tmp_path, run_id="arabic_room/Q01")
+    _consider_one_cabinet(first)
+    assert os.listdir(first.run_dir)
+
+    second = _collector(tmp_path, run_id="arabic_room/Q01")
+    assert second.run_dir == first.run_dir
+    leftover = [name for name in os.listdir(second.run_dir)
+                if name.startswith("best_rank") or name == "manifest.json"]
+    assert leftover == []
+
+
 def test_manifest_includes_instance_labels(tmp_path):
     collector = _collector(tmp_path, run_id="arabic_room_Q01")
     assert "arabic_room_Q01" in collector.run_dir

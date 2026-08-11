@@ -6,9 +6,15 @@ ROS topics
   /qwen_vqa/request  (std_msgs/String JSON)
       {"id": "<uuid>", "image": "/abs/path.png", "question": "How many…"}
       {"id": "<uuid>", "image": null, "question": "…", "mode": "freeform"}
+      {"id": "<uuid>", "images": ["/a.png", "/b.png"], "question": "How many…"}
       mode: "numerical" (default) | "freeform" (no integer-only wrapper)
   /qwen_vqa/response (std_msgs/String JSON)
       {"id": "…", "answer": "4", "number": 4, "error": null, "seconds": 0.5}
+
+`images` shows the model several views of one scene in a single call, which is what
+lets a counting question draw on more than the one best view that happens to rank
+first. `image` is the one-view spelling of the same thing and stays supported: most
+callers send exactly one crop and should not have to wrap it in a list.
 
 Requests are served by a single worker thread: one GPU, one generate() at a time.
 Extra requests queue up to QUEUE_DEPTH and are rejected with error="busy" beyond
@@ -33,7 +39,12 @@ from std_msgs.msg import String
 
 from captioner.models.captioning import load_qwen_backend
 from captioner.paths import secure_image_path
-from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
+from captioner.qwen_vqa_protocol import (
+    REQUEST_TOPIC,
+    RESPONSE_TOPIC,
+    STATUS_TOPIC,
+    parse_vqa_request,
+)
 
 # Tiny RGB placeholder so VL backends accept text-only extract / planning prompts.
 _BLANK_RGB = np.zeros((64, 64, 3), dtype=np.uint8)
@@ -41,9 +52,6 @@ _BLANK_RGB = np.zeros((64, 64, 3), dtype=np.uint8)
 # Deep enough to absorb a burst from the reasoner (extract + answer + attribute
 # captions), shallow enough that a stuck client is rejected rather than queued.
 QUEUE_DEPTH = 16
-
-# A malformed or hostile request must not be able to pin the GPU for minutes.
-MAX_NEW_TOKENS_LIMIT = 512
 
 
 class QwenVQAServer(Node):
@@ -149,65 +157,46 @@ class QwenVQAServer(Node):
             finally:
                 self._requests.task_done()
 
-    @staticmethod
-    def _parse_request(raw: str) -> tuple[Optional[str], str, Optional[str], bool, Optional[int]]:
-        """(id, question, image_path, freeform, max_new_tokens) or raise ValueError."""
-        payload = json.loads(raw)
-        if not isinstance(payload, dict):
-            raise ValueError("payload must be a JSON object")
-
-        req_id = payload.get("id")
-        if "image" not in payload or "question" not in payload:
-            raise ValueError("need keys: id, question, image (image may be null)")
-
-        question = payload["question"]
-        if not isinstance(question, str) or not question.strip():
-            raise ValueError("question must be a non-empty string")
-
-        image_path = payload["image"]
-        if image_path is not None and not isinstance(image_path, str):
-            raise ValueError("image must be a string path or null")
-
-        mode = str(payload.get("mode") or "numerical").lower()
-        freeform = mode in ("freeform", "text", "extract")
-
-        max_new_tokens = payload.get("max_new_tokens")
-        if max_new_tokens is not None:
-            max_new_tokens = int(max_new_tokens)
-            if not 1 <= max_new_tokens <= MAX_NEW_TOKENS_LIMIT:
-                raise ValueError(
-                    f"max_new_tokens must be in 1..{MAX_NEW_TOKENS_LIMIT}")
-
-        return req_id, question, image_path, freeform, max_new_tokens
-
     def _handle_request(self, raw: str):
         req_id = None
         try:
-            req_id, question, image_path, freeform, max_new_tokens = \
-                self._parse_request(raw)
+            req_id, question, image_paths, freeform, max_new_tokens = \
+                parse_vqa_request(raw)
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             self.get_logger().warn(f"rejected request: {exc}")
             self._publish_error(req_id, f"invalid request: {exc}")
             return
 
         try:
-            if not image_path:
-                image = _BLANK_RGB
-            else:
+            images = []
+            for image_path in image_paths:
                 path = secure_image_path(image_path)
                 image = iio.imread(str(path))
                 if image is None:
                     raise RuntimeError(f"Failed to read image: {path}")
+                images.append(image)
 
+            budget = max_new_tokens or self.max_new_tokens
             t0 = time.time()
-            answers = self.model.answer_questions(
-                [image], [question],
-                max_new_tokens=max_new_tokens or self.max_new_tokens,
-                freeform=freeform,
-            )
+            if len(images) > 1:
+                # One prompt, several views. Kept off answer_questions because that
+                # one pairs N images with N questions for batching, so handing it a
+                # list here would ask the same question of each view separately and
+                # return N answers that then have to be reconciled.
+                raw_answer = self.model.answer_multi_image(
+                    images, question,
+                    max_new_tokens=budget,
+                    freeform=freeform,
+                )
+            else:
+                answers = self.model.answer_questions(
+                    [images[0] if images else _BLANK_RGB], [question],
+                    max_new_tokens=budget,
+                    freeform=freeform,
+                )
+                raw_answer = answers[0]
             elapsed = time.time() - t0
 
-            raw_answer = answers[0]
             number = self.model.extract_integer(raw_answer)
             self._publish_response({
                 "id": req_id,
@@ -216,7 +205,8 @@ class QwenVQAServer(Node):
                 "error": None,
                 "seconds": round(elapsed, 3),
             })
-            self.get_logger().info(f"id={req_id} number={number} ({elapsed:.2f}s)")
+            self.get_logger().info(
+                f"id={req_id} views={len(images)} number={number} ({elapsed:.2f}s)")
         except Exception as exc:  # noqa: BLE001 — one bad request must not kill the server
             # Report the exception type only: the message can carry filesystem
             # paths, and requests arrive from other processes.

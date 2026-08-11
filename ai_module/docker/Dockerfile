@@ -173,6 +173,9 @@ from sam_mapper.detections import PromptTable; \
 from sam_mapper.sam3_backend import Sam3Backend; \
 from captioner.paths import ALLOWED_ROOTS; \
 from captioner.text_utils import extract_integer; \
+from captioner.vlm_backends.schemas import CountAnswer, TargetList; \
+from captioner.vlm_backends.openai_backend import OpenAIBackend; \
+import openai; \
 print('import check OK: transformers', transformers.__version__)\""
 
 # No weights are baked into this image; HF_HUB_OFFLINE=1 above means every load

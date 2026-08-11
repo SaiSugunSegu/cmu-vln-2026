@@ -29,3 +29,8 @@ matplotlib
 requests
 # Optional: needed by captioning_node ROS entrypoint, not the offline crop CLI.
 open3d
+# captioner.vlm_backends: pydantic defines the structured outputs both backends return,
+# and openai is the client for the hosted one (VLM_BACKEND=cloud), which is the scored
+# path — so this is a hard requirement, not an optional extra.
+pydantic>=2
+openai>=1.40

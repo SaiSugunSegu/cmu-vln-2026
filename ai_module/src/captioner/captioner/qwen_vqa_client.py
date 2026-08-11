@@ -13,7 +13,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from captioner.qwen_vqa_topics import REQUEST_TOPIC, RESPONSE_TOPIC
+from captioner.qwen_vqa_protocol import REQUEST_TOPIC, RESPONSE_TOPIC
 from captioner.ros_utils import wait_for_subscriber
 
 
