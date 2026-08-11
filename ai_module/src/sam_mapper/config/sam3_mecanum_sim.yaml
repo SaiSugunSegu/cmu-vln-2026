@@ -140,7 +140,7 @@ runtime:
   executor_threads: 16
   publish_annotated: false
   log_every_n_frames: 5
-  profile: true                    # per-stage breakdown in BOTH node logs, 
+  profile: false                    # per-stage breakdown in BOTH node logs, 
   cloud_window_before: 0.5         # gather clouds in [stamp - before, stamp + after]
   cloud_window_after: 0.1
   verbose_objects: false           # print every 2D detection + 3D map object per frame
