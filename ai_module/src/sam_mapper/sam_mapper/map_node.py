@@ -55,6 +55,7 @@ from sam_mapper.detections import PromptTable
 from sam_mapper.mapping_config import MappingConfig
 from sam_mapper.node_base import WorkerNodeMixin, run_node
 from sam_mapper.object_mapper import ObjMapper
+from sam_mapper.profiling import StageTimer
 
 
 def _pretty_json(payload: dict) -> str:
@@ -99,6 +100,10 @@ class MapNode(WorkerNodeMixin, Node):
         self.cloud_window_before = float(runtime.get('cloud_window_before', 0.5))
         self.cloud_window_after = float(runtime.get('cloud_window_after', 0.1))
         self.verbose_objects = bool(runtime.get('verbose_objects', False))
+        # Same runtime.profile switch sam_node reads. No CUDA here, so this costs only the
+        # perf_counter calls — but keep it off by default so the two nodes stay symmetric.
+        self.profile = bool(runtime.get('profile', False))
+        self.timer = StageTimer(enabled=self.profile)
 
         # Write the map beside the crops it came from, on every publish. sam_node publishes
         # its per-question run dir on /sam3/best_view_dir (save_best_target_view_images);
@@ -459,13 +464,18 @@ Report what the worker is doing. Runs on a ROS timer, not in the worker.
             self._report(0.0, 0, 0)
             return
 
-        self._set_stage(f'update_map ({len(detections["ids"])} dets, {len(cloud)} pts)')
-        start = time.perf_counter()
-        self.obj_mapper.update_map(detections, stamp, odom, cloud, image=None)
-        map_ms = (time.perf_counter() - start) * 1000.0
+        with self.timer.frame():
+            self._set_stage(f'update_map ({len(detections["ids"])} dets, {len(cloud)} pts)')
+            start = time.perf_counter()
+            with self.timer.stage('map_update'):
+                self.obj_mapper.update_map(detections, stamp, odom, cloud, image=None)
+            map_ms = (time.perf_counter() - start) * 1000.0
 
-        self._set_stage('publish')
-        objects_3d = self._publish_map(stamp)
+            self._set_stage('publish')
+            objects_3d = self._publish_map(stamp)
+            # Detections drive update_map's cost, so they are the fit's x-axis here; the
+            # second slot (sam_node's prompt count) carries the published-object count.
+            self.timer.end_frame(map_ms, len(detections['ids']), len(objects_3d))
         if self.verbose_objects:
             self._log_verbose(detections, objects_3d)
 
@@ -486,6 +496,11 @@ Report what the worker is doing. Runs on a ROS timer, not in the worker.
             f'frame {self.frames_done}: {detected} detections | map {map_ms:.0f} ms | '
             f'{tracked} tracked, {published} published'
         )
+        if self.profile:
+            from sam_mapper.profiling import format_summary
+
+            self.log(format_summary(self.timer.summary(),
+                                    title=f'map_node frame {self.frames_done}'))
 
     def _log_verbose(self, detections: dict, objects_3d: dict) -> None:
         """
@@ -508,7 +523,8 @@ Every 2D detection and every 3D map object, one line each — validation only.""
         seconds = int(stamp)
         nanoseconds = int((stamp - seconds) * 1e9)
 
-        bbox_msgs, text_msgs, ros_pcd = self.obj_mapper.to_ros2_msgs(stamp)
+        with self.timer.stage('map_ros_msgs'):
+            bbox_msgs, text_msgs, ros_pcd = self.obj_mapper.to_ros2_msgs(stamp)
 
         # DELETEALL first, so markers for objects that were merged away disappear
         # instead of lingering. Stamped a hair earlier so it is ordered first.
@@ -518,19 +534,24 @@ Every 2D detection and every 3D map object, one line each — validation only.""
                                   nanoseconds=max(nanoseconds - 10000, 0)).to_msg()
         clear.action = Marker.DELETEALL
 
-        if ros_pcd is not None:
-            self.obj_cloud_pub.publish(ros_pcd)
-        if bbox_msgs:
-            self.obj_box_pub.publish(MarkerArray(markers=[clear] + list(bbox_msgs)))
-        if text_msgs:
-            self.obj_text_pub.publish(MarkerArray(markers=[clear] + list(text_msgs)))
+        with self.timer.stage('map_publish'):
+            if ros_pcd is not None:
+                self.obj_cloud_pub.publish(ros_pcd)
+            if bbox_msgs:
+                self.obj_box_pub.publish(MarkerArray(markers=[clear] + list(bbox_msgs)))
+            if text_msgs:
+                self.obj_text_pub.publish(MarkerArray(markers=[clear] + list(text_msgs)))
 
         # Published unconditionally, even when empty — an empty map is itself the answer
         # when nothing else is coming out. `just sam-status` decodes it.
-        objects = self.obj_mapper.serialize_map_to_dict()
-        self.map_json_pub.publish(String(data=json.dumps(objects, default=_jsonable)))
+        with self.timer.stage('map_serialize'):
+            objects = self.obj_mapper.serialize_map_to_dict()
+            self.map_json_pub.publish(String(data=json.dumps(objects, default=_jsonable)))
         self.latest_objects = objects
-        self.write_obj_map()
+        # Disk write on EVERY publish, on the worker thread — a prime suspect if map_ms
+        # spikes without the detection count changing.
+        with self.timer.stage('map_write_json'):
+            self.write_obj_map()
         return objects
 
     def _on_run_dir(self, msg: String) -> None:

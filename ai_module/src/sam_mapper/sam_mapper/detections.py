@@ -116,7 +116,7 @@ def to_detections(result, table: PromptTable) -> dict:
     scores_by_id = {int(i): float(s) for i, s in zip(result.object_ids, result.scores)}
     owner = _invert_prompt_map(result.prompt_to_obj_ids, scores_by_id)
 
-    bboxes, confidences, labels, ids, masks = [], [], [], [], []
+    rows, labels, ids = [], [], []
     for row, obj_id in enumerate(result.object_ids):
         prompt = owner.get(int(obj_id))
         if prompt is None:
@@ -125,22 +125,25 @@ def to_detections(result, table: PromptTable) -> dict:
         if spec is None:
             continue
 
-        bboxes.append(result.boxes[row])
-        confidences.append(result.scores[row])
+        rows.append(row)
         labels.append(spec.label)
-        masks.append(result.masks[row])
         # Background objects are not tracked: renumber onto the negative-id convention.
         ids.append(int(obj_id) if spec.instance else table.background_ids[spec.label])
 
     if not ids:
         return _empty()
 
+    # Select rows rather than append-then-restack: masks are 1.2 MB per object, and when
+    # nothing is dropped (the usual case) this passes the backend's array through with no
+    # copy. Consumers only read masks, so sharing the buffer is safe.
+    keep_all = len(rows) == len(result.object_ids)
+    select = slice(None) if keep_all else np.asarray(rows, dtype=int)
     return {
-        "bboxes": np.asarray(bboxes, dtype=float),
-        "confidences": np.asarray(confidences, dtype=float),
+        "bboxes": np.asarray(result.boxes[select], dtype=float),
+        "confidences": np.asarray(result.scores[select], dtype=float),
         "labels": np.asarray(labels, dtype=object),
         "ids": np.asarray(ids, dtype=int),
-        "masks": np.asarray(masks, dtype=bool),
+        "masks": result.masks[select],
     }
 
 
@@ -161,3 +164,18 @@ def encode_instance_id(obj_id: int) -> int:
     collide with an instance id. sam_node encodes with this, map_node decodes with it.
     """
     return obj_id + 1 if obj_id >= 0 else 65536 + obj_id
+
+
+def build_id_map(ids: np.ndarray, masks: np.ndarray, height: int, width: int) -> np.ndarray:
+    """Masks -> the mono16 /sam3/instance_map image, beside encode_instance_id because the
+    two together are the wire format map_node decodes.
+
+    Vectorised: argmax over the REVERSED mask stack resolves every pixel in one pass and
+    keeps the old per-object loop's tie-break (later entries win on overlaps).
+    """
+    if len(ids) == 0:
+        return np.zeros((height, width), dtype=np.uint16)
+
+    codes = np.array([encode_instance_id(int(i)) for i in ids], dtype=np.uint16)
+    winner = len(codes) - 1 - masks[::-1].argmax(axis=0)
+    return np.where(masks.any(axis=0), codes[winner], np.uint16(0)).astype(np.uint16)

@@ -54,9 +54,8 @@ services:
     env_file:
       - path: ../.env
         required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
-    # HF_HOME and HF_HUB_OFFLINE=1 come from the image (ai_module/docker/Dockerfile).
-    # Do NOT re-declare them under `environment:` — that outranks `env_file:` and
-    # would make the documented HF_HUB_OFFLINE=0 override in ../.env a no-op.
+    # HF_HOME comes from the image (ai_module/docker/Dockerfile). Offline mode is not set
+    # anywhere — see the note in compose_gpu.yml. Gated repos read HF_TOKEN from ../.env.
     volumes:
       # Host data/ maps 1:1 to /data — bags, benchmark, crops, captions, runs.
       - ../data:/data

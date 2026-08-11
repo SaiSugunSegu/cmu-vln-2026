@@ -36,13 +36,11 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
     && rm -f /tmp/requirements_captioner.txt
 
 # Hugging Face cache lives under the docker user home (compose bind-mounts it).
-# These two are the whole HF configuration and this is the ONLY place they are
-# set: the compose files deliberately do not re-declare HF_HUB_OFFLINE, because a
-# value under `environment:` outranks `env_file:` and would silently defeat the
-# documented HF_HUB_OFFLINE=0 override in the repo-root .env.
+# HF_HUB_OFFLINE deliberately NOT set: this deployment always has connectivity, and the
+# cv-utils kernel downloads on first use (its absence silently disables mask NMS).
 # HUGGINGFACE_HUB_CACHE is not set: HF derives $HF_HOME/hub by default.
 # TRANSFORMERS_CACHE / TRANSFORMERS_OFFLINE are deprecated aliases; don't add them.
-ENV HF_HOME=/home/docker/.cache/huggingface HF_HUB_OFFLINE=0
+ENV HF_HOME=/home/docker/.cache/huggingface
 RUN mkdir -p /home/docker/.cache/huggingface && chown -R docker:docker /home/docker/.cache
 
 USER docker
@@ -99,18 +97,32 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --upgrade transformers \
     || python3 -m pip install --ignore-installed --upgrade transformers
 
-# OPTIONAL extras — `|| echo` because neither affects correctness and neither is worth
-# failing a build over. Without `kernels`, SAM 3 skips NMS/hole-filling/sprinkle removal
-# (coarser masks); without `flash-attn`, the backend falls back to sdpa (slower).
-# Pinned: transformers' is_kernels_available() requires 0.15.2 <= version < 0.16.0
-# (strict upper bound) — unpinned installs grab 0.16.0 and silently fail the check.
+# `kernels` delivers kernels-community/cv-utils (no pip package exists), which SAM 3 uses
+# for two jobs: generic_nms (mask NMS — skipped entirely without it, making det_nms_thresh
+# dead) and cc_2d (hole filling, the only half gated by fill_hole_area). Both fail silently.
+# A matching prebuilt variant is also needed — see the torch pin in requirements_captioner.txt.
+#
+# The version window is DERIVED from the installed transformers, which is unpinned: a
+# hardcoded pin rots on the next rebuild, and did (5.14.1 wanted >=0.15.2,<0.16.0; 5.15.0
+# wants >=0.16.0,<0.17.0, and the mismatch silently disabled every kernel).
+# No `|| echo`: swallowing this failure is what let it run degraded for months.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install "kernels>=0.15.2,<0.16.0" \
-    || echo "OPTIONAL: kernels unavailable — SAM 3 mask post-processing (NMS, hole \
-filling, sprinkle removal) will be skipped. Not fatal."
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --no-build-isolation --no-deps flash-attn \
-    || echo "OPTIONAL: flash-attn unavailable — backend falls back to sdpa. Not fatal."
+    spec="$(python3 -c 'from transformers.utils.import_utils import KERNELS_MIN_VERSION, KERNELS_MAX_VERSION; print(f"kernels>={KERNELS_MIN_VERSION},<{KERNELS_MAX_VERSION}")')" \
+    && echo "transformers requires: $spec" \
+    && python3 -m pip install "$spec" \
+    && python3 -c "\
+from transformers.utils import is_kernels_available; \
+import kernels; \
+assert is_kernels_available(), f'kernels {kernels.__version__} installed but transformers still rejects it'; \
+print('kernels OK:', kernels.__version__)"
+# NOT installed, deliberately, and each for its own reason:
+#   flash-attn (pip)  harmful: with it installed transformers runs real FA2, which on SAM 3
+#                     measures 0.0 objects/frame vs sdpa's 2.0 (probe: --attn <impl>).
+#   flash-attn-3      Hopper-only (sm_90); both deploy targets are Ada sm_89.
+#   cc_torch          named only in a transformers DOCSTRING inherited from the native repo;
+#                     the code calls cv_utils_kernel.cc_2d. Installing it does nothing.
+#   einops, ninja     einops is unused by transformers' sam3* modules; ninja only mattered
+#                     for the source builds we no longer do.
 
 # semantic_mapping's 3D stage: open3d is the big one (~400 MB), hence its own layer.
 RUN --mount=type=cache,target=/root/.cache/pip \
@@ -178,9 +190,9 @@ from captioner.vlm_backends.openai_backend import OpenAIBackend; \
 import openai; \
 print('import check OK: transformers', transformers.__version__)\""
 
-# No weights are baked into this image; HF_HUB_OFFLINE=1 above means every load
-# reads a pre-seeded cache. Populate it once with `just hf-fetch` (see docker/README.md),
-# which goes online for that command only. No `hf auth login` is needed: put
+# No weights are baked into this image — they are fetched into the mounted HF cache. Seed
+# it once with `just hf-fetch` (see docker/README.md) so the first real run is not also a
+# ~20 GB download; nothing forces offline mode. No `hf auth login` is needed: put
 # HF_TOKEN in the repo-root .env (docker/compose*.yml reads it via env_file) and
 # huggingface_hub picks it up on every from_pretrained(). SAM 3 is additionally
 # gated — accept its licence once on the model page with the same account.

@@ -65,12 +65,6 @@ services:
     # variables (VLM_PROVIDER and its API key) when it is cloud. Unset means local, so an
     # unconfigured container answers with the resident Qwen and spends no credits; a
     # scored run sets VLM_BACKEND=cloud. See captioner/vlm_backends/constants.py.
-    # HF_HOME and HF_HUB_OFFLINE=1 come from the image (ai_module/docker/Dockerfile)
-    # and are deliberately NOT repeated here. Never hit huggingface.co at runtime
-    # (robot has no internet): pre-seed the HF cache mount with Qwen/SAM weights
-    # before deploy. For a gated first-time download put HF_HUB_OFFLINE=0 and
-    # HF_TOKEN in ../.env — env_file overrides the image ENV, but only because
-    # nothing below re-declares it (`environment:` would outrank env_file).
     environment:
       # No privileged: true — the nvidia runtime reservation below is what grants
       # GPU access, and privileged would hand the container every host device.
@@ -79,16 +73,11 @@ services:
     volumes:
       # Host data/ maps 1:1 to /data — bags, benchmark, crops, captions, runs.
       # Put caption input under data/crops, read results from data/captions.
+      # Scene recordings live in data/bags (gitignored by `data/bags/*`, with README.md
+      # and scenes.yaml kept). Do NOT bind a separate <repo>/bags over /data/bags: it
+      # shadows every recording, so bag_fetch reads each scene as missing and re-downloads
+      # it from Drive, and the new source lands root-owned outside init's reach.
       - ../data:/data
-      # Scene bags are recorded to <repo>/bags (gitignored, tens of GB) but every
-      # consumer looks under /data/bags — bag_fetch even names this mount in its
-      # "manifest not found" error. Without it a scene sitting on disk is invisible and
-      # bag_replay tries to re-download it from Drive.
-      - ../bags:/data/bags
-      # Remounted on top because the line above shadows it: scenes.yaml is tracked in
-      # git under data/bags, while <repo>/bags holds only untracked recordings. Docker
-      # orders bind mounts by destination depth, so the more specific path wins.
-      - ../data/bags/scenes.yaml:/data/bags/scenes.yaml:ro
       # Ground-truth QA files are tracked in git; nothing in the container writes them.
       - ../data/benchmark:/data/benchmark:ro
       # Repo scripts (eval drivers) at a fixed container path.

@@ -52,7 +52,7 @@ from std_msgs.msg import String
 
 from sam_mapper.annotate import annotate_frame
 from sam_mapper.best_view import BestViewCollector, BestViewConfig
-from sam_mapper.detections import PromptTable, encode_instance_id, to_detections
+from sam_mapper.detections import PromptTable, build_id_map, to_detections
 from sam_mapper.node_base import WorkerNodeMixin, run_node
 from sam_mapper.sam3_backend import Sam3Backend
 
@@ -72,6 +72,8 @@ class SamNode(WorkerNodeMixin, Node):
         self.publish_annotated = runtime.get('publish_annotated', True)
         self.log_every_n = int(runtime.get('log_every_n_frames', 20))
         self.verbose_objects = bool(runtime.get('verbose_objects', False))
+        # How much of the node's frame is NOT SAM 3. Costs a cuda sync per stage.
+        self.profile = bool(runtime.get('profile', False))
 
         self.declare_parameter('wait_for_prompts', False)
         self.wait_for_prompts = bool(self.get_parameter('wait_for_prompts').value)
@@ -111,7 +113,7 @@ class SamNode(WorkerNodeMixin, Node):
                 BestViewConfig.from_dict(self.best_view_cfg, self.prompt_table), log=self.log)
 
         self.log("loading SAM 3 (first run downloads weights, this can take a while) ...")
-        self.backend = Sam3Backend(config['sam3'], log=self.log)
+        self.backend = Sam3Backend(config['sam3'], log=self.log, profile=self.profile)
         # Empty prompts are fine: Sam3Backend.reset() only calls add_text_prompt when the
         # list is non-empty, so this opens a valid, promptless session.
         self.backend.set_prompts(self.prompt_table.prompts if self.armed else [])
@@ -358,36 +360,46 @@ class SamNode(WorkerNodeMixin, Node):
 
     def _process(self, image, stamp):
         rgb = image[:, :, ::-1].copy()                # cv_bridge gives BGR; SAM 3 wants RGB
+        # The backend's timer, so SAM stages and the node's own land in one table.
+        timer = self.backend.timer
 
-        self._set_stage('sam3 inference')
-        start = time.perf_counter()
-        result = self.backend.process_frame(rgb)
-        infer_ms = (time.perf_counter() - start) * 1000.0
+        with timer.frame():
+            self._set_stage('sam3 inference')
+            start = time.perf_counter()
+            result = self.backend.process_frame(rgb)
+            infer_ms = (time.perf_counter() - start) * 1000.0
 
-        self._set_stage('detections')
-        detections = to_detections(result, self.prompt_table)
+            self._set_stage('detections')
+            with timer.stage('node_to_detections'):
+                detections = to_detections(result, self.prompt_table)
 
-        # Shift instance ids into a fresh namespace after any session reset, and track the
-        # high-water mark so the next reset can clear it. Background ids (< 0) are a fixed
-        # per-class encoding and must not be touched.
-        instance = detections['ids'] >= 0
-        if self.id_offset:
-            detections['ids'][instance] += self.id_offset
-        if instance.any():
-            self.max_seen_id = max(self.max_seen_id, int(detections['ids'][instance].max()))
+            # Shift instance ids into a fresh namespace after any session reset, and track the
+            # high-water mark so the next reset can clear it. Background ids (< 0) are a fixed
+            # per-class encoding and must not be touched.
+            instance = detections['ids'] >= 0
+            if self.id_offset:
+                detections['ids'][instance] += self.id_offset
+            if instance.any():
+                self.max_seen_id = max(self.max_seen_id, int(detections['ids'][instance].max()))
 
-        if self.best_view_collector:
-            self.best_view_collector.consider(image, detections, stamp)
+            if self.best_view_collector:
+                with timer.stage('node_best_view'):
+                    self.best_view_collector.consider(image, detections, stamp)
 
-        self._set_stage('publish')
-        self._publish_detections(detections, stamp, image.shape[:2])
-        if self.publish_annotated:
-            self._publish_annotated(image, detections, stamp)
+            self._set_stage('publish')
+            with timer.stage('node_publish'):
+                self._publish_detections(detections, stamp, image.shape[:2])
+                if self.publish_annotated:
+                    self._publish_annotated(image, detections, stamp)
 
         self.frames_done += 1
         if self.frames_done <= self.VERBOSE_FIRST or self.frames_done % self.log_every_n == 0:
             self.log(f'frame {self.frames_done}: {len(detections["ids"])} detections | '
                      f'SAM3 {infer_ms:.0f} ms | dropped {self.frames_dropped}/{self.frames_in}')
+        if self.profile and self.frames_done % self.log_every_n == 0:
+            from sam_mapper.profiling import format_summary
+
+            self.log(format_summary(timer.summary(), title=f'sam_node frame {self.frames_done}'))
         if self.verbose_objects:
             self._log_verbose(detections)
 
@@ -408,9 +420,7 @@ class SamNode(WorkerNodeMixin, Node):
         # One image regardless of object count, and directly viewable in RViz/Foxglove
         # (each object is a distinct pixel value) — see docs/M2_perception.md 3.6-split.
         # Later entries win on overlapping pixels; rare, not worth resolving further.
-        id_map = np.zeros((height, width), dtype=np.uint16)
-        for obj_id, mask in zip(detections['ids'], detections['masks']):
-            id_map[mask] = encode_instance_id(int(obj_id))
+        id_map = build_id_map(detections['ids'], detections['masks'], height, width)
         map_msg = self.bridge.cv2_to_imgmsg(id_map, encoding='mono16')
         map_msg.header.stamp = header_stamp
         map_msg.header.frame_id = 'camera'

@@ -9,7 +9,9 @@ sam3:
   model_id: facebook/sam3
   device: cuda
   dtype: bfloat16
-  attn_implementation: flash_attention_2   # falls back to sdpa, then eager
+  # sdpa, not flash attention — flash-attn2 breaks SAM 3 detection, see sam3_mecanum_sim.yaml.
+  attn_implementation: sdpa
+  fill_hole_area: 0        # cv-utils hole filling off; mask NMS still runs
   max_vision_features_cache_size: 1
 
   # Must be square: a reshape downstream of the ViT hardcodes a square token grid.
