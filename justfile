@@ -157,13 +157,13 @@ sam-probe frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="--swe
 sam-profile frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="":
     just sam-probe {{frames}} {{config}} "--profile {{args}}"
 
-# facebook/sam3.1 ships only a native .pt.
-# Run `just hf-fetch sam3.1` first.
+# Profiles SAM 3.1 the way sam_node runs it: `just hf-fetch sam3.1` first.
 [group('sam')]
-[doc('Convert facebook/sam3.1 to an HF dir, and prove no tensor was left random')]
-sam31-convert out="/data/models/sam3.1_hf" args="":
+[doc('SAM 3.1 benchmark: all concepts batched through one backbone pass')]
+sam31-probe args="--bench":
     docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
-      "python3 /home/docker/scripts/eval/convert_sam31.py --out {{out}} {{args}}"
+      "source {{ai_src}}/install/setup.bash && \
+       python3 /home/docker/scripts/eval/sam31_probe.py {{args}}"
 
 # Challenge mode uses domain 42: just ask "…" 42
 [group('sim')]

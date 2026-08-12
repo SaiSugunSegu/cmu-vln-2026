@@ -6,6 +6,9 @@ detection_linear_state_time_bias: 0.0    # tune against the rig
 detection_angular_state_time_bias: 0.0
 
 sam3:
+  # hf_sam3      transformers Sam3VideoModel (default, the measured baseline)
+  # native_sam31 facebookresearch/sam3 Object Multiplex. 
+  backend: hf_sam3
   model_id: facebook/sam3
   device: cuda
   dtype: bfloat16
@@ -125,7 +128,7 @@ runtime:
   executor_threads: 2
   publish_annotated: true
   log_every_n_frames: 5
-  profile: false                    # per-stage breakdown in BOTH node logs, 
+  profile: true                    # per-stage breakdown in BOTH node logs, 
   cloud_window_before: 0.5         # gather clouds in [stamp - before, stamp + after]
   cloud_window_after: 0.1
   verbose_objects: false           # print every 2D detection + 3D map object per frame

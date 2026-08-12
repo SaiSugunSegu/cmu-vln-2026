@@ -68,7 +68,11 @@ class StageTimer:
 
     # -- lifecycle ---------------------------------------------------------
 
-    def attach(self, model) -> "StageTimer":
+    def attach(self, model, stages=None) -> "StageTimer":
+        """`stages` defaults to MODEL_STAGES (transformers' Sam3VideoModel). Pass another
+        map to instrument a different model with the same machinery — e.g. native SAM 3.1,
+        whose per-frame methods are named differently."""
+        stages = stages or MODEL_STAGES
         if not self.enabled or self._patched:
             return self
         if self._torch is None:
@@ -81,7 +85,7 @@ class StageTimer:
                 self._needs_sync = torch.cuda.is_available()
             except ImportError:
                 pass
-        for path, label in MODEL_STAGES:
+        for path, label in stages:
             found = _resolve(model, path)
             if found is None:
                 self.missing.append(path)

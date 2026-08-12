@@ -582,41 +582,63 @@ dead weight. `semantic_mapper` (§2) still has it; unrelated to this package.
 
 ### 3.6 Real-time design
 
-**Measured, 2026-07-27, `scene_0` frames, `square_1008`, bf16, sdpa:**
+**Superseded 2026-08-11.** The 7339 ms/frame figure below was measured at 13 prompts / 33 objects
+with `cv-utils` silently unloaded and every yaml threshold silently ignored (see the two bugs at the
+end of this section). Current measurements, `sam_mapper` stage profiler (`just sam-profile`):
+
+| regime | ms/frame | breakdown |
+|---|---|---|
+| offline, 1 prompt, 5-6 obj | 449 | encoder 178, tracker 208, detection 28 |
+| offline, 5 prompts, 6.0 obj | 563 | encoder 187, tracker 233, detection 127 |
+| **live `eval-cat1`, 3 prompts, 12.2 obj** | **663 (1.5 Hz)** | encoder 173, tracker 285, detection 97, node 50, off-seam 43 |
+
+Fitted over those points, and predicting the 5-prompt/12-object case to within 8 ms:
 
 ```
-median 7339 ms/frame (0.14 Hz), mean 32.7 objects, 23 ids present in all 30 frames
+SAM 3 model cost ~ 175 (vision encoder, FIXED)
+                 + ~30 per PROMPT   (run_detection loops prompts over shared vision features)
+                 + 37 + 20.4 * N    (tracker, per OBJECT)
 ```
 
-Two things to take from that.
+**Tracking works** — the property the design rests on. 23 of ~33 ids held across all 30 frames in the
+original run; re-check it after any prompt or threshold change.
 
-**Tracking works.** 23 of ~33 objects hold the same id across all 30 frames. That is the result the
-whole design rests on — it validates deleting ByteTrack *and* the spaCy meta-class matcher. This
-number is the one to re-check after any change to prompts or thresholds.
+**The old per-object hypothesis was directionally right.** The tracker *does* scale linearly with
+object count, but at 20.4 ms/object, not the ~200 ms guessed here. `run_detection` also loops per
+PROMPT (`modeling_sam3_video.py:588`), so prompt count is a separate linear cost — "N classes cost
+~1 forward pass" is true only of the vision encoder.
 
-**Throughput is the open problem: 0.14 Hz against a 10 Hz camera.** An earlier estimate in this doc
-said "plan for 3–8 Hz"; that was wrong by roughly 40×, and the latest-frame-wins design is what keeps
-it merely slow instead of unboundedly lagged.
+**Two bugs found 2026-08-11, both silent, both now fixed:**
 
-Leading hypothesis, from the shape of the number: the SAM 2-style tracker runs memory attention
-**per object**, and 33 objects × ~200 ms ≈ 6.6 s accounts for nearly all of the 7.3 s. If that holds,
-`ms/object` stays flat as prompts are removed while `ms/frame` falls proportionally — which is what
-`sam3_backend --sweep-prompts` measures. It would also mean SAM 3.1's **Object Multiplex** (shared
-memory across jointly-tracked objects) targets exactly this bottleneck, making §4.5 substantially
-more attractive than "a modest optimization".
+1. **No yaml threshold ever reached the model.** `Sam3VideoModel.__init__` copies each knob onto the
+   module and the forward path reads the copy; `Sam3Backend` set them only on `model.config`.
+   Verified in transformers 5.15: `self.<key>` is read in the model body, `self.config.<key>` **zero**
+   times, for all five knobs. So `score_threshold_detection: 0.7` ran at the checkpoint's 0.5 and
+   `det_nms_thresh` did nothing. Fixed in `Sam3Backend._apply_override` (writes both), logged as
+   `[sam3] effective: ...` at startup, guarded by `tests/test_backend_config.py`.
+2. **The `cv-utils` kernel was not loading**, so mask NMS was skipped entirely (`generic_nms` returns
+   `is_valid`, keeping every detection) and hole filling was off. Two causes: torch 2.5.1 had no
+   matching prebuilt variant, and transformers' `is_kernels_available()` window moved with an
+   unpinned transformers bump. The torch pin and the `kernels` version are now both derived from what
+   the kernel and transformers actually require — see `docker/requirements_captioner.txt`.
 
-Levers, cheapest first:
-1. **Drop the background prompts.** `wall`/`floor`/`ceiling` produced 10 of 37 objects in frame 0 and
-   yield *nothing persistent* — `update_map` re-creates background objects every frame because the
-   background merge branch is commented out (`semantic_map.py:312-318`). Pure cost.
-2. **Tighten over-firing prompts.** Frame 0 gave 9 `painting` and 8 `cabinet` instances.
-3. **`image_size: [672, 672]`** — 0.44× tokens (§4.3).
-4. **flash-attn** — the run fell back to `sdpa`; `flash_attention_2` is supported but the package is
-   not installed.
-5. **`pip install kernels`** — transformers logs that NMS, hole filling and sprinkle removal are
-   *skipped* without it. Mask-quality first, but worth measuring. **Done 2026-07-28**: pin to
-   `>=0.15.2,<0.16.0` (Dockerfile + live), `cv-utils` kernel confirmed loading.
-6. **SAM 3.1** (§4.5).
+**Every map3d bench number predating 2026-08-11 was therefore produced by a different detector than
+its config describes.**
+
+Levers, re-ranked by measurement:
+1. **`image_size: [672, 672]`** — 0.44× tokens against a fixed 175 ms encoder. The largest untouched
+   lever at low object counts; weak at 20 objects where the encoder is only 14% of the frame. Gate on
+   mask IoU (`--save-masks` / `--compare-baseline`).
+2. **Cut tracked objects** — ~20 ms per object removed, now that thresholds actually apply.
+3. **Prompt count** — ~30 ms each; cat1 already sends the minimum.
+4. **flash attention: do NOT.** Measured: `kernels-community/flash-attn2` returns **0.0 objects/frame**
+   against sdpa's 2.0, and is slower — `Sam3Attention` falls back to SDPA for relative-position
+   cross-attention anyway. transformers 5.15 substitutes the hub kernel for a `flash_attention_2`
+   request automatically, so `Sam3Backend.ATTN_FALLBACKS` is `("sdpa", "eager")` to keep it
+   unreachable by accident. FA3 is Hopper-only; both deploy targets are Ada sm_89.
+5. **`fill_hole_area: 0`** — disables cv-utils hole filling / sprinkle removal (mask NMS still runs).
+   Cheap, but the latency saving attributed to it was thermally confounded and is unproven.
+6. **SAM 3.1** (§4.5) — now measured, and viable for multi-concept.
 
 **Square 672/336 backlog (2026-07-28, deferred).** Root cause of the reshape failure:
 `sam3_backend.py` set `config.detector_config.image_size` directly instead of the top-level
@@ -823,72 +845,55 @@ work in §6 from "nice to have" to the only route to undistorted input.
 | Model | Status here |
 |---|---|
 | `facebook/sam3` | Full transformers integration (`Sam3Model`, `Sam3VideoModel`). **Ships first.** |
-| `facebook/sam3.1` | Released 2026-03-27. Adds **Object Multiplex** — shared-memory joint multi-object tracking, ~7× faster at 128 objects. **Spike result (2026-07-27): does not load directly**, see below. |
+| `facebook/sam3.1` | Released 2026-03-27. Adds **Object Multiplex** — objects packed into buckets of `multiplex_count` (16) and tracked jointly, ~7× at 128 objects. **Loads and runs (2026-08-11)** via the NATIVE `facebookresearch/sam3` package; no conversion. `transformers` has none of it. See §4.5. |
 | SAM3-LiteText | **Dead end here — do not re-investigate.** Distills the 353M text encoder to MobileCLIP (42.5M, −88%). Disqualified twice over: there is no `sam3_lite_text_video` module (image only, no tracking), and our prompts are fixed per session so the text encoder runs *once* — the saving is static memory, not per-frame latency. |
 
-### 4.5 SAM 3.1 spike result — and the cheap path to it
+### 4.5 SAM 3.1 — measured, 2026-08-11
 
-Probing `Sam3VideoModel.from_pretrained("facebook/sam3.1")` on 2026-07-27:
+**This section previously said "the gap is a file format, not a missing integration" and that a
+checkpoint conversion was the cheap path. That was wrong and cost a day.** `transformers` contains
+**no Object Multiplex at all** (`grep -ril multiplex` over `transformers/models/` returns nothing),
+so converting `sam3.1_multiplex.pt` into `Sam3VideoModel` yields 3.1's *weights* running SAM 3's
+*algorithm* — the speedup is in the code. The conversion tooling has been deleted.
 
-```
-config.json: 100% ... 25.8k
-FAILED to load facebook/sam3.1
-  OSError: facebook/sam3.1 does not appear to have a file named
-           pytorch_model.bin or model.safetensors
-```
+**How it is actually used.** `pip install --no-deps git+.../sam3.git@<sha>` (pinned in
+`ai_module/docker/Dockerfile`) plus `einops`, `iopath`, `pycocotools`. `--no-deps` is load-bearing:
+sam3 pins `ftfy==6.1.1`, which would downgrade the one `open_clip` needs, and an unconstrained
+resolve could move torch or numpy (the 1.26 ABI is what `cv_bridge`/`rclpy` are built against).
+`einops` is *not* in sam3's `pyproject` but is imported at `sam3/sam/rope.py:15`. `hydra` and
+`skimage` are reachable only from paths we do not use. `build_sam3_multiplex_video_predictor` loads
+`sam3.1_multiplex.pt` directly via `just hf-fetch sam3.1`.
 
-**Read that failure carefully — it is better news than it looks.** It failed *after* parsing
-config.json, so the config genuinely is transformers-format `sam3_video`. The architecture is
-supported; only the **weights format** is wrong. The repo ships `sam3.1_multiplex.pt`, a native
-checkpoint, with no safetensors.
+**Findings, all verified against source at `96914d2` and measured on 40 `livingroom_1` frames (L4):**
 
-So the gap is a file format, not a missing integration — and transformers ships
-`models/sam3_video/convert_sam3_video_to_hf.py`, which turns a native SAM 3 checkpoint into a
-proper HF directory using only `torch` + `transformers` (no native repo needed).
+| | finding |
+|---|---|
+| **Streaming** | Possible. `_run_single_frame_inference(state, frame_idx, reverse)` is a per-frame primitive with all memory in `inference_state`; `assert img_ids.numel() == 1`; `feature_cache.pop(frame_idx-1)` self-evicts. Only the session bootstrap wants a whole video, and `resource_path` accepts a list of PIL Images (`io_utils.py:44`) — no disk. |
+| **Multi-concept** | Works, but not through `add_prompt`, which holds ONE caption and calls `reset_state()` on entry (a second call replaces the first). `find_text_batch` is an arbitrary caption list and any slot is selectable: `text_ids` and `img_ids` are **parallel batches** (`sam3_image.py:180-184`, *"the batch size of txt_feats is always the number of prompts"*). `img_ids=[t]*N` with `text_ids=[0..N-1]` grounds N concepts against one image, and `_get_img_feats` dedupes img_ids (`:139-143`) so it costs **one backbone pass**. Measured **3.1× faster** than N separate passes, with identical per-concept detections. |
+| **Upstream's own multi-prompt** | `Sam3MultiplexTracking.forward()` loops `add_prompt` → full `propagate_in_video` → `reset_state` per concept, and `reset_state` does `feature_cache.clear()`. Measured: prompts 2–5 cost the same as prompt 1 — every frame re-encoded. 1788 ms/frame for 5 concepts. **This is the slow way; do not copy it.** |
+| **Attribution** | Exists — `scores_labels[obj_id + start_obj_id] = (score, prompt_id)`, the `prompt_to_obj_ids` equivalent `detections.py` needs. Nothing to build. |
+| **Tracker** | Nearly flat in object count: **`50 + 1.28·N` ms** against SAM 3's `37 + 20.4·N`. Object Multiplex pays off even at 43.75% bucket fill; it is concept-agnostic (it tracks masklets), so the fit should hold for a merged multi-concept object set. |
+| **Fixed cost** | Higher than SAM 3: ~330 ms `detect(+backbone)` for one concept, ~447 ms for six batched, vs SAM 3's 175 ms encoder + ~30/prompt. |
+| **`use_fa3`** | Builder default is **True** and imports `flash_attn_interface` with `float8_e4m3fn` — Hopper only. Must be `False` on Ada; falls back cleanly to SDPA (`model_misc.py:397-410`). |
+| **Memory** | `batched_grounding_batch_size=16` and `postprocess_batch_size=16` are hardcoded (`model_builder.py:1190-1191`, exposed by neither) and OOM a 22 GB L4 at 640×1920. Plain attributes; set to 4. Both are offline lookahead and worthless in streaming. |
+| **Upstream bug** | `Sam3BasePredictor.start_session` always passes `offload_state_to_cpu`, which no `init_state` in the multiplex chain accepts. Filter kwargs by the real signature — `offload_video_to_cpu` IS supported and must keep working. |
+| **State dict** | The builder loads twice (`model_builder.py:1120` then `:1222`): first into the bare tracker BEFORE the `sam3_model.`→`detector.` remap (misses ~900 keys, means nothing), then into the assembled model. Only the second is authoritative — 64 missing, all benign `freqs_cis` register-buffers recomputed in `__init__` (`vitdet.py:552-555`), 0 unexpected. |
+| **Lost in streaming** | hotstart(15), masklet confirmation, batched grounding — all need future frames. SAM 3 streaming already runs without hotstart, so this is parity, not a regression. It does mean 3.1's published benchmark numbers are offline numbers. |
 
-**This replaces `NativeSam31Backend` entirely.** Converting is far less work than implementing
-facebookresearch/sam3's file-based session API, and it keeps the clean `Sam3VideoModel` interface,
-so `sam_mapper` needs no code change at all — just `sam3.model_id` pointed at the converted dir.
+**Where it stands.** For 1 concept SAM 3.1 already beats SAM 3 above ~6 objects (374 vs 449 ms
+measured). For 3–6 concepts it should win by a widening margin — 6 concepts found 21.2 objects/frame,
+where SAM 3 pays 20.4 ms each and SAM 3.1 pays 1.28 — but that requires the one thing still unbuilt:
+**wiring batched multi-concept detection into the per-frame tracker.** Detection is proven
+(`pred_logits (N,200,1)`, reproducing every per-concept baseline exactly); the tracker path still
+computes image features at batch 1 against a batch-N stage. The merge and attribution it would feed
+already exist.
 
-**Blocked, and deprioritised (2026-07-27).** The converter is development tooling and is **excluded
-from the PyPI wheel** — it exists only in a transformers source checkout:
+Benchmark it with `just sam31-probe` (`scripts/eval/sam31_probe.py`). **Run it on a cool card** — the
+L4 throttles from 2040 to ~1150 MHz within one sweep, which is enough to make per-concept times track
+run order instead of object count; the probe now refuses to report a tracker fit when clocks move
+more than 5% across a run.
 
-```
-No module named 'transformers.models.sam3_video.convert_sam3_video_to_hf'
-```
-
-Unblocking means fetching that one file from GitHub at the tag matching the installed transformers
-(it imports only public API, so it runs standalone). Version matching matters — a converter from
-another release may carry a different key mapping.
-
-**One trap to carry forward when this is picked up:** the converter calls
-`load_state_dict(..., strict=False)` (`convert_sam3_video_to_hf.py:641`) and was written for SAM 3.
-If SAM 3.1's Object Multiplex renamed keys, conversion reports success while leaving those tensors
-**randomly initialised** — a model that loads, runs, and segments worse, with nothing in the output
-saying so. Any conversion attempt must audit the real missing/unexpected key lists. Note that
-scraping the converter's log does *not* work: transformers sets `propagate = False` on its root
-logger, so a stdlib root handler captures nothing and every conversion looks clean. Wrap
-`torch.nn.Module.load_state_dict` and read its return value instead.
-
-The SAM 3.1 tooling has been removed from `sam_mapper` to keep the package free of dead code; this
-section is the record needed to rebuild it.
-
-Even on a clean conversion, A/B it against `facebook/sam3` on real frames before adopting it —
-`just sam-probe` reports objects/frame and stable-id counts for exactly this.
-
-**Calibration, revised after measurement.** An earlier version of this section argued Object
-Multiplex's headline "~7× faster" is quoted at 128 objects and would therefore give little at our
-scale. The 2026-07-27 probe undercut that: we run **~33 objects per frame** at 7.3 s/frame, and
-per-object memory attention is the leading suspect for that cost (§3.6). Object Multiplex shares
-memory across jointly-tracked objects, so it targets this bottleneck directly. Confirm with
-`--sweep-prompts` first — if runtime scales with object count, converting to 3.1 moves up the
-priority list considerably.
-
-The remaining native option (`facebookresearch/sam3`, Python 3.12, torch 2.7+, session/request API)
-is now a distant third choice. Its `handle_request` takes a `resource_path` (JPEG folder or MP4), so
-per-frame streaming is not even confirmed to exist.
-
----
+**SAM3-LiteText remains a dead end** — see §4.4.
 
 ## 5. Tuning guide — symptom → knob
 

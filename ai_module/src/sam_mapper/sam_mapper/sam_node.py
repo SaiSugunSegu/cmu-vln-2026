@@ -54,7 +54,7 @@ from sam_mapper.annotate import annotate_frame
 from sam_mapper.best_view import BestViewCollector, BestViewConfig
 from sam_mapper.detections import PromptTable, build_id_map, to_detections
 from sam_mapper.node_base import WorkerNodeMixin, run_node
-from sam_mapper.sam3_backend import Sam3Backend
+from sam_mapper.sam3_backend import make_backend
 
 
 class SamNode(WorkerNodeMixin, Node):
@@ -113,9 +113,9 @@ class SamNode(WorkerNodeMixin, Node):
                 BestViewConfig.from_dict(self.best_view_cfg, self.prompt_table), log=self.log)
 
         self.log("loading SAM 3 (first run downloads weights, this can take a while) ...")
-        self.backend = Sam3Backend(config['sam3'], log=self.log, profile=self.profile)
-        # Empty prompts are fine: Sam3Backend.reset() only calls add_text_prompt when the
-        # list is non-empty, so this opens a valid, promptless session.
+        self.backend = make_backend(config['sam3'], log=self.log, profile=self.profile)
+        # Empty prompts are fine: both backends treat an empty prompt list as a valid,
+        # promptless session rather than an error.
         self.backend.set_prompts(self.prompt_table.prompts if self.armed else [])
         self.log("SAM 3 ready" if self.armed else "SAM 3 weights loaded — awaiting prompts")
 
