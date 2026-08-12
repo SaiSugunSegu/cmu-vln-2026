@@ -7,13 +7,22 @@ Category 2 asks the robot to *point at one object* — the answer is a 3D box, n
     <scene>_referential_statements.json   utterance -> target_index, relation, anchors
     <scene>_objects.json                  object_id -> 8-corner bbox, centre, size
 
-The join alone is not enough. IRef-VLA emits every statement its grammar allows, including
-ones no human could resolve ("the pillow closest to the plant", with three plants in the
-room), so each candidate is re-derived from the geometry in ``cat2_geometry`` and kept only
-when its answer is unique by a margin under both distance metrics and both class
-granularities. The two official questions per scene come from the PDF text verbatim and
-are resolved by ``cat2_text_solver`` rather than by the join, because the organizers'
-phrasing usually has no generated counterpart.
+The join alone is not enough, in two directions.
+
+It says too much: IRef-VLA emits every statement its grammar allows, including ones no human
+could resolve ("the pillow closest to the plant", with three plants in the room), so each
+candidate is re-derived from the geometry in ``cat2_geometry`` and kept only when its answer
+is unique by a margin under both distance metrics and both class granularities.
+
+And it says too little: that grammar wrote 16330 "near" statements for these scenes and 155
+"on" ones, which is a fact about the generator rather than about the rooms. So the spatial
+predicates — on, in, supports, above, below, between — are also synthesised straight from the
+boxes, under the same checks, or the benchmark would be three quarters distance comparisons.
+
+The two official questions per scene come from the PDF text verbatim and are resolved by
+``cat2_text_solver`` rather than by the join, because the organizers' phrasing usually has no
+generated counterpart. That solver then vets every generated question too: a question that
+does not read back to its own answer across the whole scene is not asked.
 
 Default output:
   <repo>/data/benchmark/<scene>/category_2/<scene>_category2_qa.json
@@ -30,12 +39,12 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
-import math
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
 import cat2_text_solver as solver
+from cat2_visibility import Visibility, load_visibility, report_path
 from cat2_geometry import (
     BAGS,
     MIN_MARGIN,
@@ -106,7 +115,8 @@ SINGULAR_S_WORDS = {"glass", "grass", "dress", "compass", "mattress", "bass", "c
 QUESTION_KEYS = [
     "id", "question", "source", "difficulty", "relation", "target_objects", "answer",
     "anchors", "distractor_ids", "competitors", "margin", "evidence", "statement",
-    "region", "images", "verified", "solver_trace", "reworded", "review_note",
+    "region", "images", "views", "visibility_warning", "verified", "solver_trace",
+    "reworded", "review_note",
 ]
 
 
@@ -200,7 +210,7 @@ def build_candidate(
 
 
 def synthesize_candidates(
-    objects: dict[str, Obj], rejected: Counter
+    objects: dict[str, Obj], rejected: Counter, vis: Visibility
 ) -> dict[tuple[str, str, str], dict]:
     """Predicate candidates derived from the boxes, with no utterance behind them.
 
@@ -211,9 +221,15 @@ def synthesize_candidates(
     out: dict[tuple[str, str, str], dict] = {}
     for region in sorted({o.region for o in objects.values()}):
         region_objs = [o for o in objects.values() if o.region == region]
-        named = [(a, p) for a in region_objs if (p := anchor_phrase(a, region_objs))]
+        # Rivals are NOT filtered by visibility: an unseen twin still makes "the vase
+        # closest to the sofa" ambiguous in the room the question is asked about.
+        named = [(a, p) for a in region_objs
+                 if (p := anchor_phrase(a, region_objs)) and vis.visible(a.id)]
         for target in region_objs:
             if target.structural:
+                continue
+            if not vis.visible(target.id):
+                rejected[f"target not seen by the robot: {vis.reason(target.id)}"] += 1
                 continue
             for relation in SYNTHESIZED:
                 if relation == "between":
@@ -283,8 +299,8 @@ def synthesize_between(
     return {key: candidate for _score, key, candidate in found[:2]}
 
 
-def mine_candidates(
-    objects: dict[str, Obj], statements: dict[str, Any]
+def build_candidates(
+    objects: dict[str, Obj], statements: dict[str, Any], vis: Visibility
 ) -> tuple[list[dict], dict[str, int]]:
     """Every claim that survives geometric verification, from utterances and from boxes."""
     by_region: dict[str, list[Obj]] = defaultdict(list)
@@ -294,7 +310,7 @@ def mine_candidates(
     rejected: Counter = Counter()
     # Synthesised first, so a statement-backed duplicate of the same claim overwrites it
     # and keeps its utterance and distractor list.
-    best: dict[tuple[str, str, str], dict] = synthesize_candidates(objects, rejected)
+    best: dict[tuple[str, str, str], dict] = synthesize_candidates(objects, rejected, vis)
 
     for region, utterances in (statements.get("regions") or {}).items():
         region_objs = by_region.get(str(region), [])
@@ -311,10 +327,16 @@ def mine_candidates(
                 if target.structural:
                     rejected["structural target"] += 1
                     continue
+                if not vis.visible(target.id):
+                    rejected[f"target not seen by the robot: {vis.reason(target.id)}"] += 1
+                    continue
                 anchor_ids = [str(a.get("index")) for a in (entry.get("anchors") or {}).values()]
                 anchors = [objects[i] for i in anchor_ids if i in objects]
                 if not anchors or len(anchors) != len(anchor_ids):
                     rejected["anchor missing from objects.json"] += 1
+                    continue
+                if hidden := vis.hidden([a.id for a in anchors]):
+                    rejected[f"anchor not seen by the robot: {hidden[0][1]}"] += 1
                     continue
 
                 phrases = [anchor_phrase(a, region_objs) for a in anchors]
@@ -357,9 +379,17 @@ def mine_candidates(
                 if previous is None or len(utterance) < len(previous["statement"] or "z" * 999):
                     best[key] = candidate
 
+    # Among candidates that are equally unmistakable on the geometry, prefer the one the
+    # robot saw best. Bucketed, so a 40 px^2 difference does not reorder the pool and the
+    # selection stays reproducible.
     candidates = sorted(
         best.values(),
-        key=lambda c: (-selection_score(c), c["answer"]["object_id"], c["question"]),
+        key=lambda c: (
+            -selection_score(c),
+            -int(vis.quality(c["answer"]["object_id"]) // 500),
+            c["answer"]["object_id"],
+            c["question"],
+        ),
     )
     return candidates, dict(rejected.most_common())
 
@@ -476,7 +506,10 @@ def build_official(
 # ---------------------------------------------------------------- selection
 
 
-def select(candidates: list[dict], n: int, taken_relations: Counter) -> list[dict]:
+def select(
+    candidates: list[dict], n: int, taken_relations: Counter, objects: dict[str, Obj],
+    skipped: Counter,
+) -> list[dict]:
     """Fill the remaining slots by relation quota, scarcest relation first.
 
     Ranking candidates purely by how unmistakable they are produces ten distance
@@ -492,6 +525,7 @@ def select(candidates: list[dict], n: int, taken_relations: Counter) -> list[dic
     other's answer.
     """
     picked: list[int] = []
+    ambiguous: set[int] = set()
     used_targets: set[str] = set()
     used_pairs: set[tuple[str, str]] = set()
     used_anchors: Counter = Counter()
@@ -509,6 +543,18 @@ def select(candidates: list[dict], n: int, taken_relations: Counter) -> list[dic
             return False
         if any(used_anchors[a["object_id"]] >= per_anchor for a in candidate["anchors"]):
             return False
+        # Verification is per region, but a robot is asked the question in the whole scene.
+        # Reading the text back with the solver is what catches "the curtains closest to the
+        # trash bin" in a suite where another room has a shower curtain and a bin of its own.
+        # Checked here rather than while mining because it is the expensive test and only a
+        # handful of the hundreds of candidates ever reach a slot.
+        if index in ambiguous:
+            return False
+        solved = solver.solve_in_regions(candidate["question"], objects)["target"]
+        if solved is None or solved.id != target_id:
+            ambiguous.add(index)
+            skipped[candidate["relation"]] += 1
+            return False
         picked.append(index)
         used_targets.add(target_id)
         used_pairs.add((cls, anchor_ids))
@@ -518,11 +564,12 @@ def select(candidates: list[dict], n: int, taken_relations: Counter) -> list[dic
             used_anchors[a["object_id"]] += 1
         return True
 
-    # Quotas first at their nominal size, then raised a step at a time, so a scene that
-    # cannot fill ten slots from its scarce relations widens the common ones evenly instead
-    # of handing every leftover slot to whichever comparative had the biggest margin.
+    # Quotas at their nominal size first, scarcest relation leading. Then they are raised a
+    # step at a time in the *opposite* order: leftover slots belong to the relations with
+    # hundreds of candidates, whose second-best is still excellent, rather than to the ones
+    # that had two — a third "between" means scraping the bottom of that barrel.
     for extra, per_class, per_anchor in ((0, 2, 2), (1, 2, 2), (2, 3, 3), (n, n, n)):
-        for relation, quota in QUOTAS:
+        for relation, quota in (QUOTAS if not extra else QUOTAS[::-1]):
             for index, candidate in enumerate(candidates):
                 if len(picked) >= n:
                     return [candidates[i] for i in picked]
@@ -531,6 +578,41 @@ def select(candidates: list[dict], n: int, taken_relations: Counter) -> list[dic
                 if candidate["relation"] == relation and index not in picked:
                     take(index, per_class, per_anchor)
     return [candidates[i] for i in picked]
+
+
+# ---------------------------------------------------------------- visibility
+
+
+def attach_views(questions: list[dict], vis: Visibility) -> list[str]:
+    """Record where the robot saw each question's objects; return the ones it never did.
+
+    Generated questions cannot fail this -- their candidates were gated on it -- so the
+    return value is about the official questions, which are asked verbatim whether or not
+    the organizers' object is reachable from the floor of that room. Naming it in the file
+    beats discovering it as a zero score.
+    """
+    if not vis:
+        return []
+    unseen: list[str] = []
+    for q in questions:
+        answer = q.get("answer")
+        roles = ([(answer["object_id"], "target")] if answer else []) + [
+            (a["object_id"], "anchor") for a in q.get("anchors") or []
+        ]
+        views, missing = [], []
+        for oid, role in roles:
+            if view := vis.view(oid):
+                views.append({"object_id": oid, "role": role} | view)
+            else:
+                missing.append(f"{role} {oid} was never resolved by the robot's camera: "
+                               f"{vis.reason(oid)}")
+                unseen.append(f"{q.get('id') or q['question'][:40]}: {role} {oid} "
+                              f"({vis.reason(oid)})")
+        if views:
+            q["views"] = views
+        if missing:
+            q["visibility_warning"] = missing
+    return unseen
 
 
 # ---------------------------------------------------------------- overrides
@@ -543,6 +625,7 @@ def scene_overrides(overrides: dict[str, Any], scene: str) -> dict[str, Any]:
         "reword": {solver.normalize(k): v for k, v in (rules.get("reword") or {}).items()},
         "pin": {solver.normalize(k): str(v) for k, v in (rules.get("pin") or {}).items()},
         "note": {solver.normalize(k): v for k, v in (rules.get("note") or {}).items()},
+        "hide": {str(k): v for k, v in (rules.get("hide") or {}).items()},
     }
 
 
@@ -559,6 +642,33 @@ def apply_text_rules(questions: list[dict], rules: dict[str, Any]) -> list[dict]
     return questions
 
 
+def stale_overrides(
+    questions: list[dict], offered: set[str], rules: dict[str, Any], vis: Visibility
+) -> list[str]:
+    """Override keys that matched nothing this run.
+
+    A correction whose question the generator no longer produces is not harmless: it reads
+    like a live decision while doing nothing, and the next person to move a threshold has no
+    way to tell which of these rules are still load-bearing. pin, reword and note are
+    checked against the questions that came out; drop against everything that was on offer,
+    since a drop's whole job is to keep its question from being asked; hide against the
+    measured report, since hiding what the measurement already rejects says nothing.
+
+    A note explaining a drop is the exception: its question is gone precisely because the
+    rule worked, and that explanation is the most useful thing in the file.
+    """
+    asked = {solver.normalize(q["question"]) for q in questions}
+    reworded = {solver.normalize(new): old for old, new in rules["reword"].items()}
+    live = asked | {reworded[key] for key in asked & reworded.keys()} | rules["drop"]
+    stale = [f"{kind}: {key}" for kind in ("pin", "reword", "note")
+             for key in rules[kind] if key not in live]
+    stale += [f"drop: {key}" for key in rules["drop"] if key not in offered]
+    stale += [f"hide: {oid} is already {vis.report and 'rejected by the measurement' or 'unmeasured'}"
+              for oid in rules["hide"]
+              if vis.report and not (vis.objects.get(oid, {}).get("visible", True))]
+    return sorted(stale)
+
+
 # ---------------------------------------------------------------- generation
 
 
@@ -573,7 +683,8 @@ def generate_scene(
     objects = load_objects(scene)
     statements = load_statements(scene)
     rules = scene_overrides(overrides, scene)
-    candidates, rejected = mine_candidates(objects, statements)
+    vis = Visibility(load_visibility(scene), rules["hide"])
+    candidates, rejected = build_candidates(objects, statements, vis)
     images = official_images(scene)
 
     questions: list[dict] = []
@@ -585,6 +696,8 @@ def generate_scene(
         )
 
     taken = {q["answer"]["object_id"] for q in questions if q.get("answer")}
+    offered = {solver.normalize(c["question"]) for c in candidates}
+    offered |= {solver.normalize(t) for t in official_questions().get(scene, [])}
     pool = [
         c
         for c in candidates
@@ -592,11 +705,15 @@ def generate_scene(
         and solver.normalize(c["question"]) not in rules["drop"]
     ]
     official_relations = Counter(q["relation"] for q in questions if q.get("relation"))
-    questions += select(pool, max(0, n_per_scene - len(questions)), official_relations)
+    ambiguous: Counter = Counter()
+    questions += select(
+        pool, max(0, n_per_scene - len(questions)), official_relations, objects, ambiguous
+    )
     questions = apply_text_rules(questions, rules)
 
     for i, q in enumerate(questions, start=1):
         q["id"] = f"Q{i:02d}"
+    unseen = attach_views(questions, vis)
     questions = [
         {k: q[k] for k in QUESTION_KEYS if k in q}
         | {k: v for k, v in q.items() if k not in QUESTION_KEYS}
@@ -621,13 +738,28 @@ def generate_scene(
             "their target object is solved from the geometry by bags/cat2_text_solver.py and "
             "solver_trace records how. images points at the screenshot the PDF shows next to "
             "the question, in which the expected answer is outlined.",
-            "source=generated questions are mined from the scene's referential statements and "
-            f"re-derived from the boxes: the answer wins by at least {MIN_MARGIN} m under both "
-            "centre-to-centre and box-gap distance, against both raw-label and NYU-label "
-            "competitors, and every anchor is uniquely named in its region.",
+            "source=generated questions carry derivation=statement when mined from one of the "
+            "scene's referential statements (quoted in statement) and derivation=geometry when "
+            "the relation was found in the boxes directly, which is how on/in/supports/above/"
+            "below/between get represented at all: IRef's grammar emits thousands of distance "
+            "comparisons and a handful of everything else. Both go through the same checks.",
+            f"Every generated answer is re-derived from the boxes: it wins by at least "
+            f"{MIN_MARGIN} m under both centre-to-centre and box-gap distance (comparatives) or "
+            "is the only object the relation holds for, against both raw-label and NYU-label "
+            "competitors, every anchor is uniquely named in its region, and the question read "
+            "back by bags/cat2_text_solver.py resolves to this answer across the whole scene.",
+            "Every generated question's target and anchors were seen by the robot's own "
+            "camera: scripts/eval/object_visibility.py projects each box into the recorded "
+            "/camera/image frames and requires lidar returns off the object inside the 120 "
+            "degree band, so IRef geometry the robot drove under, past or behind cannot be "
+            "asked about. views records the frame each object was best seen in, and a "
+            "visibility_warning marks an official question whose own object the robot never "
+            "resolved -- those are asked as the organizers wrote them, not dropped. The report is "
+            f"{report_path(scene).relative_to(REPO) if report_path(scene).exists() else 'NOT MEASURED'}.",
             "difficulty: easy = one same-class competitor and a uniquely named anchor; medium "
-            "= 2-3 competitors, a vertical relation, or a single-hop official question; hard = "
-            "4+ competitors, a between relation, or a multi-hop official question.",
+            "= 2-3 competitors, a vertical or containment relation, or a single-hop official "
+            "question; hard = 4+ competitors, a between relation, or a multi-hop official "
+            "question.",
             f"source_statements: {metadata_path(scene, 'referential_statements.json').relative_to(REPO)}",
             f"source_objects: {metadata_path(scene, 'objects.json').relative_to(REPO)}",
         ],
@@ -665,11 +797,20 @@ def generate_scene(
         )
 
     unresolved = [q["id"] for q in questions if not q.get("verified")]
+    stale = stale_overrides(questions, offered, rules, vis)
     print(
         f"{scene:16s} questions={len(questions):2d} candidates={len(candidates):4d} "
         f"relations={out['relation_counts']} difficulty={out['difficulty_counts']}"
+        + (f" ambiguous={sum(ambiguous.values())}" if ambiguous else "")
         + (f"  UNRESOLVED: {unresolved}" if unresolved else "")
     )
+    if not vis:
+        print(f"    visibility NOT MEASURED -- run `just visibility {scene}`; every candidate "
+              f"was allowed through")
+    for miss in unseen:
+        print(f"    official question names an object the robot never resolved -- {miss}")
+    for rule in stale:
+        print(f"    stale override, matched nothing this run -- {rule}")
     if verbose:
         for q in questions:
             answer = q.get("answer")

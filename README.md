@@ -223,17 +223,28 @@ just map3d-score                   # vs IRef-VLA GT, incl. the category-2 marker
 Full guide, metric definitions and current numbers: [docs/map3d_bench.md](docs/map3d_bench.md)
 Mapper internals — every stage, threshold and the Tier 1/2/3 backlog: [docs/map_node_pipeline.md](docs/map_node_pipeline.md)
 
-### 3.7 · Category-2 ground truth — 130 questions, seconds to rebuild
+### 3.7 · Category-2 ground truth — 122 questions, seconds to rebuild
 
 Object reference needs a *box* as the answer, so the benchmark is a join over the IRef-VLA
-metadata: 10 questions per scene across the 13 scenes with referential statements. No SAM,
-no VLM, no bag — the whole thing regenerates in 8 s, and every answer is re-derived from the
-boxes rather than trusted from the statement that produced it.
+metadata: up to 10 questions per scene across the 13 scenes with referential statements. No
+SAM, no VLM, no bag — the whole thing regenerates in ~15 s, and every answer is re-derived
+from the boxes rather than trusted from the statement that produced it.
 
 ```bash
 just gen-cat2       # -> data/benchmark/<scene>/category_2/<scene>_category2_qa.json
 just verify-cat2    # independent audit; non-zero exit on any mismatch
 ```
+
+Half the questions are distance comparisons (`closest`, `farthest`, `near`) and half are
+spatial predicates (`on`, `in`, `supports`, `above`, `below`, `between`). IRef's statements
+are almost entirely the former, so the latter are synthesised from the boxes and held to the
+same verification — with a per-relation quota so a scene cannot fill up on "farthest from".
+
+Every question is also gated on what the robot **actually saw**: `just visibility` projects
+each IRef box into the recorded `/camera/image` frames with the mapper's own camera model and
+keeps only the objects the sensors resolved. It turned out to disqualify 47 of the first 130
+questions — recessed downlights, a book 270 px² across, geometry behind a wall — and its
+committed per-scene report is what lets `gen-cat2` stay bag-free.
 
 Corrections go in `bags/category2_overrides.json` (pin / reword / drop), never into the
 generated JSON — the next `gen-cat2` overwrites it. These answers are also the target set

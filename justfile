@@ -483,10 +483,12 @@ cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
       "source {{ai_src}}/install/setup.bash && python3 $(printf '%q' "$script") --qa $(printf '%q' "$qa") --scene $(printf '%q' "$scene") --out $(printf '%q' "$out") --limit $(printf '%q' "$limit") --speed $(printf '%q' "$speed") ${extra}"
 
 # ---------- Category-2 (object reference) benchmark ---------------------
-# All three run on the HOST: they only read bags/<scene>/iref_vla_metadata and
-# questions/, and write data/benchmark + data/pdf_assets. Seconds, not hours --
+# gen/verify/pdf-assets run on the HOST: they only read bags/<scene>/iref_vla_metadata
+# and questions/, and write data/benchmark + data/pdf_assets. Seconds, not hours --
 # unlike the category-1 view cache there is no SAM or VLM in this loop, so
 # regenerating the whole benchmark is cheap and is the intended way to change it.
+# `just visibility` is the exception: it needs the bags and ros2, so it runs in the
+# container, and its committed report is what lets gen-cat2 stay host-only.
 #   just gen-cat2                     # all 13 scenes with referential statements
 #   just gen-cat2 "--scenes loft -v"
 # Hand corrections belong in bags/category2_overrides.json (pin / reword / drop),
@@ -496,9 +498,10 @@ cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
 gen-cat2 args="":
     python3 bags/generate_category2_qa.py {{args}}
 
-# Re-derives every answer box from the scene metadata and re-checks every relation,
-# including re-solving the official questions from their text. Non-zero exit on any
-# mismatch, so it is safe to gate on. Run it after gen-cat2 and after any metadata refresh.
+# Re-derives every answer box from the scene metadata, re-checks every relation, and
+# re-solves every question -- generated as well as official -- from its own text. Non-zero
+# exit on any mismatch, so it is safe to gate on. Run it after gen-cat2 and after any
+# metadata refresh.
 [group('cat2')]
 [doc('Audit the category-2 benchmark against the scene metadata')]
 verify-cat2 args="":
@@ -511,3 +514,24 @@ verify-cat2 args="":
 [doc('Extract questions.pdf images and text into data/pdf_assets')]
 pdf-assets args="":
     python3 bags/extract_pdf_assets.py {{args}}
+
+# Measures which IRef-VLA boxes the robot's camera actually resolved, by projecting them
+# into the recorded /camera/image frames (see docs/cat2_benchmark.md "Visibility gate").
+# ~35 s/scene, needs the scene bag. The JSON reports are committed -- gen-cat2 and
+# verify-cat2 read them and must not need a bag -- while the annotated crops under
+# data/crops/visibility are untracked review material. Re-run after a camera-model or
+# threshold change, then re-run gen-cat2: dropping a scene's report silently disables
+# the gate, and both tools say so when it is missing.
+[group('cat2')]
+[doc("Measure which objects the robot's camera saw, per scene")]
+visibility scene="all" args="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    docker exec iros2026_ai_module bash -lc \
+      "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/object_visibility.py --scene $(printf '%q' "{{scene}}") {{args}}"
+    for report in data/runs/visibility/*_visibility.json; do
+      s="$(basename "$report" _visibility.json)"
+      mkdir -p "data/benchmark/${s}/visibility"
+      cp "$report" "data/benchmark/${s}/visibility/"
+    done
+    echo "reports copied to data/benchmark/<scene>/visibility/ -- now run: just gen-cat2"

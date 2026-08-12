@@ -205,18 +205,21 @@ Selection is **oracle** (best label-compatible prediction per target) because M4
 exist yet. So this is the ceiling the reasoner will work under, and it separates "our boxes
 are bad" from "our reasoner picked the wrong object".
 
-The target set is the category-2 benchmark's answer objects — 10 per scene, each the single
-object a reference question must be pointed at (see [docs/cat2_benchmark.md](cat2_benchmark.md)).
-Scenes without a category-2 file fall back to the category-1 `object_ids`, which are
-*numerical*-question objects: a proxy that over-counts, since a counting question touches
-many objects and singles out none. Only `home_building_1/2` are on the fallback.
+The target set is the category-2 benchmark's answer objects — up to 10 per scene, each the
+single object a reference question must be pointed at (see
+[docs/cat2_benchmark.md](cat2_benchmark.md)). Those answers are themselves gated on visibility:
+an IRef box the robot's own camera never resolved is not asked about, so a miss here is a
+mapping failure rather than a question about geometry the sensors never saw. Scenes without a
+category-2 file fall back to the category-1 `object_ids`, which are *numerical*-question
+objects: a proxy that over-counts, since a counting question touches many objects and singles
+out none. Only `home_building_1/2` are on the fallback.
 
 Targets are then intersected with the askable set, as everything here is, and **that is where
-most of them go**: only 69 of the 130 category-2 answers have a label in their scene's prompt
+most of them go**: only 81 of the 122 category-2 answers have a label in their scene's prompt
 set, because the sets are curated from the five official questions and capped at 10 while the
-generated questions name whatever the scene's referential statements name (`door`, `column`,
-`towel rack`, `tv remote`). Nothing prompted them, so SAM 3 never looked for them and they
-cannot be found by construction. Widening the prompt sets is the fix; it costs SAM 3 time per
+generated questions name whatever the scene contains (`books`, `ceiling lamp`, `towel rack`,
+`tv remote`). Nothing prompted them, so SAM 3 never looked for them and they cannot be found
+by construction. Widening the prompt sets is the fix; it costs SAM 3 time per
 scene, which is why they are capped. Do not instead bias category-2 selection toward objects
 we happen to prompt — that grades the bench against itself.
 

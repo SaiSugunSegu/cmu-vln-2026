@@ -35,7 +35,6 @@ from cat2_geometry import (
     MIN_MARGIN,
     Obj,
     between_holds,
-    center_dist,
     color_matches,
     gap_dist,
     norm_class,
@@ -58,6 +57,8 @@ RELATION_KEYWORDS = {
     "beneath": "below",
     "underneath": "below",
     "on": "on",
+    "inside": "in",
+    "within": "in",
     "near": "near",
     "with": "supports",
     "has": "supports",
@@ -65,9 +66,12 @@ RELATION_KEYWORDS = {
 }
 
 # Dropped wholesale before parsing: they carry no object and no relation.
+# "in" stays filler rather than joining the table above: it is a relation in "the vase in
+# the cabinet" but a preposition of place in "in the corner", and "inside" says the first
+# unambiguously. "top" is dropped so that "on top of the tray" reads as the "on" hop it is.
 FILLER = ARTICLES | {
     "find", "locate", "identify", "point", "to", "at", "from", "of", "it", "is", "are",
-    "that", "which", "in", "and", "then", "please", "this",
+    "that", "which", "in", "and", "then", "please", "this", "top",
 }
 
 

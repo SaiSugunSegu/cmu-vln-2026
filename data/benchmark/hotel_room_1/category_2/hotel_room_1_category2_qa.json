@@ -6,41 +6,40 @@
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
-    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
-    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by bags/cat2_text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/hotel_room_1/visibility/hotel_room_1_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
     "source_statements: bags/hotel_room_1/iref_vla_metadata/hotel_room_1_referential_statements.json",
     "source_objects: bags/hotel_room_1/iref_vla_metadata/hotel_room_1_objects.json"
   ],
   "difficulty_counts": {
     "medium": 2,
-    "hard": 3,
-    "easy": 5
+    "hard": 2,
+    "easy": 6
   },
   "relation_counts": {
-    "farthest": 2,
-    "above": 1,
-    "between": 2,
-    "near": 2,
+    "farthest": 3,
+    "above": 2,
+    "between": 1,
+    "near": 1,
     "closest": 3
   },
   "target_object_coverage": [
     "bed",
     "bedside table",
-    "book",
     "chair",
     "curtains",
-    "eye glasses",
     "floor",
-    "lamp",
     "magazine",
     "phone",
     "picture",
-    "shower tap",
+    "shower",
     "suitcase",
     "towel",
     "towel rack",
-    "trash bin",
     "trash can",
+    "tv",
     "vase",
     "window"
   ],
@@ -150,6 +149,30 @@
       "region": "2",
       "images": [
         "data/pdf_assets/hotel_room_1/p1_img2.png"
+      ],
+      "views": [
+        {
+          "object_id": "72",
+          "role": "target",
+          "frames_visible": 94,
+          "distance_m": 2.43,
+          "px_area": 8976,
+          "occlusion": 0.0,
+          "elevation_deg": -11.2,
+          "stamp": 1785527219.79034,
+          "image": "data/crops/visibility/hotel_room_1/72_bedside_table.png"
+        },
+        {
+          "object_id": "58",
+          "role": "anchor",
+          "frames_visible": 349,
+          "distance_m": 1.06,
+          "px_area": 310175,
+          "occlusion": 0.397,
+          "elevation_deg": 22.3,
+          "stamp": 1785527246.390391,
+          "image": "data/crops/visibility/hotel_room_1/58_window.png"
+        }
       ],
       "verified": true,
       "solver_trace": [
@@ -268,6 +291,30 @@
       "images": [
         "data/pdf_assets/hotel_room_1/p2_img1.png"
       ],
+      "views": [
+        {
+          "object_id": "19",
+          "role": "target",
+          "frames_visible": 142,
+          "distance_m": 1.2,
+          "px_area": 5694,
+          "occlusion": 0.0,
+          "elevation_deg": 46.8,
+          "stamp": 1785527229.795348,
+          "image": "data/crops/visibility/hotel_room_1/19_framed_record.png"
+        },
+        {
+          "object_id": "84",
+          "role": "anchor",
+          "frames_visible": 193,
+          "distance_m": 0.89,
+          "px_area": 25380,
+          "occlusion": 0.0,
+          "elevation_deg": -10.2,
+          "stamp": 1785527226.845344,
+          "image": "data/crops/visibility/hotel_room_1/84_suitcase.png"
+        }
+      ],
       "verified": true,
       "solver_trace": [
         "head='picture' color='' hops=[{'relation': 'above', 'phrases': ['suitcase']}, {'relation': 'farthest', 'phrases': ['floor']}]",
@@ -281,14 +328,14 @@
     },
     {
       "id": "Q03",
-      "question": "Find the chair that is between the bed and the eye glasses.",
+      "question": "Find the chair that is between the bed and the magazine.",
       "source": "generated",
       "difficulty": "hard",
       "relation": "between",
       "target_objects": [
         "chair",
         "bed",
-        "eye glasses"
+        "magazine"
       ],
       "answer": {
         "object_id": "15",
@@ -379,16 +426,51 @@
           "phrase": "the bed"
         },
         {
-          "object_id": "66",
-          "label": "eye glasses",
-          "phrase": "the eye glasses"
+          "object_id": "23",
+          "label": "magazine",
+          "phrase": "the magazine"
         }
       ],
       "distractor_ids": [],
       "competitors": 1,
-      "evidence": "between: between bed#11 and eye glasses#66 (lateral offset 0.17 m)",
+      "evidence": "between: between bed#11 and magazine#23 (lateral offset 0.18 m)",
       "statement": "",
       "region": "2",
+      "views": [
+        {
+          "object_id": "15",
+          "role": "target",
+          "frames_visible": 301,
+          "distance_m": 0.51,
+          "px_area": 145336,
+          "occlusion": 0.0,
+          "elevation_deg": -17.4,
+          "stamp": 1785527251.470355,
+          "image": "data/crops/visibility/hotel_room_1/15_chair.png"
+        },
+        {
+          "object_id": "11",
+          "role": "anchor",
+          "frames_visible": 326,
+          "distance_m": 0.68,
+          "px_area": 272315,
+          "occlusion": 0.0,
+          "elevation_deg": -0.3,
+          "stamp": 1785527222.535344,
+          "image": "data/crops/visibility/hotel_room_1/11_bed.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 20,
+          "distance_m": 1.42,
+          "px_area": 1377,
+          "occlusion": 0.0,
+          "elevation_deg": 3.8,
+          "stamp": 1785527252.350349,
+          "image": "data/crops/visibility/hotel_room_1/23_magazine.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
@@ -498,120 +580,35 @@
       "evidence": "near: box-gap 0.09 m; next towel is 3.39 m away",
       "statement": "the towel that is near the garbage bin",
       "region": "0",
+      "views": [
+        {
+          "object_id": "24",
+          "role": "target",
+          "frames_visible": 57,
+          "distance_m": 1.62,
+          "px_area": 5580,
+          "occlusion": 0.0,
+          "elevation_deg": -3.9,
+          "stamp": 1785527258.750364,
+          "image": "data/crops/visibility/hotel_room_1/24_towel.png"
+        },
+        {
+          "object_id": "69",
+          "role": "anchor",
+          "frames_visible": 37,
+          "distance_m": 1.54,
+          "px_area": 6141,
+          "occlusion": 0.0,
+          "elevation_deg": -20.8,
+          "stamp": 1785527259.005359,
+          "image": "data/crops/visibility/hotel_room_1/69_garbage_can.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q05",
-      "question": "Find the towel rack that is closest to the shower tap.",
-      "source": "generated",
-      "difficulty": "easy",
-      "relation": "closest",
-      "target_objects": [
-        "towel rack",
-        "shower tap"
-      ],
-      "answer": {
-        "object_id": "25",
-        "region": "0",
-        "label": "towel rack",
-        "raw_label": "towel rack",
-        "nyu_label": "towel rod",
-        "colors": [
-          "black"
-        ],
-        "center": [
-          1.2768,
-          4.6122,
-          1.0587
-        ],
-        "size": [
-          0.3581,
-          0.0694,
-          0.2229
-        ],
-        "yaw": -3.1366,
-        "aabb": {
-          "min": [
-            1.0976,
-            4.5766,
-            0.9472
-          ],
-          "max": [
-            1.4561,
-            4.6478,
-            1.1701
-          ]
-        },
-        "size_aabb": [
-          0.3584,
-          0.0712,
-          0.2229
-        ],
-        "bbox_corners": [
-          [
-            1.4561,
-            4.5784,
-            1.1701
-          ],
-          [
-            1.098,
-            4.5766,
-            1.1701
-          ],
-          [
-            1.0976,
-            4.646,
-            1.1701
-          ],
-          [
-            1.4557,
-            4.6478,
-            1.1701
-          ],
-          [
-            1.4561,
-            4.5784,
-            0.9472
-          ],
-          [
-            1.098,
-            4.5766,
-            0.9472
-          ],
-          [
-            1.0976,
-            4.646,
-            0.9472
-          ],
-          [
-            1.4557,
-            4.6478,
-            0.9472
-          ]
-        ],
-        "volume": 0.00554
-      },
-      "anchors": [
-        {
-          "object_id": "12",
-          "label": "shower tap",
-          "phrase": "the shower tap"
-        }
-      ],
-      "distractor_ids": [
-        "18"
-      ],
-      "competitors": 1,
-      "margin": 3.076,
-      "evidence": "closest: centre 2.27 m vs runner-up towel rack#18 5.34 m; box-gap 1.75 m vs runner-up towel rack#18 4.86 m",
-      "statement": "the towel rod that is closest to the faucet",
-      "region": "0",
-      "verified": true,
-      "derivation": "statement"
-    },
-    {
-      "id": "Q06",
       "question": "Find the bedside table that is closest to the window.",
       "source": "generated",
       "difficulty": "easy",
@@ -716,6 +713,163 @@
       "evidence": "closest: centre 4.18 m vs runner-up bedside table#72 7.12 m; box-gap 1.91 m vs runner-up bedside table#72 5.77 m",
       "statement": "the night stand that is closest to the window",
       "region": "2",
+      "views": [
+        {
+          "object_id": "85",
+          "role": "target",
+          "frames_visible": 131,
+          "distance_m": 0.87,
+          "px_area": 52297,
+          "occlusion": 0.0,
+          "elevation_deg": -21.0,
+          "stamp": 1785527234.730349,
+          "image": "data/crops/visibility/hotel_room_1/85_bedside_table.png"
+        },
+        {
+          "object_id": "58",
+          "role": "anchor",
+          "frames_visible": 349,
+          "distance_m": 1.06,
+          "px_area": 310175,
+          "occlusion": 0.397,
+          "elevation_deg": 22.3,
+          "stamp": 1785527246.390391,
+          "image": "data/crops/visibility/hotel_room_1/58_window.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the towel rack that is closest to the shower.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "towel rack",
+        "shower"
+      ],
+      "answer": {
+        "object_id": "25",
+        "region": "0",
+        "label": "towel rack",
+        "raw_label": "towel rack",
+        "nyu_label": "towel rod",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          1.2768,
+          4.6122,
+          1.0587
+        ],
+        "size": [
+          0.3581,
+          0.0694,
+          0.2229
+        ],
+        "yaw": -3.1366,
+        "aabb": {
+          "min": [
+            1.0976,
+            4.5766,
+            0.9472
+          ],
+          "max": [
+            1.4561,
+            4.6478,
+            1.1701
+          ]
+        },
+        "size_aabb": [
+          0.3584,
+          0.0712,
+          0.2229
+        ],
+        "bbox_corners": [
+          [
+            1.4561,
+            4.5784,
+            1.1701
+          ],
+          [
+            1.098,
+            4.5766,
+            1.1701
+          ],
+          [
+            1.0976,
+            4.646,
+            1.1701
+          ],
+          [
+            1.4557,
+            4.6478,
+            1.1701
+          ],
+          [
+            1.4561,
+            4.5784,
+            0.9472
+          ],
+          [
+            1.098,
+            4.5766,
+            0.9472
+          ],
+          [
+            1.0976,
+            4.646,
+            0.9472
+          ],
+          [
+            1.4557,
+            4.6478,
+            0.9472
+          ]
+        ],
+        "volume": 0.00554
+      },
+      "anchors": [
+        {
+          "object_id": "16",
+          "label": "shower",
+          "phrase": "the shower"
+        }
+      ],
+      "distractor_ids": [
+        "18"
+      ],
+      "competitors": 1,
+      "margin": 2.902,
+      "evidence": "closest: centre 2.26 m vs runner-up towel rack#18 5.16 m; box-gap 1.17 m vs runner-up towel rack#18 4.26 m",
+      "statement": "the towel rod that is closest to the shower curtain",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "25",
+          "role": "target",
+          "frames_visible": 44,
+          "distance_m": 1.69,
+          "px_area": 2730,
+          "occlusion": 0.0,
+          "elevation_deg": 7.0,
+          "stamp": 1785527258.750364,
+          "image": "data/crops/visibility/hotel_room_1/25_towel_rack.png"
+        },
+        {
+          "object_id": "16",
+          "role": "anchor",
+          "frames_visible": 51,
+          "distance_m": 1.94,
+          "px_area": 112424,
+          "occlusion": 0.0,
+          "elevation_deg": 11.5,
+          "stamp": 1785527258.750364,
+          "image": "data/crops/visibility/hotel_room_1/16_shower.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
@@ -826,19 +980,309 @@
       "evidence": "farthest: centre 5.10 m vs runner-up chair#15 1.25 m; box-gap 4.00 m vs runner-up chair#15 0.59 m",
       "statement": "the chair that is farthest from the telephone",
       "region": "2",
+      "views": [
+        {
+          "object_id": "36",
+          "role": "target",
+          "frames_visible": 265,
+          "distance_m": 0.34,
+          "px_area": 236006,
+          "occlusion": 0.0,
+          "elevation_deg": -30.6,
+          "stamp": 1785527233.845358,
+          "image": "data/crops/visibility/hotel_room_1/36_chair.png"
+        },
+        {
+          "object_id": "65",
+          "role": "anchor",
+          "frames_visible": 86,
+          "distance_m": 1.23,
+          "px_area": 2788,
+          "occlusion": 0.0,
+          "elevation_deg": 5.3,
+          "stamp": 1785527253.21036,
+          "image": "data/crops/visibility/hotel_room_1/65_phone.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q08",
-      "question": "Find the vase that is between the magazine and the eye glasses.",
+      "question": "Find the towel that is farthest from the shower.",
       "source": "generated",
-      "difficulty": "hard",
-      "relation": "between",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "towel",
+        "shower"
+      ],
+      "answer": {
+        "object_id": "64",
+        "region": "0",
+        "label": "towel",
+        "raw_label": "towel",
+        "nyu_label": "towel",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -1.9265,
+          3.2077,
+          1.3044
+        ],
+        "size": [
+          0.3549,
+          0.22,
+          0.8865
+        ],
+        "yaw": -1.8663,
+        "aabb": {
+          "min": [
+            -2.0834,
+            3.0058,
+            0.8612
+          ],
+          "max": [
+            -1.7696,
+            3.4095,
+            1.7477
+          ]
+        },
+        "size_aabb": [
+          0.3139,
+          0.4036,
+          0.8865
+        ],
+        "bbox_corners": [
+          [
+            -1.7696,
+            3.3454,
+            1.7477
+          ],
+          [
+            -1.8729,
+            3.0058,
+            1.7477
+          ],
+          [
+            -2.0834,
+            3.0699,
+            1.7477
+          ],
+          [
+            -1.98,
+            3.4095,
+            1.7477
+          ],
+          [
+            -1.7696,
+            3.3454,
+            0.8612
+          ],
+          [
+            -1.8729,
+            3.0058,
+            0.8612
+          ],
+          [
+            -2.0834,
+            3.0699,
+            0.8612
+          ],
+          [
+            -1.98,
+            3.4095,
+            0.8612
+          ]
+        ],
+        "volume": 0.06923
+      },
+      "anchors": [
+        {
+          "object_id": "16",
+          "label": "shower",
+          "phrase": "the shower"
+        }
+      ],
+      "distractor_ids": [
+        "24"
+      ],
+      "competitors": 1,
+      "margin": 2.89,
+      "evidence": "farthest: centre 5.22 m vs runner-up towel#24 2.33 m; box-gap 4.40 m vs runner-up towel#24 1.19 m",
+      "statement": "the towel that is farthest from the shower curtain",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "64",
+          "role": "target",
+          "frames_visible": 56,
+          "distance_m": 2.12,
+          "px_area": 6820,
+          "occlusion": 0.0,
+          "elevation_deg": 11.7,
+          "stamp": 1785527256.795386,
+          "image": "data/crops/visibility/hotel_room_1/64_towel.png"
+        },
+        {
+          "object_id": "16",
+          "role": "anchor",
+          "frames_visible": 51,
+          "distance_m": 1.94,
+          "px_area": 112424,
+          "occlusion": 0.0,
+          "elevation_deg": 11.5,
+          "stamp": 1785527258.750364,
+          "image": "data/crops/visibility/hotel_room_1/16_shower.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the curtains that are closest to the tv.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "curtains",
+        "tv"
+      ],
+      "answer": {
+        "object_id": "45",
+        "region": "2",
+        "label": "curtains",
+        "raw_label": "curtains",
+        "nyu_label": "curtain",
+        "colors": [
+          "aqua",
+          "gray"
+        ],
+        "center": [
+          -1.4445,
+          -5.8658,
+          1.6091
+        ],
+        "size": [
+          1.0971,
+          0.0719,
+          3.2212
+        ],
+        "yaw": -0.0165,
+        "aabb": {
+          "min": [
+            -1.9936,
+            -5.9109,
+            -0.0015
+          ],
+          "max": [
+            -0.8955,
+            -5.8208,
+            3.2197
+          ]
+        },
+        "size_aabb": [
+          1.0982,
+          0.09,
+          3.2212
+        ],
+        "bbox_corners": [
+          [
+            -1.9924,
+            -5.8208,
+            3.2197
+          ],
+          [
+            -0.8955,
+            -5.8389,
+            3.2197
+          ],
+          [
+            -0.8966,
+            -5.9109,
+            3.2197
+          ],
+          [
+            -1.9936,
+            -5.8927,
+            3.2197
+          ],
+          [
+            -1.9924,
+            -5.8208,
+            -0.0015
+          ],
+          [
+            -0.8955,
+            -5.8389,
+            -0.0015
+          ],
+          [
+            -0.8966,
+            -5.9109,
+            -0.0015
+          ],
+          [
+            -1.9936,
+            -5.8927,
+            -0.0015
+          ]
+        ],
+        "volume": 0.25423
+      },
+      "anchors": [
+        {
+          "object_id": "10",
+          "label": "tv",
+          "phrase": "the tv"
+        }
+      ],
+      "distractor_ids": [
+        "8"
+      ],
+      "competitors": 1,
+      "margin": 2.155,
+      "evidence": "closest: centre 4.18 m vs runner-up curtains#8 6.59 m; box-gap 3.69 m vs runner-up curtains#8 5.84 m",
+      "statement": "the curtain that is closest to the television",
+      "region": "2",
+      "views": [
+        {
+          "object_id": "45",
+          "role": "target",
+          "frames_visible": 354,
+          "distance_m": 0.7,
+          "px_area": 228984,
+          "occlusion": 0.0,
+          "elevation_deg": 45.7,
+          "stamp": 1785527246.135386,
+          "image": "data/crops/visibility/hotel_room_1/45_curtain.png"
+        },
+        {
+          "object_id": "10",
+          "role": "anchor",
+          "frames_visible": 304,
+          "distance_m": 1.76,
+          "px_area": 14144,
+          "occlusion": 0.0,
+          "elevation_deg": 19.6,
+          "stamp": 1785527252.350349,
+          "image": "data/crops/visibility/hotel_room_1/10_television.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the vase that is above the magazine.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "above",
       "target_objects": [
         "vase",
-        "magazine",
-        "eye glasses"
+        "magazine"
       ],
       "answer": {
         "object_id": "20",
@@ -926,240 +1370,39 @@
           "object_id": "23",
           "label": "magazine",
           "phrase": "the magazine"
-        },
-        {
-          "object_id": "66",
-          "label": "eye glasses",
-          "phrase": "the eye glasses"
         }
       ],
       "distractor_ids": [],
       "competitors": 1,
-      "evidence": "between: between magazine#23 and eye glasses#66 (lateral offset 0.00 m)",
+      "evidence": "above: underside 2.64 m clears magazine#23 top 0.99 m by 1.66 m",
       "statement": "",
       "region": "2",
+      "views": [
+        {
+          "object_id": "20",
+          "role": "target",
+          "frames_visible": 131,
+          "distance_m": 1.69,
+          "px_area": 3136,
+          "occlusion": 0.0,
+          "elevation_deg": 50.6,
+          "stamp": 1785527252.220296,
+          "image": "data/crops/visibility/hotel_room_1/20_vase.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 20,
+          "distance_m": 1.42,
+          "px_area": 1377,
+          "occlusion": 0.0,
+          "elevation_deg": 3.8,
+          "stamp": 1785527252.350349,
+          "image": "data/crops/visibility/hotel_room_1/23_magazine.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
-    },
-    {
-      "id": "Q09",
-      "question": "Find the lamp that is near the book.",
-      "source": "generated",
-      "difficulty": "medium",
-      "relation": "near",
-      "target_objects": [
-        "lamp",
-        "book"
-      ],
-      "answer": {
-        "object_id": "80",
-        "region": "2",
-        "label": "lamp",
-        "raw_label": "lamp",
-        "nyu_label": "lamp",
-        "colors": [
-          "black"
-        ],
-        "center": [
-          3.5463,
-          0.1909,
-          0.873
-        ],
-        "size": [
-          0.4017,
-          0.3989,
-          0.4476
-        ],
-        "yaw": -1.5725,
-        "aabb": {
-          "min": [
-            3.3465,
-            -0.0103,
-            0.6492
-          ],
-          "max": [
-            3.7461,
-            0.392,
-            1.0968
-          ]
-        },
-        "size_aabb": [
-          0.3996,
-          0.4023,
-          0.4476
-        ],
-        "bbox_corners": [
-          [
-            3.7461,
-            0.3914,
-            1.0968
-          ],
-          [
-            3.7454,
-            -0.0103,
-            1.0968
-          ],
-          [
-            3.3465,
-            -0.0096,
-            1.0968
-          ],
-          [
-            3.3472,
-            0.392,
-            1.0968
-          ],
-          [
-            3.7461,
-            0.3914,
-            0.6492
-          ],
-          [
-            3.7454,
-            -0.0103,
-            0.6492
-          ],
-          [
-            3.3465,
-            -0.0096,
-            0.6492
-          ],
-          [
-            3.3472,
-            0.392,
-            0.6492
-          ]
-        ],
-        "volume": 0.07172
-      },
-      "anchors": [
-        {
-          "object_id": "1",
-          "label": "book",
-          "phrase": "the book"
-        }
-      ],
-      "distractor_ids": [
-        "74",
-        "82"
-      ],
-      "competitors": 2,
-      "margin": 2.556,
-      "evidence": "near: box-gap 0.00 m; next lamp is 3.36 m away",
-      "statement": "the lamp that is near the book",
-      "region": "2",
-      "verified": true,
-      "derivation": "statement"
-    },
-    {
-      "id": "Q10",
-      "question": "Find the curtains that are closest to the trash bin.",
-      "source": "generated",
-      "difficulty": "easy",
-      "relation": "closest",
-      "target_objects": [
-        "curtains",
-        "trash bin"
-      ],
-      "answer": {
-        "object_id": "45",
-        "region": "2",
-        "label": "curtains",
-        "raw_label": "curtains",
-        "nyu_label": "curtain",
-        "colors": [
-          "aqua",
-          "gray"
-        ],
-        "center": [
-          -1.4445,
-          -5.8658,
-          1.6091
-        ],
-        "size": [
-          1.0971,
-          0.0719,
-          3.2212
-        ],
-        "yaw": -0.0165,
-        "aabb": {
-          "min": [
-            -1.9936,
-            -5.9109,
-            -0.0015
-          ],
-          "max": [
-            -0.8955,
-            -5.8208,
-            3.2197
-          ]
-        },
-        "size_aabb": [
-          1.0982,
-          0.09,
-          3.2212
-        ],
-        "bbox_corners": [
-          [
-            -1.9924,
-            -5.8208,
-            3.2197
-          ],
-          [
-            -0.8955,
-            -5.8389,
-            3.2197
-          ],
-          [
-            -0.8966,
-            -5.9109,
-            3.2197
-          ],
-          [
-            -1.9936,
-            -5.8927,
-            3.2197
-          ],
-          [
-            -1.9924,
-            -5.8208,
-            -0.0015
-          ],
-          [
-            -0.8955,
-            -5.8389,
-            -0.0015
-          ],
-          [
-            -0.8966,
-            -5.9109,
-            -0.0015
-          ],
-          [
-            -1.9936,
-            -5.8927,
-            -0.0015
-          ]
-        ],
-        "volume": 0.25423
-      },
-      "anchors": [
-        {
-          "object_id": "32",
-          "label": "trash bin",
-          "phrase": "the trash bin"
-        }
-      ],
-      "distractor_ids": [
-        "8"
-      ],
-      "competitors": 1,
-      "margin": 2.708,
-      "evidence": "closest: centre 2.45 m vs runner-up curtains#8 5.45 m; box-gap 1.71 m vs runner-up curtains#8 4.41 m",
-      "statement": "the curtain that is closest to the garbage bin",
-      "region": "2",
-      "verified": true,
-      "derivation": "statement"
     }
   ]
 }

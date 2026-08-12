@@ -1,0 +1,3326 @@
+{
+  "scene": "livingroom_3",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 215,
+  "objects": {
+    "0": {
+      "label": "speaker",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 3.28,
+      "best_view": {
+        "n_points": 75,
+        "px_bbox": [
+          446,
+          145,
+          477,
+          182
+        ],
+        "px_bbox_unwrapped": [
+          446,
+          145,
+          477,
+          182
+        ],
+        "px_area": 1147,
+        "px_area_frac": 0.00093,
+        "distance_m": 2.72,
+        "occlusion": 0.024,
+        "clipped": false,
+        "stamp": 1785528668.022146,
+        "frame": 186,
+        "elevation_deg": 29.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/0_speaker.png"
+    },
+    "1": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.2,
+      "best_view": {
+        "n_points": 56,
+        "px_bbox": [
+          390,
+          152,
+          416,
+          167
+        ],
+        "px_bbox_unwrapped": [
+          390,
+          152,
+          416,
+          167
+        ],
+        "px_area": 390,
+        "px_area_frac": 0.00032,
+        "distance_m": 3.42,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528668.412165,
+        "frame": 189,
+        "elevation_deg": 30.1
+      }
+    },
+    "2": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 3.73,
+      "best_view": {
+        "n_points": 513,
+        "px_bbox": [
+          505,
+          183,
+          543,
+          399
+        ],
+        "px_bbox_unwrapped": [
+          505,
+          183,
+          543,
+          399
+        ],
+        "px_area": 8208,
+        "px_area_frac": 0.00668,
+        "distance_m": 3.19,
+        "occlusion": 0.091,
+        "clipped": false,
+        "stamp": 1785528645.522169,
+        "frame": 5,
+        "elevation_deg": 5.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/2_door.png"
+    },
+    "3": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 3.73,
+      "best_view": {
+        "n_points": 516,
+        "px_bbox": [
+          548,
+          172,
+          587,
+          402
+        ],
+        "px_bbox_unwrapped": [
+          548,
+          172,
+          587,
+          402
+        ],
+        "px_area": 8970,
+        "px_area_frac": 0.0073,
+        "distance_m": 3.12,
+        "occlusion": 0.031,
+        "clipped": false,
+        "stamp": 1785528645.272182,
+        "frame": 3,
+        "elevation_deg": 6.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/3_door_frame.png"
+    },
+    "4": {
+      "label": "carpet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 83,
+      "min_range_m": 1.41,
+      "best_view": {
+        "n_points": 57,
+        "px_bbox": [
+          1735,
+          392,
+          835,
+          541
+        ],
+        "px_bbox_unwrapped": [
+          1735,
+          392,
+          2755,
+          541
+        ],
+        "px_area": 151980,
+        "px_area_frac": 0.12368,
+        "distance_m": 0.83,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528669.522143,
+        "frame": 198,
+        "elevation_deg": -28.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/4_carpet.png"
+    },
+    "5": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 5.82,
+      "best_view": {
+        "n_points": 56,
+        "px_bbox": [
+          1018,
+          321,
+          1057,
+          344
+        ],
+        "px_bbox_unwrapped": [
+          1018,
+          321,
+          1057,
+          344
+        ],
+        "px_area": 897,
+        "px_area_frac": 0.00073,
+        "distance_m": 5.56,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528667.017156,
+        "frame": 178,
+        "elevation_deg": -2.2
+      }
+    },
+    "6": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 61,
+      "min_range_m": 5.82,
+      "best_view": {
+        "n_points": 122,
+        "px_bbox": [
+          1017,
+          332,
+          1060,
+          368
+        ],
+        "px_bbox_unwrapped": [
+          1017,
+          332,
+          1060,
+          368
+        ],
+        "px_area": 1548,
+        "px_area_frac": 0.00126,
+        "distance_m": 5.57,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528667.017156,
+        "frame": 178,
+        "elevation_deg": -5.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/6_plant.png"
+    },
+    "7": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 9,
+      "min_range_m": 2.2,
+      "best_view": {
+        "n_points": 62,
+        "px_bbox": [
+          1919,
+          5,
+          49,
+          42
+        ],
+        "px_bbox_unwrapped": [
+          1919,
+          5,
+          1969,
+          42
+        ],
+        "px_area": 1850,
+        "px_area_frac": 0.00151,
+        "distance_m": 1.49,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528650.962249,
+        "frame": 49,
+        "elevation_deg": 55.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/7_focus_light.png"
+    },
+    "8": {
+      "label": "light switch",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 5.68,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          320,
+          296,
+          325,
+          302
+        ],
+        "px_bbox_unwrapped": [
+          320,
+          296,
+          325,
+          302
+        ],
+        "px_area": 30,
+        "px_area_frac": 2e-05,
+        "distance_m": 5.76,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528645.907182,
+        "frame": 8,
+        "elevation_deg": 4.0
+      }
+    },
+    "9": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 190,
+      "min_range_m": 1.93,
+      "best_view": {
+        "n_points": 10152,
+        "px_bbox": [
+          1534,
+          207,
+          377,
+          370
+        ],
+        "px_bbox_unwrapped": [
+          1534,
+          207,
+          2297,
+          370
+        ],
+        "px_area": 124369,
+        "px_area_frac": 0.10121,
+        "distance_m": 1.78,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528645.272182,
+        "frame": 3,
+        "elevation_deg": 18.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/9_window.png"
+    },
+    "10": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 65,
+      "min_range_m": 1.48,
+      "best_view": {
+        "n_points": 246,
+        "px_bbox": [
+          524,
+          220,
+          598,
+          294
+        ],
+        "px_bbox_unwrapped": [
+          524,
+          220,
+          598,
+          294
+        ],
+        "px_area": 5476,
+        "px_area_frac": 0.00446,
+        "distance_m": 1.32,
+        "occlusion": 0.693,
+        "clipped": false,
+        "stamp": 1785528651.717172,
+        "frame": 55,
+        "elevation_deg": 12.0
+      }
+    },
+    "11": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 42,
+      "min_range_m": 1.32,
+      "best_view": {
+        "n_points": 423,
+        "px_bbox": [
+          519,
+          293,
+          600,
+          375
+        ],
+        "px_bbox_unwrapped": [
+          519,
+          293,
+          600,
+          375
+        ],
+        "px_area": 6642,
+        "px_area_frac": 0.00541,
+        "distance_m": 2.06,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528669.427223,
+        "frame": 197,
+        "elevation_deg": -2.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/11_pillow.png"
+    },
+    "12": {
+      "label": "buddha decoration",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 27,
+      "min_range_m": 2.61,
+      "best_view": {
+        "n_points": 124,
+        "px_bbox": [
+          882,
+          284,
+          921,
+          326
+        ],
+        "px_bbox_unwrapped": [
+          882,
+          284,
+          921,
+          326
+        ],
+        "px_area": 1638,
+        "px_area_frac": 0.00133,
+        "distance_m": 2.5,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": 2.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/12_buddha_decoration.png"
+    },
+    "13": {
+      "label": "photo",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 28,
+      "min_range_m": 2.17,
+      "best_view": {
+        "n_points": 115,
+        "px_bbox": [
+          636,
+          289,
+          667,
+          330
+        ],
+        "px_bbox_unwrapped": [
+          636,
+          289,
+          667,
+          330
+        ],
+        "px_area": 1271,
+        "px_area_frac": 0.00103,
+        "distance_m": 2.11,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": 2.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/13_framed_record.png"
+    },
+    "14": {
+      "label": "lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 16,
+      "min_range_m": 2.23,
+      "best_view": {
+        "n_points": 28,
+        "px_bbox": [
+          1857,
+          9,
+          1912,
+          53
+        ],
+        "px_bbox_unwrapped": [
+          1857,
+          9,
+          1912,
+          53
+        ],
+        "px_area": 2420,
+        "px_area_frac": 0.00197,
+        "distance_m": 1.39,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528661.64219,
+        "frame": 135,
+        "elevation_deg": 54.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/14_lamp.png"
+    },
+    "15": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 201,
+      "min_range_m": 2.1,
+      "best_view": {
+        "n_points": 4575,
+        "px_bbox": [
+          448,
+          106,
+          589,
+          457
+        ],
+        "px_bbox_unwrapped": [
+          448,
+          106,
+          589,
+          457
+        ],
+        "px_area": 49491,
+        "px_area_frac": 0.04028,
+        "distance_m": 1.84,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528653.442172,
+        "frame": 69,
+        "elevation_deg": 9.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/15_door.png"
+    },
+    "16": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 208,
+      "min_range_m": 2.12,
+      "best_view": {
+        "n_points": 5261,
+        "px_bbox": [
+          434,
+          98,
+          598,
+          456
+        ],
+        "px_bbox_unwrapped": [
+          434,
+          98,
+          598,
+          456
+        ],
+        "px_area": 58712,
+        "px_area_frac": 0.04778,
+        "distance_m": 1.85,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528653.442172,
+        "frame": 69,
+        "elevation_deg": 11.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/16_door_frame.png"
+    },
+    "17": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 10,
+      "min_range_m": 2.81,
+      "best_view": {
+        "n_points": 102,
+        "px_bbox": [
+          576,
+          145,
+          598,
+          207
+        ],
+        "px_bbox_unwrapped": [
+          576,
+          145,
+          598,
+          207
+        ],
+        "px_area": 1364,
+        "px_area_frac": 0.00111,
+        "distance_m": 2.31,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528645.387179,
+        "frame": 4,
+        "elevation_deg": 26.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/17_framed_record.png"
+    },
+    "18": {
+      "label": "tv",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 128,
+      "min_range_m": 3.22,
+      "best_view": {
+        "n_points": 750,
+        "px_bbox": [
+          936,
+          267,
+          1039,
+          356
+        ],
+        "px_bbox_unwrapped": [
+          936,
+          267,
+          1039,
+          356
+        ],
+        "px_area": 9167,
+        "px_area_frac": 0.00746,
+        "distance_m": 2.87,
+        "occlusion": 0.054,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": 1.5
+      },
+      "view_image": "data/crops/visibility/livingroom_3/18_television.png"
+    },
+    "19": {
+      "label": "light switch",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.83,
+      "best_view": {
+        "n_points": 243,
+        "px_bbox": [
+          491,
+          246,
+          508,
+          263
+        ],
+        "px_bbox_unwrapped": [
+          491,
+          246,
+          508,
+          263
+        ],
+        "px_area": 289,
+        "px_area_frac": 0.00024,
+        "distance_m": 1.75,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528652.947186,
+        "frame": 65,
+        "elevation_deg": 13.1
+      }
+    },
+    "20": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 160,
+      "min_range_m": 1.49,
+      "best_view": {
+        "n_points": 1060,
+        "px_bbox": [
+          1348,
+          127,
+          1464,
+          233
+        ],
+        "px_bbox_unwrapped": [
+          1348,
+          127,
+          1464,
+          233
+        ],
+        "px_area": 12296,
+        "px_area_frac": 0.01001,
+        "distance_m": 1.26,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528659.377149,
+        "frame": 117,
+        "elevation_deg": 27.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/20_framed_record.png"
+    },
+    "21": {
+      "label": "dvd",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 19,
+      "min_range_m": 2.29,
+      "best_view": {
+        "n_points": 137,
+        "px_bbox": [
+          871,
+          348,
+          951,
+          365
+        ],
+        "px_bbox_unwrapped": [
+          871,
+          348,
+          951,
+          365
+        ],
+        "px_area": 1360,
+        "px_area_frac": 0.00111,
+        "distance_m": 2.05,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -6.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/21_dvd.png"
+    },
+    "22": {
+      "label": "speaker",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 2.69,
+      "best_view": {
+        "n_points": 19,
+        "px_bbox": [
+          326,
+          100,
+          360,
+          143
+        ],
+        "px_bbox_unwrapped": [
+          326,
+          100,
+          360,
+          143
+        ],
+        "px_area": 1462,
+        "px_area_frac": 0.00119,
+        "distance_m": 2.0,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528667.652164,
+        "frame": 183,
+        "elevation_deg": 37.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/22_speaker.png"
+    },
+    "23": {
+      "label": "tablecloth",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 135,
+      "min_range_m": 1.73,
+      "best_view": {
+        "n_points": 524,
+        "px_bbox": [
+          1277,
+          321,
+          1535,
+          381
+        ],
+        "px_bbox_unwrapped": [
+          1277,
+          321,
+          1535,
+          381
+        ],
+        "px_area": 15480,
+        "px_area_frac": 0.0126,
+        "distance_m": 0.94,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528656.887164,
+        "frame": 97,
+        "elevation_deg": -3.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/23_tablecloth.png"
+    },
+    "24": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.28,
+      "best_view": {
+        "n_points": 132,
+        "px_bbox": [
+          837,
+          322,
+          890,
+          327
+        ],
+        "px_bbox_unwrapped": [
+          837,
+          322,
+          890,
+          327
+        ],
+        "px_area": 265,
+        "px_area_frac": 0.00022,
+        "distance_m": 2.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -0.8
+      }
+    },
+    "25": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.28,
+      "best_view": {
+        "n_points": 149,
+        "px_bbox": [
+          837,
+          317,
+          890,
+          322
+        ],
+        "px_bbox_unwrapped": [
+          837,
+          317,
+          890,
+          322
+        ],
+        "px_area": 265,
+        "px_area_frac": 0.00022,
+        "distance_m": 2.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": 0.2
+      }
+    },
+    "26": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.29,
+      "best_view": {
+        "n_points": 123,
+        "px_bbox": [
+          842,
+          312,
+          889,
+          317
+        ],
+        "px_bbox_unwrapped": [
+          842,
+          312,
+          889,
+          317
+        ],
+        "px_area": 235,
+        "px_area_frac": 0.00019,
+        "distance_m": 2.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": 1.0
+      }
+    },
+    "27": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.29,
+      "best_view": {
+        "n_points": 125,
+        "px_bbox": [
+          792,
+          308,
+          839,
+          313
+        ],
+        "px_bbox_unwrapped": [
+          792,
+          308,
+          839,
+          313
+        ],
+        "px_area": 235,
+        "px_area_frac": 0.00019,
+        "distance_m": 2.17,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528667.017156,
+        "frame": 178,
+        "elevation_deg": 1.8
+      }
+    },
+    "28": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.3,
+      "best_view": {
+        "n_points": 104,
+        "px_bbox": [
+          795,
+          305,
+          837,
+          310
+        ],
+        "px_bbox_unwrapped": [
+          795,
+          305,
+          837,
+          310
+        ],
+        "px_area": 210,
+        "px_area_frac": 0.00017,
+        "distance_m": 2.18,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528667.017156,
+        "frame": 178,
+        "elevation_deg": 2.5
+      }
+    },
+    "29": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 50,
+      "min_range_m": 3.56,
+      "best_view": {
+        "n_points": 63,
+        "px_bbox": [
+          1081,
+          353,
+          1161,
+          402
+        ],
+        "px_bbox_unwrapped": [
+          1081,
+          353,
+          1161,
+          402
+        ],
+        "px_area": 3920,
+        "px_area_frac": 0.00319,
+        "distance_m": 3.33,
+        "occlusion": 0.116,
+        "clipped": false,
+        "stamp": 1785528667.017156,
+        "frame": 178,
+        "elevation_deg": -10.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/29_chair.png"
+    },
+    "30": {
+      "label": "chair",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 70,
+      "min_range_m": 2.75,
+      "best_view": {
+        "n_points": 109,
+        "px_bbox": [
+          474,
+          275,
+          571,
+          428
+        ],
+        "px_bbox_unwrapped": [
+          474,
+          275,
+          571,
+          428
+        ],
+        "px_area": 14841,
+        "px_area_frac": 0.01208,
+        "distance_m": 2.63,
+        "occlusion": 0.697,
+        "clipped": false,
+        "stamp": 1785528665.657138,
+        "frame": 167,
+        "elevation_deg": -5.3
+      }
+    },
+    "31": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.09,
+      "best_view": {
+        "n_points": 123,
+        "px_bbox": [
+          508,
+          195,
+          534,
+          223
+        ],
+        "px_bbox_unwrapped": [
+          508,
+          195,
+          534,
+          223
+        ],
+        "px_area": 728,
+        "px_area_frac": 0.00059,
+        "distance_m": 2.74,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528667.902158,
+        "frame": 185,
+        "elevation_deg": 20.8
+      }
+    },
+    "32": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 194,
+      "min_range_m": 2.59,
+      "best_view": {
+        "n_points": 12472,
+        "px_bbox": [
+          323,
+          200,
+          1032,
+          370
+        ],
+        "px_bbox_unwrapped": [
+          323,
+          200,
+          1032,
+          370
+        ],
+        "px_area": 120530,
+        "px_area_frac": 0.09809,
+        "distance_m": 2.36,
+        "occlusion": 0.039,
+        "clipped": false,
+        "stamp": 1785528667.017156,
+        "frame": 178,
+        "elevation_deg": 14.5
+      },
+      "view_image": "data/crops/visibility/livingroom_3/32_wall.png"
+    },
+    "33": {
+      "label": "decorative ball",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.77,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1450,
+          304,
+          1471,
+          321
+        ],
+        "px_bbox_unwrapped": [
+          1450,
+          304,
+          1471,
+          321
+        ],
+        "px_area": 357,
+        "px_area_frac": 0.00029,
+        "distance_m": 1.66,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528657.142175,
+        "frame": 99,
+        "elevation_deg": 1.4
+      }
+    },
+    "34": {
+      "label": "decorative ball",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.67,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          1320,
+          297,
+          1352,
+          321
+        ],
+        "px_bbox_unwrapped": [
+          1320,
+          297,
+          1352,
+          321
+        ],
+        "px_area": 768,
+        "px_area_frac": 0.00063,
+        "distance_m": 1.56,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528656.642186,
+        "frame": 95,
+        "elevation_deg": 2.0
+      }
+    },
+    "35": {
+      "label": "decorative ball",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.79,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          1332,
+          298,
+          1363,
+          321
+        ],
+        "px_bbox_unwrapped": [
+          1332,
+          298,
+          1363,
+          321
+        ],
+        "px_area": 713,
+        "px_area_frac": 0.00058,
+        "distance_m": 1.69,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528656.767195,
+        "frame": 96,
+        "elevation_deg": 1.9
+      }
+    },
+    "36": {
+      "label": "bowl",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 54,
+      "min_range_m": 1.75,
+      "best_view": {
+        "n_points": 86,
+        "px_bbox": [
+          1285,
+          304,
+          1381,
+          324
+        ],
+        "px_bbox_unwrapped": [
+          1285,
+          304,
+          1381,
+          324
+        ],
+        "px_area": 1920,
+        "px_area_frac": 0.00156,
+        "distance_m": 1.53,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528656.642186,
+        "frame": 95,
+        "elevation_deg": 1.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/36_bowl.png"
+    },
+    "37": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 49,
+      "min_range_m": 1.24,
+      "best_view": {
+        "n_points": 740,
+        "px_bbox": [
+          347,
+          361,
+          507,
+          560
+        ],
+        "px_bbox_unwrapped": [
+          347,
+          361,
+          507,
+          560
+        ],
+        "px_area": 31840,
+        "px_area_frac": 0.02591,
+        "distance_m": 1.03,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528650.587191,
+        "frame": 46,
+        "elevation_deg": -23.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/37_vase.png"
+    },
+    "38": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 214,
+      "min_range_m": 1.34,
+      "best_view": {
+        "n_points": 4328,
+        "px_bbox": [
+          478,
+          0,
+          623,
+          554
+        ],
+        "px_bbox_unwrapped": [
+          478,
+          0,
+          623,
+          554
+        ],
+        "px_area": 80330,
+        "px_area_frac": 0.06537,
+        "distance_m": 0.9,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528646.267219,
+        "frame": 11,
+        "elevation_deg": 29.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/38_column.png"
+    },
+    "39": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 122,
+      "min_range_m": 1.06,
+      "best_view": {
+        "n_points": 2449,
+        "px_bbox": [
+          1056,
+          198,
+          1308,
+          567
+        ],
+        "px_bbox_unwrapped": [
+          1056,
+          198,
+          1308,
+          567
+        ],
+        "px_area": 92988,
+        "px_area_frac": 0.07567,
+        "distance_m": 0.78,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528656.887164,
+        "frame": 97,
+        "elevation_deg": -13.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/39_chair.png"
+    },
+    "40": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 43,
+      "min_range_m": 1.11,
+      "best_view": {
+        "n_points": 279,
+        "px_bbox": [
+          1195,
+          477,
+          1332,
+          576
+        ],
+        "px_bbox_unwrapped": [
+          1195,
+          477,
+          1332,
+          576
+        ],
+        "px_area": 13563,
+        "px_area_frac": 0.01104,
+        "distance_m": 0.78,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -37.8
+      },
+      "view_image": "data/crops/visibility/livingroom_3/40_vase.png"
+    },
+    "41": {
+      "label": "tv cabinet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 102,
+      "min_range_m": 2.35,
+      "best_view": {
+        "n_points": 4173,
+        "px_bbox": [
+          583,
+          325,
+          1061,
+          464
+        ],
+        "px_bbox_unwrapped": [
+          583,
+          325,
+          1061,
+          464
+        ],
+        "px_area": 66442,
+        "px_area_frac": 0.05407,
+        "distance_m": 1.71,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -11.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/41_tv_cabinet.png"
+    },
+    "42": {
+      "label": "table",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 32,
+      "min_range_m": 2.23,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          1397,
+          380,
+          1510,
+          452
+        ],
+        "px_bbox_unwrapped": [
+          1397,
+          380,
+          1510,
+          452
+        ],
+        "px_area": 8136,
+        "px_area_frac": 0.00662,
+        "distance_m": 1.85,
+        "occlusion": 0.828,
+        "clipped": false,
+        "stamp": 1785528647.997129,
+        "frame": 25,
+        "elevation_deg": -17.4
+      }
+    },
+    "43": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 36,
+      "min_range_m": 1.52,
+      "best_view": {
+        "n_points": 134,
+        "px_bbox": [
+          1429,
+          304,
+          1478,
+          409
+        ],
+        "px_bbox_unwrapped": [
+          1429,
+          304,
+          1478,
+          409
+        ],
+        "px_area": 5145,
+        "px_area_frac": 0.00419,
+        "distance_m": 1.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528647.997129,
+        "frame": 25,
+        "elevation_deg": -6.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/43_vase.png"
+    },
+    "44": {
+      "label": "couch",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 201,
+      "min_range_m": 1.48,
+      "best_view": {
+        "n_points": 4897,
+        "px_bbox": [
+          324,
+          193,
+          725,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          324,
+          193,
+          725,
+          639
+        ],
+        "px_area": 178846,
+        "px_area_frac": 0.14555,
+        "distance_m": 0.4,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528670.237105,
+        "frame": 203,
+        "elevation_deg": -10.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/44_couch.png"
+    },
+    "45": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 21,
+      "min_range_m": 1.51,
+      "best_view": {
+        "n_points": 131,
+        "px_bbox": [
+          1437,
+          375,
+          1489,
+          410
+        ],
+        "px_bbox_unwrapped": [
+          1437,
+          375,
+          1489,
+          410
+        ],
+        "px_area": 1820,
+        "px_area_frac": 0.00148,
+        "distance_m": 1.38,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528647.642173,
+        "frame": 22,
+        "elevation_deg": -13.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/45_box.png"
+    },
+    "46": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 20,
+      "min_range_m": 2.23,
+      "best_view": {
+        "n_points": 55,
+        "px_bbox": [
+          15,
+          4,
+          79,
+          42
+        ],
+        "px_bbox_unwrapped": [
+          15,
+          4,
+          79,
+          42
+        ],
+        "px_area": 2432,
+        "px_area_frac": 0.00198,
+        "distance_m": 1.48,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528653.442172,
+        "frame": 69,
+        "elevation_deg": 55.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/46_focus_light.png"
+    },
+    "47": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 215,
+      "min_range_m": 2.25,
+      "best_view": {
+        "n_points": 15754,
+        "px_bbox": [
+          830,
+          29,
+          1555,
+          484
+        ],
+        "px_bbox_unwrapped": [
+          830,
+          29,
+          1555,
+          484
+        ],
+        "px_area": 329875,
+        "px_area_frac": 0.26845,
+        "distance_m": 0.84,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528656.887164,
+        "frame": 97,
+        "elevation_deg": 15.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/47_window.png"
+    },
+    "48": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 107,
+      "min_range_m": 2.12,
+      "best_view": {
+        "n_points": 129,
+        "px_bbox": [
+          1371,
+          79,
+          1458,
+          160
+        ],
+        "px_bbox_unwrapped": [
+          1371,
+          79,
+          1458,
+          160
+        ],
+        "px_area": 7047,
+        "px_area_frac": 0.00573,
+        "distance_m": 1.5,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528660.882195,
+        "frame": 129,
+        "elevation_deg": 38.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/48_framed_record.png"
+    },
+    "49": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 215,
+      "min_range_m": 1.79,
+      "best_view": {
+        "n_points": 13205,
+        "px_bbox": [
+          277,
+          7,
+          864,
+          497
+        ],
+        "px_bbox_unwrapped": [
+          277,
+          7,
+          864,
+          497
+        ],
+        "px_area": 287630,
+        "px_area_frac": 0.23407,
+        "distance_m": 1.16,
+        "occlusion": 0.03,
+        "clipped": false,
+        "stamp": 1785528647.997129,
+        "frame": 25,
+        "elevation_deg": 10.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/49_wall.png"
+    },
+    "50": {
+      "label": "magazine",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 22,
+      "min_range_m": 1.54,
+      "best_view": {
+        "n_points": 33,
+        "px_bbox": [
+          640,
+          372,
+          713,
+          387
+        ],
+        "px_bbox_unwrapped": [
+          640,
+          372,
+          713,
+          387
+        ],
+        "px_area": 1095,
+        "px_area_frac": 0.00089,
+        "distance_m": 1.41,
+        "occlusion": 0.576,
+        "clipped": false,
+        "stamp": 1785528668.272201,
+        "frame": 188,
+        "elevation_deg": -11.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/50_magazine.png"
+    },
+    "51": {
+      "label": "elephant decoration",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 2.0,
+      "best_view": {
+        "n_points": 77,
+        "px_bbox": [
+          750,
+          352,
+          792,
+          388
+        ],
+        "px_bbox_unwrapped": [
+          750,
+          352,
+          792,
+          388
+        ],
+        "px_area": 1512,
+        "px_area_frac": 0.00123,
+        "distance_m": 1.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.797109,
+        "frame": 176,
+        "elevation_deg": -9.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/51_elephant_decoration.png"
+    },
+    "52": {
+      "label": "coffee table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 80,
+      "min_range_m": 1.26,
+      "best_view": {
+        "n_points": 1657,
+        "px_bbox": [
+          1177,
+          372,
+          1463,
+          636
+        ],
+        "px_bbox_unwrapped": [
+          1177,
+          372,
+          1463,
+          636
+        ],
+        "px_area": 75504,
+        "px_area_frac": 0.06145,
+        "distance_m": 0.53,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -26.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/52_coffee_table.png"
+    },
+    "53": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 2.94,
+      "best_view": {
+        "n_points": 162,
+        "px_bbox": [
+          124,
+          60,
+          182,
+          86
+        ],
+        "px_bbox_unwrapped": [
+          124,
+          60,
+          182,
+          86
+        ],
+        "px_area": 1508,
+        "px_area_frac": 0.00123,
+        "distance_m": 1.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528668.657139,
+        "frame": 191,
+        "elevation_deg": 46.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/53_focus_light.png"
+    },
+    "54": {
+      "label": "wall decal",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 51,
+      "min_range_m": 1.44,
+      "best_view": {
+        "n_points": 7301,
+        "px_bbox": [
+          106,
+          44,
+          441,
+          443
+        ],
+        "px_bbox_unwrapped": [
+          106,
+          44,
+          441,
+          443
+        ],
+        "px_area": 133665,
+        "px_area_frac": 0.10878,
+        "distance_m": 1.48,
+        "occlusion": 0.022,
+        "clipped": false,
+        "stamp": 1785528650.732178,
+        "frame": 47,
+        "elevation_deg": 17.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/54_wall_decal.png"
+    },
+    "55": {
+      "label": "bowl",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 33,
+      "min_range_m": 0.6,
+      "best_view": {
+        "n_points": 1317,
+        "px_bbox": [
+          475,
+          375,
+          649,
+          493
+        ],
+        "px_bbox_unwrapped": [
+          475,
+          375,
+          649,
+          493
+        ],
+        "px_area": 20532,
+        "px_area_frac": 0.01671,
+        "distance_m": 0.46,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528647.277168,
+        "frame": 19,
+        "elevation_deg": -18.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/55_bowl.png"
+    },
+    "56": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 213,
+      "min_range_m": 1.49,
+      "best_view": {
+        "n_points": 13865,
+        "px_bbox": [
+          1171,
+          125,
+          1887,
+          408
+        ],
+        "px_bbox_unwrapped": [
+          1171,
+          125,
+          1887,
+          408
+        ],
+        "px_area": 202628,
+        "px_area_frac": 0.1649,
+        "distance_m": 1.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528660.247172,
+        "frame": 124,
+        "elevation_deg": 20.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/56_wall.png"
+    },
+    "57": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 37,
+      "min_range_m": 2.34,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          1750,
+          7,
+          1832,
+          39
+        ],
+        "px_bbox_unwrapped": [
+          1750,
+          7,
+          1832,
+          39
+        ],
+        "px_area": 2624,
+        "px_area_frac": 0.00214,
+        "distance_m": 1.49,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528663.277097,
+        "frame": 148,
+        "elevation_deg": 55.8
+      },
+      "view_image": "data/crops/visibility/livingroom_3/57_focus_light.png"
+    },
+    "58": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 62,
+      "min_range_m": 1.53,
+      "best_view": {
+        "n_points": 109,
+        "px_bbox": [
+          439,
+          217,
+          504,
+          294
+        ],
+        "px_bbox_unwrapped": [
+          439,
+          217,
+          504,
+          294
+        ],
+        "px_area": 5005,
+        "px_area_frac": 0.00407,
+        "distance_m": 1.3,
+        "occlusion": 0.727,
+        "clipped": false,
+        "stamp": 1785528652.572199,
+        "frame": 62,
+        "elevation_deg": 12.3
+      }
+    },
+    "59": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.8,
+      "best_view": {
+        "n_points": 60,
+        "px_bbox": [
+          298,
+          140,
+          322,
+          157
+        ],
+        "px_bbox_unwrapped": [
+          298,
+          140,
+          322,
+          157
+        ],
+        "px_area": 408,
+        "px_area_frac": 0.00033,
+        "distance_m": 3.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528646.267219,
+        "frame": 11,
+        "elevation_deg": 32.2
+      }
+    },
+    "60": {
+      "label": "painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 146,
+      "min_range_m": 5.16,
+      "best_view": {
+        "n_points": 379,
+        "px_bbox": [
+          1429,
+          245,
+          1486,
+          302
+        ],
+        "px_bbox_unwrapped": [
+          1429,
+          245,
+          1486,
+          302
+        ],
+        "px_area": 3249,
+        "px_area_frac": 0.00264,
+        "distance_m": 5.88,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528647.157109,
+        "frame": 18,
+        "elevation_deg": 8.8
+      },
+      "view_image": "data/crops/visibility/livingroom_3/60_framed_record.png"
+    },
+    "61": {
+      "label": "photo",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 23,
+      "min_range_m": 2.12,
+      "best_view": {
+        "n_points": 130,
+        "px_bbox": [
+          710,
+          287,
+          747,
+          330
+        ],
+        "px_bbox_unwrapped": [
+          710,
+          287,
+          747,
+          330
+        ],
+        "px_area": 1591,
+        "px_area_frac": 0.00129,
+        "distance_m": 2.03,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": 2.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/61_framed_record.png"
+    },
+    "62": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 5.6,
+      "best_view": {
+        "n_points": 616,
+        "px_bbox": [
+          430,
+          236,
+          484,
+          368
+        ],
+        "px_bbox_unwrapped": [
+          430,
+          236,
+          484,
+          368
+        ],
+        "px_area": 7128,
+        "px_area_frac": 0.0058,
+        "distance_m": 5.49,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528645.272182,
+        "frame": 3,
+        "elevation_deg": 3.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/62_door.png"
+    },
+    "63": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 5.6,
+      "best_view": {
+        "n_points": 748,
+        "px_bbox": [
+          425,
+          231,
+          489,
+          367
+        ],
+        "px_bbox_unwrapped": [
+          425,
+          231,
+          489,
+          367
+        ],
+        "px_area": 8704,
+        "px_area_frac": 0.00708,
+        "distance_m": 5.51,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528645.272182,
+        "frame": 3,
+        "elevation_deg": 4.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/63_door_frame.png"
+    },
+    "64": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 31,
+      "min_range_m": 1.65,
+      "best_view": {
+        "n_points": 310,
+        "px_bbox": [
+          1414,
+          381,
+          1614,
+          510
+        ],
+        "px_bbox_unwrapped": [
+          1414,
+          381,
+          1614,
+          510
+        ],
+        "px_area": 25800,
+        "px_area_frac": 0.021,
+        "distance_m": 1.2,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528648.247217,
+        "frame": 27,
+        "elevation_deg": -21.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/64_table.png"
+    },
+    "65": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 17,
+      "min_range_m": 2.84,
+      "best_view": {
+        "n_points": 229,
+        "px_bbox": [
+          1878,
+          44,
+          23,
+          70
+        ],
+        "px_bbox_unwrapped": [
+          1878,
+          44,
+          1943,
+          70
+        ],
+        "px_area": 1690,
+        "px_area_frac": 0.00138,
+        "distance_m": 1.67,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528668.272201,
+        "frame": 188,
+        "elevation_deg": 49.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/65_focus_light.png"
+    },
+    "66": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 5.81,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          1416,
+          204,
+          1438,
+          210
+        ],
+        "px_bbox_unwrapped": [
+          1416,
+          204,
+          1438,
+          210
+        ],
+        "px_area": 132,
+        "px_area_frac": 0.00011,
+        "distance_m": 5.3,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528646.397116,
+        "frame": 12,
+        "elevation_deg": 21.3
+      }
+    },
+    "67": {
+      "label": "stool",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 76,
+      "min_range_m": 0.84,
+      "best_view": {
+        "n_points": 1637,
+        "px_bbox": [
+          294,
+          399,
+          648,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          294,
+          399,
+          648,
+          639
+        ],
+        "px_area": 84960,
+        "px_area_frac": 0.06914,
+        "distance_m": 0.44,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528647.532178,
+        "frame": 21,
+        "elevation_deg": -38.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/67_stool.png"
+    },
+    "68": {
+      "label": "newtons cradle",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 22,
+      "min_range_m": 1.32,
+      "best_view": {
+        "n_points": 49,
+        "px_bbox": [
+          515,
+          232,
+          604,
+          291
+        ],
+        "px_bbox_unwrapped": [
+          515,
+          232,
+          604,
+          291
+        ],
+        "px_area": 5251,
+        "px_area_frac": 0.00427,
+        "distance_m": 1.2,
+        "occlusion": 0.852,
+        "clipped": false,
+        "stamp": 1785528650.587191,
+        "frame": 46,
+        "elevation_deg": 11.2
+      }
+    },
+    "71": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 182,
+      "min_range_m": 1.91,
+      "best_view": {
+        "n_points": 12244,
+        "px_bbox": [
+          1513,
+          212,
+          400,
+          365
+        ],
+        "px_bbox_unwrapped": [
+          1513,
+          212,
+          2320,
+          365
+        ],
+        "px_area": 123471,
+        "px_area_frac": 0.10048,
+        "distance_m": 1.78,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528645.272182,
+        "frame": 3,
+        "elevation_deg": 20.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/71_wall.png"
+    },
+    "72": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 129,
+      "min_range_m": 1.74,
+      "best_view": {
+        "n_points": 2185,
+        "px_bbox": [
+          1208,
+          322,
+          1532,
+          602
+        ],
+        "px_bbox_unwrapped": [
+          1208,
+          322,
+          1532,
+          602
+        ],
+        "px_area": 90720,
+        "px_area_frac": 0.07383,
+        "distance_m": 0.69,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528656.767195,
+        "frame": 96,
+        "elevation_deg": -14.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/72_table.png"
+    },
+    "73": {
+      "label": "lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 195,
+      "min_range_m": 2.56,
+      "best_view": {
+        "n_points": 820,
+        "px_bbox": [
+          1726,
+          4,
+          1849,
+          139
+        ],
+        "px_bbox_unwrapped": [
+          1726,
+          4,
+          1849,
+          139
+        ],
+        "px_area": 16605,
+        "px_area_frac": 0.01351,
+        "distance_m": 1.52,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528657.902179,
+        "frame": 105,
+        "elevation_deg": 47.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/73_lamp.png"
+    },
+    "74": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 89,
+      "min_range_m": 1.82,
+      "best_view": {
+        "n_points": 662,
+        "px_bbox": [
+          1121,
+          253,
+          1251,
+          473
+        ],
+        "px_bbox_unwrapped": [
+          1121,
+          253,
+          1251,
+          473
+        ],
+        "px_area": 28600,
+        "px_area_frac": 0.02327,
+        "distance_m": 1.56,
+        "occlusion": 0.246,
+        "clipped": false,
+        "stamp": 1785528656.887164,
+        "frame": 97,
+        "elevation_deg": -7.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/74_chair.png"
+    },
+    "75": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 117,
+      "min_range_m": 1.16,
+      "best_view": {
+        "n_points": 149,
+        "px_bbox": [
+          305,
+          261,
+          423,
+          433
+        ],
+        "px_bbox_unwrapped": [
+          305,
+          261,
+          423,
+          433
+        ],
+        "px_area": 20296,
+        "px_area_frac": 0.01652,
+        "distance_m": 0.93,
+        "occlusion": 0.101,
+        "clipped": false,
+        "stamp": 1785528671.207198,
+        "frame": 211,
+        "elevation_deg": -4.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/75_pillow.png"
+    },
+    "76": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 55,
+      "min_range_m": 1.05,
+      "best_view": {
+        "n_points": 518,
+        "px_bbox": [
+          504,
+          326,
+          622,
+          383
+        ],
+        "px_bbox_unwrapped": [
+          504,
+          326,
+          622,
+          383
+        ],
+        "px_area": 6726,
+        "px_area_frac": 0.00547,
+        "distance_m": 0.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528650.832164,
+        "frame": 48,
+        "elevation_deg": -4.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/76_box.png"
+    },
+    "77": {
+      "label": "book",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 48,
+      "min_range_m": 2.78,
+      "best_view": {
+        "n_points": 182,
+        "px_bbox": [
+          184,
+          159,
+          243,
+          213
+        ],
+        "px_bbox_unwrapped": [
+          184,
+          159,
+          243,
+          213
+        ],
+        "px_area": 3186,
+        "px_area_frac": 0.00259,
+        "distance_m": 2.35,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528668.532179,
+        "frame": 190,
+        "elevation_deg": 25.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/77_book.png"
+    },
+    "78": {
+      "label": "picture",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.9,
+      "best_view": null
+    },
+    "79": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 5.72,
+      "best_view": {
+        "n_points": 276,
+        "px_bbox": [
+          516,
+          205,
+          542,
+          368
+        ],
+        "px_bbox_unwrapped": [
+          516,
+          205,
+          542,
+          368
+        ],
+        "px_area": 4238,
+        "px_area_frac": 0.00345,
+        "distance_m": 5.44,
+        "occlusion": 0.159,
+        "clipped": false,
+        "stamp": 1785528645.272182,
+        "frame": 3,
+        "elevation_deg": 6.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/79_column.png"
+    },
+    "80": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 215,
+      "min_range_m": 0.88,
+      "best_view": {
+        "n_points": 3022,
+        "px_bbox": [
+          1067,
+          341,
+          256,
+          395
+        ],
+        "px_bbox_unwrapped": [
+          1067,
+          341,
+          2176,
+          395
+        ],
+        "px_area": 59886,
+        "px_area_frac": 0.04874,
+        "distance_m": 1.17,
+        "occlusion": 0.282,
+        "clipped": false,
+        "stamp": 1785528656.642186,
+        "frame": 95,
+        "elevation_deg": -11.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/80_floor.png"
+    },
+    "81": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 91,
+      "min_range_m": 3.3,
+      "best_view": {
+        "n_points": 404,
+        "px_bbox": [
+          1314,
+          275,
+          1452,
+          413
+        ],
+        "px_bbox_unwrapped": [
+          1314,
+          275,
+          1452,
+          413
+        ],
+        "px_area": 19044,
+        "px_area_frac": 0.0155,
+        "distance_m": 2.85,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528646.147179,
+        "frame": 10,
+        "elevation_deg": -3.8
+      },
+      "view_image": "data/crops/visibility/livingroom_3/81_chair.png"
+    },
+    "82": {
+      "label": "wall",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.52,
+      "best_view": null
+    },
+    "83": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 39,
+      "min_range_m": 0.87,
+      "best_view": {
+        "n_points": 269,
+        "px_bbox": [
+          399,
+          301,
+          532,
+          442
+        ],
+        "px_bbox_unwrapped": [
+          399,
+          301,
+          532,
+          442
+        ],
+        "px_area": 18753,
+        "px_area_frac": 0.01526,
+        "distance_m": 0.87,
+        "occlusion": 0.343,
+        "clipped": false,
+        "stamp": 1785528647.532178,
+        "frame": 21,
+        "elevation_deg": -7.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/83_plant.png"
+    },
+    "84": {
+      "label": "lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 21,
+      "min_range_m": 2.57,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          1613,
+          44,
+          1653,
+          80
+        ],
+        "px_bbox_unwrapped": [
+          1613,
+          44,
+          1653,
+          80
+        ],
+        "px_area": 1440,
+        "px_area_frac": 0.00117,
+        "distance_m": 1.71,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528661.897117,
+        "frame": 137,
+        "elevation_deg": 48.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/84_lamp.png"
+    },
+    "85": {
+      "label": "flower",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 41,
+      "min_range_m": 1.09,
+      "best_view": {
+        "n_points": 191,
+        "px_bbox": [
+          1241,
+          263,
+          1283,
+          413
+        ],
+        "px_bbox_unwrapped": [
+          1241,
+          263,
+          1283,
+          413
+        ],
+        "px_area": 6300,
+        "px_area_frac": 0.00513,
+        "distance_m": 1.05,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -3.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/85_flower.png"
+    },
+    "86": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 116,
+      "min_range_m": 0.94,
+      "best_view": {
+        "n_points": 1713,
+        "px_bbox": [
+          402,
+          377,
+          639,
+          544
+        ],
+        "px_bbox_unwrapped": [
+          402,
+          377,
+          639,
+          544
+        ],
+        "px_area": 39579,
+        "px_area_frac": 0.03221,
+        "distance_m": 0.85,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528651.967203,
+        "frame": 57,
+        "elevation_deg": -27.4
+      },
+      "view_image": "data/crops/visibility/livingroom_3/86_door.png"
+    },
+    "87": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 113,
+      "min_range_m": 0.86,
+      "best_view": {
+        "n_points": 1952,
+        "px_bbox": [
+          394,
+          381,
+          653,
+          560
+        ],
+        "px_bbox_unwrapped": [
+          394,
+          381,
+          653,
+          560
+        ],
+        "px_area": 46361,
+        "px_area_frac": 0.03773,
+        "distance_m": 0.77,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528651.092158,
+        "frame": 50,
+        "elevation_deg": -29.8
+      },
+      "view_image": "data/crops/visibility/livingroom_3/87_door.png"
+    },
+    "88": {
+      "label": "cabinet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 165,
+      "min_range_m": 1.18,
+      "best_view": {
+        "n_points": 8264,
+        "px_bbox": [
+          310,
+          258,
+          771,
+          571
+        ],
+        "px_bbox_unwrapped": [
+          310,
+          258,
+          771,
+          571
+        ],
+        "px_area": 144293,
+        "px_area_frac": 0.11743,
+        "distance_m": 0.78,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528651.222173,
+        "frame": 51,
+        "elevation_deg": -15.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/88_cabinet.png"
+    },
+    "89": {
+      "label": "pillow",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 49,
+      "min_range_m": 1.59,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1354,
+          281,
+          1472,
+          399
+        ],
+        "px_bbox_unwrapped": [
+          1354,
+          281,
+          1472,
+          399
+        ],
+        "px_area": 13924,
+        "px_area_frac": 0.01133,
+        "distance_m": 1.65,
+        "occlusion": 0.984,
+        "clipped": false,
+        "stamp": 1785528648.857121,
+        "frame": 32,
+        "elevation_deg": -3.4
+      }
+    },
+    "90": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 10,
+      "min_range_m": 2.39,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          601,
+          112,
+          634,
+          185
+        ],
+        "px_bbox_unwrapped": [
+          601,
+          112,
+          634,
+          185
+        ],
+        "px_area": 2409,
+        "px_area_frac": 0.00196,
+        "distance_m": 2.1,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528645.387179,
+        "frame": 4,
+        "elevation_deg": 32.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/90_framed_record.png"
+    },
+    "91": {
+      "label": "shelf",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 184,
+      "min_range_m": 2.55,
+      "best_view": {
+        "n_points": 292,
+        "px_bbox": [
+          614,
+          115,
+          985,
+          229
+        ],
+        "px_bbox_unwrapped": [
+          614,
+          115,
+          985,
+          229
+        ],
+        "px_area": 42294,
+        "px_area_frac": 0.03442,
+        "distance_m": 2.19,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": 29.2
+      },
+      "view_image": "data/crops/visibility/livingroom_3/91_shelf.png"
+    },
+    "92": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 5.64,
+      "best_view": {
+        "n_points": 1508,
+        "px_bbox": [
+          339,
+          208,
+          493,
+          367
+        ],
+        "px_bbox_unwrapped": [
+          339,
+          208,
+          493,
+          367
+        ],
+        "px_area": 24486,
+        "px_area_frac": 0.01993,
+        "distance_m": 5.54,
+        "occlusion": 0.047,
+        "clipped": false,
+        "stamp": 1785528645.522169,
+        "frame": 5,
+        "elevation_deg": 6.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/92_wall.png"
+    },
+    "93": {
+      "label": "lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 8,
+      "min_range_m": 2.16,
+      "best_view": {
+        "n_points": 19,
+        "px_bbox": [
+          1410,
+          303,
+          1503,
+          395
+        ],
+        "px_bbox_unwrapped": [
+          1410,
+          303,
+          1503,
+          395
+        ],
+        "px_area": 8556,
+        "px_area_frac": 0.00696,
+        "distance_m": 2.06,
+        "occlusion": 0.256,
+        "clipped": false,
+        "stamp": 1785528648.127171,
+        "frame": 26,
+        "elevation_deg": -5.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/93_lamp.png"
+    },
+    "94": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 136,
+      "min_range_m": 0.98,
+      "best_view": {
+        "n_points": 3577,
+        "px_bbox": [
+          394,
+          144,
+          651,
+          630
+        ],
+        "px_bbox_unwrapped": [
+          394,
+          144,
+          651,
+          630
+        ],
+        "px_area": 124902,
+        "px_area_frac": 0.10165,
+        "distance_m": 0.63,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528665.137136,
+        "frame": 163,
+        "elevation_deg": -14.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/94_chair.png"
+    },
+    "95": {
+      "label": "mirror",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 206,
+      "min_range_m": 1.9,
+      "best_view": {
+        "n_points": 1112,
+        "px_bbox": [
+          416,
+          85,
+          595,
+          230
+        ],
+        "px_bbox_unwrapped": [
+          416,
+          85,
+          595,
+          230
+        ],
+        "px_area": 25955,
+        "px_area_frac": 0.02112,
+        "distance_m": 1.5,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528651.467173,
+        "frame": 53,
+        "elevation_deg": 33.3
+      },
+      "view_image": "data/crops/visibility/livingroom_3/95_mirror.png"
+    },
+    "96": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 40,
+      "min_range_m": 1.25,
+      "best_view": {
+        "n_points": 530,
+        "px_bbox": [
+          496,
+          284,
+          600,
+          391
+        ],
+        "px_bbox_unwrapped": [
+          496,
+          284,
+          600,
+          391
+        ],
+        "px_area": 11128,
+        "px_area_frac": 0.00906,
+        "distance_m": 1.61,
+        "occlusion": 0.243,
+        "clipped": false,
+        "stamp": 1785528669.81711,
+        "frame": 200,
+        "elevation_deg": -2.7
+      },
+      "view_image": "data/crops/visibility/livingroom_3/96_pillow.png"
+    },
+    "97": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 177,
+      "min_range_m": 1.72,
+      "best_view": {
+        "n_points": 1665,
+        "px_bbox": [
+          1280,
+          142,
+          1433,
+          253
+        ],
+        "px_bbox_unwrapped": [
+          1280,
+          142,
+          1433,
+          253
+        ],
+        "px_area": 16983,
+        "px_area_frac": 0.01382,
+        "distance_m": 1.41,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528660.247172,
+        "frame": 124,
+        "elevation_deg": 23.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/97_framed_record.png"
+    },
+    "98": {
+      "label": "picture",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.37,
+      "best_view": null
+    },
+    "99": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 191,
+      "min_range_m": 2.14,
+      "best_view": {
+        "n_points": 2143,
+        "px_bbox": [
+          1375,
+          187,
+          1525,
+          468
+        ],
+        "px_bbox_unwrapped": [
+          1375,
+          187,
+          1525,
+          468
+        ],
+        "px_area": 42150,
+        "px_area_frac": 0.0343,
+        "distance_m": 2.06,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528661.542171,
+        "frame": 134,
+        "elevation_deg": -1.1
+      },
+      "view_image": "data/crops/visibility/livingroom_3/99_plant.png"
+    },
+    "100": {
+      "label": "candle",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.96,
+      "best_view": {
+        "n_points": 50,
+        "px_bbox": [
+          615,
+          360,
+          631,
+          386
+        ],
+        "px_bbox_unwrapped": [
+          615,
+          360,
+          631,
+          386
+        ],
+        "px_area": 416,
+        "px_area_frac": 0.00034,
+        "distance_m": 1.92,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528667.017156,
+        "frame": 178,
+        "elevation_deg": -9.9
+      }
+    },
+    "101": {
+      "label": "candle",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.95,
+      "best_view": {
+        "n_points": 55,
+        "px_bbox": [
+          647,
+          368,
+          663,
+          387
+        ],
+        "px_bbox_unwrapped": [
+          647,
+          368,
+          663,
+          387
+        ],
+        "px_area": 304,
+        "px_area_frac": 0.00025,
+        "distance_m": 1.9,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -10.7
+      }
+    },
+    "102": {
+      "label": "tray",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.96,
+      "best_view": {
+        "n_points": 65,
+        "px_bbox": [
+          638,
+          379,
+          687,
+          392
+        ],
+        "px_bbox_unwrapped": [
+          638,
+          379,
+          687,
+          392
+        ],
+        "px_area": 637,
+        "px_area_frac": 0.00052,
+        "distance_m": 1.84,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -12.2
+      }
+    },
+    "103": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 172,
+      "min_range_m": 0.8,
+      "best_view": {
+        "n_points": 3945,
+        "px_bbox": [
+          1292,
+          86,
+          1603,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1292,
+          86,
+          1603,
+          639
+        ],
+        "px_area": 171983,
+        "px_area_frac": 0.13996,
+        "distance_m": 0.46,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528656.027157,
+        "frame": 90,
+        "elevation_deg": -17.8
+      },
+      "view_image": "data/crops/visibility/livingroom_3/103_chair.png"
+    },
+    "104": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 114,
+      "min_range_m": 1.45,
+      "best_view": {
+        "n_points": 1241,
+        "px_bbox": [
+          424,
+          219,
+          604,
+          535
+        ],
+        "px_bbox_unwrapped": [
+          424,
+          219,
+          604,
+          535
+        ],
+        "px_area": 56880,
+        "px_area_frac": 0.04629,
+        "distance_m": 1.1,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528665.657138,
+        "frame": 167,
+        "elevation_deg": -9.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/104_chair.png"
+    },
+    "105": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 30,
+      "min_range_m": 1.52,
+      "best_view": {
+        "n_points": 140,
+        "px_bbox": [
+          1427,
+          342,
+          1477,
+          409
+        ],
+        "px_bbox_unwrapped": [
+          1427,
+          342,
+          1477,
+          409
+        ],
+        "px_area": 3350,
+        "px_area_frac": 0.00273,
+        "distance_m": 1.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528648.247217,
+        "frame": 27,
+        "elevation_deg": -9.9
+      },
+      "view_image": "data/crops/visibility/livingroom_3/105_vase.png"
+    },
+    "106": {
+      "label": "ceiling",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 215,
+      "min_range_m": 2.28,
+      "best_view": {
+        "n_points": 15351,
+        "px_bbox": [
+          1537,
+          182,
+          786,
+          271
+        ],
+        "px_bbox_unwrapped": [
+          1537,
+          182,
+          2706,
+          271
+        ],
+        "px_area": 104041,
+        "px_area_frac": 0.08467,
+        "distance_m": 1.79,
+        "occlusion": 0.044,
+        "clipped": false,
+        "stamp": 1785528658.022166,
+        "frame": 106,
+        "elevation_deg": 25.6
+      },
+      "view_image": "data/crops/visibility/livingroom_3/106_ceiling.png"
+    },
+    "107": {
+      "label": "chess",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 31,
+      "min_range_m": 1.4,
+      "best_view": {
+        "n_points": 197,
+        "px_bbox": [
+          1210,
+          426,
+          1306,
+          464
+        ],
+        "px_bbox_unwrapped": [
+          1210,
+          426,
+          1306,
+          464
+        ],
+        "px_area": 3648,
+        "px_area_frac": 0.00297,
+        "distance_m": 1.11,
+        "occlusion": 0.252,
+        "clipped": false,
+        "stamp": 1785528666.897147,
+        "frame": 177,
+        "elevation_deg": -23.0
+      },
+      "view_image": "data/crops/visibility/livingroom_3/107_chess.png"
+    }
+  },
+  "summary": {
+    "objects": 106,
+    "visible": 79,
+    "hidden": 27,
+    "seconds": 24.1
+  }
+}

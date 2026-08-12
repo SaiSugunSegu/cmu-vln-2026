@@ -13,7 +13,9 @@ Per question::
     anchors exist, and none of them is the answer
     the stated relation still holds and still picks out this object uniquely
     official questions still resolve to this object from their text alone
-    ids are unique, and the scene has the expected number of questions
+    the robot's camera actually resolved the answer and every anchor
+    ids are unique, and the scene has no more than the expected number of questions
+    (fewer is a warning: three scenes run out of candidates the camera resolved)
 
 Usage::
 
@@ -34,6 +36,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "bags"))
 
 import cat2_text_solver as solver  # noqa: E402
+from cat2_visibility import Visibility, load_visibility  # noqa: E402
 from cat2_geometry import (  # noqa: E402
     STRUCTURAL,
     Obj,
@@ -67,6 +70,14 @@ def pinned_targets(scene: str) -> dict[str, str]:
     return {solver.normalize(k): str(v) for k, v in (rules.get("pin") or {}).items()}
 
 
+def hidden_objects(scene: str) -> dict[str, str]:
+    """Objects the review pass ruled out by hand, whatever the measurement says."""
+    if not OVERRIDES.exists():
+        return {}
+    rules = json.loads(OVERRIDES.read_text()).get(scene) or {}
+    return {str(k): v for k, v in (rules.get("hide") or {}).items()}
+
+
 def reworded(scene: str) -> dict[str, str]:
     """New text -> original text, so a reworded question can still be re-solved."""
     if not OVERRIDES.exists():
@@ -96,6 +107,7 @@ def check_question(
     statements: dict[str, Any],
     pins: dict[str, str],
     rewords: dict[str, str],
+    vis: Visibility,
 ) -> list[str]:
     problems: list[str] = []
     answer = q.get("answer")
@@ -126,22 +138,39 @@ def check_question(
 
     relation = q.get("relation") or ""
     scene_objs = region_objects(objects, target.region)
-    if q.get("source") == "official":
-        # Re-solve from the text, which is the only ground truth the organizers gave us.
-        text = rewords.get(solver.normalize(q["question"]), q["question"])
-        pin = pins.get(solver.normalize(text))
-        if pin:
-            if pin != target.id:
-                problems.append(f"override pins {pin} but the answer is {target.id}")
-        else:
-            result = solver.solve_in_regions(text, objects)
-            got = result["target"]
-            if got is None:
-                problems.append(f"no longer resolves from its text ({result['reason']}) and is not pinned")
-            elif got.id != target.id:
-                problems.append(f"text now resolves to {got} instead of {target}")
-    elif relation:
-        if not anchors:
+
+    # A generated question about geometry the robot's camera never resolved is unanswerable
+    # from the sensors however clean its box is. The official questions are the organizers'
+    # to write, so their misses are reported by the generator rather than failed here.
+    if q.get("source") != "official":
+        for oid, why in vis.hidden([target.id] + anchor_ids):
+            role = "answer" if oid == target.id else "anchor"
+            problems.append(f"{role} {oid} was never resolved by the robot's camera: {why}")
+
+    # Every question, official or generated, has to name its answer and nothing else across
+    # the whole scene. A generated question is verified region by region, but the robot is
+    # asked it in the whole house: reading the text back is what catches "the curtains
+    # closest to the trash bin" in a suite whose other room has a shower curtain and a bin.
+    text = rewords.get(solver.normalize(q["question"]), q["question"])
+    pin = pins.get(solver.normalize(text))
+    if pin:
+        if pin != target.id:
+            problems.append(f"override pins {pin} but the answer is {target.id}")
+    else:
+        result = solver.solve_in_regions(text, objects)
+        got = result["target"]
+        if got is None:
+            problems.append(f"no longer resolves from its text ({result['reason']}) and is not pinned")
+        elif got.id != target.id:
+            problems.append(f"text now resolves to {got} instead of {target}")
+
+    # For an official question the text is the whole ground truth: the organizers wrote it,
+    # so there is no stored relation of ours to re-derive. Generated questions carry one, and
+    # it has to still hold against the current boxes.
+    if q.get("source") != "official":
+        if not relation:
+            problems.append("no relation recorded")
+        elif not anchors:
             problems.append(f"relation {relation!r} with no usable anchor")
         else:
             # True but unaskable is still a bad question, and the rules that decide which
@@ -161,8 +190,6 @@ def check_question(
                     problems.append(f"margin {stated} != recomputed {margin:.3f}")
             elif stated is not None:
                 problems.append(f"{relation} question should not carry a distance margin")
-    else:
-        problems.append("no relation recorded")
 
     return problems
 
@@ -174,19 +201,35 @@ def verify_scene(path: Path, expect: int, verbose: bool) -> tuple[int, int]:
     objects = load_objects(scene)
     statements = load_statements(scene)
     pins, rewords = pinned_targets(scene), reworded(scene)
+    vis = Visibility(load_visibility(scene), hidden_objects(scene))
 
     n_ok = n_bad = 0
     ids = [q.get("id") for q in questions]
-    scene_problems = []
+    scene_problems, scene_warnings = [], []
+    if not vis:
+        scene_problems.append(f"no visibility report -- run `just visibility {scene}`")
     if len(set(ids)) != len(ids):
         scene_problems.append(f"duplicate question ids: {ids}")
-    if expect and len(questions) != expect:
-        scene_problems.append(f"{len(questions)} questions, expected {expect}")
+    if not questions:
+        scene_problems.append("no questions at all")
+    elif expect and len(questions) > expect:
+        scene_problems.append(f"{len(questions)} questions, more than the {expect} asked for")
+    elif expect and len(questions) < expect:
+        # A short scene is the visibility gate working, not a bug: once every candidate whose
+        # target or anchors the robot resolved is used up, the only ways to reach ten are to
+        # ask about geometry the camera never saw or to repeat a target. Warn -- with the
+        # shortfall visible -- rather than fail, so this stays usable as a CI gate; the
+        # per-scene counts are recorded in docs/cat2_benchmark.md.
+        scene_warnings.append(
+            f"{len(questions)} questions, {expect - len(questions)} short of {expect} "
+            f"-- {sum(1 for e in vis.objects.values() if e.get('visible'))}"
+            f"/{len(vis.objects)} objects were resolved by the camera"
+        )
     if qa.get("category") != 2 or qa.get("category_name") != "object_reference":
         scene_problems.append("envelope is not category 2 / object_reference")
 
     for q in questions:
-        problems = check_question(q, objects, statements, pins, rewords)
+        problems = check_question(q, objects, statements, pins, rewords, vis)
         if problems:
             n_bad += 1
             print(f"[{scene}] {q.get('id')} FAIL  {q.get('question')}")
@@ -201,6 +244,8 @@ def verify_scene(path: Path, expect: int, verbose: bool) -> tuple[int, int]:
                     f"{q.get('relation')}  {q.get('question')}"
                 )
 
+    for warning in scene_warnings:
+        print(f"[{scene}] WARN  {warning}")
     for problem in scene_problems:
         print(f"[{scene}] SCENE FAIL - {problem}")
     status = "OK" if not (n_bad or scene_problems) else "FAIL"

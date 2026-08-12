@@ -6,15 +6,17 @@
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
-    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
-    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by bags/cat2_text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/office_1/visibility/office_1_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
     "source_statements: bags/office_1/iref_vla_metadata/office_1_referential_statements.json",
     "source_objects: bags/office_1/iref_vla_metadata/office_1_objects.json"
   ],
   "difficulty_counts": {
-    "medium": 4,
-    "hard": 3,
-    "easy": 3
+    "medium": 6,
+    "hard": 2,
+    "easy": 2
   },
   "relation_counts": {
     "on": 2,
@@ -28,18 +30,19 @@
   },
   "target_object_coverage": [
     "bottle",
+    "chair",
     "clock",
     "coffee machine",
-    "eye glasses",
     "file cabinet",
+    "laptop",
     "map wall decal",
-    "paper",
     "paper cup",
-    "pen",
+    "potted cactus",
     "potted plant",
     "projector screen",
     "table",
-    "trash bin"
+    "trash bin",
+    "window"
   ],
   "questions": [
     {
@@ -150,6 +153,30 @@
       "region": "0",
       "images": [
         "data/pdf_assets/office_1/p1_img2.png"
+      ],
+      "views": [
+        {
+          "object_id": "55",
+          "role": "target",
+          "frames_visible": 78,
+          "distance_m": 1.12,
+          "px_area": 10098,
+          "occlusion": 0.0,
+          "elevation_deg": 21.2,
+          "stamp": 1785528923.722945,
+          "image": "data/crops/visibility/office_1/55_plant.png"
+        },
+        {
+          "object_id": "69",
+          "role": "anchor",
+          "frames_visible": 164,
+          "distance_m": 0.75,
+          "px_area": 180048,
+          "occlusion": 0.0,
+          "elevation_deg": -11.0,
+          "stamp": 1785528925.71796,
+          "image": "data/crops/visibility/office_1/69_file_cabinet.png"
+        }
       ],
       "verified": true,
       "solver_trace": [
@@ -269,6 +296,22 @@
       "images": [
         "data/pdf_assets/office_1/p2_img1.png"
       ],
+      "views": [
+        {
+          "object_id": "50",
+          "role": "anchor",
+          "frames_visible": 117,
+          "distance_m": 0.81,
+          "px_area": 106305,
+          "occlusion": 0.0,
+          "elevation_deg": -13.9,
+          "stamp": 1785528947.522968,
+          "image": "data/crops/visibility/office_1/50_table.png"
+        }
+      ],
+      "visibility_warning": [
+        "target 84 was never resolved by the robot's camera: too_small"
+      ],
       "verified": true,
       "solver_trace": [
         "head='paper cup' color='' hops=[{'relation': 'on', 'phrases': ['table']}, {'relation': 'closest', 'phrases': ['projector screen']}]",
@@ -281,113 +324,149 @@
     },
     {
       "id": "Q03",
-      "question": "Find the paper that is between the eye glasses and the pen.",
+      "question": "Find the chair that is between the window and the laptop.",
       "source": "generated",
       "difficulty": "hard",
       "relation": "between",
       "target_objects": [
-        "paper",
-        "eye glasses",
-        "pen"
+        "chair",
+        "window",
+        "laptop"
       ],
       "answer": {
-        "object_id": "1",
+        "object_id": "49",
         "region": "0",
-        "label": "paper",
-        "raw_label": "paper",
-        "nyu_label": "papers",
+        "label": "chair",
+        "raw_label": "chair",
+        "nyu_label": "chair",
         "colors": [
-          "gray"
+          "aqua",
+          "black"
         ],
         "center": [
-          -1.5697,
-          -1.6668,
-          0.7578
+          -1.94,
+          -3.5584,
+          0.5217
         ],
         "size": [
-          0.3284,
-          0.3118,
-          0.0021
+          0.5831,
+          0.6519,
+          1.047
         ],
-        "yaw": -1.6147,
+        "yaw": -0.0118,
         "aabb": {
           "min": [
-            -1.7326,
-            -1.8377,
-            0.7568
+            -2.2353,
+            -3.8877,
+            -0.0018
           ],
           "max": [
-            -1.4067,
-            -1.4959,
-            0.7589
+            -1.6446,
+            -3.229,
+            1.0453
           ]
         },
         "size_aabb": [
-          0.3259,
-          0.3418,
-          0.0021
+          0.5908,
+          0.6588,
+          1.047
         ],
         "bbox_corners": [
           [
-            -1.4067,
-            -1.5096,
-            0.7589
+            -2.2277,
+            -3.229,
+            1.0453
           ],
           [
-            -1.4211,
-            -1.8377,
-            0.7589
+            -1.6446,
+            -3.2358,
+            1.0453
           ],
           [
-            -1.7326,
-            -1.8241,
-            0.7589
+            -1.6522,
+            -3.8877,
+            1.0453
           ],
           [
-            -1.7182,
-            -1.4959,
-            0.7589
+            -2.2353,
+            -3.8809,
+            1.0453
           ],
           [
-            -1.4067,
-            -1.5096,
-            0.7568
+            -2.2277,
+            -3.229,
+            -0.0018
           ],
           [
-            -1.4211,
-            -1.8377,
-            0.7568
+            -1.6446,
+            -3.2358,
+            -0.0018
           ],
           [
-            -1.7326,
-            -1.8241,
-            0.7568
+            -1.6522,
+            -3.8877,
+            -0.0018
           ],
           [
-            -1.7182,
-            -1.4959,
-            0.7568
+            -2.2353,
+            -3.8809,
+            -0.0018
           ]
         ],
-        "volume": 0.00021
+        "volume": 0.39804
       },
       "anchors": [
         {
-          "object_id": "44",
-          "label": "eye glasses",
-          "phrase": "the eye glasses"
+          "object_id": "6",
+          "label": "window",
+          "phrase": "the window"
         },
         {
-          "object_id": "73",
-          "label": "pen",
-          "phrase": "the pen"
+          "object_id": "70",
+          "label": "laptop",
+          "phrase": "the laptop"
         }
       ],
       "distractor_ids": [],
-      "competitors": 6,
-      "evidence": "between: between eye glasses#44 and pen#73 (lateral offset 0.07 m)",
+      "competitors": 11,
+      "evidence": "between: between window#6 and laptop#70 (lateral offset 0.82 m)",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "49",
+          "role": "target",
+          "frames_visible": 122,
+          "distance_m": 0.43,
+          "px_area": 156492,
+          "occlusion": 0.0,
+          "elevation_deg": -23.3,
+          "stamp": 1785528946.387986,
+          "image": "data/crops/visibility/office_1/49_chair.png"
+        },
+        {
+          "object_id": "6",
+          "role": "anchor",
+          "frames_visible": 208,
+          "distance_m": 1.52,
+          "px_area": 197120,
+          "occlusion": 0.0,
+          "elevation_deg": 11.4,
+          "stamp": 1785528938.847962,
+          "image": "data/crops/visibility/office_1/6_window.png"
+        },
+        {
+          "object_id": "70",
+          "role": "anchor",
+          "frames_visible": 64,
+          "distance_m": 1.32,
+          "px_area": 9702,
+          "occlusion": 0.003,
+          "elevation_deg": 1.9,
+          "stamp": 1785528947.872986,
+          "image": "data/crops/visibility/office_1/70_laptop.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
@@ -495,18 +574,42 @@
       "evidence": "in: inside coffee machine#78: base 1.19 m sits 0.41 m below its rim",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "79",
+          "role": "target",
+          "frames_visible": 14,
+          "distance_m": 0.99,
+          "px_area": 1326,
+          "occlusion": 0.0,
+          "elevation_deg": 21.0,
+          "stamp": 1785528924.592996,
+          "image": "data/crops/visibility/office_1/79_paper_cup.png"
+        },
+        {
+          "object_id": "78",
+          "role": "anchor",
+          "frames_visible": 119,
+          "distance_m": 1.09,
+          "px_area": 18330,
+          "occlusion": 0.0,
+          "elevation_deg": 23.4,
+          "stamp": 1785528925.472963,
+          "image": "data/crops/visibility/office_1/78_coffee_machine.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
     {
       "id": "Q05",
-      "question": "Find the table with the eye glasses on it.",
+      "question": "Find the table with the laptop on it.",
       "source": "generated",
       "difficulty": "medium",
       "relation": "supports",
       "target_objects": [
         "table",
-        "eye glasses"
+        "laptop"
       ],
       "answer": {
         "object_id": "50",
@@ -591,109 +694,134 @@
       },
       "anchors": [
         {
-          "object_id": "44",
-          "label": "eye glasses",
-          "phrase": "the eye glasses"
+          "object_id": "70",
+          "label": "laptop",
+          "phrase": "the laptop"
         }
       ],
       "distractor_ids": [],
       "competitors": 1,
-      "evidence": "supports: holds eye glasses#44 (top 0.75 m, its underside 0.76 m)",
+      "evidence": "supports: holds laptop#70 (top 0.75 m, its underside 0.76 m)",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "50",
+          "role": "target",
+          "frames_visible": 117,
+          "distance_m": 0.81,
+          "px_area": 106305,
+          "occlusion": 0.0,
+          "elevation_deg": -13.9,
+          "stamp": 1785528947.522968,
+          "image": "data/crops/visibility/office_1/50_table.png"
+        },
+        {
+          "object_id": "70",
+          "role": "anchor",
+          "frames_visible": 64,
+          "distance_m": 1.32,
+          "px_area": 9702,
+          "occlusion": 0.003,
+          "elevation_deg": 1.9,
+          "stamp": 1785528947.872986,
+          "image": "data/crops/visibility/office_1/70_laptop.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
     {
       "id": "Q06",
-      "question": "Find the paper that is above the trash bin.",
+      "question": "Find the potted cactus that are above the trash bin.",
       "source": "generated",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "relation": "above",
       "target_objects": [
-        "paper",
+        "potted cactus",
         "trash bin"
       ],
       "answer": {
-        "object_id": "46",
+        "object_id": "90",
         "region": "0",
-        "label": "paper",
-        "raw_label": "paper",
-        "nyu_label": "papers",
+        "label": "potted cactus",
+        "raw_label": "potted cactus",
+        "nyu_label": "cactus",
         "colors": [
-          "gray"
+          "aqua",
+          "olive"
         ],
         "center": [
-          4.1433,
-          -2.0268,
-          0.8195
+          4.0951,
+          -1.7534,
+          0.9127
         ],
         "size": [
-          0.3124,
-          0.2428,
-          0.0021
+          0.0983,
+          0.0982,
+          0.1884
         ],
-        "yaw": 1.8893,
+        "yaw": -1.5708,
         "aabb": {
           "min": [
-            3.9791,
-            -2.2132,
+            4.0461,
+            -1.8026,
             0.8185
           ],
           "max": [
-            4.3075,
-            -1.8405,
-            0.8206
+            4.1442,
+            -1.7043,
+            1.0069
           ]
         },
         "size_aabb": [
-          0.3284,
-          0.3727,
-          0.0021
+          0.0982,
+          0.0983,
+          0.1884
         ],
         "bbox_corners": [
           [
-            4.0769,
-            -2.2132,
-            0.8206
+            4.1442,
+            -1.7043,
+            1.0069
           ],
           [
-            3.9791,
-            -1.9165,
-            0.8206
+            4.1442,
+            -1.8026,
+            1.0069
           ],
           [
-            4.2097,
-            -1.8405,
-            0.8206
+            4.0461,
+            -1.8026,
+            1.0069
           ],
           [
-            4.3075,
-            -2.1372,
-            0.8206
+            4.0461,
+            -1.7043,
+            1.0069
           ],
           [
-            4.0769,
-            -2.2132,
+            4.1442,
+            -1.7043,
             0.8185
           ],
           [
-            3.9791,
-            -1.9165,
+            4.1442,
+            -1.8026,
             0.8185
           ],
           [
-            4.2097,
-            -1.8405,
+            4.0461,
+            -1.8026,
             0.8185
           ],
           [
-            4.3075,
-            -2.1372,
+            4.0461,
+            -1.7043,
             0.8185
           ]
         ],
-        "volume": 0.00016
+        "volume": 0.00182
       },
       "anchors": [
         {
@@ -703,10 +831,34 @@
         }
       ],
       "distractor_ids": [],
-      "competitors": 6,
-      "evidence": "above: underside 0.82 m clears trash bin#31 top 0.41 m, footprints overlap 5%",
+      "competitors": 2,
+      "evidence": "above: underside 0.82 m clears trash bin#31 top 0.41 m by 0.41 m",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "90",
+          "role": "target",
+          "frames_visible": 49,
+          "distance_m": 0.88,
+          "px_area": 2752,
+          "occlusion": 0.0,
+          "elevation_deg": 3.8,
+          "stamp": 1785528930.512977,
+          "image": "data/crops/visibility/office_1/90_potted_cactus.png"
+        },
+        {
+          "object_id": "31",
+          "role": "anchor",
+          "frames_visible": 38,
+          "distance_m": 0.61,
+          "px_area": 44896,
+          "occlusion": 0.0,
+          "elevation_deg": -45.0,
+          "stamp": 1785528931.142932,
+          "image": "data/crops/visibility/office_1/31_garbage_can.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
@@ -816,6 +968,30 @@
       "evidence": "near: box-gap 0.00 m; next table is 5.60 m away",
       "statement": "the table that is near the garbage bin",
       "region": "0",
+      "views": [
+        {
+          "object_id": "53",
+          "role": "target",
+          "frames_visible": 169,
+          "distance_m": 0.66,
+          "px_area": 112112,
+          "occlusion": 0.0,
+          "elevation_deg": -12.0,
+          "stamp": 1785528930.007983,
+          "image": "data/crops/visibility/office_1/53_table.png"
+        },
+        {
+          "object_id": "31",
+          "role": "anchor",
+          "frames_visible": 38,
+          "distance_m": 0.61,
+          "px_area": 44896,
+          "occlusion": 0.0,
+          "elevation_deg": -45.0,
+          "stamp": 1785528931.142932,
+          "image": "data/crops/visibility/office_1/31_garbage_can.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
@@ -925,127 +1101,42 @@
       "evidence": "closest: centre 1.06 m vs runner-up bottle#93 4.06 m; box-gap 0.73 m vs runner-up bottle#93 3.82 m",
       "statement": "the bottle that is closest to the clock",
       "region": "0",
+      "views": [
+        {
+          "object_id": "100",
+          "role": "target",
+          "frames_visible": 18,
+          "distance_m": 1.1,
+          "px_area": 1550,
+          "occlusion": 0.0,
+          "elevation_deg": 21.6,
+          "stamp": 1785528924.722914,
+          "image": "data/crops/visibility/office_1/100_bottle.png"
+        },
+        {
+          "object_id": "80",
+          "role": "anchor",
+          "frames_visible": 39,
+          "distance_m": 1.47,
+          "px_area": 5022,
+          "occlusion": 0.0,
+          "elevation_deg": 43.9,
+          "stamp": 1785528925.108007,
+          "image": "data/crops/visibility/office_1/80_clock.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q09",
-      "question": "Find the bottle that is closest to the map wall decal.",
-      "source": "generated",
-      "difficulty": "easy",
-      "relation": "closest",
-      "target_objects": [
-        "bottle",
-        "map wall decal"
-      ],
-      "answer": {
-        "object_id": "93",
-        "region": "0",
-        "label": "bottle",
-        "raw_label": "bottle",
-        "nyu_label": "bottle",
-        "colors": [
-          "black"
-        ],
-        "center": [
-          3.334,
-          -1.9523,
-          0.9326
-        ],
-        "size": [
-          0.0667,
-          0.0674,
-          0.2283
-        ],
-        "yaw": 1.5973,
-        "aabb": {
-          "min": [
-            3.2994,
-            -1.9865,
-            0.8185
-          ],
-          "max": [
-            3.3686,
-            -1.918,
-            1.0467
-          ]
-        },
-        "size_aabb": [
-          0.0691,
-          0.0684,
-          0.2283
-        ],
-        "bbox_corners": [
-          [
-            3.3012,
-            -1.9865,
-            1.0467
-          ],
-          [
-            3.2994,
-            -1.9198,
-            1.0467
-          ],
-          [
-            3.3668,
-            -1.918,
-            1.0467
-          ],
-          [
-            3.3686,
-            -1.9847,
-            1.0467
-          ],
-          [
-            3.3012,
-            -1.9865,
-            0.8185
-          ],
-          [
-            3.2994,
-            -1.9198,
-            0.8185
-          ],
-          [
-            3.3668,
-            -1.918,
-            0.8185
-          ],
-          [
-            3.3686,
-            -1.9847,
-            0.8185
-          ]
-        ],
-        "volume": 0.00103
-      },
-      "anchors": [
-        {
-          "object_id": "108",
-          "label": "map wall decal",
-          "phrase": "the map wall decal"
-        }
-      ],
-      "distractor_ids": [
-        "100"
-      ],
-      "competitors": 1,
-      "margin": 2.915,
-      "evidence": "closest: centre 3.07 m vs runner-up bottle#100 6.26 m; box-gap 2.66 m vs runner-up bottle#100 5.58 m",
-      "statement": "the bottle that is closest to the wall decoration",
-      "region": "0",
-      "verified": true,
-      "derivation": "statement"
-    },
-    {
-      "id": "Q10",
-      "question": "Find the potted plant that is farthest from the projector screen.",
+      "question": "Find the potted plant that is closest to the map wall decal.",
       "source": "generated",
       "difficulty": "medium",
-      "relation": "farthest",
+      "relation": "closest",
       "target_objects": [
         "potted plant",
-        "projector screen"
+        "map wall decal"
       ],
       "answer": {
         "object_id": "67",
@@ -1131,9 +1222,9 @@
       },
       "anchors": [
         {
-          "object_id": "105",
-          "label": "projector screen",
-          "phrase": "the projector screen"
+          "object_id": "108",
+          "label": "map wall decal",
+          "phrase": "the map wall decal"
         }
       ],
       "distractor_ids": [
@@ -1142,10 +1233,170 @@
         "71"
       ],
       "competitors": 3,
-      "margin": 4.165,
-      "evidence": "farthest: centre 10.29 m vs runner-up potted plant#55 6.08 m; box-gap 9.39 m vs runner-up potted plant#55 5.22 m",
-      "statement": "the plant that is farthest from the projector screen",
+      "margin": 2.155,
+      "evidence": "closest: centre 4.50 m vs runner-up potted plant#55 6.65 m; box-gap 3.13 m vs runner-up potted plant#55 5.77 m",
+      "statement": "the plant that is closest to the wall decoration",
       "region": "0",
+      "views": [
+        {
+          "object_id": "67",
+          "role": "target",
+          "frames_visible": 156,
+          "distance_m": 2.01,
+          "px_area": 50808,
+          "occlusion": 0.001,
+          "elevation_deg": 5.4,
+          "stamp": 1785528927.857964,
+          "image": "data/crops/visibility/office_1/67_plant.png"
+        },
+        {
+          "object_id": "108",
+          "role": "anchor",
+          "frames_visible": 214,
+          "distance_m": 0.86,
+          "px_area": 97440,
+          "occlusion": 0.0,
+          "elevation_deg": 33.7,
+          "stamp": 1785528932.00295,
+          "image": "data/crops/visibility/office_1/108_map_wall_decal.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the potted plant that is farthest from the coffee machine.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "coffee machine"
+      ],
+      "answer": {
+        "object_id": "71",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "brown"
+        ],
+        "center": [
+          -3.8139,
+          1.163,
+          0.459
+        ],
+        "size": [
+          0.5264,
+          0.5438,
+          0.923
+        ],
+        "yaw": -2.231,
+        "aabb": {
+          "min": [
+            -4.1901,
+            0.7884,
+            -0.0025
+          ],
+          "max": [
+            -3.4377,
+            1.5377,
+            0.9205
+          ]
+        },
+        "size_aabb": [
+          0.7524,
+          0.7493,
+          0.923
+        ],
+        "bbox_corners": [
+          [
+            -3.4377,
+            1.2042,
+            0.9205
+          ],
+          [
+            -3.7605,
+            0.7884,
+            0.9205
+          ],
+          [
+            -4.1901,
+            1.1219,
+            0.9205
+          ],
+          [
+            -3.8672,
+            1.5377,
+            0.9205
+          ],
+          [
+            -3.4377,
+            1.2042,
+            -0.0025
+          ],
+          [
+            -3.7605,
+            0.7884,
+            -0.0025
+          ],
+          [
+            -4.1901,
+            1.1219,
+            -0.0025
+          ],
+          [
+            -3.8672,
+            1.5377,
+            -0.0025
+          ]
+        ],
+        "volume": 0.26422
+      },
+      "anchors": [
+        {
+          "object_id": "78",
+          "label": "coffee machine",
+          "phrase": "the coffee machine"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "55",
+        "67"
+      ],
+      "competitors": 3,
+      "margin": 2.341,
+      "evidence": "farthest: centre 5.96 m vs runner-up potted plant#67 3.62 m; box-gap 5.34 m vs runner-up potted plant#67 2.97 m",
+      "statement": "the plant that is farthest from the coffee machine",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "71",
+          "role": "target",
+          "frames_visible": 29,
+          "distance_m": 3.99,
+          "px_area": 3650,
+          "occlusion": 0.244,
+          "elevation_deg": -5.4,
+          "stamp": 1785528952.606998,
+          "image": "data/crops/visibility/office_1/71_plant.png"
+        },
+        {
+          "object_id": "78",
+          "role": "anchor",
+          "frames_visible": 119,
+          "distance_m": 1.09,
+          "px_area": 18330,
+          "occlusion": 0.0,
+          "elevation_deg": 23.4,
+          "stamp": 1785528925.472963,
+          "image": "data/crops/visibility/office_1/78_coffee_machine.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     }

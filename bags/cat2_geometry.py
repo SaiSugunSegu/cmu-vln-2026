@@ -107,11 +107,32 @@ STRUCTURAL = {
 }
 
 # Room-sized datums. "Farthest from the tatami" is not a question anyone can answer,
-# because the tatami is the whole floor.
-VACUOUS_ANCHORS = {"floor", "tatami", "ceiling"}
+# because the tatami is the whole floor -- and a wall is the same thing stood upright: its
+# box is the room's perimeter, so "the cup between the lamp and the wall" holds for anything
+# near any wall. Door and window frames are deliberately NOT here: they are room-sized
+# datums' opposite, a specific spot on a wall, and are how the organizers write questions.
+VACUOUS_ANCHORS = {
+    "floor", "tatami", "ceiling",
+    "wall", "walls", "exterior walls", "interior walls", "bathroom walls", "glass wall",
+    "partition wall",
+}
 # Additionally vacuous for the vertical relations: everything in the room is above the
 # carpet, though "near the carpet" is still a real constraint.
 SURFACE_ANCHORS = VACUOUS_ANCHORS | {"carpet"}
+# Never a landmark, whatever the relation.
+#   Cables: the box is a long thin diagonal that runs past half the objects on the table, so
+#   it is neither where it looks nor worth naming.
+#   Cameras: "the chair closest to the camera" reads as the robot's own camera, and a 13 cm
+#   photo camera on a shelf is not what anyone would take it to mean.
+BAD_LANDMARKS = {
+    "hookah wire",
+    "cable",
+    "wire",
+    "cord",
+    "power cord",
+    "camera",
+    "security camera",
+}
 
 # Class folding, same spirit (and mostly the same entries) as scripts/eval/score_map3d.py:
 # every wrong entry here merges two genuinely different classes and lets an ambiguous
@@ -294,16 +315,6 @@ def footprint_area(obj: Obj) -> float:
     return float((obj.hi[0] - obj.lo[0]) * (obj.hi[1] - obj.lo[1]))
 
 
-def overlap_fraction(a: Obj, b: Obj) -> float:
-    """Shared footprint area as a fraction of the smaller object's footprint."""
-    dx = min(a.hi[0], b.hi[0]) - max(a.lo[0], b.lo[0])
-    dy = min(a.hi[1], b.hi[1]) - max(a.lo[1], b.lo[1])
-    if dx <= 0.0 or dy <= 0.0:
-        return 0.0
-    smaller = min(footprint_area(a), footprint_area(b))
-    return float(dx * dy / smaller) if smaller > 1e-9 else 0.0
-
-
 def vertical_gap(a: Obj, b: Obj) -> float:
     """Clear vertical space between two boxes; 0 when their z-ranges overlap."""
     return float(max(a.lo[2] - b.hi[2], b.lo[2] - a.hi[2], 0.0))
@@ -328,8 +339,9 @@ def rests_on(item: Obj, support: Obj) -> bool:
     the tray under it have overlapping z-ranges, so the height test passes both ways. Two
     further conditions pin the direction down.
 
-    The support has to be the bigger object, in footprint and in volume — that alone rules
-    out "the tray on the glass".
+    The support has to have the bigger footprint — that alone rules out "the tray on the
+    glass". Volume is deliberately not compared: a spray of flowers has a bigger box than
+    the ledge holding it up, and the ledge is still what it stands on.
 
     And the item has to sit in the support's upper reaches rather than merely inside its
     box, which is what separates a glass on a tray from a glass standing next to the hookah
@@ -342,7 +354,7 @@ def rests_on(item: Obj, support: Obj) -> bool:
         return False
     if not (support.lo[2] - REST_TOL <= item.lo[2] <= support.hi[2] + REST_TOL):
         return False
-    if footprint_area(support) < footprint_area(item) or support.volume < item.volume:
+    if footprint_area(support) < footprint_area(item):
         return False
     if support.size[2] <= FLAT_SUPPORT:
         return True
@@ -414,12 +426,15 @@ def unaskable(target: Obj, anchors: list[Obj], relation: str, region_objs: list[
         rests_on(a, target) or rests_on(target, a) for a in anchors
     ):
         return f"{relation}: anchor rests on target"
+    for anchor in anchors:
+        if anchor.fine in BAD_LANDMARKS:
+            return f"{relation}: {anchor} is never a landmark"
     vacuous = SURFACE_ANCHORS if relation in ("on", "above", "below", "between") else VACUOUS_ANCHORS
     if any(a.fine in vacuous for a in anchors):
         return f"{relation}: room-sized anchor"
-    if relation in ("in", "above", "below") and target.fine in SURFACE_ANCHORS:
-        # Everything in the room is above the carpet, so "the carpet below the jar" is true
-        # of every carpet in the scene and picks out none of them.
+    if relation in ("in", "above", "below", "between") and target.fine in SURFACE_ANCHORS:
+        # Everything in the room is above the carpet and most of it is between two things
+        # the carpet reaches under, so neither picks out one carpet from another.
         return f"{relation}: room-sized target"
     # A wall's box is the room's perimeter, so it "supports" and sits "above" everything
     # inside it. Structural classes stay usable for the relations that only need a
@@ -443,12 +458,15 @@ def stacked_through(target: Obj, anchor: Obj, region_objs: list[Obj], upward: bo
     The flowers are in a vase that stands on the display ledge, so "the flowers above the
     display ledge" is true — and nobody says it, because the vase is right there to name.
     """
+    def held_by(item: Obj, base: Obj) -> bool:
+        return rests_on(item, base) or is_inside(item, base)
+
     for middle in region_objs:
         if middle.id in (target.id, anchor.id):
             continue
-        pair = (rests_on(target, middle), rests_on(middle, anchor))
+        pair = (held_by(target, middle), held_by(middle, anchor))
         if not upward:
-            pair = (rests_on(anchor, middle), rests_on(middle, target))
+            pair = (held_by(anchor, middle), held_by(middle, target))
         if all(pair):
             return middle
     return None
@@ -563,13 +581,13 @@ def predicate_unique(
         )
     elif relation == "above":
         detail = (
-            f"underside {target.lo[2]:.2f} m clears {anchors[0]} top {anchors[0].hi[2]:.2f} m, "
-            f"footprints overlap {overlap_fraction(target, anchors[0]):.0%}"
+            f"underside {target.lo[2]:.2f} m clears {anchors[0]} top {anchors[0].hi[2]:.2f} m "
+            f"by {vertical_gap(target, anchors[0]):.2f} m"
         )
     elif relation == "below":
         detail = (
-            f"top {target.hi[2]:.2f} m under {anchors[0]} underside {anchors[0].lo[2]:.2f} m, "
-            f"footprints overlap {overlap_fraction(target, anchors[0]):.0%}"
+            f"top {target.hi[2]:.2f} m sits {vertical_gap(target, anchors[0]):.2f} m under "
+            f"{anchors[0]} underside {anchors[0].lo[2]:.2f} m"
         )
     else:
         detail = relation

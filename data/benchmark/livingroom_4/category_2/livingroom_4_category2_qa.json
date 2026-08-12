@@ -6,24 +6,25 @@
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
-    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
-    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by bags/cat2_text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/livingroom_4/visibility/livingroom_4_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
     "source_statements: bags/livingroom_4/iref_vla_metadata/livingroom_4_referential_statements.json",
     "source_objects: bags/livingroom_4/iref_vla_metadata/livingroom_4_objects.json"
   ],
   "difficulty_counts": {
-    "medium": 6,
+    "medium": 7,
     "hard": 2,
-    "easy": 2
+    "easy": 1
   },
   "relation_counts": {
     "closest": 3,
     "between": 1,
     "in": 1,
     "supports": 1,
-    "on": 1,
     "near": 1,
-    "farthest": 2
+    "farthest": 3
   },
   "target_object_coverage": [
     "bookcase",
@@ -182,6 +183,99 @@
       "images": [
         "data/pdf_assets/livingroom_4/p1_img2.png"
       ],
+      "views": [
+        {
+          "object_id": "30",
+          "role": "target",
+          "frames_visible": 56,
+          "distance_m": 1.65,
+          "px_area": 1802,
+          "occlusion": 0.162,
+          "elevation_deg": -0.8,
+          "stamp": 1785528751.348911,
+          "image": "data/crops/visibility/livingroom_4/30_framed_record.png"
+        },
+        {
+          "object_id": "35",
+          "role": "anchor",
+          "frames_visible": 7,
+          "distance_m": 4.44,
+          "px_area": 3726,
+          "occlusion": 0.276,
+          "elevation_deg": 10.8,
+          "stamp": 1785528750.423858,
+          "image": "data/crops/visibility/livingroom_4/35_window.png"
+        },
+        {
+          "object_id": "36",
+          "role": "anchor",
+          "frames_visible": 444,
+          "distance_m": 4.26,
+          "px_area": 4118,
+          "occlusion": 0.0,
+          "elevation_deg": 1.0,
+          "stamp": 1785528748.533892,
+          "image": "data/crops/visibility/livingroom_4/36_window.png"
+        },
+        {
+          "object_id": "76",
+          "role": "anchor",
+          "frames_visible": 18,
+          "distance_m": 3.51,
+          "px_area": 5810,
+          "occlusion": 0.23,
+          "elevation_deg": 13.5,
+          "stamp": 1785528754.873989,
+          "image": "data/crops/visibility/livingroom_4/76_window.png"
+        },
+        {
+          "object_id": "77",
+          "role": "anchor",
+          "frames_visible": 463,
+          "distance_m": 1.55,
+          "px_area": 27692,
+          "occlusion": 0.0,
+          "elevation_deg": 2.5,
+          "stamp": 1785528748.398895,
+          "image": "data/crops/visibility/livingroom_4/77_window.png"
+        },
+        {
+          "object_id": "101",
+          "role": "anchor",
+          "frames_visible": 1,
+          "distance_m": 5.65,
+          "px_area": 2068,
+          "occlusion": 0.487,
+          "elevation_deg": 8.5,
+          "stamp": 1785528719.973928,
+          "image": "data/crops/visibility/livingroom_4/101_window.png"
+        },
+        {
+          "object_id": "109",
+          "role": "anchor",
+          "frames_visible": 17,
+          "distance_m": 5.44,
+          "px_area": 2420,
+          "occlusion": 0.179,
+          "elevation_deg": 8.9,
+          "stamp": 1785528743.28895,
+          "image": "data/crops/visibility/livingroom_4/109_window.png"
+        },
+        {
+          "object_id": "110",
+          "role": "anchor",
+          "frames_visible": 443,
+          "distance_m": 4.71,
+          "px_area": 3402,
+          "occlusion": 0.084,
+          "elevation_deg": 0.9,
+          "stamp": 1785528786.942558,
+          "image": "data/crops/visibility/livingroom_4/110_window.png"
+        }
+      ],
+      "visibility_warning": [
+        "anchor 102 was never resolved by the robot's camera: occluded"
+      ],
       "verified": true,
       "solver_trace": [
         "head='picture' color='' hops=[{'relation': 'closest', 'phrases': ['window']}]",
@@ -299,6 +393,30 @@
       "images": [
         "data/pdf_assets/livingroom_4/p2_img1.png"
       ],
+      "views": [
+        {
+          "object_id": "94",
+          "role": "target",
+          "frames_visible": 349,
+          "distance_m": 1.75,
+          "px_area": 2805,
+          "occlusion": 0.0,
+          "elevation_deg": 1.5,
+          "stamp": 1785528721.703854,
+          "image": "data/crops/visibility/livingroom_4/94_fossil_decoration.png"
+        },
+        {
+          "object_id": "86",
+          "role": "anchor",
+          "frames_visible": 32,
+          "distance_m": 1.46,
+          "px_area": 1416,
+          "occlusion": 0.0,
+          "elevation_deg": -1.8,
+          "stamp": 1785528722.64386,
+          "image": "data/crops/visibility/livingroom_4/86_phone.png"
+        }
+      ],
       "verified": true,
       "solver_trace": [
         "head='fossil decoration' color='' hops=[{'relation': 'closest', 'phrases': ['phone']}]",
@@ -310,17 +428,17 @@
     },
     {
       "id": "Q03",
-      "question": "Find the sofa that is between the mirror and the flowers.",
+      "question": "Find the sofa that is between the bookcase and the flowers.",
       "source": "generated",
       "difficulty": "hard",
       "relation": "between",
       "target_objects": [
         "sofa",
-        "mirror",
+        "bookcase",
         "flowers"
       ],
       "answer": {
-        "object_id": "49",
+        "object_id": "88",
         "region": "0",
         "label": "sofa",
         "raw_label": "sofa",
@@ -329,82 +447,82 @@
           "gray"
         ],
         "center": [
-          0.2292,
-          -2.0091,
-          0.3934
+          -2.366,
+          -1.3525,
+          0.2778
         ],
         "size": [
-          2.1928,
-          0.8878,
-          0.8127
+          0.9768,
+          0.8129,
+          0.5953
         ],
-        "yaw": -1.5711,
+        "yaw": -1.8946,
         "aabb": {
           "min": [
-            -0.215,
-            -3.1057,
-            -0.0129
+            -2.9067,
+            -1.9448,
+            -0.0199
           ],
           "max": [
-            0.6735,
-            -0.9126,
-            0.7997
+            -1.8253,
+            -0.7602,
+            0.5754
           ]
         },
         "size_aabb": [
-          0.8885,
-          2.1931,
-          0.8127
+          1.0814,
+          1.1847,
+          0.5953
         ],
         "bbox_corners": [
           [
-            0.6735,
-            -0.9128,
-            0.7997
+            -1.8253,
+            -1.0188,
+            0.5754
           ],
           [
-            0.6728,
-            -3.1057,
-            0.7997
+            -2.1361,
+            -1.9448,
+            0.5754
           ],
           [
-            -0.215,
-            -3.1054,
-            0.7997
+            -2.9067,
+            -1.6862,
+            0.5754
           ],
           [
-            -0.2143,
-            -0.9126,
-            0.7997
+            -2.5959,
+            -0.7602,
+            0.5754
           ],
           [
-            0.6735,
-            -0.9128,
-            -0.0129
+            -1.8253,
+            -1.0188,
+            -0.0199
           ],
           [
-            0.6728,
-            -3.1057,
-            -0.0129
+            -2.1361,
+            -1.9448,
+            -0.0199
           ],
           [
-            -0.215,
-            -3.1054,
-            -0.0129
+            -2.9067,
+            -1.6862,
+            -0.0199
           ],
           [
-            -0.2143,
-            -0.9126,
-            -0.0129
+            -2.5959,
+            -0.7602,
+            -0.0199
           ]
         ],
-        "volume": 1.58206
+        "volume": 0.47267
       },
       "anchors": [
         {
-          "object_id": "7",
-          "label": "mirror",
-          "phrase": "the mirror"
+          "object_id": "23",
+          "label": "bookcase",
+          "phrase": "the bookcase"
         },
         {
           "object_id": "42",
@@ -414,104 +532,138 @@
       ],
       "distractor_ids": [],
       "competitors": 2,
-      "evidence": "between: between mirror#7 and flowers#42 (lateral offset 0.70 m)",
+      "evidence": "between: between bookcase#23 and flowers#42 (lateral offset 0.29 m)",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "88",
+          "role": "target",
+          "frames_visible": 281,
+          "distance_m": 0.35,
+          "px_area": 112038,
+          "occlusion": 0.0,
+          "elevation_deg": -33.6,
+          "stamp": 1785528748.398895,
+          "image": "data/crops/visibility/livingroom_4/88_couch.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 494,
+          "distance_m": 1.18,
+          "px_area": 88102,
+          "occlusion": 0.0,
+          "elevation_deg": 5.4,
+          "stamp": 1785528751.218938,
+          "image": "data/crops/visibility/livingroom_4/23_bookcase.png"
+        },
+        {
+          "object_id": "42",
+          "role": "anchor",
+          "frames_visible": 410,
+          "distance_m": 1.61,
+          "px_area": 5185,
+          "occlusion": 0.0,
+          "elevation_deg": 0.5,
+          "stamp": 1785528778.253391,
+          "image": "data/crops/visibility/livingroom_4/42_flowers.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
     {
       "id": "Q04",
-      "question": "Find the potted plant inside the bookcase.",
+      "question": "Find the fossil decoration inside the bookcase.",
       "source": "generated",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "relation": "in",
       "target_objects": [
-        "potted plant",
+        "fossil decoration",
         "bookcase"
       ],
       "answer": {
-        "object_id": "27",
+        "object_id": "64",
         "region": "0",
-        "label": "potted plant",
-        "raw_label": "potted plant",
-        "nyu_label": "plant",
+        "label": "fossil decoration",
+        "raw_label": "fossil decoration",
+        "nyu_label": "decoration item",
         "colors": [
-          "gray",
-          "aqua",
-          "purple"
+          "brown",
+          "black"
         ],
         "center": [
-          -4.1377,
-          0.517,
-          1.6958
+          -4.148,
+          0.3158,
+          1.332
         ],
         "size": [
-          0.1801,
-          0.1682,
-          0.2049
+          0.3141,
+          0.1023,
+          0.3639
         ],
-        "yaw": -1.8988,
+        "yaw": -1.5379,
         "aabb": {
           "min": [
-            -4.2463,
-            0.4047,
-            1.5934
+            -4.2043,
+            0.1572,
+            1.15
           ],
           "max": [
-            -4.0291,
-            0.6294,
-            1.7983
+            -4.0917,
+            0.4745,
+            1.5139
           ]
         },
         "size_aabb": [
-          0.2172,
-          0.2246,
-          0.2049
+          0.1126,
+          0.3173,
+          0.3639
         ],
         "bbox_corners": [
           [
-            -4.0291,
-            0.5752,
-            1.7983
+            -4.1021,
+            0.4745,
+            1.5139
           ],
           [
-            -4.0871,
-            0.4047,
-            1.7983
+            -4.0917,
+            0.1606,
+            1.5139
           ],
           [
-            -4.2463,
-            0.4589,
-            1.7983
+            -4.1939,
+            0.1572,
+            1.5139
           ],
           [
-            -4.1883,
-            0.6294,
-            1.7983
+            -4.2043,
+            0.4711,
+            1.5139
           ],
           [
-            -4.0291,
-            0.5752,
-            1.5934
+            -4.1021,
+            0.4745,
+            1.15
           ],
           [
-            -4.0871,
-            0.4047,
-            1.5934
+            -4.0917,
+            0.1606,
+            1.15
           ],
           [
-            -4.2463,
-            0.4589,
-            1.5934
+            -4.1939,
+            0.1572,
+            1.15
           ],
           [
-            -4.1883,
-            0.6294,
-            1.5934
+            -4.2043,
+            0.4711,
+            1.15
           ]
         ],
-        "volume": 0.00621
+        "volume": 0.01169
       },
       "anchors": [
         {
@@ -521,10 +673,34 @@
         }
       ],
       "distractor_ids": [],
-      "competitors": 4,
-      "evidence": "in: inside bookcase#23: base 1.59 m sits 0.40 m below its rim",
+      "competitors": 1,
+      "evidence": "in: inside bookcase#23: base 1.15 m sits 0.85 m below its rim",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "64",
+          "role": "target",
+          "frames_visible": 364,
+          "distance_m": 1.32,
+          "px_area": 5695,
+          "occlusion": 0.0,
+          "elevation_deg": 18.7,
+          "stamp": 1785528751.218938,
+          "image": "data/crops/visibility/livingroom_4/64_fossil_decoration.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 494,
+          "distance_m": 1.18,
+          "px_area": 88102,
+          "occlusion": 0.0,
+          "elevation_deg": 5.4,
+          "stamp": 1785528751.218938,
+          "image": "data/crops/visibility/livingroom_4/23_bookcase.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
@@ -631,121 +807,35 @@
       "evidence": "supports: holds vase#89 (top 0.48 m, its underside 0.48 m)",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "67",
+          "role": "target",
+          "frames_visible": 390,
+          "distance_m": 0.98,
+          "px_area": 37648,
+          "occlusion": 0.0,
+          "elevation_deg": -20.1,
+          "stamp": 1785528784.02257,
+          "image": "data/crops/visibility/livingroom_4/67_table.png"
+        },
+        {
+          "object_id": "89",
+          "role": "anchor",
+          "frames_visible": 354,
+          "distance_m": 1.62,
+          "px_area": 2128,
+          "occlusion": 0.0,
+          "elevation_deg": -7.6,
+          "stamp": 1785528787.012662,
+          "image": "data/crops/visibility/livingroom_4/89_vase.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
     {
       "id": "Q06",
-      "question": "Find the fossil decoration on top of the bookcase.",
-      "source": "generated",
-      "difficulty": "easy",
-      "relation": "on",
-      "target_objects": [
-        "fossil decoration",
-        "bookcase"
-      ],
-      "answer": {
-        "object_id": "64",
-        "region": "0",
-        "label": "fossil decoration",
-        "raw_label": "fossil decoration",
-        "nyu_label": "decoration item",
-        "colors": [
-          "brown",
-          "black"
-        ],
-        "center": [
-          -4.148,
-          0.3158,
-          1.332
-        ],
-        "size": [
-          0.3141,
-          0.1023,
-          0.3639
-        ],
-        "yaw": -1.5379,
-        "aabb": {
-          "min": [
-            -4.2043,
-            0.1572,
-            1.15
-          ],
-          "max": [
-            -4.0917,
-            0.4745,
-            1.5139
-          ]
-        },
-        "size_aabb": [
-          0.1126,
-          0.3173,
-          0.3639
-        ],
-        "bbox_corners": [
-          [
-            -4.1021,
-            0.4745,
-            1.5139
-          ],
-          [
-            -4.0917,
-            0.1606,
-            1.5139
-          ],
-          [
-            -4.1939,
-            0.1572,
-            1.5139
-          ],
-          [
-            -4.2043,
-            0.4711,
-            1.5139
-          ],
-          [
-            -4.1021,
-            0.4745,
-            1.15
-          ],
-          [
-            -4.0917,
-            0.1606,
-            1.15
-          ],
-          [
-            -4.1939,
-            0.1572,
-            1.15
-          ],
-          [
-            -4.2043,
-            0.4711,
-            1.15
-          ]
-        ],
-        "volume": 0.01169
-      },
-      "anchors": [
-        {
-          "object_id": "23",
-          "label": "bookcase",
-          "phrase": "the bookcase"
-        }
-      ],
-      "distractor_ids": [
-        "82",
-        "94"
-      ],
-      "competitors": 1,
-      "evidence": "on: rests on bookcase#23 (underside 1.15 m, top 2.00 m)",
-      "statement": "the decoration item that is on the bookshelf",
-      "region": "0",
-      "verified": true,
-      "derivation": "statement"
-    },
-    {
-      "id": "Q07",
       "question": "Find the lamp that is near the flowers.",
       "source": "generated",
       "difficulty": "medium",
@@ -852,11 +942,35 @@
       "evidence": "near: box-gap 0.72 m; next lamp is 3.01 m away",
       "statement": "the lamp that is near the flower",
       "region": "0",
+      "views": [
+        {
+          "object_id": "6",
+          "role": "target",
+          "frames_visible": 484,
+          "distance_m": 1.67,
+          "px_area": 30600,
+          "occlusion": 0.0,
+          "elevation_deg": 38.3,
+          "stamp": 1785528785.882603,
+          "image": "data/crops/visibility/livingroom_4/6_lamp.png"
+        },
+        {
+          "object_id": "42",
+          "role": "anchor",
+          "frames_visible": 410,
+          "distance_m": 1.61,
+          "px_area": 5185,
+          "occlusion": 0.0,
+          "elevation_deg": 0.5,
+          "stamp": 1785528778.253391,
+          "image": "data/crops/visibility/livingroom_4/42_flowers.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
-      "id": "Q08",
+      "id": "Q07",
       "question": "Find the table that is farthest from the firewood.",
       "source": "generated",
       "difficulty": "easy",
@@ -962,11 +1076,35 @@
       "evidence": "farthest: centre 5.92 m vs runner-up table#67 2.52 m; box-gap 5.27 m vs runner-up table#67 1.66 m",
       "statement": "the table that is farthest from the piece of wood",
       "region": "0",
+      "views": [
+        {
+          "object_id": "62",
+          "role": "target",
+          "frames_visible": 492,
+          "distance_m": 0.92,
+          "px_area": 84376,
+          "occlusion": 0.402,
+          "elevation_deg": -18.0,
+          "stamp": 1785528746.093928,
+          "image": "data/crops/visibility/livingroom_4/62_table.png"
+        },
+        {
+          "object_id": "29",
+          "role": "anchor",
+          "frames_visible": 221,
+          "distance_m": 4.27,
+          "px_area": 1056,
+          "occlusion": 0.5,
+          "elevation_deg": -8.1,
+          "stamp": 1785528779.507586,
+          "image": "data/crops/visibility/livingroom_4/29_firewood.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
-      "id": "Q09",
+      "id": "Q08",
       "question": "Find the curtain that is farthest from the clock.",
       "source": "generated",
       "difficulty": "medium",
@@ -1074,100 +1212,260 @@
       "evidence": "farthest: centre 4.39 m vs runner-up curtain#1 3.26 m; box-gap 3.59 m vs runner-up curtain#1 2.68 m",
       "statement": "the curtain that is farthest from the clock",
       "region": "0",
+      "views": [
+        {
+          "object_id": "18",
+          "role": "target",
+          "frames_visible": 500,
+          "distance_m": 1.3,
+          "px_area": 121562,
+          "occlusion": 0.0,
+          "elevation_deg": 12.8,
+          "stamp": 1785528748.398895,
+          "image": "data/crops/visibility/livingroom_4/18_curtain.png"
+        },
+        {
+          "object_id": "69",
+          "role": "anchor",
+          "frames_visible": 415,
+          "distance_m": 4.1,
+          "px_area": 1482,
+          "occlusion": 0.0,
+          "elevation_deg": 12.6,
+          "stamp": 1785528767.736938,
+          "image": "data/crops/visibility/livingroom_4/69_clock.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the potted plant that is farthest from the vase.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "vase"
+      ],
+      "answer": {
+        "object_id": "11",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "gray"
+        ],
+        "center": [
+          -3.9437,
+          2.3174,
+          0.7485
+        ],
+        "size": [
+          0.9632,
+          0.3438,
+          1.4885
+        ],
+        "yaw": -2.3484,
+        "aabb": {
+          "min": [
+            -4.4041,
+            1.8536,
+            0.0043
+          ],
+          "max": [
+            -3.4833,
+            2.7812,
+            1.4928
+          ]
+        },
+        "size_aabb": [
+          0.9208,
+          0.9276,
+          1.4885
+        ],
+        "bbox_corners": [
+          [
+            -3.4833,
+            2.54,
+            1.4928
+          ],
+          [
+            -4.1591,
+            1.8536,
+            1.4928
+          ],
+          [
+            -4.4041,
+            2.0949,
+            1.4928
+          ],
+          [
+            -3.7283,
+            2.7812,
+            1.4928
+          ],
+          [
+            -3.4833,
+            2.54,
+            0.0043
+          ],
+          [
+            -4.1591,
+            1.8536,
+            0.0043
+          ],
+          [
+            -4.4041,
+            2.0949,
+            0.0043
+          ],
+          [
+            -3.7283,
+            2.7812,
+            0.0043
+          ]
+        ],
+        "volume": 0.49297
+      },
+      "anchors": [
+        {
+          "object_id": "89",
+          "label": "vase",
+          "phrase": "the vase"
+        }
+      ],
+      "distractor_ids": [
+        "27",
+        "38",
+        "5",
+        "56"
+      ],
+      "competitors": 4,
+      "margin": 0.665,
+      "evidence": "farthest: centre 5.14 m vs runner-up potted plant#27 4.05 m; box-gap 4.38 m vs runner-up potted plant#27 3.71 m",
+      "statement": "the plant that is farthest from the vase",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "11",
+          "role": "target",
+          "frames_visible": 127,
+          "distance_m": 2.81,
+          "px_area": 18297,
+          "occlusion": 0.119,
+          "elevation_deg": -1.9,
+          "stamp": 1785528751.348911,
+          "image": "data/crops/visibility/livingroom_4/11_plant.png"
+        },
+        {
+          "object_id": "89",
+          "role": "anchor",
+          "frames_visible": 354,
+          "distance_m": 1.62,
+          "px_area": 2128,
+          "occlusion": 0.0,
+          "elevation_deg": -7.6,
+          "stamp": 1785528787.012662,
+          "image": "data/crops/visibility/livingroom_4/89_vase.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q10",
-      "question": "Find the curtain that is closest to the mirror.",
+      "question": "Find the sofa that is closest to the mirror.",
       "source": "generated",
       "difficulty": "medium",
       "relation": "closest",
       "target_objects": [
-        "curtain",
+        "sofa",
         "mirror"
       ],
       "answer": {
-        "object_id": "31",
+        "object_id": "49",
         "region": "0",
-        "label": "curtain",
-        "raw_label": "curtain",
-        "nyu_label": "curtain",
+        "label": "sofa",
+        "raw_label": "sofa",
+        "nyu_label": "sofa",
         "colors": [
-          "maroon",
-          "aqua"
+          "gray"
         ],
         "center": [
-          0.5941,
-          -4.7562,
-          1.1816
+          0.2292,
+          -2.0091,
+          0.3934
         ],
         "size": [
-          1.3767,
-          0.2402,
-          2.368
+          2.1928,
+          0.8878,
+          0.8127
         ],
-        "yaw": -0.0003,
+        "yaw": -1.5711,
         "aabb": {
           "min": [
-            -0.0943,
-            -4.8765,
-            -0.0024
+            -0.215,
+            -3.1057,
+            -0.0129
           ],
           "max": [
-            1.2825,
-            -4.6359,
-            2.3656
+            0.6735,
+            -0.9126,
+            0.7997
           ]
         },
         "size_aabb": [
-          1.3768,
-          0.2406,
-          2.368
+          0.8885,
+          2.1931,
+          0.8127
         ],
         "bbox_corners": [
           [
-            -0.0942,
-            -4.6359,
-            2.3656
+            0.6735,
+            -0.9128,
+            0.7997
           ],
           [
-            1.2825,
-            -4.6363,
-            2.3656
+            0.6728,
+            -3.1057,
+            0.7997
           ],
           [
-            1.2825,
-            -4.8765,
-            2.3656
+            -0.215,
+            -3.1054,
+            0.7997
           ],
           [
-            -0.0943,
-            -4.8761,
-            2.3656
+            -0.2143,
+            -0.9126,
+            0.7997
           ],
           [
-            -0.0942,
-            -4.6359,
-            -0.0024
+            0.6735,
+            -0.9128,
+            -0.0129
           ],
           [
-            1.2825,
-            -4.6363,
-            -0.0024
+            0.6728,
+            -3.1057,
+            -0.0129
           ],
           [
-            1.2825,
-            -4.8765,
-            -0.0024
+            -0.215,
+            -3.1054,
+            -0.0129
           ],
           [
-            -0.0943,
-            -4.8761,
-            -0.0024
+            -0.2143,
+            -0.9126,
+            -0.0129
           ]
         ],
-        "volume": 0.78305
+        "volume": 1.58206
       },
       "anchors": [
         {
@@ -1177,15 +1475,38 @@
         }
       ],
       "distractor_ids": [
-        "1",
-        "18",
-        "40"
+        "51",
+        "88"
       ],
-      "competitors": 3,
-      "margin": 1.652,
-      "evidence": "closest: centre 4.79 m vs runner-up curtain#18 6.44 m; box-gap 4.18 m vs runner-up curtain#40 6.00 m",
-      "statement": "the curtain that is closest to the mirror",
+      "competitors": 2,
+      "margin": 1.954,
+      "evidence": "closest: centre 2.76 m vs runner-up sofa#88 4.71 m; box-gap 1.44 m vs runner-up sofa#88 3.90 m",
+      "statement": "the sofa that is closest to the mirror",
       "region": "0",
+      "views": [
+        {
+          "object_id": "49",
+          "role": "target",
+          "frames_visible": 450,
+          "distance_m": 0.86,
+          "px_area": 78740,
+          "occlusion": 0.0,
+          "elevation_deg": -13.3,
+          "stamp": 1785528784.02257,
+          "image": "data/crops/visibility/livingroom_4/49_couch.png"
+        },
+        {
+          "object_id": "7",
+          "role": "anchor",
+          "frames_visible": 509,
+          "distance_m": 1.73,
+          "px_area": 12054,
+          "occlusion": 0.0,
+          "elevation_deg": 15.7,
+          "stamp": 1785528722.103857,
+          "image": "data/crops/visibility/livingroom_4/7_mirror.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     }

@@ -6,35 +6,33 @@
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
-    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
-    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by bags/cat2_text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/livingroom_2/visibility/livingroom_2_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
     "source_statements: bags/livingroom_2/iref_vla_metadata/livingroom_2_referential_statements.json",
     "source_objects: bags/livingroom_2/iref_vla_metadata/livingroom_2_objects.json"
   ],
   "difficulty_counts": {
-    "hard": 4,
-    "medium": 6
+    "hard": 3,
+    "medium": 4,
+    "easy": 1
   },
   "relation_counts": {
-    "closest": 3,
+    "closest": 2,
     "on": 1,
-    "between": 2,
-    "above": 1,
-    "near": 1,
+    "between": 1,
+    "near": 2,
     "farthest": 2
   },
   "target_object_coverage": [
     "books",
     "bottle",
-    "can of coke",
     "candle",
-    "clock",
-    "coffee table",
+    "chair",
     "couch",
-    "dvd",
-    "kitchen island",
+    "kitchen counter",
     "lamp",
-    "painting",
     "pillow",
     "shelf",
     "soccer ball",
@@ -152,6 +150,30 @@
       "images": [
         "data/pdf_assets/livingroom_2/p1_img2.png"
       ],
+      "views": [
+        {
+          "object_id": "56",
+          "role": "target",
+          "frames_visible": 111,
+          "distance_m": 1.65,
+          "px_area": 12986,
+          "occlusion": 0.064,
+          "elevation_deg": -12.9,
+          "stamp": 1785528582.499689,
+          "image": "data/crops/visibility/livingroom_2/56_stool.png"
+        },
+        {
+          "object_id": "29",
+          "role": "anchor",
+          "frames_visible": 181,
+          "distance_m": 1.59,
+          "px_area": 77319,
+          "occlusion": 0.0,
+          "elevation_deg": 3.9,
+          "stamp": 1785528560.244706,
+          "image": "data/crops/visibility/livingroom_2/29_shelf.png"
+        }
+      ],
       "verified": true,
       "solver_trace": [
         "head='stool' color='' hops=[{'relation': 'closest', 'phrases': ['shelf']}, {'relation': 'near', 'phrases': ['tv cabinet']}]",
@@ -268,6 +290,19 @@
       "images": [
         "data/pdf_assets/livingroom_2/p2_img1.png"
       ],
+      "views": [
+        {
+          "object_id": "39",
+          "role": "target",
+          "frames_visible": 108,
+          "distance_m": 2.27,
+          "px_area": 5037,
+          "occlusion": 0.184,
+          "elevation_deg": -0.9,
+          "stamp": 1785528560.004689,
+          "image": "data/crops/visibility/livingroom_2/39_pillow.png"
+        }
+      ],
       "verified": true,
       "solver_trace": [
         "head='pillow' color='' hops=[{'relation': 'on', 'phrases': ['sofa']}, {'relation': 'closest', 'phrases': ['lamp']}]",
@@ -279,226 +314,157 @@
     },
     {
       "id": "Q03",
-      "question": "Find the stool that is between the kitchen island and the coffee table.",
+      "question": "Find the couch that is between the table and the soccer ball.",
       "source": "generated",
       "difficulty": "hard",
       "relation": "between",
       "target_objects": [
-        "stool",
-        "kitchen island",
-        "coffee table"
+        "couch",
+        "table",
+        "soccer ball"
       ],
       "answer": {
-        "object_id": "25",
-        "region": "0",
-        "label": "stool",
-        "raw_label": "stool",
-        "nyu_label": "stool",
+        "object_id": "6",
+        "region": "1",
+        "label": "couch",
+        "raw_label": "couch",
+        "nyu_label": "sofa",
         "colors": [
-          "aqua",
-          "maroon"
+          "gray",
+          "brown"
         ],
         "center": [
-          0.9915,
-          0.4291,
-          0.4164
+          1.7244,
+          -7.3781,
+          0.5497
         ],
         "size": [
-          0.3885,
-          0.3877,
-          0.8721
+          0.9774,
+          1.1793,
+          1.0863
         ],
-        "yaw": 0.2584,
+        "yaw": 3.132,
         "aabb": {
           "min": [
-            0.7541,
-            0.1921,
-            -0.0196
+            1.2301,
+            -7.9725,
+            0.0066
           ],
           "max": [
-            1.2288,
-            0.6662,
-            0.8525
+            2.2188,
+            -6.7838,
+            1.0929
           ]
         },
         "size_aabb": [
-          0.4747,
-          0.4741,
-          0.8721
+          0.9887,
+          1.1886,
+          1.0863
         ],
         "bbox_corners": [
           [
-            0.7541,
-            0.5669,
-            0.8525
+            2.2074,
+            -7.9725,
+            1.0929
           ],
           [
-            1.1297,
-            0.6662,
-            0.8525
+            1.2301,
+            -7.9631,
+            1.0929
           ],
           [
-            1.2288,
-            0.2913,
-            0.8525
+            1.2414,
+            -6.7838,
+            1.0929
           ],
           [
-            0.8532,
-            0.1921,
-            0.8525
+            2.2188,
+            -6.7932,
+            1.0929
           ],
           [
-            0.7541,
-            0.5669,
-            -0.0196
+            2.2074,
+            -7.9725,
+            0.0066
           ],
           [
-            1.1297,
-            0.6662,
-            -0.0196
+            1.2301,
+            -7.9631,
+            0.0066
           ],
           [
-            1.2288,
-            0.2913,
-            -0.0196
+            1.2414,
+            -6.7838,
+            0.0066
           ],
           [
-            0.8532,
-            0.1921,
-            -0.0196
+            2.2188,
+            -6.7932,
+            0.0066
           ]
         ],
-        "volume": 0.13137
+        "volume": 1.25214
       },
       "anchors": [
         {
-          "object_id": "61",
-          "label": "kitchen island",
-          "phrase": "the kitchen island"
+          "object_id": "41",
+          "label": "table",
+          "phrase": "the table"
         },
         {
-          "object_id": "83",
-          "label": "coffee table",
-          "phrase": "the coffee table"
+          "object_id": "63",
+          "label": "soccer ball",
+          "phrase": "the soccer ball"
         }
       ],
-      "distractor_ids": [],
-      "competitors": 1,
-      "evidence": "between: between kitchen island#61 and coffee table#83 (lateral offset 0.36 m)",
-      "statement": "",
-      "region": "0",
+      "distractor_ids": [
+        "24",
+        "60"
+      ],
+      "competitors": 2,
+      "evidence": "between: between table#41 and soccer ball#63 (lateral offset 0.35 m)",
+      "statement": "the sofa that is between the table and the ball",
+      "region": "1",
+      "views": [
+        {
+          "object_id": "6",
+          "role": "target",
+          "frames_visible": 183,
+          "distance_m": 0.96,
+          "px_area": 84800,
+          "occlusion": 0.0,
+          "elevation_deg": -10.5,
+          "stamp": 1785528573.974646,
+          "image": "data/crops/visibility/livingroom_2/6_couch.png"
+        },
+        {
+          "object_id": "41",
+          "role": "anchor",
+          "frames_visible": 82,
+          "distance_m": 1.92,
+          "px_area": 15120,
+          "occlusion": 0.0,
+          "elevation_deg": -15.0,
+          "stamp": 1785528575.449714,
+          "image": "data/crops/visibility/livingroom_2/41_table.png"
+        },
+        {
+          "object_id": "63",
+          "role": "anchor",
+          "frames_visible": 81,
+          "distance_m": 0.43,
+          "px_area": 41736,
+          "occlusion": 0.0,
+          "elevation_deg": -50.5,
+          "stamp": 1785528569.089772,
+          "image": "data/crops/visibility/livingroom_2/63_soccer_ball.png"
+        }
+      ],
       "verified": true,
-      "derivation": "geometry"
+      "derivation": "statement"
     },
     {
       "id": "Q04",
-      "question": "Find the candle that is above the dvd.",
-      "source": "generated",
-      "difficulty": "medium",
-      "relation": "above",
-      "target_objects": [
-        "candle",
-        "dvd"
-      ],
-      "answer": {
-        "object_id": "67",
-        "region": "0",
-        "label": "candle",
-        "raw_label": "candle",
-        "nyu_label": "candle",
-        "colors": [
-          "black",
-          "gray"
-        ],
-        "center": [
-          2.3917,
-          -3.6941,
-          0.6223
-        ],
-        "size": [
-          0.0782,
-          0.077,
-          0.0617
-        ],
-        "yaw": -2.9121,
-        "aabb": {
-          "min": [
-            2.3449,
-            -3.7404,
-            0.5915
-          ],
-          "max": [
-            2.4386,
-            -3.6477,
-            0.6532
-          ]
-        },
-        "size_aabb": [
-          0.0936,
-          0.0927,
-          0.0617
-        ],
-        "bbox_corners": [
-          [
-            2.4386,
-            -3.7227,
-            0.6532
-          ],
-          [
-            2.3624,
-            -3.7404,
-            0.6532
-          ],
-          [
-            2.3449,
-            -3.6655,
-            0.6532
-          ],
-          [
-            2.421,
-            -3.6477,
-            0.6532
-          ],
-          [
-            2.4386,
-            -3.7227,
-            0.5915
-          ],
-          [
-            2.3624,
-            -3.7404,
-            0.5915
-          ],
-          [
-            2.3449,
-            -3.6655,
-            0.5915
-          ],
-          [
-            2.421,
-            -3.6477,
-            0.5915
-          ]
-        ],
-        "volume": 0.00037
-      },
-      "anchors": [
-        {
-          "object_id": "26",
-          "label": "dvd",
-          "phrase": "the dvd"
-        }
-      ],
-      "distractor_ids": [],
-      "competitors": 2,
-      "evidence": "above: underside 0.59 m clears dvd#26 top 0.37 m, footprints overlap 0%",
-      "statement": "",
-      "region": "0",
-      "verified": true,
-      "derivation": "geometry"
-    },
-    {
-      "id": "Q05",
       "question": "Find the candle that is near the soccer ball.",
       "source": "generated",
       "difficulty": "medium",
@@ -605,232 +571,169 @@
       "evidence": "near: box-gap 0.96 m; next candle is 4.24 m away",
       "statement": "the candle that is near the ball",
       "region": "1",
+      "views": [
+        {
+          "object_id": "31",
+          "role": "target",
+          "frames_visible": 13,
+          "distance_m": 0.78,
+          "px_area": 3055,
+          "occlusion": 0.0,
+          "elevation_deg": -39.6,
+          "stamp": 1785528568.719679,
+          "image": "data/crops/visibility/livingroom_2/31_candle.png"
+        },
+        {
+          "object_id": "63",
+          "role": "anchor",
+          "frames_visible": 81,
+          "distance_m": 0.43,
+          "px_area": 41736,
+          "occlusion": 0.0,
+          "elevation_deg": -50.5,
+          "stamp": 1785528569.089772,
+          "image": "data/crops/visibility/livingroom_2/63_soccer_ball.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the stool that is closest to the chair.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "stool",
+        "chair"
+      ],
+      "answer": {
+        "object_id": "25",
+        "region": "0",
+        "label": "stool",
+        "raw_label": "stool",
+        "nyu_label": "stool",
+        "colors": [
+          "aqua",
+          "maroon"
+        ],
+        "center": [
+          0.9915,
+          0.4291,
+          0.4164
+        ],
+        "size": [
+          0.3885,
+          0.3877,
+          0.8721
+        ],
+        "yaw": 0.2584,
+        "aabb": {
+          "min": [
+            0.7541,
+            0.1921,
+            -0.0196
+          ],
+          "max": [
+            1.2288,
+            0.6662,
+            0.8525
+          ]
+        },
+        "size_aabb": [
+          0.4747,
+          0.4741,
+          0.8721
+        ],
+        "bbox_corners": [
+          [
+            0.7541,
+            0.5669,
+            0.8525
+          ],
+          [
+            1.1297,
+            0.6662,
+            0.8525
+          ],
+          [
+            1.2288,
+            0.2913,
+            0.8525
+          ],
+          [
+            0.8532,
+            0.1921,
+            0.8525
+          ],
+          [
+            0.7541,
+            0.5669,
+            -0.0196
+          ],
+          [
+            1.1297,
+            0.6662,
+            -0.0196
+          ],
+          [
+            1.2288,
+            0.2913,
+            -0.0196
+          ],
+          [
+            0.8532,
+            0.1921,
+            -0.0196
+          ]
+        ],
+        "volume": 0.13137
+      },
+      "anchors": [
+        {
+          "object_id": "28",
+          "label": "chair",
+          "phrase": "the chair"
+        }
+      ],
+      "distractor_ids": [
+        "56"
+      ],
+      "competitors": 1,
+      "margin": 0.718,
+      "evidence": "closest: centre 3.07 m vs runner-up stool#56 3.79 m; box-gap 2.28 m vs runner-up stool#56 3.09 m",
+      "statement": "the stool that is closest to the chair",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "25",
+          "role": "target",
+          "frames_visible": 122,
+          "distance_m": 0.77,
+          "px_area": 40920,
+          "occlusion": 0.0,
+          "elevation_deg": -23.7,
+          "stamp": 1785528583.819685,
+          "image": "data/crops/visibility/livingroom_2/25_stool.png"
+        },
+        {
+          "object_id": "28",
+          "role": "anchor",
+          "frames_visible": 138,
+          "distance_m": 0.64,
+          "px_area": 99522,
+          "occlusion": 0.0,
+          "elevation_deg": -22.1,
+          "stamp": 1785528588.269641,
+          "image": "data/crops/visibility/livingroom_2/28_chair.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q06",
-      "question": "Find the couch that is closest to the soccer ball.",
-      "source": "generated",
-      "difficulty": "medium",
-      "relation": "closest",
-      "target_objects": [
-        "couch",
-        "soccer ball"
-      ],
-      "answer": {
-        "object_id": "6",
-        "region": "1",
-        "label": "couch",
-        "raw_label": "couch",
-        "nyu_label": "sofa",
-        "colors": [
-          "gray",
-          "brown"
-        ],
-        "center": [
-          1.7244,
-          -7.3781,
-          0.5497
-        ],
-        "size": [
-          0.9774,
-          1.1793,
-          1.0863
-        ],
-        "yaw": 3.132,
-        "aabb": {
-          "min": [
-            1.2301,
-            -7.9725,
-            0.0066
-          ],
-          "max": [
-            2.2188,
-            -6.7838,
-            1.0929
-          ]
-        },
-        "size_aabb": [
-          0.9887,
-          1.1886,
-          1.0863
-        ],
-        "bbox_corners": [
-          [
-            2.2074,
-            -7.9725,
-            1.0929
-          ],
-          [
-            1.2301,
-            -7.9631,
-            1.0929
-          ],
-          [
-            1.2414,
-            -6.7838,
-            1.0929
-          ],
-          [
-            2.2188,
-            -6.7932,
-            1.0929
-          ],
-          [
-            2.2074,
-            -7.9725,
-            0.0066
-          ],
-          [
-            1.2301,
-            -7.9631,
-            0.0066
-          ],
-          [
-            1.2414,
-            -6.7838,
-            0.0066
-          ],
-          [
-            2.2188,
-            -6.7932,
-            0.0066
-          ]
-        ],
-        "volume": 1.25214
-      },
-      "anchors": [
-        {
-          "object_id": "63",
-          "label": "soccer ball",
-          "phrase": "the soccer ball"
-        }
-      ],
-      "distractor_ids": [
-        "24",
-        "60"
-      ],
-      "competitors": 2,
-      "margin": 1.883,
-      "evidence": "closest: centre 1.32 m vs runner-up couch#60 3.73 m; box-gap 0.42 m vs runner-up couch#60 2.31 m",
-      "statement": "the sofa that is closest to the ball",
-      "region": "1",
-      "verified": true,
-      "derivation": "statement"
-    },
-    {
-      "id": "Q07",
-      "question": "Find the lamp that is farthest from the can of coke.",
-      "source": "generated",
-      "difficulty": "medium",
-      "relation": "farthest",
-      "target_objects": [
-        "lamp",
-        "can of coke"
-      ],
-      "answer": {
-        "object_id": "72",
-        "region": "1",
-        "label": "lamp",
-        "raw_label": "lamp",
-        "nyu_label": "lamp",
-        "colors": [
-          "black"
-        ],
-        "center": [
-          7.346,
-          -7.5659,
-          0.4104
-        ],
-        "size": [
-          0.247,
-          0.2259,
-          0.8657
-        ],
-        "yaw": -3.1416,
-        "aabb": {
-          "min": [
-            7.2226,
-            -7.6789,
-            -0.0225
-          ],
-          "max": [
-            7.4695,
-            -7.4529,
-            0.8432
-          ]
-        },
-        "size_aabb": [
-          0.247,
-          0.226,
-          0.8657
-        ],
-        "bbox_corners": [
-          [
-            7.4695,
-            -7.6789,
-            0.8432
-          ],
-          [
-            7.2226,
-            -7.6789,
-            0.8432
-          ],
-          [
-            7.2226,
-            -7.4529,
-            0.8432
-          ],
-          [
-            7.4695,
-            -7.4529,
-            0.8432
-          ],
-          [
-            7.4695,
-            -7.6789,
-            -0.0225
-          ],
-          [
-            7.2226,
-            -7.6789,
-            -0.0225
-          ],
-          [
-            7.2226,
-            -7.4529,
-            -0.0225
-          ],
-          [
-            7.4695,
-            -7.4529,
-            -0.0225
-          ]
-        ],
-        "volume": 0.04831
-      },
-      "anchors": [
-        {
-          "object_id": "84",
-          "label": "can of coke",
-          "phrase": "the can of coke"
-        }
-      ],
-      "distractor_ids": [
-        "15",
-        "17"
-      ],
-      "competitors": 2,
-      "margin": 3.427,
-      "evidence": "farthest: centre 7.12 m vs runner-up lamp#15 3.69 m; box-gap 6.92 m vs runner-up lamp#15 3.46 m",
-      "statement": "the lamp that is farthest from the coke bottle",
-      "region": "1",
-      "verified": true,
-      "derivation": "statement"
-    },
-    {
-      "id": "Q08",
       "question": "Find the books that are farthest from the bottle.",
       "source": "generated",
       "difficulty": "medium",
@@ -938,19 +841,42 @@
       "evidence": "farthest: centre 2.04 m vs runner-up books#33 1.57 m; box-gap 1.59 m vs runner-up books#33 1.11 m",
       "statement": "the books that are farthest from the bottle",
       "region": "0",
+      "views": [
+        {
+          "object_id": "14",
+          "role": "target",
+          "frames_visible": 79,
+          "distance_m": 1.53,
+          "px_area": 17112,
+          "occlusion": 0.0,
+          "elevation_deg": -18.7,
+          "stamp": 1785528560.359667,
+          "image": "data/crops/visibility/livingroom_2/14_book.png"
+        },
+        {
+          "object_id": "38",
+          "role": "anchor",
+          "frames_visible": 141,
+          "distance_m": 1.93,
+          "px_area": 4130,
+          "occlusion": 0.0,
+          "elevation_deg": 32.4,
+          "stamp": 1785528581.019684,
+          "image": "data/crops/visibility/livingroom_2/38_bottle.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
-      "id": "Q09",
-      "question": "Find the pillow that is between the clock and the painting.",
+      "id": "Q07",
+      "question": "Find the pillow that is farthest from the kitchen counter.",
       "source": "generated",
-      "difficulty": "hard",
-      "relation": "between",
+      "difficulty": "medium",
+      "relation": "farthest",
       "target_objects": [
         "pillow",
-        "clock",
-        "painting"
+        "kitchen counter"
       ],
       "answer": {
         "object_id": "5",
@@ -1036,36 +962,59 @@
       },
       "anchors": [
         {
-          "object_id": "53",
-          "label": "clock",
-          "phrase": "the clock"
-        },
-        {
-          "object_id": "73",
-          "label": "painting",
-          "phrase": "the painting"
+          "object_id": "74",
+          "label": "kitchen counter",
+          "phrase": "the kitchen counter"
         }
       ],
-      "distractor_ids": [],
+      "distractor_ids": [
+        "22",
+        "39"
+      ],
       "competitors": 2,
-      "evidence": "between: between clock#53 and painting#73 (lateral offset 0.39 m)",
-      "statement": "",
+      "margin": 0.427,
+      "evidence": "farthest: centre 8.04 m vs runner-up pillow#22 7.61 m; box-gap 6.54 m vs runner-up pillow#22 6.02 m",
+      "statement": "the pillow that is farthest from the counter",
       "region": "0",
+      "views": [
+        {
+          "object_id": "5",
+          "role": "target",
+          "frames_visible": 135,
+          "distance_m": 2.74,
+          "px_area": 3520,
+          "occlusion": 0.08,
+          "elevation_deg": -0.6,
+          "stamp": 1785528579.664686,
+          "image": "data/crops/visibility/livingroom_2/5_pillow.png"
+        },
+        {
+          "object_id": "74",
+          "role": "anchor",
+          "frames_visible": 44,
+          "distance_m": 2.02,
+          "px_area": 78435,
+          "occlusion": 0.05,
+          "elevation_deg": -7.4,
+          "stamp": 1785528586.179688,
+          "image": "data/crops/visibility/livingroom_2/74_kitchen_counter.png"
+        }
+      ],
       "verified": true,
-      "derivation": "geometry"
+      "derivation": "statement"
     },
     {
-      "id": "Q10",
-      "question": "Find the lamp that is closest to the table.",
+      "id": "Q08",
+      "question": "Find the lamp that is near the soccer ball.",
       "source": "generated",
       "difficulty": "medium",
-      "relation": "closest",
+      "relation": "near",
       "target_objects": [
         "lamp",
-        "table"
+        "soccer ball"
       ],
       "answer": {
-        "object_id": "17",
+        "object_id": "15",
         "region": "1",
         "label": "lamp",
         "raw_label": "lamp",
@@ -1074,93 +1023,117 @@
           "black"
         ],
         "center": [
-          -1.7875,
-          -5.7058,
-          0.4091
+          3.6975,
+          -5.7361,
+          0.4102
         ],
         "size": [
           0.2464,
           0.2259,
-          0.8632
+          0.8655
         ],
-        "yaw": 1.5708,
+        "yaw": -1.5708,
         "aabb": {
           "min": [
-            -1.9005,
-            -5.829,
+            3.5845,
+            -5.8593,
             -0.0225
           ],
           "max": [
-            -1.6745,
-            -5.5826,
-            0.8407
+            3.8104,
+            -5.6129,
+            0.843
           ]
         },
         "size_aabb": [
           0.2259,
           0.2464,
-          0.8632
+          0.8655
         ],
         "bbox_corners": [
           [
-            -1.9005,
-            -5.829,
-            0.8407
+            3.8104,
+            -5.6129,
+            0.843
           ],
           [
-            -1.9005,
-            -5.5826,
-            0.8407
+            3.8104,
+            -5.8593,
+            0.843
           ],
           [
-            -1.6745,
-            -5.5826,
-            0.8407
+            3.5845,
+            -5.8593,
+            0.843
           ],
           [
-            -1.6745,
-            -5.829,
-            0.8407
+            3.5845,
+            -5.6129,
+            0.843
           ],
           [
-            -1.9005,
-            -5.829,
+            3.8104,
+            -5.6129,
             -0.0225
           ],
           [
-            -1.9005,
-            -5.5826,
+            3.8104,
+            -5.8593,
             -0.0225
           ],
           [
-            -1.6745,
-            -5.5826,
+            3.5845,
+            -5.8593,
             -0.0225
           ],
           [
-            -1.6745,
-            -5.829,
+            3.5845,
+            -5.6129,
             -0.0225
           ]
         ],
-        "volume": 0.04805
+        "volume": 0.04819
       },
       "anchors": [
         {
-          "object_id": "41",
-          "label": "table",
-          "phrase": "the table"
+          "object_id": "63",
+          "label": "soccer ball",
+          "phrase": "the soccer ball"
         }
       ],
       "distractor_ids": [
-        "15",
+        "17",
         "72"
       ],
       "competitors": 2,
-      "margin": 1.502,
-      "evidence": "closest: centre 2.48 m vs runner-up lamp#15 3.98 m; box-gap 1.61 m vs runner-up lamp#15 3.25 m",
-      "statement": "the lamp that is closest to the table",
+      "margin": 3.272,
+      "evidence": "near: box-gap 0.88 m; next lamp is 4.15 m away",
+      "statement": "the lamp that is near the ball",
       "region": "1",
+      "views": [
+        {
+          "object_id": "15",
+          "role": "target",
+          "frames_visible": 51,
+          "distance_m": 0.71,
+          "px_area": 33360,
+          "occlusion": 0.0,
+          "elevation_deg": -27.8,
+          "stamp": 1785528573.329691,
+          "image": "data/crops/visibility/livingroom_2/15_lamp.png"
+        },
+        {
+          "object_id": "63",
+          "role": "anchor",
+          "frames_visible": 81,
+          "distance_m": 0.43,
+          "px_area": 41736,
+          "occlusion": 0.0,
+          "elevation_deg": -50.5,
+          "stamp": 1785528569.089772,
+          "image": "data/crops/visibility/livingroom_2/63_soccer_ball.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     }

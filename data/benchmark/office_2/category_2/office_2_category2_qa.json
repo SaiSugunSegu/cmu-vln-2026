@@ -6,15 +6,17 @@
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
-    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
-    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by bags/cat2_text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/office_2/visibility/office_2_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
     "source_statements: bags/office_2/iref_vla_metadata/office_2_referential_statements.json",
     "source_objects: bags/office_2/iref_vla_metadata/office_2_objects.json"
   ],
   "difficulty_counts": {
-    "hard": 5,
+    "hard": 4,
     "medium": 4,
-    "easy": 1
+    "easy": 2
   },
   "relation_counts": {
     "closest": 2,
@@ -29,18 +31,16 @@
   "target_object_coverage": [
     "box",
     "cabinet",
-    "calendar",
     "clock",
     "coffee cup",
     "coffee machine",
-    "computer",
     "computer monitor",
-    "fire alarm",
-    "headphones",
+    "drawers",
     "laptop",
+    "notice board",
     "phone",
-    "poster",
     "potted plant",
+    "table",
     "whiteboard"
   ],
   "questions": [
@@ -152,6 +152,30 @@
       "region": "0",
       "images": [
         "data/pdf_assets/office_2/p1_img2.png"
+      ],
+      "views": [
+        {
+          "object_id": "75",
+          "role": "target",
+          "frames_visible": 167,
+          "distance_m": 1.51,
+          "px_area": 6528,
+          "occlusion": 0.0,
+          "elevation_deg": 8.7,
+          "stamp": 1785529024.10976,
+          "image": "data/crops/visibility/office_2/75_computer_monitor.png"
+        },
+        {
+          "object_id": "160",
+          "role": "anchor",
+          "frames_visible": 168,
+          "distance_m": 1.01,
+          "px_area": 49060,
+          "occlusion": 0.0,
+          "elevation_deg": -16.5,
+          "stamp": 1785529026.164857,
+          "image": "data/crops/visibility/office_2/160_cabinet.png"
+        }
       ],
       "verified": true,
       "solver_trace": [
@@ -265,6 +289,19 @@
       "images": [
         "data/pdf_assets/office_2/p2_img1.png"
       ],
+      "views": [
+        {
+          "object_id": "36",
+          "role": "target",
+          "frames_visible": 46,
+          "distance_m": 1.67,
+          "px_area": 1593,
+          "occlusion": 0.0,
+          "elevation_deg": 1.6,
+          "stamp": 1785529026.164857,
+          "image": "data/crops/visibility/office_2/36_box.png"
+        }
+      ],
       "verified": true,
       "solver_trace": [
         "head='box' color='' hops=[{'relation': 'on', 'phrases': ['cabinet']}, {'relation': 'closest', 'phrases': ['whiteboard']}]",
@@ -276,113 +313,148 @@
     },
     {
       "id": "Q03",
-      "question": "Find the computer that is between the laptop and the clock.",
+      "question": "Find the drawers that are between the coffee machine and the laptop.",
       "source": "generated",
       "difficulty": "hard",
       "relation": "between",
       "target_objects": [
-        "computer",
-        "laptop",
-        "clock"
+        "drawers",
+        "coffee machine",
+        "laptop"
       ],
       "answer": {
-        "object_id": "106",
+        "object_id": "23",
         "region": "0",
-        "label": "computer",
-        "raw_label": "computer",
-        "nyu_label": "computer",
+        "label": "drawers",
+        "raw_label": "drawers",
+        "nyu_label": "drawer",
         "colors": [
           "black"
         ],
         "center": [
-          3.664,
-          3.077,
-          0.841
+          3.6684,
+          1.7358,
+          0.3165
         ],
         "size": [
-          0.3728,
-          0.3646,
-          0.0785
+          0.4757,
+          0.6781,
+          0.639
         ],
-        "yaw": 3.1416,
+        "yaw": -1.5708,
         "aabb": {
           "min": [
-            3.4776,
-            2.8947,
-            0.8017
+            3.3293,
+            1.4979,
+            -0.003
           ],
           "max": [
-            3.8504,
-            3.2593,
-            0.8803
+            4.0074,
+            1.9736,
+            0.636
           ]
         },
         "size_aabb": [
-          0.3728,
-          0.3646,
-          0.0785
+          0.6781,
+          0.4757,
+          0.639
         ],
         "bbox_corners": [
           [
-            3.8504,
-            2.8947,
-            0.8803
+            4.0074,
+            1.9736,
+            0.636
           ],
           [
-            3.4776,
-            2.8947,
-            0.8803
+            4.0074,
+            1.4979,
+            0.636
           ],
           [
-            3.4776,
-            3.2593,
-            0.8803
+            3.3293,
+            1.4979,
+            0.636
           ],
           [
-            3.8504,
-            3.2593,
-            0.8803
+            3.3293,
+            1.9736,
+            0.636
           ],
           [
-            3.8504,
-            2.8947,
-            0.8017
+            4.0074,
+            1.9736,
+            -0.003
           ],
           [
-            3.4776,
-            2.8947,
-            0.8017
+            4.0074,
+            1.4979,
+            -0.003
           ],
           [
-            3.4776,
-            3.2593,
-            0.8017
+            3.3293,
+            1.4979,
+            -0.003
           ],
           [
-            3.8504,
-            3.2593,
-            0.8017
+            3.3293,
+            1.9736,
+            -0.003
           ]
         ],
-        "volume": 0.01067
+        "volume": 0.20609
       },
       "anchors": [
+        {
+          "object_id": "15",
+          "label": "coffee machine",
+          "phrase": "the coffee machine"
+        },
         {
           "object_id": "102",
           "label": "laptop",
           "phrase": "the laptop"
-        },
-        {
-          "object_id": "119",
-          "label": "clock",
-          "phrase": "the clock"
         }
       ],
       "distractor_ids": [],
-      "competitors": 2,
-      "evidence": "between: between laptop#102 and clock#119 (lateral offset 0.73 m)",
+      "competitors": 3,
+      "evidence": "between: between coffee machine#15 and laptop#102 (lateral offset 0.42 m)",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "23",
+          "role": "target",
+          "frames_visible": 187,
+          "distance_m": 0.51,
+          "px_area": 68292,
+          "occlusion": 0.0,
+          "elevation_deg": -30.4,
+          "stamp": 1785529023.489767,
+          "image": "data/crops/visibility/office_2/23_drawers.png"
+        },
+        {
+          "object_id": "15",
+          "role": "anchor",
+          "frames_visible": 207,
+          "distance_m": 0.66,
+          "px_area": 20300,
+          "occlusion": 0.0,
+          "elevation_deg": 9.5,
+          "stamp": 1785529018.144817,
+          "image": "data/crops/visibility/office_2/15_coffee_machine.png"
+        },
+        {
+          "object_id": "102",
+          "role": "anchor",
+          "frames_visible": 174,
+          "distance_m": 1.47,
+          "px_area": 7345,
+          "occlusion": 0.0,
+          "elevation_deg": 3.7,
+          "stamp": 1785529023.614934,
+          "image": "data/crops/visibility/office_2/102_laptop.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
@@ -490,114 +562,162 @@
       "evidence": "in: inside coffee machine#15: base 0.86 m sits 0.30 m below its rim",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "136",
+          "role": "target",
+          "frames_visible": 37,
+          "distance_m": 0.62,
+          "px_area": 3190,
+          "occlusion": 0.0,
+          "elevation_deg": 5.8,
+          "stamp": 1785529018.619797,
+          "image": "data/crops/visibility/office_2/136_coffee_cup.png"
+        },
+        {
+          "object_id": "15",
+          "role": "anchor",
+          "frames_visible": 207,
+          "distance_m": 0.66,
+          "px_area": 20300,
+          "occlusion": 0.0,
+          "elevation_deg": 9.5,
+          "stamp": 1785529018.144817,
+          "image": "data/crops/visibility/office_2/15_coffee_machine.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
     {
       "id": "Q05",
-      "question": "Find the cabinet with the coffee machine on it.",
+      "question": "Find the table with the laptop on it.",
       "source": "generated",
       "difficulty": "medium",
       "relation": "supports",
       "target_objects": [
-        "cabinet",
-        "coffee machine"
+        "table",
+        "laptop"
       ],
       "answer": {
-        "object_id": "132",
+        "object_id": "25",
         "region": "0",
-        "label": "cabinet",
-        "raw_label": "cabinet",
-        "nyu_label": "cabinet",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
         "colors": [
-          "black",
           "brown",
-          "red"
+          "red",
+          "black"
         ],
         "center": [
-          3.6133,
-          -0.4512,
-          0.4131
+          3.4927,
+          2.5262,
+          0.4003
         ],
         "size": [
-          1.0095,
-          0.5224,
-          0.8286
+          1.1049,
+          2.2749,
+          0.8052
         ],
-        "yaw": -0.0,
+        "yaw": 3.1416,
         "aabb": {
           "min": [
-            3.1086,
-            -0.7124,
-            -0.0012
+            2.9403,
+            1.3887,
+            -0.0023
           ],
           "max": [
-            4.118,
-            -0.19,
-            0.8274
+            4.0452,
+            3.6637,
+            0.8028
           ]
         },
         "size_aabb": [
-          1.0095,
-          0.5224,
-          0.8286
+          1.1049,
+          2.2749,
+          0.8052
         ],
         "bbox_corners": [
           [
-            3.1086,
-            -0.19,
-            0.8274
+            4.0452,
+            1.3887,
+            0.8028
           ],
           [
-            4.118,
-            -0.19,
-            0.8274
+            2.9403,
+            1.3887,
+            0.8028
           ],
           [
-            4.118,
-            -0.7124,
-            0.8274
+            2.9403,
+            3.6637,
+            0.8028
           ],
           [
-            3.1086,
-            -0.7124,
-            0.8274
+            4.0452,
+            3.6637,
+            0.8028
           ],
           [
-            3.1086,
-            -0.19,
-            -0.0012
+            4.0452,
+            1.3887,
+            -0.0023
           ],
           [
-            4.118,
-            -0.19,
-            -0.0012
+            2.9403,
+            1.3887,
+            -0.0023
           ],
           [
-            4.118,
-            -0.7124,
-            -0.0012
+            2.9403,
+            3.6637,
+            -0.0023
           ],
           [
-            3.1086,
-            -0.7124,
-            -0.0012
+            4.0452,
+            3.6637,
+            -0.0023
           ]
         ],
-        "volume": 0.43694
+        "volume": 2.02386
       },
       "anchors": [
         {
-          "object_id": "15",
-          "label": "coffee machine",
-          "phrase": "the coffee machine"
+          "object_id": "102",
+          "label": "laptop",
+          "phrase": "the laptop"
         }
       ],
       "distractor_ids": [],
-      "competitors": 3,
-      "evidence": "supports: holds coffee machine#15 (top 0.83 m, its underside 0.83 m)",
+      "competitors": 1,
+      "evidence": "supports: holds laptop#102 (top 0.80 m, its underside 0.81 m)",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "25",
+          "role": "target",
+          "frames_visible": 197,
+          "distance_m": 0.45,
+          "px_area": 157628,
+          "occlusion": 0.0,
+          "elevation_deg": -17.5,
+          "stamp": 1785529023.98973,
+          "image": "data/crops/visibility/office_2/25_table.png"
+        },
+        {
+          "object_id": "102",
+          "role": "anchor",
+          "frames_visible": 174,
+          "distance_m": 1.47,
+          "px_area": 7345,
+          "occlusion": 0.0,
+          "elevation_deg": 3.7,
+          "stamp": 1785529023.614934,
+          "image": "data/crops/visibility/office_2/102_laptop.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
@@ -703,133 +823,178 @@
       ],
       "distractor_ids": [],
       "competitors": 3,
-      "evidence": "below: top 0.83 m under whiteboard#113 underside 1.00 m, footprints overlap 0%",
+      "evidence": "below: top 0.83 m sits 0.17 m under whiteboard#113 underside 1.00 m",
       "statement": "",
       "region": "0",
+      "views": [
+        {
+          "object_id": "160",
+          "role": "target",
+          "frames_visible": 168,
+          "distance_m": 1.01,
+          "px_area": 49060,
+          "occlusion": 0.0,
+          "elevation_deg": -16.5,
+          "stamp": 1785529026.164857,
+          "image": "data/crops/visibility/office_2/160_cabinet.png"
+        },
+        {
+          "object_id": "113",
+          "role": "anchor",
+          "frames_visible": 231,
+          "distance_m": 1.32,
+          "px_area": 75555,
+          "occlusion": 0.0,
+          "elevation_deg": 26.3,
+          "stamp": 1785529026.384766,
+          "image": "data/crops/visibility/office_2/113_whiteboard.png"
+        }
+      ],
       "verified": true,
       "derivation": "geometry"
     },
     {
       "id": "Q07",
-      "question": "Find the poster that is near the fire alarm.",
+      "question": "Find the phone that is near the whiteboard.",
       "source": "generated",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "relation": "near",
       "target_objects": [
-        "poster",
-        "fire alarm"
+        "phone",
+        "whiteboard"
       ],
       "answer": {
-        "object_id": "82",
+        "object_id": "22",
         "region": "0",
-        "label": "poster",
-        "raw_label": "poster",
-        "nyu_label": "poster board",
+        "label": "phone",
+        "raw_label": "phone",
+        "nyu_label": "cell phone",
         "colors": [
           "aqua"
         ],
         "center": [
-          6.1144,
-          -1.7166,
-          1.4769
+          5.8117,
+          1.986,
+          0.8828
         ],
         "size": [
-          0.3129,
-          0.0076,
-          0.0888
+          0.2727,
+          0.1836,
+          0.1176
         ],
-        "yaw": -1.5708,
+        "yaw": -0.1687,
         "aabb": {
           "min": [
-            6.1107,
-            -1.8731,
-            1.4325
+            5.6619,
+            1.8726,
+            0.824
           ],
           "max": [
-            6.1182,
-            -1.5602,
-            1.5213
+            5.9615,
+            2.0994,
+            0.9416
           ]
         },
         "size_aabb": [
-          0.0076,
-          0.3129,
-          0.0888
+          0.2996,
+          0.2268,
+          0.1176
         ],
         "bbox_corners": [
           [
-            6.1182,
-            -1.5602,
-            1.5213
+            5.6927,
+            2.0994,
+            0.9416
           ],
           [
-            6.1182,
-            -1.8731,
-            1.5213
+            5.9615,
+            2.0536,
+            0.9416
           ],
           [
-            6.1107,
-            -1.8731,
-            1.5213
+            5.9307,
+            1.8726,
+            0.9416
           ],
           [
-            6.1107,
-            -1.5602,
-            1.5213
+            5.6619,
+            1.9184,
+            0.9416
           ],
           [
-            6.1182,
-            -1.5602,
-            1.4325
+            5.6927,
+            2.0994,
+            0.824
           ],
           [
-            6.1182,
-            -1.8731,
-            1.4325
+            5.9615,
+            2.0536,
+            0.824
           ],
           [
-            6.1107,
-            -1.8731,
-            1.4325
+            5.9307,
+            1.8726,
+            0.824
           ],
           [
-            6.1107,
-            -1.5602,
-            1.4325
+            5.6619,
+            1.9184,
+            0.824
           ]
         ],
-        "volume": 0.00021
+        "volume": 0.00589
       },
       "anchors": [
         {
-          "object_id": "120",
-          "label": "fire alarm",
-          "phrase": "the fire alarm"
+          "object_id": "113",
+          "label": "whiteboard",
+          "phrase": "the whiteboard"
         }
       ],
       "distractor_ids": [
-        "33",
-        "34",
-        "5",
-        "96"
+        "41"
       ],
-      "competitors": 4,
-      "margin": 7.195,
-      "evidence": "near: box-gap 0.62 m; next framed record is 7.82 m away",
-      "statement": "the poster board that is near the fire alarm",
+      "competitors": 1,
+      "margin": 2.472,
+      "evidence": "near: box-gap 0.28 m; next phone is 2.76 m away",
+      "statement": "the cell phone that is near the whiteboard",
       "region": "0",
+      "views": [
+        {
+          "object_id": "22",
+          "role": "target",
+          "frames_visible": 52,
+          "distance_m": 1.18,
+          "px_area": 2325,
+          "occlusion": 0.0,
+          "elevation_deg": 1.6,
+          "stamp": 1785529026.384766,
+          "image": "data/crops/visibility/office_2/22_phone.png"
+        },
+        {
+          "object_id": "113",
+          "role": "anchor",
+          "frames_visible": 231,
+          "distance_m": 1.32,
+          "px_area": 75555,
+          "occlusion": 0.0,
+          "elevation_deg": 26.3,
+          "stamp": 1785529026.384766,
+          "image": "data/crops/visibility/office_2/113_whiteboard.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q08",
-      "question": "Find the potted plant that is closest to the calendar.",
+      "question": "Find the potted plant that is closest to the notice board.",
       "source": "generated",
       "difficulty": "medium",
       "relation": "closest",
       "target_objects": [
         "potted plant",
-        "calendar"
+        "notice board"
       ],
       "answer": {
         "object_id": "30",
@@ -915,9 +1080,9 @@
       },
       "anchors": [
         {
-          "object_id": "84",
-          "label": "calendar",
-          "phrase": "the calendar"
+          "object_id": "20",
+          "label": "notice board",
+          "phrase": "the notice board"
         }
       ],
       "distractor_ids": [
@@ -925,22 +1090,46 @@
         "12"
       ],
       "competitors": 2,
-      "margin": 4.326,
-      "evidence": "closest: centre 2.30 m vs runner-up potted plant#110 6.64 m; box-gap 2.11 m vs runner-up potted plant#110 6.44 m",
-      "statement": "the plant that is closest to the calendar",
+      "margin": 3.977,
+      "evidence": "closest: centre 2.46 m vs runner-up potted plant#110 6.44 m; box-gap 2.08 m vs runner-up potted plant#110 6.29 m",
+      "statement": "the plant that is closest to the board",
       "region": "0",
+      "views": [
+        {
+          "object_id": "30",
+          "role": "target",
+          "frames_visible": 99,
+          "distance_m": 1.49,
+          "px_area": 2484,
+          "occlusion": 0.0,
+          "elevation_deg": 3.2,
+          "stamp": 1785529019.259831,
+          "image": "data/crops/visibility/office_2/30_plant.png"
+        },
+        {
+          "object_id": "20",
+          "role": "anchor",
+          "frames_visible": 112,
+          "distance_m": 2.62,
+          "px_area": 16263,
+          "occlusion": 0.307,
+          "elevation_deg": 12.0,
+          "stamp": 1785529016.424809,
+          "image": "data/crops/visibility/office_2/20_notice_board.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q09",
-      "question": "Find the potted plant that is farthest from the whiteboard.",
+      "question": "Find the potted plant that is farthest from the clock.",
       "source": "generated",
       "difficulty": "medium",
       "relation": "farthest",
       "target_objects": [
         "potted plant",
-        "whiteboard"
+        "clock"
       ],
       "answer": {
         "object_id": "12",
@@ -1027,9 +1216,9 @@
       },
       "anchors": [
         {
-          "object_id": "113",
-          "label": "whiteboard",
-          "phrase": "the whiteboard"
+          "object_id": "119",
+          "label": "clock",
+          "phrase": "the clock"
         }
       ],
       "distractor_ids": [
@@ -1037,119 +1226,169 @@
         "30"
       ],
       "competitors": 2,
-      "margin": 3.555,
-      "evidence": "farthest: centre 7.69 m vs runner-up potted plant#110 4.07 m; box-gap 6.80 m vs runner-up potted plant#110 3.24 m",
-      "statement": "the plant that is farthest from the whiteboard",
+      "margin": 3.233,
+      "evidence": "farthest: centre 7.34 m vs runner-up potted plant#30 3.94 m; box-gap 6.79 m vs runner-up potted plant#30 3.56 m",
+      "statement": "the plant that is farthest from the clock",
       "region": "0",
+      "views": [
+        {
+          "object_id": "12",
+          "role": "target",
+          "frames_visible": 89,
+          "distance_m": 3.69,
+          "px_area": 6324,
+          "occlusion": 0.0,
+          "elevation_deg": -4.2,
+          "stamp": 1785529010.449763,
+          "image": "data/crops/visibility/office_2/12_plant.png"
+        },
+        {
+          "object_id": "119",
+          "role": "anchor",
+          "frames_visible": 42,
+          "distance_m": 2.03,
+          "px_area": 2322,
+          "occlusion": 0.0,
+          "elevation_deg": 33.4,
+          "stamp": 1785529025.769751,
+          "image": "data/crops/visibility/office_2/119_clock.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     },
     {
       "id": "Q10",
-      "question": "Find the phone that is farthest from the headphones.",
+      "question": "Find the table that is farthest from the clock.",
       "source": "generated",
       "difficulty": "easy",
       "relation": "farthest",
       "target_objects": [
-        "phone",
-        "headphones"
+        "table",
+        "clock"
       ],
       "answer": {
-        "object_id": "22",
+        "object_id": "8",
         "region": "0",
-        "label": "phone",
-        "raw_label": "phone",
-        "nyu_label": "cell phone",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
         "colors": [
-          "aqua"
+          "brown",
+          "red",
+          "black"
         ],
         "center": [
-          5.8117,
-          1.986,
-          0.8828
+          0.9483,
+          2.5278,
+          0.4003
         ],
         "size": [
-          0.2727,
-          0.1836,
-          0.1176
+          1.1049,
+          2.2749,
+          0.8052
         ],
-        "yaw": -0.1687,
+        "yaw": 3.1416,
         "aabb": {
           "min": [
-            5.6619,
-            1.8726,
-            0.824
+            0.3958,
+            1.3903,
+            -0.0023
           ],
           "max": [
-            5.9615,
-            2.0994,
-            0.9416
+            1.5007,
+            3.6653,
+            0.8028
           ]
         },
         "size_aabb": [
-          0.2996,
-          0.2268,
-          0.1176
+          1.1049,
+          2.2749,
+          0.8052
         ],
         "bbox_corners": [
           [
-            5.6927,
-            2.0994,
-            0.9416
+            1.5007,
+            1.3903,
+            0.8028
           ],
           [
-            5.9615,
-            2.0536,
-            0.9416
+            0.3958,
+            1.3903,
+            0.8028
           ],
           [
-            5.9307,
-            1.8726,
-            0.9416
+            0.3958,
+            3.6653,
+            0.8028
           ],
           [
-            5.6619,
-            1.9184,
-            0.9416
+            1.5007,
+            3.6653,
+            0.8028
           ],
           [
-            5.6927,
-            2.0994,
-            0.824
+            1.5007,
+            1.3903,
+            -0.0023
           ],
           [
-            5.9615,
-            2.0536,
-            0.824
+            0.3958,
+            1.3903,
+            -0.0023
           ],
           [
-            5.9307,
-            1.8726,
-            0.824
+            0.3958,
+            3.6653,
+            -0.0023
           ],
           [
-            5.6619,
-            1.9184,
-            0.824
+            1.5007,
+            3.6653,
+            -0.0023
           ]
         ],
-        "volume": 0.00589
+        "volume": 2.02386
       },
       "anchors": [
         {
-          "object_id": "122",
-          "label": "headphones",
-          "phrase": "the headphones"
+          "object_id": "119",
+          "label": "clock",
+          "phrase": "the clock"
         }
       ],
       "distractor_ids": [
-        "41"
+        "25"
       ],
       "competitors": 1,
-      "margin": 2.596,
-      "evidence": "farthest: centre 4.54 m vs runner-up phone#41 1.91 m; box-gap 4.25 m vs runner-up phone#41 1.66 m",
-      "statement": "the cell phone that is farthest from the headphones",
+      "margin": 2.279,
+      "evidence": "farthest: centre 5.45 m vs runner-up table#25 3.17 m; box-gap 4.73 m vs runner-up table#25 2.37 m",
+      "statement": "the table that is farthest from the clock",
       "region": "0",
+      "views": [
+        {
+          "object_id": "8",
+          "role": "target",
+          "frames_visible": 154,
+          "distance_m": 1.24,
+          "px_area": 46551,
+          "occlusion": 0.0,
+          "elevation_deg": -10.9,
+          "stamp": 1785529011.974783,
+          "image": "data/crops/visibility/office_2/8_table.png"
+        },
+        {
+          "object_id": "119",
+          "role": "anchor",
+          "frames_visible": 42,
+          "distance_m": 2.03,
+          "px_area": 2322,
+          "occlusion": 0.0,
+          "elevation_deg": 33.4,
+          "stamp": 1785529025.769751,
+          "image": "data/crops/visibility/office_2/119_clock.png"
+        }
+      ],
       "verified": true,
       "derivation": "statement"
     }

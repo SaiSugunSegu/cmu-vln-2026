@@ -13,8 +13,20 @@
     "  reword: question text -> replacement text. Phrasing only; it must still name the",
     "          same object, since the answer box is not re-derived from the new wording.",
     "  drop:   list of question texts to exclude. Generated questions are backfilled from",
-    "          the candidate pool, so a scene still lands on 10.",
-    "  note:   question text -> a note carried into the QA file as review_note."
+    "          the candidate pool, so a scene still lands on 10. Prefer a rule in",
+    "          cat2_geometry over a drop when the reason generalises: 'the camera is a",
+    "          confusing landmark' belongs in BAD_LANDMARKS, not in one scene's drop list.",
+    "  hide:   object id -> why. Overrules the visibility report for one object: it is then",
+    "          neither a target nor an anchor anywhere in the scene. Use this, not drop,",
+    "          when the problem is the OBJECT rather than the phrasing -- dropping one",
+    "          question only brings the same object back under the next phrasing. The gate",
+    "          measures whether the sensors reached an object; whether the image tells it",
+    "          apart from what it lies on is the review judgement that lands here.",
+    "  note:   question text -> a note carried into the QA file as review_note.",
+    "",
+    "gen-cat2 prints any rule here that matched nothing, which is how these stay honest:",
+    "a correction whose question the generator no longer produces should be deleted, not",
+    "left looking like a live decision."
   ],
 
   "chinese_room": {
@@ -23,16 +35,6 @@
     },
     "note": {
       "Find the bowl on the table closest to the folding screen.": "The painted folding screen is not an object in the metadata, so the anchor cannot be resolved automatically. Both bowls sit on table 88; bowl 91 is the one nearer the screen and the one outlined in the PDF screenshot."
-    }
-  },
-
-  "hotel_room_2": {
-    "drop": [
-      "Find the curtain that is closest to the camera.",
-      "Find the chair that is closest to the camera."
-    ],
-    "note": {
-      "Find the ceiling lamp that is farthest from the bathtub.": "Backfilled after dropping two questions anchored on camera 46: a 13 cm photo camera is a confusing landmark to name in a robot benchmark, where 'the camera' reads as the robot's own."
     }
   },
 
@@ -46,11 +48,8 @@
   },
 
   "livingroom_3": {
-    "reword": {
-      "Find the vase that is below the flower.": "Find the vase with the flower in it."
-    },
-    "note": {
-      "Find the vase that is below the flower.": "Same object, natural phrasing: the flower's stems rise above the vase's rim, which the metadata records as the vase being below the flower."
+    "hide": {
+      "40": "Vase 40 is a 15 cm flat object on the coffee table's lower shelf, and in its own best view (data/crops/visibility/livingroom_3/40_vase.png) that recess is black on black with nothing discernible in it. The visibility gate passes it because the lidar does return from that volume: returns off a dark surface are as strong as any other, and for a flat object lying in a shelf the shelf's own returns fall inside the box. That is the gate's blind spot -- it measures whether the sensors reached an object, not whether anything in the image tells it apart from what it lies on -- so this one is a review judgement. The vase standing ON the table with the flower in it is a different object and a fine question."
     }
   },
 
