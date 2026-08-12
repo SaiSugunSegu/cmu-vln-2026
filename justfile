@@ -481,3 +481,33 @@ cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
     fi
     docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && python3 $(printf '%q' "$script") --qa $(printf '%q' "$qa") --scene $(printf '%q' "$scene") --out $(printf '%q' "$out") --limit $(printf '%q' "$limit") --speed $(printf '%q' "$speed") ${extra}"
+
+# ---------- Category-2 (object reference) benchmark ---------------------
+# All three run on the HOST: they only read bags/<scene>/iref_vla_metadata and
+# questions/, and write data/benchmark + data/pdf_assets. Seconds, not hours --
+# unlike the category-1 view cache there is no SAM or VLM in this loop, so
+# regenerating the whole benchmark is cheap and is the intended way to change it.
+#   just gen-cat2                     # all 13 scenes with referential statements
+#   just gen-cat2 "--scenes loft -v"
+# Hand corrections belong in bags/category2_overrides.json (pin / reword / drop),
+# never in the generated QA files: the next gen-cat2 would overwrite them.
+[group('cat2')]
+[doc('Generate the category-2 object-reference benchmark from IRef-VLA metadata')]
+gen-cat2 args="":
+    python3 bags/generate_category2_qa.py {{args}}
+
+# Re-derives every answer box from the scene metadata and re-checks every relation,
+# including re-solving the official questions from their text. Non-zero exit on any
+# mismatch, so it is safe to gate on. Run it after gen-cat2 and after any metadata refresh.
+[group('cat2')]
+[doc('Audit the category-2 benchmark against the scene metadata')]
+verify-cat2 args="":
+    python3 scripts/eval/verify_category2.py {{args}}
+
+# The screenshots the challenge PDFs show next to each question, which are the only
+# visual reference for reviewing category-2 answers (the expected object is outlined).
+# Output is untracked; re-run after questions/ changes.
+[group('cat2')]
+[doc('Extract questions.pdf images and text into data/pdf_assets')]
+pdf-assets args="":
+    python3 bags/extract_pdf_assets.py {{args}}

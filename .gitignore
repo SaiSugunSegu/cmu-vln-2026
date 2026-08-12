@@ -13,6 +13,8 @@ data/bags/*
 data/crops/
 data/captions/
 data/runs/
+# regenerate with: just pdf-assets
+data/pdf_assets/
 
 *.ply
 *.onnx
@@ -47,4 +49,10 @@ __pycache__/
 ai_module/build/
 ai_module/install/
 ai_module/log/
-bags/
+
+# Recorded scenes and their IRef-VLA metadata are too big to track, but the benchmark
+# generators next to them are source -- and category2_overrides.json is the record of a
+# human review pass, which `just gen-cat2` needs to reproduce the benchmark.
+bags/*
+!bags/*.py
+!bags/category2_overrides.json

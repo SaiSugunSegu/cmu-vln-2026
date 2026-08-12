@@ -1,0 +1,1155 @@
+{
+  "scene": "chinese_room",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/chinese_room/iref_vla_metadata/chinese_room_referential_statements.json",
+    "source_objects: bags/chinese_room/iref_vla_metadata/chinese_room_objects.json"
+  ],
+  "difficulty_counts": {
+    "hard": 4,
+    "medium": 5,
+    "easy": 1
+  },
+  "relation_counts": {
+    "on": 2,
+    "between": 1,
+    "supports": 1,
+    "above": 1,
+    "below": 1,
+    "near": 1,
+    "closest": 2,
+    "farthest": 1
+  },
+  "target_object_coverage": [
+    "bowl",
+    "cabinet",
+    "ceiling lamp",
+    "chair",
+    "eye glasses",
+    "painting",
+    "pillow",
+    "sofa",
+    "stool",
+    "table",
+    "tablecloth",
+    "tv",
+    "vase",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the bowl on the table closest to the folding screen.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "bowl",
+        "table"
+      ],
+      "answer": {
+        "object_id": "91",
+        "region": "0",
+        "label": "bowl",
+        "raw_label": "bowl",
+        "nyu_label": "bowl",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          4.6386,
+          -0.4606,
+          0.8168
+        ],
+        "size": [
+          0.1593,
+          0.1579,
+          0.092
+        ],
+        "yaw": 0.5248,
+        "aabb": {
+          "min": [
+            4.5301,
+            -0.5688,
+            0.7707
+          ],
+          "max": [
+            4.7471,
+            -0.3524,
+            0.8628
+          ]
+        },
+        "size_aabb": [
+          0.2169,
+          0.2165,
+          0.092
+        ],
+        "bbox_corners": [
+          [
+            4.5301,
+            -0.4322,
+            0.8628
+          ],
+          [
+            4.668,
+            -0.3524,
+            0.8628
+          ],
+          [
+            4.7471,
+            -0.489,
+            0.8628
+          ],
+          [
+            4.6093,
+            -0.5688,
+            0.8628
+          ],
+          [
+            4.5301,
+            -0.4322,
+            0.7707
+          ],
+          [
+            4.668,
+            -0.3524,
+            0.7707
+          ],
+          [
+            4.7471,
+            -0.489,
+            0.7707
+          ],
+          [
+            4.6093,
+            -0.5688,
+            0.7707
+          ]
+        ],
+        "volume": 0.00231
+      },
+      "anchors": [],
+      "distractor_ids": [],
+      "evidence": "target pinned by override to bowl#91",
+      "statement": "",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/chinese_room/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='bowl' color='' hops=[{'relation': 'on', 'phrases': ['table']}, {'relation': 'closest', 'phrases': ['folding screen']}]",
+        "head candidates: [bowl#71, bowl#91]",
+        "anchor hop 1 (closest): no candidates or no anchors; no candidate satisfies the question",
+        "result: could not resolve the anchor of hop 1: no candidate satisfies the question"
+      ],
+      "review_note": "The painted folding screen is not an object in the metadata, so the anchor cannot be resolved automatically. Both bowls sit on table 88; bowl 91 is the one nearer the screen and the one outlined in the PDF screenshot."
+    },
+    {
+      "id": "Q02",
+      "question": "Find the pillow on the chair that is closest to the tv.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "pillow",
+        "chair",
+        "tv"
+      ],
+      "answer": {
+        "object_id": "72",
+        "region": "0",
+        "label": "pillow",
+        "raw_label": "pillow",
+        "nyu_label": "pillow",
+        "colors": [
+          "maroon"
+        ],
+        "center": [
+          -0.4237,
+          -3.8109,
+          0.6168
+        ],
+        "size": [
+          0.2051,
+          0.408,
+          0.3482
+        ],
+        "yaw": 1.6047,
+        "aabb": {
+          "min": [
+            -0.6311,
+            -3.9203,
+            0.4427
+          ],
+          "max": [
+            -0.2164,
+            -3.7016,
+            0.7909
+          ]
+        },
+        "size_aabb": [
+          0.4147,
+          0.2188,
+          0.3482
+        ],
+        "bbox_corners": [
+          [
+            -0.6241,
+            -3.9203,
+            0.7909
+          ],
+          [
+            -0.6311,
+            -3.7154,
+            0.7909
+          ],
+          [
+            -0.2233,
+            -3.7016,
+            0.7909
+          ],
+          [
+            -0.2164,
+            -3.9065,
+            0.7909
+          ],
+          [
+            -0.6241,
+            -3.9203,
+            0.4427
+          ],
+          [
+            -0.6311,
+            -3.7154,
+            0.4427
+          ],
+          [
+            -0.2233,
+            -3.7016,
+            0.4427
+          ],
+          [
+            -0.2164,
+            -3.9065,
+            0.4427
+          ]
+        ],
+        "volume": 0.02914
+      },
+      "anchors": [
+        {
+          "object_id": "60",
+          "label": "chair"
+        }
+      ],
+      "distractor_ids": [
+        "35",
+        "65",
+        "66",
+        "69",
+        "74",
+        "80",
+        "83",
+        "85",
+        "87"
+      ],
+      "evidence": "solved from geometry: on: pillow#72 is the only match",
+      "statement": "the pillow that is closest to the cabinet",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/chinese_room/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='pillow' color='' hops=[{'relation': 'on', 'phrases': ['chair']}, {'relation': 'closest', 'phrases': ['tv']}]",
+        "head candidates: [pillow#35, pillow#65, pillow#66, pillow#69, pillow#72, pillow#74] ...",
+        "anchor hop 1 (closest): closest: ranked [chair#60, chair#84, chair#61]; closest: centre 2.54 m (next 3.20 m); box-gap 1.68 m (next 2.46 m)",
+        "target hop (on): on: 1 match(es) -> [pillow#72]",
+        "pick: on: pillow#72 is the only match",
+        "result: on: pillow#72 is the only match"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the ceiling lamp that is between the sofa and the cabinet.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "ceiling lamp",
+        "sofa",
+        "cabinet"
+      ],
+      "answer": {
+        "object_id": "31",
+        "region": "0",
+        "label": "ceiling lamp",
+        "raw_label": "ceiling lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "maroon",
+          "gray"
+        ],
+        "center": [
+          -0.0223,
+          -2.1006,
+          2.3572
+        ],
+        "size": [
+          0.3739,
+          0.3725,
+          0.787
+        ],
+        "yaw": -0.1159,
+        "aabb": {
+          "min": [
+            -0.2295,
+            -2.3072,
+            1.9637
+          ],
+          "max": [
+            0.1849,
+            -1.894,
+            2.7507
+          ]
+        },
+        "size_aabb": [
+          0.4144,
+          0.4132,
+          0.787
+        ],
+        "bbox_corners": [
+          [
+            -0.1865,
+            -1.894,
+            2.7507
+          ],
+          [
+            0.1849,
+            -1.9372,
+            2.7507
+          ],
+          [
+            0.1418,
+            -2.3072,
+            2.7507
+          ],
+          [
+            -0.2295,
+            -2.264,
+            2.7507
+          ],
+          [
+            -0.1865,
+            -1.894,
+            1.9637
+          ],
+          [
+            0.1849,
+            -1.9372,
+            1.9637
+          ],
+          [
+            0.1418,
+            -2.3072,
+            1.9637
+          ],
+          [
+            -0.2295,
+            -2.264,
+            1.9637
+          ]
+        ],
+        "volume": 0.10961
+      },
+      "anchors": [
+        {
+          "object_id": "48",
+          "label": "sofa",
+          "phrase": "the sofa"
+        },
+        {
+          "object_id": "89",
+          "label": "cabinet",
+          "phrase": "the cabinet"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "between: between sofa#48 and cabinet#89 (lateral offset 0.07 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the table with the tablecloth on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "tablecloth"
+      ],
+      "answer": {
+        "object_id": "88",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "brown"
+        ],
+        "center": [
+          4.2199,
+          -0.5384,
+          0.3757
+        ],
+        "size": [
+          1.1547,
+          1.1559,
+          0.7947
+        ],
+        "yaw": 3.1416,
+        "aabb": {
+          "min": [
+            3.6426,
+            -1.1164,
+            -0.0217
+          ],
+          "max": [
+            4.7973,
+            0.0395,
+            0.773
+          ]
+        },
+        "size_aabb": [
+          1.1547,
+          1.1559,
+          0.7947
+        ],
+        "bbox_corners": [
+          [
+            4.7973,
+            -1.1164,
+            0.773
+          ],
+          [
+            3.6426,
+            -1.1164,
+            0.773
+          ],
+          [
+            3.6426,
+            0.0395,
+            0.773
+          ],
+          [
+            4.7973,
+            0.0395,
+            0.773
+          ],
+          [
+            4.7973,
+            -1.1164,
+            -0.0217
+          ],
+          [
+            3.6426,
+            -1.1164,
+            -0.0217
+          ],
+          [
+            3.6426,
+            0.0395,
+            -0.0217
+          ],
+          [
+            4.7973,
+            0.0395,
+            -0.0217
+          ]
+        ],
+        "volume": 1.06071
+      },
+      "anchors": [
+        {
+          "object_id": "4",
+          "label": "tablecloth",
+          "phrase": "the tablecloth"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds tablecloth#4 (top 0.77 m, its underside 0.67 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the ceiling lamp that is above the tablecloth.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "above",
+      "target_objects": [
+        "ceiling lamp",
+        "tablecloth"
+      ],
+      "answer": {
+        "object_id": "43",
+        "region": "0",
+        "label": "ceiling lamp",
+        "raw_label": "ceiling lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "maroon",
+          "gray"
+        ],
+        "center": [
+          4.2331,
+          -0.7252,
+          2.2682
+        ],
+        "size": [
+          0.3728,
+          0.3727,
+          0.787
+        ],
+        "yaw": -1.0769,
+        "aabb": {
+          "min": [
+            3.9807,
+            -0.9777,
+            1.8747
+          ],
+          "max": [
+            4.4856,
+            -0.4727,
+            2.6617
+          ]
+        },
+        "size_aabb": [
+          0.5049,
+          0.5049,
+          0.787
+        ],
+        "bbox_corners": [
+          [
+            4.3089,
+            -0.4727,
+            2.6617
+          ],
+          [
+            4.4856,
+            -0.801,
+            2.6617
+          ],
+          [
+            4.1574,
+            -0.9777,
+            2.6617
+          ],
+          [
+            3.9807,
+            -0.6495,
+            2.6617
+          ],
+          [
+            4.3089,
+            -0.4727,
+            1.8747
+          ],
+          [
+            4.4856,
+            -0.801,
+            1.8747
+          ],
+          [
+            4.1574,
+            -0.9777,
+            1.8747
+          ],
+          [
+            3.9807,
+            -0.6495,
+            1.8747
+          ]
+        ],
+        "volume": 0.10936
+      },
+      "anchors": [
+        {
+          "object_id": "4",
+          "label": "tablecloth",
+          "phrase": "the tablecloth"
+        }
+      ],
+      "distractor_ids": [
+        "31"
+      ],
+      "competitors": 1,
+      "evidence": "above: underside 1.87 m clears tablecloth#4 top 0.78 m, footprints overlap 69%",
+      "statement": "the lamp that is over the tablecloth",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the vase that is below the tv.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "below",
+      "target_objects": [
+        "vase",
+        "tv"
+      ],
+      "answer": {
+        "object_id": "94",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "aqua"
+        ],
+        "center": [
+          -2.0911,
+          -1.4784,
+          0.6433
+        ],
+        "size": [
+          0.2543,
+          0.2543,
+          0.1289
+        ],
+        "yaw": -2.9452,
+        "aabb": {
+          "min": [
+            -2.2406,
+            -1.628,
+            0.5789
+          ],
+          "max": [
+            -1.9415,
+            -1.3289,
+            0.7078
+          ]
+        },
+        "size_aabb": [
+          0.2991,
+          0.2991,
+          0.1289
+        ],
+        "bbox_corners": [
+          [
+            -1.9415,
+            -1.5783,
+            0.7078
+          ],
+          [
+            -2.191,
+            -1.628,
+            0.7078
+          ],
+          [
+            -2.2406,
+            -1.3785,
+            0.7078
+          ],
+          [
+            -1.9912,
+            -1.3289,
+            0.7078
+          ],
+          [
+            -1.9415,
+            -1.5783,
+            0.5789
+          ],
+          [
+            -2.191,
+            -1.628,
+            0.5789
+          ],
+          [
+            -2.2406,
+            -1.3785,
+            0.5789
+          ],
+          [
+            -1.9912,
+            -1.3289,
+            0.5789
+          ]
+        ],
+        "volume": 0.00834
+      },
+      "anchors": [
+        {
+          "object_id": "19",
+          "label": "tv",
+          "phrase": "the tv"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 4,
+      "evidence": "below: top 0.71 m under tv#19 underside 0.86 m, footprints overlap 1%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the painting that is near the tv.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "near",
+      "target_objects": [
+        "painting",
+        "tv"
+      ],
+      "answer": {
+        "object_id": "2",
+        "region": "0",
+        "label": "painting",
+        "raw_label": "painting",
+        "nyu_label": "picture",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -2.2691,
+          -3.6279,
+          1.6009
+        ],
+        "size": [
+          0.7653,
+          0.0282,
+          0.9883
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -2.2832,
+            -4.0105,
+            1.1067
+          ],
+          "max": [
+            -2.255,
+            -3.2452,
+            2.0951
+          ]
+        },
+        "size_aabb": [
+          0.0282,
+          0.7653,
+          0.9883
+        ],
+        "bbox_corners": [
+          [
+            -2.255,
+            -3.2452,
+            2.0951
+          ],
+          [
+            -2.255,
+            -4.0105,
+            2.0951
+          ],
+          [
+            -2.2832,
+            -4.0105,
+            2.0951
+          ],
+          [
+            -2.2832,
+            -3.2452,
+            2.0951
+          ],
+          [
+            -2.255,
+            -3.2452,
+            1.1067
+          ],
+          [
+            -2.255,
+            -4.0105,
+            1.1067
+          ],
+          [
+            -2.2832,
+            -4.0105,
+            1.1067
+          ],
+          [
+            -2.2832,
+            -3.2452,
+            1.1067
+          ]
+        ],
+        "volume": 0.02136
+      },
+      "anchors": [
+        {
+          "object_id": "19",
+          "label": "tv",
+          "phrase": "the tv"
+        }
+      ],
+      "distractor_ids": [
+        "10",
+        "8",
+        "9"
+      ],
+      "competitors": 3,
+      "margin": 4.608,
+      "evidence": "near: box-gap 0.68 m; next framed record is 5.29 m away",
+      "statement": "the picture that is near the television",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the window that is closest to the cabinet.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "window",
+        "cabinet"
+      ],
+      "answer": {
+        "object_id": "90",
+        "region": "0",
+        "label": "window",
+        "raw_label": "window",
+        "nyu_label": "window",
+        "colors": [
+          "black",
+          "aqua"
+        ],
+        "center": [
+          0.1039,
+          -4.7324,
+          1.0838
+        ],
+        "size": [
+          2.8961,
+          0.1931,
+          2.2082
+        ],
+        "yaw": 0.0,
+        "aabb": {
+          "min": [
+            -1.3441,
+            -4.829,
+            -0.0203
+          ],
+          "max": [
+            1.552,
+            -4.6359,
+            2.1879
+          ]
+        },
+        "size_aabb": [
+          2.8961,
+          0.1931,
+          2.2082
+        ],
+        "bbox_corners": [
+          [
+            -1.3441,
+            -4.6359,
+            2.1879
+          ],
+          [
+            1.552,
+            -4.6359,
+            2.1879
+          ],
+          [
+            1.552,
+            -4.829,
+            2.1879
+          ],
+          [
+            -1.3441,
+            -4.829,
+            2.1879
+          ],
+          [
+            -1.3441,
+            -4.6359,
+            -0.0203
+          ],
+          [
+            1.552,
+            -4.6359,
+            -0.0203
+          ],
+          [
+            1.552,
+            -4.829,
+            -0.0203
+          ],
+          [
+            -1.3441,
+            -4.829,
+            -0.0203
+          ]
+        ],
+        "volume": 1.23485
+      },
+      "anchors": [
+        {
+          "object_id": "89",
+          "label": "cabinet",
+          "phrase": "the cabinet"
+        }
+      ],
+      "distractor_ids": [
+        "67"
+      ],
+      "competitors": 1,
+      "margin": 3.261,
+      "evidence": "closest: centre 3.50 m vs runner-up window#67 7.00 m; box-gap 1.79 m vs runner-up window#67 5.05 m",
+      "statement": "the window that is closest to the cabinet",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the stool that is closest to the sofa.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "stool",
+        "sofa"
+      ],
+      "answer": {
+        "object_id": "79",
+        "region": "0",
+        "label": "stool",
+        "raw_label": "stool",
+        "nyu_label": "stool",
+        "colors": [
+          "brown"
+        ],
+        "center": [
+          2.7519,
+          -4.2684,
+          0.4023
+        ],
+        "size": [
+          0.3635,
+          0.3635,
+          0.8448
+        ],
+        "yaw": 1.5705,
+        "aabb": {
+          "min": [
+            2.5701,
+            -4.4502,
+            -0.0201
+          ],
+          "max": [
+            2.9337,
+            -4.0866,
+            0.8247
+          ]
+        },
+        "size_aabb": [
+          0.3636,
+          0.3636,
+          0.8448
+        ],
+        "bbox_corners": [
+          [
+            2.5701,
+            -4.4501,
+            0.8247
+          ],
+          [
+            2.5702,
+            -4.0866,
+            0.8247
+          ],
+          [
+            2.9337,
+            -4.0867,
+            0.8247
+          ],
+          [
+            2.9336,
+            -4.4502,
+            0.8247
+          ],
+          [
+            2.5701,
+            -4.4501,
+            -0.0201
+          ],
+          [
+            2.5702,
+            -4.0866,
+            -0.0201
+          ],
+          [
+            2.9337,
+            -4.0867,
+            -0.0201
+          ],
+          [
+            2.9336,
+            -4.4502,
+            -0.0201
+          ]
+        ],
+        "volume": 0.11164
+      },
+      "anchors": [
+        {
+          "object_id": "48",
+          "label": "sofa",
+          "phrase": "the sofa"
+        }
+      ],
+      "distractor_ids": [
+        "64",
+        "73"
+      ],
+      "competitors": 2,
+      "margin": 3.19,
+      "evidence": "closest: centre 2.26 m vs runner-up stool#73 5.45 m; box-gap 0.85 m vs runner-up stool#73 4.10 m",
+      "statement": "the stool that is closest to the sofa",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the stool that is farthest from the eye glasses.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "stool",
+        "eye glasses"
+      ],
+      "answer": {
+        "object_id": "64",
+        "region": "0",
+        "label": "stool",
+        "raw_label": "stool",
+        "nyu_label": "stool",
+        "colors": [
+          "brown"
+        ],
+        "center": [
+          6.2229,
+          1.8996,
+          0.4023
+        ],
+        "size": [
+          0.3634,
+          0.3635,
+          0.8448
+        ],
+        "yaw": 3.1415,
+        "aabb": {
+          "min": [
+            6.0412,
+            1.7178,
+            -0.0201
+          ],
+          "max": [
+            6.4046,
+            2.0814,
+            0.8247
+          ]
+        },
+        "size_aabb": [
+          0.3635,
+          0.3636,
+          0.8448
+        ],
+        "bbox_corners": [
+          [
+            6.4046,
+            1.7178,
+            0.8247
+          ],
+          [
+            6.0412,
+            1.7178,
+            0.8247
+          ],
+          [
+            6.0412,
+            2.0814,
+            0.8247
+          ],
+          [
+            6.4046,
+            2.0813,
+            0.8247
+          ],
+          [
+            6.4046,
+            1.7178,
+            -0.0201
+          ],
+          [
+            6.0412,
+            1.7178,
+            -0.0201
+          ],
+          [
+            6.0412,
+            2.0814,
+            -0.0201
+          ],
+          [
+            6.4046,
+            2.0813,
+            -0.0201
+          ]
+        ],
+        "volume": 0.11162
+      },
+      "anchors": [
+        {
+          "object_id": "78",
+          "label": "eye glasses",
+          "phrase": "the eye glasses"
+        }
+      ],
+      "distractor_ids": [
+        "73",
+        "79"
+      ],
+      "competitors": 2,
+      "margin": 3.133,
+      "evidence": "farthest: centre 7.71 m vs runner-up stool#73 4.55 m; box-gap 7.30 m vs runner-up stool#73 4.17 m",
+      "statement": "the stool that is farthest from the eye glasses",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

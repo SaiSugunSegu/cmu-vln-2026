@@ -200,6 +200,7 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 | **debug** | `foxglove` · `topics` · `shell-ai` · `shell-sys` |
 | **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `caption` |
 | **cat1** | `cat1-reasoner` · `cat1-bag-bench <scene> [limit]` |
+| **cat2** | `gen-cat2` · `verify-cat2` · `pdf-assets` |
 | **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` |
 | **map3d** | `map3d-record <scene> [stride]` · `map3d-replay <scene> [jobs]` · `map3d-score` · `map3d-determinism` · `map3d-audit` |
 
@@ -221,6 +222,24 @@ just map3d-score                   # vs IRef-VLA GT, incl. the category-2 marker
 
 Full guide, metric definitions and current numbers: [docs/map3d_bench.md](docs/map3d_bench.md)
 Mapper internals — every stage, threshold and the Tier 1/2/3 backlog: [docs/map_node_pipeline.md](docs/map_node_pipeline.md)
+
+### 3.7 · Category-2 ground truth — 130 questions, seconds to rebuild
+
+Object reference needs a *box* as the answer, so the benchmark is a join over the IRef-VLA
+metadata: 10 questions per scene across the 13 scenes with referential statements. No SAM,
+no VLM, no bag — the whole thing regenerates in 8 s, and every answer is re-derived from the
+boxes rather than trusted from the statement that produced it.
+
+```bash
+just gen-cat2       # -> data/benchmark/<scene>/category_2/<scene>_category2_qa.json
+just verify-cat2    # independent audit; non-zero exit on any mismatch
+```
+
+Corrections go in `bags/category2_overrides.json` (pin / reword / drop), never into the
+generated JSON — the next `gen-cat2` overwrites it. These answers are also the target set
+`just map3d-score` measures its category-2 marker score over.
+
+Full guide, verification rules and the review loop: [docs/cat2_benchmark.md](docs/cat2_benchmark.md)
 
 -----------------------
 

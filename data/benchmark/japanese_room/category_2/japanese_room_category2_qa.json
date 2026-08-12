@@ -1,0 +1,1171 @@
+{
+  "scene": "japanese_room",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/japanese_room/iref_vla_metadata/japanese_room_referential_statements.json",
+    "source_objects: bags/japanese_room/iref_vla_metadata/japanese_room_objects.json"
+  ],
+  "difficulty_counts": {
+    "hard": 3,
+    "medium": 5,
+    "easy": 2
+  },
+  "relation_counts": {
+    "between": 3,
+    "closest": 2,
+    "supports": 1,
+    "above": 1,
+    "on": 1,
+    "near": 1,
+    "farthest": 1
+  },
+  "target_object_coverage": [
+    "chopsticks",
+    "dish",
+    "display ledge",
+    "flowers",
+    "glass",
+    "jar",
+    "lantern",
+    "pillow",
+    "potted plant",
+    "sake bottle",
+    "table",
+    "teapot",
+    "vase",
+    "zen stone decoration"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "The lantern between the vase and the stone decoration that is closest to the vase.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "lantern",
+        "vase",
+        "zen stone decoration"
+      ],
+      "answer": {
+        "object_id": "56",
+        "region": "0",
+        "label": "lantern",
+        "raw_label": "lantern",
+        "nyu_label": "lamp",
+        "colors": [
+          "gray",
+          "maroon"
+        ],
+        "center": [
+          -1.388,
+          5.102,
+          0.3442
+        ],
+        "size": [
+          0.1622,
+          0.1622,
+          0.3744
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -1.4691,
+            5.0209,
+            0.1569
+          ],
+          "max": [
+            -1.3069,
+            5.1831,
+            0.5314
+          ]
+        },
+        "size_aabb": [
+          0.1622,
+          0.1622,
+          0.3744
+        ],
+        "bbox_corners": [
+          [
+            -1.3069,
+            5.1831,
+            0.5314
+          ],
+          [
+            -1.3069,
+            5.0209,
+            0.5314
+          ],
+          [
+            -1.4691,
+            5.0209,
+            0.5314
+          ],
+          [
+            -1.4691,
+            5.1831,
+            0.5314
+          ],
+          [
+            -1.3069,
+            5.1831,
+            0.1569
+          ],
+          [
+            -1.3069,
+            5.0209,
+            0.1569
+          ],
+          [
+            -1.4691,
+            5.0209,
+            0.1569
+          ],
+          [
+            -1.4691,
+            5.1831,
+            0.1569
+          ]
+        ],
+        "volume": 0.00985
+      },
+      "anchors": [
+        {
+          "object_id": "28",
+          "label": "vase"
+        },
+        {
+          "object_id": "55",
+          "label": "vase"
+        },
+        {
+          "object_id": "23",
+          "label": "zen stone decoration"
+        }
+      ],
+      "distractor_ids": [
+        "36",
+        "52",
+        "57",
+        "61"
+      ],
+      "evidence": "solved from geometry: closest: centre 0.46 m (next 0.92 m); box-gap 0.17 m (next 0.63 m)",
+      "statement": "the lamp that is third closest to the brown lamp",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/japanese_room/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='lantern' color='' hops=[{'relation': 'between', 'phrases': ['vase', 'stone decoration']}, {'relation': 'closest', 'phrases': ['vase']}]",
+        "head candidates: [lantern#56, lantern#57, lantern#61]",
+        "anchor hop 1 (closest): host already unique, applying it to the target instead",
+        "target hop (between): between: 2 in the corridor -> [lantern#56, lantern#57]",
+        "deferred hop 1 (closest): closest: ranked [lantern#56, lantern#57]",
+        "pick: closest: centre 0.46 m (next 0.92 m); box-gap 0.17 m (next 0.63 m)",
+        "result: closest: centre 0.46 m (next 0.92 m); box-gap 0.17 m (next 0.63 m)"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "The red pillow closest to the sushi.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "pillow"
+      ],
+      "answer": {
+        "object_id": "46",
+        "region": "0",
+        "label": "pillow",
+        "raw_label": "pillow",
+        "nyu_label": "pillow",
+        "colors": [
+          "maroon"
+        ],
+        "center": [
+          -0.3703,
+          1.4782,
+          0.058
+        ],
+        "size": [
+          0.4388,
+          0.4416,
+          0.0634
+        ],
+        "yaw": -0.065,
+        "aabb": {
+          "min": [
+            -0.6036,
+            1.2436,
+            0.0263
+          ],
+          "max": [
+            -0.137,
+            1.7127,
+            0.0897
+          ]
+        },
+        "size_aabb": [
+          0.4666,
+          0.4691,
+          0.0634
+        ],
+        "bbox_corners": [
+          [
+            -0.5749,
+            1.7127,
+            0.0897
+          ],
+          [
+            -0.137,
+            1.6842,
+            0.0897
+          ],
+          [
+            -0.1657,
+            1.2436,
+            0.0897
+          ],
+          [
+            -0.6036,
+            1.2721,
+            0.0897
+          ],
+          [
+            -0.5749,
+            1.7127,
+            0.0263
+          ],
+          [
+            -0.137,
+            1.6842,
+            0.0263
+          ],
+          [
+            -0.1657,
+            1.2436,
+            0.0263
+          ],
+          [
+            -0.6036,
+            1.2721,
+            0.0263
+          ]
+        ],
+        "volume": 0.01228
+      },
+      "anchors": [],
+      "distractor_ids": [
+        "40",
+        "43",
+        "44"
+      ],
+      "evidence": "target pinned by override to pillow#46",
+      "statement": "the pillow that is closest to the small plant",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/japanese_room/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='pillow' color='red' hops=[{'relation': 'closest', 'phrases': ['sushi']}]",
+        "colour red: 4 candidate(s)",
+        "head candidates: [pillow#40, pillow#43, pillow#44, pillow#46]",
+        "target hop (closest): no candidates or no anchors",
+        "pick: no candidate satisfies the question",
+        "result: no candidate satisfies the question"
+      ],
+      "review_note": "No object is labelled sushi; the sushi sits on dish 33. Pillow 46 is the closest of the four maroon floor pillows to that dish (0.42 m) and the one outlined in the PDF screenshot."
+    },
+    {
+      "id": "Q03",
+      "question": "Find the table with the dish on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "dish"
+      ],
+      "answer": {
+        "object_id": "26",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "brown",
+          "black"
+        ],
+        "center": [
+          -0.6725,
+          2.0965,
+          0.1551
+        ],
+        "size": [
+          1.2749,
+          0.6294,
+          0.2725
+        ],
+        "yaw": 3.1416,
+        "aabb": {
+          "min": [
+            -1.31,
+            1.7818,
+            0.0188
+          ],
+          "max": [
+            -0.0351,
+            2.4112,
+            0.2913
+          ]
+        },
+        "size_aabb": [
+          1.2749,
+          0.6294,
+          0.2725
+        ],
+        "bbox_corners": [
+          [
+            -0.0351,
+            1.7818,
+            0.2913
+          ],
+          [
+            -1.31,
+            1.7818,
+            0.2913
+          ],
+          [
+            -1.31,
+            2.4112,
+            0.2913
+          ],
+          [
+            -0.0351,
+            2.4112,
+            0.2913
+          ],
+          [
+            -0.0351,
+            1.7818,
+            0.0188
+          ],
+          [
+            -1.31,
+            1.7818,
+            0.0188
+          ],
+          [
+            -1.31,
+            2.4112,
+            0.0188
+          ],
+          [
+            -0.0351,
+            2.4112,
+            0.0188
+          ]
+        ],
+        "volume": 0.21867
+      },
+      "anchors": [
+        {
+          "object_id": "33",
+          "label": "dish",
+          "phrase": "the dish"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "supports: holds dish#33 (top 0.29 m, its underside 0.29 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the flowers that are above the display ledge.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "above",
+      "target_objects": [
+        "flowers",
+        "display ledge"
+      ],
+      "answer": {
+        "object_id": "6",
+        "region": "0",
+        "label": "flowers",
+        "raw_label": "flowers",
+        "nyu_label": "flower",
+        "colors": [
+          "black",
+          "pink",
+          "gray"
+        ],
+        "center": [
+          -2.3475,
+          4.8572,
+          0.6681
+        ],
+        "size": [
+          0.5896,
+          0.6258,
+          1.0177
+        ],
+        "yaw": 0.8659,
+        "aabb": {
+          "min": [
+            -2.7769,
+            4.4299,
+            0.1593
+          ],
+          "max": [
+            -1.9182,
+            5.2845,
+            1.177
+          ]
+        },
+        "size_aabb": [
+          0.8588,
+          0.8546,
+          1.0177
+        ],
+        "bbox_corners": [
+          [
+            -2.7769,
+            4.8354,
+            1.177
+          ],
+          [
+            -2.3948,
+            5.2845,
+            1.177
+          ],
+          [
+            -1.9182,
+            4.879,
+            1.177
+          ],
+          [
+            -2.3002,
+            4.4299,
+            1.177
+          ],
+          [
+            -2.7769,
+            4.8354,
+            0.1593
+          ],
+          [
+            -2.3948,
+            5.2845,
+            0.1593
+          ],
+          [
+            -1.9182,
+            4.879,
+            0.1593
+          ],
+          [
+            -2.3002,
+            4.4299,
+            0.1593
+          ]
+        ],
+        "volume": 0.37555
+      },
+      "anchors": [
+        {
+          "object_id": "16",
+          "label": "display ledge",
+          "phrase": "the display ledge"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "above: underside 0.16 m clears display ledge#16 top 0.16 m, footprints overlap 95%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the vase on top of the display ledge.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "on",
+      "target_objects": [
+        "vase",
+        "display ledge"
+      ],
+      "answer": {
+        "object_id": "28",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "brown",
+          "black"
+        ],
+        "center": [
+          -0.9446,
+          5.1345,
+          0.4641
+        ],
+        "size": [
+          0.3465,
+          0.3434,
+          0.6094
+        ],
+        "yaw": 3.0051,
+        "aabb": {
+          "min": [
+            -1.1396,
+            4.9408,
+            0.1594
+          ],
+          "max": [
+            -0.7496,
+            5.3282,
+            0.7688
+          ]
+        },
+        "size_aabb": [
+          0.39,
+          0.3874,
+          0.6094
+        ],
+        "bbox_corners": [
+          [
+            -0.7963,
+            4.9408,
+            0.7688
+          ],
+          [
+            -1.1396,
+            4.9879,
+            0.7688
+          ],
+          [
+            -1.0929,
+            5.3282,
+            0.7688
+          ],
+          [
+            -0.7496,
+            5.281,
+            0.7688
+          ],
+          [
+            -0.7963,
+            4.9408,
+            0.1594
+          ],
+          [
+            -1.1396,
+            4.9879,
+            0.1594
+          ],
+          [
+            -1.0929,
+            5.3282,
+            0.1594
+          ],
+          [
+            -0.7496,
+            5.281,
+            0.1594
+          ]
+        ],
+        "volume": 0.07252
+      },
+      "anchors": [
+        {
+          "object_id": "16",
+          "label": "display ledge",
+          "phrase": "the display ledge"
+        }
+      ],
+      "distractor_ids": [
+        "55"
+      ],
+      "competitors": 1,
+      "evidence": "on: rests on display ledge#16 (underside 0.16 m, top 0.16 m)",
+      "statement": "the vase that is on the mini display platform",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the flowers that are near the jar.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "near",
+      "target_objects": [
+        "flowers",
+        "jar"
+      ],
+      "answer": {
+        "object_id": "53",
+        "region": "0",
+        "label": "flowers",
+        "raw_label": "flowers",
+        "nyu_label": "flower",
+        "colors": [
+          "black",
+          "pink",
+          "gray"
+        ],
+        "center": [
+          1.858,
+          3.1337,
+          0.501
+        ],
+        "size": [
+          0.5824,
+          0.6123,
+          1.0055
+        ],
+        "yaw": -1.2981,
+        "aabb": {
+          "min": [
+            1.4848,
+            2.7708,
+            -0.0018
+          ],
+          "max": [
+            2.2313,
+            3.4966,
+            1.0037
+          ]
+        },
+        "size_aabb": [
+          0.7466,
+          0.7258,
+          1.0055
+        ],
+        "bbox_corners": [
+          [
+            2.0745,
+            3.4966,
+            1.0037
+          ],
+          [
+            2.2313,
+            2.9357,
+            1.0037
+          ],
+          [
+            1.6416,
+            2.7708,
+            1.0037
+          ],
+          [
+            1.4848,
+            3.3317,
+            1.0037
+          ],
+          [
+            2.0745,
+            3.4966,
+            -0.0018
+          ],
+          [
+            2.2313,
+            2.9357,
+            -0.0018
+          ],
+          [
+            1.6416,
+            2.7708,
+            -0.0018
+          ],
+          [
+            1.4848,
+            3.3317,
+            -0.0018
+          ]
+        ],
+        "volume": 0.35858
+      },
+      "anchors": [
+        {
+          "object_id": "60",
+          "label": "jar",
+          "phrase": "the jar"
+        }
+      ],
+      "distractor_ids": [
+        "4",
+        "6"
+      ],
+      "competitors": 2,
+      "margin": 2.82,
+      "evidence": "near: box-gap 0.19 m; next flowers is 3.01 m away",
+      "statement": "the black flower that is near the jar",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the table that is closest to the jar.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "table",
+        "jar"
+      ],
+      "answer": {
+        "object_id": "59",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "brown",
+          "gray"
+        ],
+        "center": [
+          1.993,
+          3.895,
+          0.1149
+        ],
+        "size": [
+          0.4,
+          0.4,
+          0.23
+        ],
+        "yaw": 3.132,
+        "aabb": {
+          "min": [
+            1.7911,
+            3.6931,
+            -0.0001
+          ],
+          "max": [
+            2.1949,
+            4.0969,
+            0.2299
+          ]
+        },
+        "size_aabb": [
+          0.4038,
+          0.4038,
+          0.23
+        ],
+        "bbox_corners": [
+          [
+            2.1911,
+            3.6931,
+            0.2299
+          ],
+          [
+            1.7911,
+            3.6969,
+            0.2299
+          ],
+          [
+            1.7949,
+            4.0969,
+            0.2299
+          ],
+          [
+            2.1949,
+            4.0931,
+            0.2299
+          ],
+          [
+            2.1911,
+            3.6931,
+            -0.0001
+          ],
+          [
+            1.7911,
+            3.6969,
+            -0.0001
+          ],
+          [
+            1.7949,
+            4.0969,
+            -0.0001
+          ],
+          [
+            2.1949,
+            4.0931,
+            -0.0001
+          ]
+        ],
+        "volume": 0.0368
+      },
+      "anchors": [
+        {
+          "object_id": "60",
+          "label": "jar",
+          "phrase": "the jar"
+        }
+      ],
+      "distractor_ids": [
+        "26",
+        "58"
+      ],
+      "competitors": 2,
+      "margin": 2.227,
+      "evidence": "closest: centre 0.29 m vs runner-up table#26 3.23 m; box-gap 0.00 m vs runner-up table#26 2.23 m",
+      "statement": "the table that is closest to the jar",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the potted plant that is farthest from the teapot.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "teapot"
+      ],
+      "answer": {
+        "object_id": "24",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "black",
+          "gray"
+        ],
+        "center": [
+          1.8751,
+          -0.5062,
+          0.4787
+        ],
+        "size": [
+          0.7654,
+          0.5589,
+          0.9737
+        ],
+        "yaw": 0.3853,
+        "aabb": {
+          "min": [
+            1.4154,
+            -0.909,
+            -0.0081
+          ],
+          "max": [
+            2.3348,
+            -0.1034,
+            0.9655
+          ]
+        },
+        "size_aabb": [
+          0.9194,
+          0.8056,
+          0.9737
+        ],
+        "bbox_corners": [
+          [
+            1.4154,
+            -0.3911,
+            0.9655
+          ],
+          [
+            2.1247,
+            -0.1034,
+            0.9655
+          ],
+          [
+            2.3348,
+            -0.6214,
+            0.9655
+          ],
+          [
+            1.6255,
+            -0.909,
+            0.9655
+          ],
+          [
+            1.4154,
+            -0.3911,
+            -0.0081
+          ],
+          [
+            2.1247,
+            -0.1034,
+            -0.0081
+          ],
+          [
+            2.3348,
+            -0.6214,
+            -0.0081
+          ],
+          [
+            1.6255,
+            -0.909,
+            -0.0081
+          ]
+        ],
+        "volume": 0.41654
+      },
+      "anchors": [
+        {
+          "object_id": "32",
+          "label": "teapot",
+          "phrase": "the teapot"
+        }
+      ],
+      "distractor_ids": [
+        "25"
+      ],
+      "competitors": 1,
+      "margin": 0.524,
+      "evidence": "farthest: centre 3.63 m vs runner-up potted plant#25 3.11 m; box-gap 2.89 m vs runner-up potted plant#25 2.06 m",
+      "statement": "the plant that is farthest from the tea pot",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the chopsticks that are between the dish and the sake bottle.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "chopsticks",
+        "dish",
+        "sake bottle"
+      ],
+      "answer": {
+        "object_id": "51",
+        "region": "0",
+        "label": "chopsticks",
+        "raw_label": "chopsticks",
+        "nyu_label": "utensil",
+        "colors": [
+          "brown",
+          "gray"
+        ],
+        "center": [
+          -0.4685,
+          1.9257,
+          0.3012
+        ],
+        "size": [
+          0.2643,
+          0.0529,
+          0.0055
+        ],
+        "yaw": 1.7528,
+        "aabb": {
+          "min": [
+            -0.5184,
+            1.7909,
+            0.2984
+          ],
+          "max": [
+            -0.4185,
+            2.0605,
+            0.3039
+          ]
+        },
+        "size_aabb": [
+          0.0999,
+          0.2695,
+          0.0055
+        ],
+        "bbox_corners": [
+          [
+            -0.4706,
+            1.7909,
+            0.3039
+          ],
+          [
+            -0.5184,
+            2.0509,
+            0.3039
+          ],
+          [
+            -0.4663,
+            2.0605,
+            0.3039
+          ],
+          [
+            -0.4185,
+            1.8005,
+            0.3039
+          ],
+          [
+            -0.4706,
+            1.7909,
+            0.2984
+          ],
+          [
+            -0.5184,
+            2.0509,
+            0.2984
+          ],
+          [
+            -0.4663,
+            2.0605,
+            0.2984
+          ],
+          [
+            -0.4185,
+            1.8005,
+            0.2984
+          ]
+        ],
+        "volume": 8e-05
+      },
+      "anchors": [
+        {
+          "object_id": "33",
+          "label": "dish",
+          "phrase": "the dish"
+        },
+        {
+          "object_id": "38",
+          "label": "sake bottle",
+          "phrase": "the sake bottle"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "between: between dish#33 and sake bottle#38 (lateral offset 0.11 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the glass that is between the display ledge and the dish.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "glass",
+        "display ledge",
+        "dish"
+      ],
+      "answer": {
+        "object_id": "39",
+        "region": "0",
+        "label": "glass",
+        "raw_label": "glass",
+        "nyu_label": "glass",
+        "colors": [
+          "brown"
+        ],
+        "center": [
+          -1.0965,
+          2.2734,
+          0.3321
+        ],
+        "size": [
+          0.0798,
+          0.08,
+          0.0796
+        ],
+        "yaw": 1.9647,
+        "aabb": {
+          "min": [
+            -1.1488,
+            2.2212,
+            0.2923
+          ],
+          "max": [
+            -1.0443,
+            2.3256,
+            0.3719
+          ]
+        },
+        "size_aabb": [
+          0.1045,
+          0.1044,
+          0.0796
+        ],
+        "bbox_corners": [
+          [
+            -1.1181,
+            2.2212,
+            0.3719
+          ],
+          [
+            -1.1488,
+            2.2949,
+            0.3719
+          ],
+          [
+            -1.0749,
+            2.3256,
+            0.3719
+          ],
+          [
+            -1.0443,
+            2.2519,
+            0.3719
+          ],
+          [
+            -1.1181,
+            2.2212,
+            0.2923
+          ],
+          [
+            -1.1488,
+            2.2949,
+            0.2923
+          ],
+          [
+            -1.0749,
+            2.3256,
+            0.2923
+          ],
+          [
+            -1.0443,
+            2.2519,
+            0.2923
+          ]
+        ],
+        "volume": 0.00051
+      },
+      "anchors": [
+        {
+          "object_id": "16",
+          "label": "display ledge",
+          "phrase": "the display ledge"
+        },
+        {
+          "object_id": "33",
+          "label": "dish",
+          "phrase": "the dish"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 3,
+      "evidence": "between: between display ledge#16 and dish#33 (lateral offset 0.50 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    }
+  ]
+}

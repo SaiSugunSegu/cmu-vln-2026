@@ -1,0 +1,1193 @@
+{
+  "scene": "livingroom_4",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/livingroom_4/iref_vla_metadata/livingroom_4_referential_statements.json",
+    "source_objects: bags/livingroom_4/iref_vla_metadata/livingroom_4_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 6,
+    "hard": 2,
+    "easy": 2
+  },
+  "relation_counts": {
+    "closest": 3,
+    "between": 1,
+    "in": 1,
+    "supports": 1,
+    "on": 1,
+    "near": 1,
+    "farthest": 2
+  },
+  "target_object_coverage": [
+    "bookcase",
+    "clock",
+    "curtain",
+    "firewood",
+    "flowers",
+    "fossil decoration",
+    "lamp",
+    "mirror",
+    "phone",
+    "picture",
+    "potted plant",
+    "sofa",
+    "table",
+    "vase",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the picture closest to a window.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "picture",
+        "window"
+      ],
+      "answer": {
+        "object_id": "30",
+        "region": "0",
+        "label": "picture",
+        "raw_label": "picture",
+        "nyu_label": "picture",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -4.3278,
+          0.457,
+          0.8189
+        ],
+        "size": [
+          0.3137,
+          0.0424,
+          0.1732
+        ],
+        "yaw": 1.5709,
+        "aabb": {
+          "min": [
+            -4.349,
+            0.3002,
+            0.7323
+          ],
+          "max": [
+            -4.3066,
+            0.6138,
+            0.9055
+          ]
+        },
+        "size_aabb": [
+          0.0424,
+          0.3137,
+          0.1732
+        ],
+        "bbox_corners": [
+          [
+            -4.3489,
+            0.3002,
+            0.9055
+          ],
+          [
+            -4.349,
+            0.6138,
+            0.9055
+          ],
+          [
+            -4.3066,
+            0.6138,
+            0.9055
+          ],
+          [
+            -4.3066,
+            0.3002,
+            0.9055
+          ],
+          [
+            -4.3489,
+            0.3002,
+            0.7323
+          ],
+          [
+            -4.349,
+            0.6138,
+            0.7323
+          ],
+          [
+            -4.3066,
+            0.6138,
+            0.7323
+          ],
+          [
+            -4.3066,
+            0.3002,
+            0.7323
+          ]
+        ],
+        "volume": 0.0023
+      },
+      "anchors": [
+        {
+          "object_id": "35",
+          "label": "window"
+        },
+        {
+          "object_id": "36",
+          "label": "window"
+        },
+        {
+          "object_id": "76",
+          "label": "window"
+        },
+        {
+          "object_id": "77",
+          "label": "window"
+        },
+        {
+          "object_id": "101",
+          "label": "window"
+        },
+        {
+          "object_id": "102",
+          "label": "window"
+        },
+        {
+          "object_id": "109",
+          "label": "window"
+        },
+        {
+          "object_id": "110",
+          "label": "window"
+        }
+      ],
+      "distractor_ids": [
+        "10",
+        "17",
+        "20",
+        "28",
+        "46",
+        "8"
+      ],
+      "evidence": "solved from geometry: closest: centre 1.80 m (next 2.30 m); box-gap 1.14 m (next 1.67 m)",
+      "statement": "the picture that is closest to the bookshelf",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_4/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='picture' color='' hops=[{'relation': 'closest', 'phrases': ['window']}]",
+        "head candidates: [picture#8, picture#10, picture#17, picture#20, picture#28, picture#30] ...",
+        "target hop (closest): closest: ranked [picture#30, picture#8, picture#46]",
+        "pick: closest: centre 1.80 m (next 2.30 m); box-gap 1.14 m (next 1.67 m)",
+        "result: closest: centre 1.80 m (next 2.30 m); box-gap 1.14 m (next 1.67 m)"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the fossil decoration closest to the phone.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "fossil decoration",
+        "phone"
+      ],
+      "answer": {
+        "object_id": "94",
+        "region": "0",
+        "label": "fossil decoration",
+        "raw_label": "fossil decoration",
+        "nyu_label": "decoration item",
+        "colors": [
+          "gray",
+          "black"
+        ],
+        "center": [
+          1.8715,
+          -0.461,
+          0.8956
+        ],
+        "size": [
+          0.2815,
+          0.1235,
+          0.3091
+        ],
+        "yaw": 1.5759,
+        "aabb": {
+          "min": [
+            1.809,
+            -0.6021,
+            0.741
+          ],
+          "max": [
+            1.9339,
+            -0.3199,
+            1.0501
+          ]
+        },
+        "size_aabb": [
+          0.1249,
+          0.2822,
+          0.3091
+        ],
+        "bbox_corners": [
+          [
+            1.8105,
+            -0.6021,
+            1.0501
+          ],
+          [
+            1.809,
+            -0.3206,
+            1.0501
+          ],
+          [
+            1.9325,
+            -0.3199,
+            1.0501
+          ],
+          [
+            1.9339,
+            -0.6015,
+            1.0501
+          ],
+          [
+            1.8105,
+            -0.6021,
+            0.741
+          ],
+          [
+            1.809,
+            -0.3206,
+            0.741
+          ],
+          [
+            1.9325,
+            -0.3199,
+            0.741
+          ],
+          [
+            1.9339,
+            -0.6015,
+            0.741
+          ]
+        ],
+        "volume": 0.01075
+      },
+      "anchors": [
+        {
+          "object_id": "86",
+          "label": "phone"
+        }
+      ],
+      "distractor_ids": [
+        "64",
+        "82"
+      ],
+      "evidence": "solved from geometry: closest: centre 0.50 m (next 6.05 m); box-gap 0.24 m (next 5.87 m)",
+      "statement": "the decoration item that is closest to the cabinet",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_4/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='fossil decoration' color='' hops=[{'relation': 'closest', 'phrases': ['phone']}]",
+        "head candidates: [fossil decoration#64, fossil decoration#94]",
+        "target hop (closest): closest: ranked [fossil decoration#94, fossil decoration#64]",
+        "pick: closest: centre 0.50 m (next 6.05 m); box-gap 0.24 m (next 5.87 m)",
+        "result: closest: centre 0.50 m (next 6.05 m); box-gap 0.24 m (next 5.87 m)"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the sofa that is between the mirror and the flowers.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "sofa",
+        "mirror",
+        "flowers"
+      ],
+      "answer": {
+        "object_id": "49",
+        "region": "0",
+        "label": "sofa",
+        "raw_label": "sofa",
+        "nyu_label": "sofa",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          0.2292,
+          -2.0091,
+          0.3934
+        ],
+        "size": [
+          2.1928,
+          0.8878,
+          0.8127
+        ],
+        "yaw": -1.5711,
+        "aabb": {
+          "min": [
+            -0.215,
+            -3.1057,
+            -0.0129
+          ],
+          "max": [
+            0.6735,
+            -0.9126,
+            0.7997
+          ]
+        },
+        "size_aabb": [
+          0.8885,
+          2.1931,
+          0.8127
+        ],
+        "bbox_corners": [
+          [
+            0.6735,
+            -0.9128,
+            0.7997
+          ],
+          [
+            0.6728,
+            -3.1057,
+            0.7997
+          ],
+          [
+            -0.215,
+            -3.1054,
+            0.7997
+          ],
+          [
+            -0.2143,
+            -0.9126,
+            0.7997
+          ],
+          [
+            0.6735,
+            -0.9128,
+            -0.0129
+          ],
+          [
+            0.6728,
+            -3.1057,
+            -0.0129
+          ],
+          [
+            -0.215,
+            -3.1054,
+            -0.0129
+          ],
+          [
+            -0.2143,
+            -0.9126,
+            -0.0129
+          ]
+        ],
+        "volume": 1.58206
+      },
+      "anchors": [
+        {
+          "object_id": "7",
+          "label": "mirror",
+          "phrase": "the mirror"
+        },
+        {
+          "object_id": "42",
+          "label": "flowers",
+          "phrase": "the flowers"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "between: between mirror#7 and flowers#42 (lateral offset 0.70 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the potted plant inside the bookcase.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "in",
+      "target_objects": [
+        "potted plant",
+        "bookcase"
+      ],
+      "answer": {
+        "object_id": "27",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "gray",
+          "aqua",
+          "purple"
+        ],
+        "center": [
+          -4.1377,
+          0.517,
+          1.6958
+        ],
+        "size": [
+          0.1801,
+          0.1682,
+          0.2049
+        ],
+        "yaw": -1.8988,
+        "aabb": {
+          "min": [
+            -4.2463,
+            0.4047,
+            1.5934
+          ],
+          "max": [
+            -4.0291,
+            0.6294,
+            1.7983
+          ]
+        },
+        "size_aabb": [
+          0.2172,
+          0.2246,
+          0.2049
+        ],
+        "bbox_corners": [
+          [
+            -4.0291,
+            0.5752,
+            1.7983
+          ],
+          [
+            -4.0871,
+            0.4047,
+            1.7983
+          ],
+          [
+            -4.2463,
+            0.4589,
+            1.7983
+          ],
+          [
+            -4.1883,
+            0.6294,
+            1.7983
+          ],
+          [
+            -4.0291,
+            0.5752,
+            1.5934
+          ],
+          [
+            -4.0871,
+            0.4047,
+            1.5934
+          ],
+          [
+            -4.2463,
+            0.4589,
+            1.5934
+          ],
+          [
+            -4.1883,
+            0.6294,
+            1.5934
+          ]
+        ],
+        "volume": 0.00621
+      },
+      "anchors": [
+        {
+          "object_id": "23",
+          "label": "bookcase",
+          "phrase": "the bookcase"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 4,
+      "evidence": "in: inside bookcase#23: base 1.59 m sits 0.40 m below its rim",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the table with the vase on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "vase"
+      ],
+      "answer": {
+        "object_id": "67",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "aqua"
+        ],
+        "center": [
+          -1.172,
+          -1.989,
+          0.2284
+        ],
+        "size": [
+          1.3765,
+          0.7328,
+          0.4942
+        ],
+        "yaw": 1.5708,
+        "aabb": {
+          "min": [
+            -1.5384,
+            -2.6772,
+            -0.0187
+          ],
+          "max": [
+            -0.8056,
+            -1.3007,
+            0.4755
+          ]
+        },
+        "size_aabb": [
+          0.7328,
+          1.3765,
+          0.4942
+        ],
+        "bbox_corners": [
+          [
+            -1.5384,
+            -2.6772,
+            0.4755
+          ],
+          [
+            -1.5384,
+            -1.3007,
+            0.4755
+          ],
+          [
+            -0.8056,
+            -1.3007,
+            0.4755
+          ],
+          [
+            -0.8056,
+            -2.6772,
+            0.4755
+          ],
+          [
+            -1.5384,
+            -2.6772,
+            -0.0187
+          ],
+          [
+            -1.5384,
+            -1.3007,
+            -0.0187
+          ],
+          [
+            -0.8056,
+            -1.3007,
+            -0.0187
+          ],
+          [
+            -0.8056,
+            -2.6772,
+            -0.0187
+          ]
+        ],
+        "volume": 0.49852
+      },
+      "anchors": [
+        {
+          "object_id": "89",
+          "label": "vase",
+          "phrase": "the vase"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds vase#89 (top 0.48 m, its underside 0.48 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the fossil decoration on top of the bookcase.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "on",
+      "target_objects": [
+        "fossil decoration",
+        "bookcase"
+      ],
+      "answer": {
+        "object_id": "64",
+        "region": "0",
+        "label": "fossil decoration",
+        "raw_label": "fossil decoration",
+        "nyu_label": "decoration item",
+        "colors": [
+          "brown",
+          "black"
+        ],
+        "center": [
+          -4.148,
+          0.3158,
+          1.332
+        ],
+        "size": [
+          0.3141,
+          0.1023,
+          0.3639
+        ],
+        "yaw": -1.5379,
+        "aabb": {
+          "min": [
+            -4.2043,
+            0.1572,
+            1.15
+          ],
+          "max": [
+            -4.0917,
+            0.4745,
+            1.5139
+          ]
+        },
+        "size_aabb": [
+          0.1126,
+          0.3173,
+          0.3639
+        ],
+        "bbox_corners": [
+          [
+            -4.1021,
+            0.4745,
+            1.5139
+          ],
+          [
+            -4.0917,
+            0.1606,
+            1.5139
+          ],
+          [
+            -4.1939,
+            0.1572,
+            1.5139
+          ],
+          [
+            -4.2043,
+            0.4711,
+            1.5139
+          ],
+          [
+            -4.1021,
+            0.4745,
+            1.15
+          ],
+          [
+            -4.0917,
+            0.1606,
+            1.15
+          ],
+          [
+            -4.1939,
+            0.1572,
+            1.15
+          ],
+          [
+            -4.2043,
+            0.4711,
+            1.15
+          ]
+        ],
+        "volume": 0.01169
+      },
+      "anchors": [
+        {
+          "object_id": "23",
+          "label": "bookcase",
+          "phrase": "the bookcase"
+        }
+      ],
+      "distractor_ids": [
+        "82",
+        "94"
+      ],
+      "competitors": 1,
+      "evidence": "on: rests on bookcase#23 (underside 1.15 m, top 2.00 m)",
+      "statement": "the decoration item that is on the bookshelf",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the lamp that is near the flowers.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "near",
+      "target_objects": [
+        "lamp",
+        "flowers"
+      ],
+      "answer": {
+        "object_id": "6",
+        "region": "0",
+        "label": "lamp",
+        "raw_label": "lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          -1.159,
+          -2.1319,
+          2.2773
+        ],
+        "size": [
+          0.7681,
+          0.6794,
+          0.9795
+        ],
+        "yaw": -1.0488,
+        "aabb": {
+          "min": [
+            -1.645,
+            -2.6341,
+            1.7875
+          ],
+          "max": [
+            -0.6731,
+            -1.6296,
+            2.767
+          ]
+        },
+        "size_aabb": [
+          0.9719,
+          1.0046,
+          0.9795
+        ],
+        "bbox_corners": [
+          [
+            -1.056,
+            -1.6296,
+            2.767
+          ],
+          [
+            -0.6731,
+            -2.2954,
+            2.767
+          ],
+          [
+            -1.262,
+            -2.6341,
+            2.767
+          ],
+          [
+            -1.645,
+            -1.9684,
+            2.767
+          ],
+          [
+            -1.056,
+            -1.6296,
+            1.7875
+          ],
+          [
+            -0.6731,
+            -2.2954,
+            1.7875
+          ],
+          [
+            -1.262,
+            -2.6341,
+            1.7875
+          ],
+          [
+            -1.645,
+            -1.9684,
+            1.7875
+          ]
+        ],
+        "volume": 0.51112
+      },
+      "anchors": [
+        {
+          "object_id": "42",
+          "label": "flowers",
+          "phrase": "the flowers"
+        }
+      ],
+      "distractor_ids": [
+        "3",
+        "57"
+      ],
+      "competitors": 2,
+      "margin": 2.284,
+      "evidence": "near: box-gap 0.72 m; next lamp is 3.01 m away",
+      "statement": "the lamp that is near the flower",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the table that is farthest from the firewood.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "table",
+        "firewood"
+      ],
+      "answer": {
+        "object_id": "62",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          -1.977,
+          1.356,
+          0.3823
+        ],
+        "size": [
+          0.85,
+          1.6033,
+          0.8001
+        ],
+        "yaw": 1.5708,
+        "aabb": {
+          "min": [
+            -2.7786,
+            0.931,
+            -0.0178
+          ],
+          "max": [
+            -1.1754,
+            1.781,
+            0.7823
+          ]
+        },
+        "size_aabb": [
+          1.6033,
+          0.85,
+          0.8001
+        ],
+        "bbox_corners": [
+          [
+            -2.7786,
+            0.931,
+            0.7823
+          ],
+          [
+            -2.7786,
+            1.781,
+            0.7823
+          ],
+          [
+            -1.1754,
+            1.781,
+            0.7823
+          ],
+          [
+            -1.1754,
+            0.931,
+            0.7823
+          ],
+          [
+            -2.7786,
+            0.931,
+            -0.0178
+          ],
+          [
+            -2.7786,
+            1.781,
+            -0.0178
+          ],
+          [
+            -1.1754,
+            1.781,
+            -0.0178
+          ],
+          [
+            -1.1754,
+            0.931,
+            -0.0178
+          ]
+        ],
+        "volume": 1.0903
+      },
+      "anchors": [
+        {
+          "object_id": "29",
+          "label": "firewood",
+          "phrase": "the firewood"
+        }
+      ],
+      "distractor_ids": [
+        "67"
+      ],
+      "competitors": 1,
+      "margin": 3.394,
+      "evidence": "farthest: centre 5.92 m vs runner-up table#67 2.52 m; box-gap 5.27 m vs runner-up table#67 1.66 m",
+      "statement": "the table that is farthest from the piece of wood",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the curtain that is farthest from the clock.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "curtain",
+        "clock"
+      ],
+      "answer": {
+        "object_id": "18",
+        "region": "0",
+        "label": "curtain",
+        "raw_label": "curtain",
+        "nyu_label": "curtain",
+        "colors": [
+          "maroon",
+          "aqua"
+        ],
+        "center": [
+          -4.2669,
+          -1.3383,
+          1.1813
+        ],
+        "size": [
+          1.3785,
+          0.2373,
+          2.3674
+        ],
+        "yaw": -1.5721,
+        "aabb": {
+          "min": [
+            -4.3864,
+            -2.0277,
+            -0.0024
+          ],
+          "max": [
+            -4.1473,
+            -0.649,
+            2.365
+          ]
+        },
+        "size_aabb": [
+          0.2391,
+          1.3788,
+          2.3674
+        ],
+        "bbox_corners": [
+          [
+            -4.1473,
+            -0.6493,
+            2.365
+          ],
+          [
+            -4.1491,
+            -2.0277,
+            2.365
+          ],
+          [
+            -4.3864,
+            -2.0274,
+            2.365
+          ],
+          [
+            -4.3847,
+            -0.649,
+            2.365
+          ],
+          [
+            -4.1473,
+            -0.6493,
+            -0.0024
+          ],
+          [
+            -4.1491,
+            -2.0277,
+            -0.0024
+          ],
+          [
+            -4.3864,
+            -2.0274,
+            -0.0024
+          ],
+          [
+            -4.3847,
+            -0.649,
+            -0.0024
+          ]
+        ],
+        "volume": 0.77449
+      },
+      "anchors": [
+        {
+          "object_id": "69",
+          "label": "clock",
+          "phrase": "the clock"
+        }
+      ],
+      "distractor_ids": [
+        "1",
+        "31",
+        "40"
+      ],
+      "competitors": 3,
+      "margin": 0.906,
+      "evidence": "farthest: centre 4.39 m vs runner-up curtain#1 3.26 m; box-gap 3.59 m vs runner-up curtain#1 2.68 m",
+      "statement": "the curtain that is farthest from the clock",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the curtain that is closest to the mirror.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "curtain",
+        "mirror"
+      ],
+      "answer": {
+        "object_id": "31",
+        "region": "0",
+        "label": "curtain",
+        "raw_label": "curtain",
+        "nyu_label": "curtain",
+        "colors": [
+          "maroon",
+          "aqua"
+        ],
+        "center": [
+          0.5941,
+          -4.7562,
+          1.1816
+        ],
+        "size": [
+          1.3767,
+          0.2402,
+          2.368
+        ],
+        "yaw": -0.0003,
+        "aabb": {
+          "min": [
+            -0.0943,
+            -4.8765,
+            -0.0024
+          ],
+          "max": [
+            1.2825,
+            -4.6359,
+            2.3656
+          ]
+        },
+        "size_aabb": [
+          1.3768,
+          0.2406,
+          2.368
+        ],
+        "bbox_corners": [
+          [
+            -0.0942,
+            -4.6359,
+            2.3656
+          ],
+          [
+            1.2825,
+            -4.6363,
+            2.3656
+          ],
+          [
+            1.2825,
+            -4.8765,
+            2.3656
+          ],
+          [
+            -0.0943,
+            -4.8761,
+            2.3656
+          ],
+          [
+            -0.0942,
+            -4.6359,
+            -0.0024
+          ],
+          [
+            1.2825,
+            -4.6363,
+            -0.0024
+          ],
+          [
+            1.2825,
+            -4.8765,
+            -0.0024
+          ],
+          [
+            -0.0943,
+            -4.8761,
+            -0.0024
+          ]
+        ],
+        "volume": 0.78305
+      },
+      "anchors": [
+        {
+          "object_id": "7",
+          "label": "mirror",
+          "phrase": "the mirror"
+        }
+      ],
+      "distractor_ids": [
+        "1",
+        "18",
+        "40"
+      ],
+      "competitors": 3,
+      "margin": 1.652,
+      "evidence": "closest: centre 4.79 m vs runner-up curtain#18 6.44 m; box-gap 4.18 m vs runner-up curtain#40 6.00 m",
+      "statement": "the curtain that is closest to the mirror",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

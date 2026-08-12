@@ -1,0 +1,1172 @@
+{
+  "scene": "studio",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/studio/iref_vla_metadata/studio_referential_statements.json",
+    "source_objects: bags/studio/iref_vla_metadata/studio_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 4,
+    "hard": 4,
+    "easy": 2
+  },
+  "relation_counts": {
+    "closest": 2,
+    "farthest": 2,
+    "between": 1,
+    "in": 1,
+    "above": 1,
+    "below": 1,
+    "on": 1,
+    "near": 1
+  },
+  "target_object_coverage": [
+    "beer bottle",
+    "books",
+    "box",
+    "cabinet",
+    "clothes",
+    "couch",
+    "door",
+    "framed record",
+    "guitar",
+    "hanger",
+    "picture",
+    "shelf",
+    "tv",
+    "vase",
+    "windows"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the vase closest to the guitar.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "vase",
+        "guitar"
+      ],
+      "answer": {
+        "object_id": "46",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          4.8943,
+          -3.1483,
+          1.248
+        ],
+        "size": [
+          0.296,
+          0.3843,
+          2.4934
+        ],
+        "yaw": 2.3499,
+        "aabb": {
+          "min": [
+            4.6536,
+            -3.3886,
+            0.0013
+          ],
+          "max": [
+            5.135,
+            -2.908,
+            2.4947
+          ]
+        },
+        "size_aabb": [
+          0.4814,
+          0.4806,
+          2.4934
+        ],
+        "bbox_corners": [
+          [
+            4.8615,
+            -3.3886,
+            2.4947
+          ],
+          [
+            4.6536,
+            -3.178,
+            2.4947
+          ],
+          [
+            4.927,
+            -2.908,
+            2.4947
+          ],
+          [
+            5.135,
+            -3.1186,
+            2.4947
+          ],
+          [
+            4.8615,
+            -3.3886,
+            0.0013
+          ],
+          [
+            4.6536,
+            -3.178,
+            0.0013
+          ],
+          [
+            4.927,
+            -2.908,
+            0.0013
+          ],
+          [
+            5.135,
+            -3.1186,
+            0.0013
+          ]
+        ],
+        "volume": 0.28362
+      },
+      "anchors": [
+        {
+          "object_id": "48",
+          "label": "guitar"
+        }
+      ],
+      "distractor_ids": [
+        "0",
+        "24",
+        "25",
+        "26",
+        "27"
+      ],
+      "evidence": "solved from geometry: closest: centre 1.29 m (next 4.94 m); box-gap 0.39 m (next 4.38 m)",
+      "statement": "the vase that is closest to the plant",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/studio/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='vase' color='' hops=[{'relation': 'closest', 'phrases': ['guitar']}]",
+        "head candidates: [vase#0, vase#24, vase#25, vase#26, vase#27, vase#46]",
+        "target hop (closest): closest: ranked [vase#46, vase#24, vase#0]",
+        "pick: closest: centre 1.29 m (next 4.94 m); box-gap 0.39 m (next 4.38 m)",
+        "result: closest: centre 1.29 m (next 4.94 m); box-gap 0.39 m (next 4.38 m)"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the beer bottle furthest from the couch.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "beer bottle",
+        "couch"
+      ],
+      "answer": {
+        "object_id": "72",
+        "region": "0",
+        "label": "beer bottle",
+        "raw_label": "beer bottle",
+        "nyu_label": "bottle",
+        "colors": [
+          "aqua"
+        ],
+        "center": [
+          2.4571,
+          -1.3408,
+          0.583
+        ],
+        "size": [
+          0.0882,
+          0.0877,
+          0.3235
+        ],
+        "yaw": 2.7571,
+        "aabb": {
+          "min": [
+            2.3997,
+            -1.398,
+            0.4213
+          ],
+          "max": [
+            2.5145,
+            -1.2836,
+            0.7447
+          ]
+        },
+        "size_aabb": [
+          0.1147,
+          0.1144,
+          0.3235
+        ],
+        "bbox_corners": [
+          [
+            2.4815,
+            -1.398,
+            0.7447
+          ],
+          [
+            2.3997,
+            -1.3649,
+            0.7447
+          ],
+          [
+            2.4327,
+            -1.2836,
+            0.7447
+          ],
+          [
+            2.5145,
+            -1.3167,
+            0.7447
+          ],
+          [
+            2.4815,
+            -1.398,
+            0.4213
+          ],
+          [
+            2.3997,
+            -1.3649,
+            0.4213
+          ],
+          [
+            2.4327,
+            -1.2836,
+            0.4213
+          ],
+          [
+            2.5145,
+            -1.3167,
+            0.4213
+          ]
+        ],
+        "volume": 0.0025
+      },
+      "anchors": [
+        {
+          "object_id": "16",
+          "label": "couch"
+        }
+      ],
+      "distractor_ids": [],
+      "evidence": "solved from geometry: farthest: centre 2.03 m (next 1.59 m); box-gap 1.32 m (next 0.90 m)",
+      "statement": "",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/studio/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='beer bottle' color='' hops=[{'relation': 'farthest', 'phrases': ['couch']}]",
+        "head candidates: [beer bottle#54, beer bottle#72]",
+        "target hop (farthest): farthest: ranked [beer bottle#72, beer bottle#54]",
+        "pick: farthest: centre 2.03 m (next 1.59 m); box-gap 1.32 m (next 0.90 m)",
+        "result: farthest: centre 2.03 m (next 1.59 m); box-gap 1.32 m (next 0.90 m)"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the picture that is between the door and the hanger.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "picture",
+        "door",
+        "hanger"
+      ],
+      "answer": {
+        "object_id": "21",
+        "region": "0",
+        "label": "picture",
+        "raw_label": "picture",
+        "nyu_label": "picture",
+        "colors": [
+          "brown",
+          "aqua",
+          "gray"
+        ],
+        "center": [
+          -2.1939,
+          -2.955,
+          1.6926
+        ],
+        "size": [
+          0.8263,
+          0.0265,
+          1.016
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -2.2071,
+            -3.3682,
+            1.1846
+          ],
+          "max": [
+            -2.1806,
+            -2.5418,
+            2.2006
+          ]
+        },
+        "size_aabb": [
+          0.0265,
+          0.8263,
+          1.016
+        ],
+        "bbox_corners": [
+          [
+            -2.1806,
+            -2.5418,
+            2.2006
+          ],
+          [
+            -2.1806,
+            -3.3682,
+            2.2006
+          ],
+          [
+            -2.2071,
+            -3.3682,
+            2.2006
+          ],
+          [
+            -2.2071,
+            -2.5418,
+            2.2006
+          ],
+          [
+            -2.1806,
+            -2.5418,
+            1.1846
+          ],
+          [
+            -2.1806,
+            -3.3682,
+            1.1846
+          ],
+          [
+            -2.2071,
+            -3.3682,
+            1.1846
+          ],
+          [
+            -2.2071,
+            -2.5418,
+            1.1846
+          ]
+        ],
+        "volume": 0.02227
+      },
+      "anchors": [
+        {
+          "object_id": "1",
+          "label": "door",
+          "phrase": "the door"
+        },
+        {
+          "object_id": "6",
+          "label": "hanger",
+          "phrase": "the hanger"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "7"
+      ],
+      "competitors": 1,
+      "evidence": "between: between door#1 and hanger#6 (lateral offset 0.16 m)",
+      "statement": "the picture that is between the door and the hangers",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the vase inside the cabinet.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "in",
+      "target_objects": [
+        "vase",
+        "cabinet"
+      ],
+      "answer": {
+        "object_id": "0",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "aqua",
+          "gray",
+          "brown"
+        ],
+        "center": [
+          3.6969,
+          2.1919,
+          0.198
+        ],
+        "size": [
+          0.3003,
+          0.3,
+          0.328
+        ],
+        "yaw": 1.762,
+        "aabb": {
+          "min": [
+            3.5211,
+            2.016,
+            0.0341
+          ],
+          "max": [
+            3.8727,
+            2.3679,
+            0.362
+          ]
+        },
+        "size_aabb": [
+          0.3516,
+          0.3519,
+          0.328
+        ],
+        "bbox_corners": [
+          [
+            3.5782,
+            2.016,
+            0.362
+          ],
+          [
+            3.5211,
+            2.3109,
+            0.362
+          ],
+          [
+            3.8157,
+            2.3679,
+            0.362
+          ],
+          [
+            3.8727,
+            2.073,
+            0.362
+          ],
+          [
+            3.5782,
+            2.016,
+            0.0341
+          ],
+          [
+            3.5211,
+            2.3109,
+            0.0341
+          ],
+          [
+            3.8157,
+            2.3679,
+            0.0341
+          ],
+          [
+            3.8727,
+            2.073,
+            0.0341
+          ]
+        ],
+        "volume": 0.02955
+      },
+      "anchors": [
+        {
+          "object_id": "55",
+          "label": "cabinet",
+          "phrase": "the cabinet"
+        }
+      ],
+      "distractor_ids": [
+        "24",
+        "25",
+        "26",
+        "27",
+        "46"
+      ],
+      "competitors": 5,
+      "evidence": "in: inside cabinet#55: base 0.03 m sits 0.57 m below its rim",
+      "statement": "the vase that is in the cabinet",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the framed record that is above the couch.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "above",
+      "target_objects": [
+        "framed record",
+        "couch"
+      ],
+      "answer": {
+        "object_id": "11",
+        "region": "0",
+        "label": "framed record",
+        "raw_label": "framed record",
+        "nyu_label": "picture",
+        "colors": [
+          "black",
+          "aqua",
+          "gray"
+        ],
+        "center": [
+          5.1873,
+          -1.809,
+          1.7331
+        ],
+        "size": [
+          0.6735,
+          0.0403,
+          0.8057
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            5.1671,
+            -2.1457,
+            1.3303
+          ],
+          "max": [
+            5.2075,
+            -1.4723,
+            2.1359
+          ]
+        },
+        "size_aabb": [
+          0.0403,
+          0.6735,
+          0.8057
+        ],
+        "bbox_corners": [
+          [
+            5.2075,
+            -1.4723,
+            2.1359
+          ],
+          [
+            5.2075,
+            -2.1457,
+            2.1359
+          ],
+          [
+            5.1671,
+            -2.1457,
+            2.1359
+          ],
+          [
+            5.1671,
+            -1.4723,
+            2.1359
+          ],
+          [
+            5.2075,
+            -1.4723,
+            1.3303
+          ],
+          [
+            5.2075,
+            -2.1457,
+            1.3303
+          ],
+          [
+            5.1671,
+            -2.1457,
+            1.3303
+          ],
+          [
+            5.1671,
+            -1.4723,
+            1.3303
+          ]
+        ],
+        "volume": 0.02189
+      },
+      "anchors": [
+        {
+          "object_id": "16",
+          "label": "couch",
+          "phrase": "the couch"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "above: underside 1.33 m clears couch#16 top 0.92 m, footprints overlap 0%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the books that are below the tv.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "below",
+      "target_objects": [
+        "books",
+        "tv"
+      ],
+      "answer": {
+        "object_id": "61",
+        "region": "0",
+        "label": "books",
+        "raw_label": "books",
+        "nyu_label": "books",
+        "colors": [
+          "gray",
+          "maroon",
+          "brown"
+        ],
+        "center": [
+          2.1397,
+          2.2282,
+          0.2068
+        ],
+        "size": [
+          1.0258,
+          0.1957,
+          0.2994
+        ],
+        "yaw": -3.1416,
+        "aabb": {
+          "min": [
+            1.6268,
+            2.1304,
+            0.057
+          ],
+          "max": [
+            2.6526,
+            2.3261,
+            0.3565
+          ]
+        },
+        "size_aabb": [
+          1.0258,
+          0.1957,
+          0.2994
+        ],
+        "bbox_corners": [
+          [
+            2.6526,
+            2.1304,
+            0.3565
+          ],
+          [
+            1.6268,
+            2.1304,
+            0.3565
+          ],
+          [
+            1.6268,
+            2.3261,
+            0.3565
+          ],
+          [
+            2.6526,
+            2.3261,
+            0.3565
+          ],
+          [
+            2.6526,
+            2.1304,
+            0.057
+          ],
+          [
+            1.6268,
+            2.1304,
+            0.057
+          ],
+          [
+            1.6268,
+            2.3261,
+            0.057
+          ],
+          [
+            2.6526,
+            2.3261,
+            0.057
+          ]
+        ],
+        "volume": 0.06012
+      },
+      "anchors": [
+        {
+          "object_id": "14",
+          "label": "tv",
+          "phrase": "the tv"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 5,
+      "evidence": "below: top 0.36 m under tv#14 underside 1.12 m, footprints overlap 0%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the books on top of the shelf.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "books",
+        "shelf"
+      ],
+      "answer": {
+        "object_id": "60",
+        "region": "0",
+        "label": "books",
+        "raw_label": "books",
+        "nyu_label": "books",
+        "colors": [
+          "gray",
+          "aqua",
+          "maroon"
+        ],
+        "center": [
+          3.327,
+          -4.839,
+          0.5026
+        ],
+        "size": [
+          2.8789,
+          0.288,
+          0.4412
+        ],
+        "yaw": 0.0,
+        "aabb": {
+          "min": [
+            1.8875,
+            -4.983,
+            0.282
+          ],
+          "max": [
+            4.7665,
+            -4.695,
+            0.7232
+          ]
+        },
+        "size_aabb": [
+          2.8789,
+          0.288,
+          0.4412
+        ],
+        "bbox_corners": [
+          [
+            1.8875,
+            -4.695,
+            0.7232
+          ],
+          [
+            4.7665,
+            -4.695,
+            0.7232
+          ],
+          [
+            4.7665,
+            -4.983,
+            0.7232
+          ],
+          [
+            1.8875,
+            -4.983,
+            0.7232
+          ],
+          [
+            1.8875,
+            -4.695,
+            0.282
+          ],
+          [
+            4.7665,
+            -4.695,
+            0.282
+          ],
+          [
+            4.7665,
+            -4.983,
+            0.282
+          ],
+          [
+            1.8875,
+            -4.983,
+            0.282
+          ]
+        ],
+        "volume": 0.36582
+      },
+      "anchors": [
+        {
+          "object_id": "71",
+          "label": "shelf",
+          "phrase": "the shelf"
+        }
+      ],
+      "distractor_ids": [
+        "12",
+        "15",
+        "20",
+        "37",
+        "61"
+      ],
+      "competitors": 5,
+      "evidence": "on: rests on shelf#71 (underside 0.28 m, top 0.29 m)",
+      "statement": "the books that are on the shelves",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the windows that are near the clothes.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "near",
+      "target_objects": [
+        "windows",
+        "clothes"
+      ],
+      "answer": {
+        "object_id": "42",
+        "region": "0",
+        "label": "windows",
+        "raw_label": "windows",
+        "nyu_label": "window",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          -0.198,
+          -4.7491,
+          1.8245
+        ],
+        "size": [
+          2.0702,
+          1.642,
+          2.0704
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -1.019,
+            -5.7842,
+            0.7893
+          ],
+          "max": [
+            0.623,
+            -3.714,
+            2.8598
+          ]
+        },
+        "size_aabb": [
+          1.642,
+          2.0702,
+          2.0704
+        ],
+        "bbox_corners": [
+          [
+            0.623,
+            -3.714,
+            2.8598
+          ],
+          [
+            0.623,
+            -5.7842,
+            2.8598
+          ],
+          [
+            -1.019,
+            -5.7842,
+            2.8598
+          ],
+          [
+            -1.019,
+            -3.714,
+            2.8598
+          ],
+          [
+            0.623,
+            -3.714,
+            0.7893
+          ],
+          [
+            0.623,
+            -5.7842,
+            0.7893
+          ],
+          [
+            -1.019,
+            -5.7842,
+            0.7893
+          ],
+          [
+            -1.019,
+            -3.714,
+            0.7893
+          ]
+        ],
+        "volume": 7.03801
+      },
+      "anchors": [
+        {
+          "object_id": "18",
+          "label": "clothes",
+          "phrase": "the clothes"
+        }
+      ],
+      "distractor_ids": [
+        "5"
+      ],
+      "competitors": 1,
+      "margin": 3.497,
+      "evidence": "near: box-gap 0.57 m; next window is 4.06 m away",
+      "statement": "the window that is near the clothes",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the windows that are closest to the guitar.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "windows",
+        "guitar"
+      ],
+      "answer": {
+        "object_id": "5",
+        "region": "0",
+        "label": "windows",
+        "raw_label": "windows",
+        "nyu_label": "window",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          3.299,
+          -4.749,
+          1.8204
+        ],
+        "size": [
+          2.0705,
+          1.642,
+          2.0705
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            2.478,
+            -5.7843,
+            0.7852
+          ],
+          "max": [
+            4.12,
+            -3.7138,
+            2.8557
+          ]
+        },
+        "size_aabb": [
+          1.642,
+          2.0705,
+          2.0705
+        ],
+        "bbox_corners": [
+          [
+            4.12,
+            -3.7138,
+            2.8557
+          ],
+          [
+            4.12,
+            -5.7843,
+            2.8557
+          ],
+          [
+            2.478,
+            -5.7843,
+            2.8557
+          ],
+          [
+            2.478,
+            -3.7138,
+            2.8557
+          ],
+          [
+            4.12,
+            -3.7138,
+            0.7852
+          ],
+          [
+            4.12,
+            -5.7843,
+            0.7852
+          ],
+          [
+            2.478,
+            -5.7843,
+            0.7852
+          ],
+          [
+            2.478,
+            -3.7138,
+            0.7852
+          ]
+        ],
+        "volume": 7.03919
+      },
+      "anchors": [
+        {
+          "object_id": "48",
+          "label": "guitar",
+          "phrase": "the guitar"
+        }
+      ],
+      "distractor_ids": [
+        "42"
+      ],
+      "competitors": 1,
+      "margin": 2.268,
+      "evidence": "closest: centre 2.42 m vs runner-up windows#42 4.69 m; box-gap 0.63 m vs runner-up windows#42 2.89 m",
+      "statement": "the window that is closest to the guitar",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the box that is farthest from the hanger.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "box",
+        "hanger"
+      ],
+      "answer": {
+        "object_id": "22",
+        "region": "0",
+        "label": "box",
+        "raw_label": "box",
+        "nyu_label": "box",
+        "colors": [
+          "gray",
+          "brown"
+        ],
+        "center": [
+          -2.0085,
+          0.3975,
+          0.19
+        ],
+        "size": [
+          0.4494,
+          0.32,
+          0.224
+        ],
+        "yaw": 3.1416,
+        "aabb": {
+          "min": [
+            -2.2332,
+            0.2375,
+            0.078
+          ],
+          "max": [
+            -1.7838,
+            0.5575,
+            0.302
+          ]
+        },
+        "size_aabb": [
+          0.4494,
+          0.32,
+          0.224
+        ],
+        "bbox_corners": [
+          [
+            -1.7838,
+            0.2375,
+            0.302
+          ],
+          [
+            -2.2332,
+            0.2375,
+            0.302
+          ],
+          [
+            -2.2332,
+            0.5575,
+            0.302
+          ],
+          [
+            -1.7838,
+            0.5575,
+            0.302
+          ],
+          [
+            -1.7838,
+            0.2375,
+            0.078
+          ],
+          [
+            -2.2332,
+            0.2375,
+            0.078
+          ],
+          [
+            -2.2332,
+            0.5575,
+            0.078
+          ],
+          [
+            -1.7838,
+            0.5575,
+            0.078
+          ]
+        ],
+        "volume": 0.03221
+      },
+      "anchors": [
+        {
+          "object_id": "6",
+          "label": "hanger",
+          "phrase": "the hanger"
+        }
+      ],
+      "distractor_ids": [
+        "32",
+        "35",
+        "43",
+        "56"
+      ],
+      "competitors": 3,
+      "margin": 0.62,
+      "evidence": "farthest: centre 4.31 m vs runner-up box#35 3.69 m; box-gap 3.79 m vs runner-up box#35 3.16 m",
+      "statement": "the box that is farthest from the hangers",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

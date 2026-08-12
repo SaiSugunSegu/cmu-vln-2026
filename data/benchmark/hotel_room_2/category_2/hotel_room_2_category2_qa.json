@@ -1,0 +1,1150 @@
+{
+  "scene": "hotel_room_2",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/hotel_room_2/iref_vla_metadata/hotel_room_2_referential_statements.json",
+    "source_objects: bags/hotel_room_2/iref_vla_metadata/hotel_room_2_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 5,
+    "hard": 2,
+    "easy": 3
+  },
+  "relation_counts": {
+    "near": 1,
+    "closest": 2,
+    "between": 2,
+    "supports": 1,
+    "above": 1,
+    "below": 1,
+    "farthest": 2
+  },
+  "target_object_coverage": [
+    "bench",
+    "ceiling lamp",
+    "curtain",
+    "eye glasses",
+    "flowers",
+    "glass",
+    "lamp",
+    "map",
+    "night stand",
+    "picture",
+    "pillow",
+    "soap bottle",
+    "soap dish",
+    "toilet paper",
+    "trash bin",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the flowers near the window.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "near",
+      "target_objects": [
+        "flowers",
+        "window"
+      ],
+      "answer": {
+        "object_id": "38",
+        "region": "1",
+        "label": "flowers",
+        "raw_label": "flowers",
+        "nyu_label": "flower",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -3.9799,
+          1.2628,
+          0.653
+        ],
+        "size": [
+          0.2526,
+          0.1858,
+          0.5176
+        ],
+        "yaw": 1.1266,
+        "aabb": {
+          "min": [
+            -4.1181,
+            1.1089,
+            0.3942
+          ],
+          "max": [
+            -3.8418,
+            1.4168,
+            0.9117
+          ]
+        },
+        "size_aabb": [
+          0.2763,
+          0.3079,
+          0.5176
+        ],
+        "bbox_corners": [
+          [
+            -4.1181,
+            1.1887,
+            0.9117
+          ],
+          [
+            -4.0095,
+            1.4168,
+            0.9117
+          ],
+          [
+            -3.8418,
+            1.337,
+            0.9117
+          ],
+          [
+            -3.9503,
+            1.1089,
+            0.9117
+          ],
+          [
+            -4.1181,
+            1.1887,
+            0.3942
+          ],
+          [
+            -4.0095,
+            1.4168,
+            0.3942
+          ],
+          [
+            -3.8418,
+            1.337,
+            0.3942
+          ],
+          [
+            -3.9503,
+            1.1089,
+            0.3942
+          ]
+        ],
+        "volume": 0.02429
+      },
+      "anchors": [
+        {
+          "object_id": "63",
+          "label": "window"
+        }
+      ],
+      "distractor_ids": [],
+      "evidence": "solved from geometry: near: flowers#38 is the only match",
+      "statement": "the flower that is near the table",
+      "region": "1",
+      "images": [
+        "data/pdf_assets/hotel_room_2/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='flowers' color='' hops=[{'relation': 'near', 'phrases': ['window']}]",
+        "head candidates: [flowers#38]",
+        "target hop (near): near: 1 match(es) -> [flowers#38]",
+        "pick: near: flowers#38 is the only match",
+        "result: near: flowers#38 is the only match"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the picture closest to the bench.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "picture",
+        "bench"
+      ],
+      "answer": {
+        "object_id": "31",
+        "region": "1",
+        "label": "picture",
+        "raw_label": "picture",
+        "nyu_label": "picture",
+        "colors": [
+          "black",
+          "gray"
+        ],
+        "center": [
+          -1.2265,
+          2.4677,
+          1.3075
+        ],
+        "size": [
+          0.4043,
+          0.0081,
+          0.6026
+        ],
+        "yaw": -0.0,
+        "aabb": {
+          "min": [
+            -1.4286,
+            2.4637,
+            1.0062
+          ],
+          "max": [
+            -1.0244,
+            2.4717,
+            1.6088
+          ]
+        },
+        "size_aabb": [
+          0.4043,
+          0.0081,
+          0.6026
+        ],
+        "bbox_corners": [
+          [
+            -1.4286,
+            2.4717,
+            1.6088
+          ],
+          [
+            -1.0244,
+            2.4717,
+            1.6088
+          ],
+          [
+            -1.0244,
+            2.4637,
+            1.6088
+          ],
+          [
+            -1.4286,
+            2.4637,
+            1.6088
+          ],
+          [
+            -1.4286,
+            2.4717,
+            1.0062
+          ],
+          [
+            -1.0244,
+            2.4717,
+            1.0062
+          ],
+          [
+            -1.0244,
+            2.4637,
+            1.0062
+          ],
+          [
+            -1.4286,
+            2.4637,
+            1.0062
+          ]
+        ],
+        "volume": 0.00196
+      },
+      "anchors": [
+        {
+          "object_id": "61",
+          "label": "bench"
+        }
+      ],
+      "distractor_ids": [
+        "34",
+        "76"
+      ],
+      "evidence": "solved from geometry: closest: centre 2.25 m (next 2.72 m); box-gap 1.46 m (next 1.99 m)",
+      "statement": "the picture that is closest to the bench",
+      "region": "1",
+      "images": [
+        "data/pdf_assets/hotel_room_2/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='picture' color='' hops=[{'relation': 'closest', 'phrases': ['bench']}]",
+        "head candidates: [picture#31, picture#34, picture#76]",
+        "target hop (closest): closest: ranked [picture#31, picture#34, picture#76]",
+        "pick: closest: centre 2.25 m (next 2.72 m); box-gap 1.46 m (next 1.99 m)",
+        "result: closest: centre 2.25 m (next 2.72 m); box-gap 1.46 m (next 1.99 m)"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the lamp that is between the flowers and the bench.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "lamp",
+        "flowers",
+        "bench"
+      ],
+      "answer": {
+        "object_id": "10",
+        "region": "1",
+        "label": "lamp",
+        "raw_label": "lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "gray",
+          "aqua"
+        ],
+        "center": [
+          -2.9975,
+          2.2457,
+          0.6205
+        ],
+        "size": [
+          0.2814,
+          0.2814,
+          0.5008
+        ],
+        "yaw": 2.4633,
+        "aabb": {
+          "min": [
+            -3.1954,
+            2.0478,
+            0.3702
+          ],
+          "max": [
+            -2.7996,
+            2.4436,
+            0.8709
+          ]
+        },
+        "size_aabb": [
+          0.3957,
+          0.3957,
+          0.5008
+        ],
+        "bbox_corners": [
+          [
+            -2.9762,
+            2.0478,
+            0.8709
+          ],
+          [
+            -3.1954,
+            2.2244,
+            0.8709
+          ],
+          [
+            -3.0188,
+            2.4436,
+            0.8709
+          ],
+          [
+            -2.7996,
+            2.267,
+            0.8709
+          ],
+          [
+            -2.9762,
+            2.0478,
+            0.3702
+          ],
+          [
+            -3.1954,
+            2.2244,
+            0.3702
+          ],
+          [
+            -3.0188,
+            2.4436,
+            0.3702
+          ],
+          [
+            -2.7996,
+            2.267,
+            0.3702
+          ]
+        ],
+        "volume": 0.03966
+      },
+      "anchors": [
+        {
+          "object_id": "38",
+          "label": "flowers",
+          "phrase": "the flowers"
+        },
+        {
+          "object_id": "61",
+          "label": "bench",
+          "phrase": "the bench"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "between: between flowers#38 and bench#61 (lateral offset 0.95 m)",
+      "statement": "",
+      "region": "1",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the map with the eye glasses on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "map",
+        "eye glasses"
+      ],
+      "answer": {
+        "object_id": "36",
+        "region": "1",
+        "label": "map",
+        "raw_label": "map",
+        "nyu_label": "map",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -2.3524,
+          -0.9951,
+          0.7715
+        ],
+        "size": [
+          0.4564,
+          0.3415,
+          0.0448
+        ],
+        "yaw": -0.447,
+        "aabb": {
+          "min": [
+            -2.632,
+            -1.2477,
+            0.7491
+          ],
+          "max": [
+            -2.0728,
+            -0.7425,
+            0.7939
+          ]
+        },
+        "size_aabb": [
+          0.5592,
+          0.5052,
+          0.0448
+        ],
+        "bbox_corners": [
+          [
+            -2.4844,
+            -0.7425,
+            0.7939
+          ],
+          [
+            -2.0728,
+            -0.9398,
+            0.7939
+          ],
+          [
+            -2.2204,
+            -1.2477,
+            0.7939
+          ],
+          [
+            -2.632,
+            -1.0505,
+            0.7939
+          ],
+          [
+            -2.4844,
+            -0.7425,
+            0.7491
+          ],
+          [
+            -2.0728,
+            -0.9398,
+            0.7491
+          ],
+          [
+            -2.2204,
+            -1.2477,
+            0.7491
+          ],
+          [
+            -2.632,
+            -1.0505,
+            0.7491
+          ]
+        ],
+        "volume": 0.00698
+      },
+      "anchors": [
+        {
+          "object_id": "69",
+          "label": "eye glasses",
+          "phrase": "the eye glasses"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds eye glasses#69 (top 0.79 m, its underside 0.76 m)",
+      "statement": "",
+      "region": "1",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the ceiling lamp that is above the soap dish.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "above",
+      "target_objects": [
+        "ceiling lamp",
+        "soap dish"
+      ],
+      "answer": {
+        "object_id": "83",
+        "region": "0",
+        "label": "ceiling lamp",
+        "raw_label": "ceiling lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          0.8849,
+          1.42,
+          2.4626
+        ],
+        "size": [
+          0.1998,
+          0.0749,
+          0.244
+        ],
+        "yaw": -1.0235,
+        "aabb": {
+          "min": [
+            0.8009,
+            1.3152,
+            2.3406
+          ],
+          "max": [
+            0.9689,
+            1.5249,
+            2.5846
+          ]
+        },
+        "size_aabb": [
+          0.1679,
+          0.2096,
+          0.244
+        ],
+        "bbox_corners": [
+          [
+            0.8649,
+            1.5249,
+            2.5846
+          ],
+          [
+            0.9689,
+            1.3542,
+            2.5846
+          ],
+          [
+            0.9049,
+            1.3152,
+            2.5846
+          ],
+          [
+            0.8009,
+            1.4859,
+            2.5846
+          ],
+          [
+            0.8649,
+            1.5249,
+            2.3406
+          ],
+          [
+            0.9689,
+            1.3542,
+            2.3406
+          ],
+          [
+            0.9049,
+            1.3152,
+            2.3406
+          ],
+          [
+            0.8009,
+            1.4859,
+            2.3406
+          ]
+        ],
+        "volume": 0.00365
+      },
+      "anchors": [
+        {
+          "object_id": "47",
+          "label": "soap dish",
+          "phrase": "the soap dish"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "above: underside 2.34 m clears soap dish#47 top 1.00 m, footprints overlap 49%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the toilet paper that is below the soap bottle.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "below",
+      "target_objects": [
+        "toilet paper",
+        "soap bottle"
+      ],
+      "answer": {
+        "object_id": "5",
+        "region": "0",
+        "label": "toilet paper",
+        "raw_label": "toilet paper",
+        "nyu_label": "toilet paper",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          0.9843,
+          1.497,
+          0.4311
+        ],
+        "size": [
+          0.1046,
+          0.1032,
+          0.093
+        ],
+        "yaw": 1.7453,
+        "aabb": {
+          "min": [
+            0.9244,
+            1.4365,
+            0.3847
+          ],
+          "max": [
+            1.0442,
+            1.5575,
+            0.4776
+          ]
+        },
+        "size_aabb": [
+          0.1198,
+          0.121,
+          0.093
+        ],
+        "bbox_corners": [
+          [
+            0.9426,
+            1.4365,
+            0.4776
+          ],
+          [
+            0.9244,
+            1.5396,
+            0.4776
+          ],
+          [
+            1.026,
+            1.5575,
+            0.4776
+          ],
+          [
+            1.0442,
+            1.4544,
+            0.4776
+          ],
+          [
+            0.9426,
+            1.4365,
+            0.3847
+          ],
+          [
+            0.9244,
+            1.5396,
+            0.3847
+          ],
+          [
+            1.026,
+            1.5575,
+            0.3847
+          ],
+          [
+            1.0442,
+            1.4544,
+            0.3847
+          ]
+        ],
+        "volume": 0.001
+      },
+      "anchors": [
+        {
+          "object_id": "12",
+          "label": "soap bottle",
+          "phrase": "the soap bottle"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "below: top 0.48 m under soap bottle#12 underside 0.95 m, footprints overlap 0%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the night stand that is closest to the bench.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "night stand",
+        "bench"
+      ],
+      "answer": {
+        "object_id": "91",
+        "region": "1",
+        "label": "night stand",
+        "raw_label": "night stand",
+        "nyu_label": "night stand",
+        "colors": [
+          "black",
+          "aqua"
+        ],
+        "center": [
+          -0.7035,
+          2.2507,
+          0.1825
+        ],
+        "size": [
+          0.3215,
+          0.6479,
+          0.3736
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -1.0275,
+            2.09,
+            -0.0043
+          ],
+          "max": [
+            -0.3795,
+            2.4115,
+            0.3694
+          ]
+        },
+        "size_aabb": [
+          0.6479,
+          0.3215,
+          0.3736
+        ],
+        "bbox_corners": [
+          [
+            -0.3795,
+            2.4115,
+            0.3694
+          ],
+          [
+            -0.3795,
+            2.09,
+            0.3694
+          ],
+          [
+            -1.0275,
+            2.09,
+            0.3694
+          ],
+          [
+            -1.0275,
+            2.4115,
+            0.3694
+          ],
+          [
+            -0.3795,
+            2.4115,
+            -0.0043
+          ],
+          [
+            -0.3795,
+            2.09,
+            -0.0043
+          ],
+          [
+            -1.0275,
+            2.09,
+            -0.0043
+          ],
+          [
+            -1.0275,
+            2.4115,
+            -0.0043
+          ]
+        ],
+        "volume": 0.07783
+      },
+      "anchors": [
+        {
+          "object_id": "61",
+          "label": "bench",
+          "phrase": "the bench"
+        }
+      ],
+      "distractor_ids": [
+        "50"
+      ],
+      "competitors": 1,
+      "margin": 2.122,
+      "evidence": "closest: centre 1.39 m vs runner-up night stand#50 3.52 m; box-gap 0.58 m vs runner-up night stand#50 2.88 m",
+      "statement": "the night stand that is closest to the bench",
+      "region": "1",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the night stand that is farthest from the glass.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "night stand",
+        "glass"
+      ],
+      "answer": {
+        "object_id": "50",
+        "region": "1",
+        "label": "night stand",
+        "raw_label": "night stand",
+        "nyu_label": "night stand",
+        "colors": [
+          "black",
+          "aqua"
+        ],
+        "center": [
+          -3.0095,
+          2.2507,
+          0.1825
+        ],
+        "size": [
+          0.6479,
+          0.3215,
+          0.3736
+        ],
+        "yaw": -0.0,
+        "aabb": {
+          "min": [
+            -3.3335,
+            2.09,
+            -0.0043
+          ],
+          "max": [
+            -2.6855,
+            2.4115,
+            0.3694
+          ]
+        },
+        "size_aabb": [
+          0.6479,
+          0.3215,
+          0.3736
+        ],
+        "bbox_corners": [
+          [
+            -3.3335,
+            2.4115,
+            0.3694
+          ],
+          [
+            -2.6855,
+            2.4115,
+            0.3694
+          ],
+          [
+            -2.6855,
+            2.09,
+            0.3694
+          ],
+          [
+            -3.3335,
+            2.09,
+            0.3694
+          ],
+          [
+            -3.3335,
+            2.4115,
+            -0.0043
+          ],
+          [
+            -2.6855,
+            2.4115,
+            -0.0043
+          ],
+          [
+            -2.6855,
+            2.09,
+            -0.0043
+          ],
+          [
+            -3.3335,
+            2.09,
+            -0.0043
+          ]
+        ],
+        "volume": 0.07783
+      },
+      "anchors": [
+        {
+          "object_id": "18",
+          "label": "glass",
+          "phrase": "the glass"
+        }
+      ],
+      "distractor_ids": [
+        "91"
+      ],
+      "competitors": 1,
+      "margin": 2.085,
+      "evidence": "farthest: centre 2.48 m vs runner-up night stand#91 0.29 m; box-gap 2.08 m vs runner-up night stand#91 0.00 m",
+      "statement": "the night stand that is farthest from the glass",
+      "region": "1",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the curtain that is farthest from the trash bin.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "curtain",
+        "trash bin"
+      ],
+      "answer": {
+        "object_id": "17",
+        "region": "1",
+        "label": "curtain",
+        "raw_label": "curtain",
+        "nyu_label": "curtain",
+        "colors": [
+          "aqua"
+        ],
+        "center": [
+          -4.4163,
+          2.0641,
+          1.2708
+        ],
+        "size": [
+          0.8059,
+          0.1406,
+          2.5323
+        ],
+        "yaw": -1.5669,
+        "aabb": {
+          "min": [
+            -4.4882,
+            1.6609,
+            0.0046
+          ],
+          "max": [
+            -4.3445,
+            2.4673,
+            2.5369
+          ]
+        },
+        "size_aabb": [
+          0.1437,
+          0.8065,
+          2.5323
+        ],
+        "bbox_corners": [
+          [
+            -4.3476,
+            2.4673,
+            2.5369
+          ],
+          [
+            -4.3445,
+            1.6614,
+            2.5369
+          ],
+          [
+            -4.4851,
+            1.6609,
+            2.5369
+          ],
+          [
+            -4.4882,
+            2.4668,
+            2.5369
+          ],
+          [
+            -4.3476,
+            2.4673,
+            0.0046
+          ],
+          [
+            -4.3445,
+            1.6614,
+            0.0046
+          ],
+          [
+            -4.4851,
+            1.6609,
+            0.0046
+          ],
+          [
+            -4.4882,
+            2.4668,
+            0.0046
+          ]
+        ],
+        "volume": 0.28697
+      },
+      "anchors": [
+        {
+          "object_id": "7",
+          "label": "trash bin",
+          "phrase": "the trash bin"
+        }
+      ],
+      "distractor_ids": [
+        "45"
+      ],
+      "competitors": 1,
+      "margin": 1.733,
+      "evidence": "farthest: centre 3.61 m vs runner-up curtain#45 1.75 m; box-gap 2.82 m vs runner-up curtain#45 1.09 m",
+      "statement": "the curtain that is farthest from the garbage bin",
+      "region": "1",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the pillow that is between the glass and the eye glasses.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "pillow",
+        "glass",
+        "eye glasses"
+      ],
+      "answer": {
+        "object_id": "14",
+        "region": "1",
+        "label": "pillow",
+        "raw_label": "pillow",
+        "nyu_label": "pillow",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -1.5637,
+          2.0133,
+          0.5423
+        ],
+        "size": [
+          0.5942,
+          0.3008,
+          0.2195
+        ],
+        "yaw": 3.1398,
+        "aabb": {
+          "min": [
+            -1.861,
+            1.8623,
+            0.4326
+          ],
+          "max": [
+            -1.2663,
+            2.1642,
+            0.6521
+          ]
+        },
+        "size_aabb": [
+          0.5947,
+          0.3019,
+          0.2195
+        ],
+        "bbox_corners": [
+          [
+            -1.2669,
+            1.8623,
+            0.6521
+          ],
+          [
+            -1.861,
+            1.8634,
+            0.6521
+          ],
+          [
+            -1.8605,
+            2.1642,
+            0.6521
+          ],
+          [
+            -1.2663,
+            2.1631,
+            0.6521
+          ],
+          [
+            -1.2669,
+            1.8623,
+            0.4326
+          ],
+          [
+            -1.861,
+            1.8634,
+            0.4326
+          ],
+          [
+            -1.8605,
+            2.1642,
+            0.4326
+          ],
+          [
+            -1.2663,
+            2.1631,
+            0.4326
+          ]
+        ],
+        "volume": 0.03923
+      },
+      "anchors": [
+        {
+          "object_id": "18",
+          "label": "glass",
+          "phrase": "the glass"
+        },
+        {
+          "object_id": "69",
+          "label": "eye glasses",
+          "phrase": "the eye glasses"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 5,
+      "evidence": "between: between glass#18 and eye glasses#69 (lateral offset 0.85 m)",
+      "statement": "",
+      "region": "1",
+      "verified": true,
+      "derivation": "geometry"
+    }
+  ]
+}

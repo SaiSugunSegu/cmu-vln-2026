@@ -1,0 +1,1192 @@
+{
+  "scene": "arabic_room",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/arabic_room/iref_vla_metadata/arabic_room_referential_statements.json",
+    "source_objects: bags/arabic_room/iref_vla_metadata/arabic_room_objects.json"
+  ],
+  "difficulty_counts": {
+    "hard": 2,
+    "medium": 4,
+    "easy": 4
+  },
+  "relation_counts": {
+    "closest": 2,
+    "between": 2,
+    "supports": 2,
+    "on": 1,
+    "near": 1,
+    "farthest": 2
+  },
+  "target_object_coverage": [
+    "arabic jar",
+    "book",
+    "carpet",
+    "coffee pot",
+    "door frame",
+    "glass",
+    "hookah wire",
+    "pillow",
+    "potted plant",
+    "shoes",
+    "stool",
+    "table",
+    "tray",
+    "vase",
+    "wall lamp",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the pillow closest to the book on the stool.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "closest",
+      "target_objects": [
+        "pillow",
+        "book",
+        "stool"
+      ],
+      "answer": {
+        "object_id": "73",
+        "region": "0",
+        "label": "pillow",
+        "raw_label": "pillow",
+        "nyu_label": "pillow",
+        "colors": [
+          "maroon"
+        ],
+        "center": [
+          1.4909,
+          -2.1159,
+          0.4156
+        ],
+        "size": [
+          0.4182,
+          0.2153,
+          0.3618
+        ],
+        "yaw": 0.0056,
+        "aabb": {
+          "min": [
+            1.2812,
+            -2.2248,
+            0.2347
+          ],
+          "max": [
+            1.7006,
+            -2.0071,
+            0.5964
+          ]
+        },
+        "size_aabb": [
+          0.4194,
+          0.2177,
+          0.3618
+        ],
+        "bbox_corners": [
+          [
+            1.2812,
+            -2.0094,
+            0.5964
+          ],
+          [
+            1.6994,
+            -2.0071,
+            0.5964
+          ],
+          [
+            1.7006,
+            -2.2224,
+            0.5964
+          ],
+          [
+            1.2824,
+            -2.2248,
+            0.5964
+          ],
+          [
+            1.2812,
+            -2.0094,
+            0.2347
+          ],
+          [
+            1.6994,
+            -2.0071,
+            0.2347
+          ],
+          [
+            1.7006,
+            -2.2224,
+            0.2347
+          ],
+          [
+            1.2824,
+            -2.2248,
+            0.2347
+          ]
+        ],
+        "volume": 0.03257
+      },
+      "anchors": [
+        {
+          "object_id": "10",
+          "label": "book"
+        }
+      ],
+      "distractor_ids": [
+        "13",
+        "2",
+        "27",
+        "35",
+        "50",
+        "52",
+        "7",
+        "70",
+        "77",
+        "78",
+        "84"
+      ],
+      "evidence": "solved from geometry: closest: centre 1.38 m (next 1.83 m); box-gap 1.06 m (next 1.49 m)",
+      "statement": "the pillow that is close to the book",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/arabic_room/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='pillow' color='' hops=[{'relation': 'closest', 'phrases': ['book']}, {'relation': 'on', 'phrases': ['stool']}]",
+        "head candidates: [pillow#2, pillow#7, pillow#13, pillow#27, pillow#35, pillow#50] ...",
+        "anchor hop 1 (on): host already unique, applying it to the target instead",
+        "target hop (closest): closest: ranked [pillow#73, pillow#2, pillow#27]",
+        "deferred hop 1 (on): nothing is on the anchor(s)",
+        "pick: closest: centre 1.38 m (next 1.83 m); box-gap 1.06 m (next 1.49 m)",
+        "result: closest: centre 1.38 m (next 1.83 m); box-gap 1.06 m (next 1.49 m)"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the wall lamp that is between a door frame and a window.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "between",
+      "target_objects": [
+        "wall lamp",
+        "door frame",
+        "window"
+      ],
+      "answer": {
+        "object_id": "79",
+        "region": "0",
+        "label": "wall lamp",
+        "raw_label": "wall lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "black",
+          "aqua"
+        ],
+        "center": [
+          -0.7869,
+          -2.4026,
+          2.0771
+        ],
+        "size": [
+          0.1933,
+          0.1007,
+          0.4469
+        ],
+        "yaw": -0.0001,
+        "aabb": {
+          "min": [
+            -0.8836,
+            -2.4529,
+            1.8536
+          ],
+          "max": [
+            -0.6903,
+            -2.3522,
+            2.3005
+          ]
+        },
+        "size_aabb": [
+          0.1933,
+          0.1007,
+          0.4469
+        ],
+        "bbox_corners": [
+          [
+            -0.8836,
+            -2.3522,
+            2.3005
+          ],
+          [
+            -0.6903,
+            -2.3522,
+            2.3005
+          ],
+          [
+            -0.6903,
+            -2.4529,
+            2.3005
+          ],
+          [
+            -0.8836,
+            -2.4529,
+            2.3005
+          ],
+          [
+            -0.8836,
+            -2.3522,
+            1.8536
+          ],
+          [
+            -0.6903,
+            -2.3522,
+            1.8536
+          ],
+          [
+            -0.6903,
+            -2.4529,
+            1.8536
+          ],
+          [
+            -0.8836,
+            -2.4529,
+            1.8536
+          ]
+        ],
+        "volume": 0.0087
+      },
+      "anchors": [
+        {
+          "object_id": "39",
+          "label": "door frame"
+        },
+        {
+          "object_id": "45",
+          "label": "door frame"
+        },
+        {
+          "object_id": "20",
+          "label": "window"
+        },
+        {
+          "object_id": "65",
+          "label": "window"
+        },
+        {
+          "object_id": "75",
+          "label": "window"
+        },
+        {
+          "object_id": "76",
+          "label": "window"
+        }
+      ],
+      "distractor_ids": [
+        "26",
+        "41",
+        "54",
+        "57",
+        "62"
+      ],
+      "evidence": "solved from geometry: between: wall lamp#79 is the only match",
+      "statement": "the lamp that is nearest to the navy vase",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/arabic_room/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='wall lamp' color='' hops=[{'relation': 'between', 'phrases': ['door frame', 'window']}]",
+        "head candidates: [wall lamp#26, wall lamp#54, wall lamp#57, wall lamp#79]",
+        "target hop (between): between: 1 in the corridor -> [wall lamp#79]",
+        "pick: between: wall lamp#79 is the only match",
+        "result: between: wall lamp#79 is the only match"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the table with the coffee pot on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "coffee pot"
+      ],
+      "answer": {
+        "object_id": "28",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "brown"
+        ],
+        "center": [
+          1.5786,
+          -0.6263,
+          0.2712
+        ],
+        "size": [
+          0.5621,
+          0.4886,
+          0.5416
+        ],
+        "yaw": 2.618,
+        "aabb": {
+          "min": [
+            1.213,
+            -0.9784,
+            0.0004
+          ],
+          "max": [
+            1.9441,
+            -0.2742,
+            0.542
+          ]
+        },
+        "size_aabb": [
+          0.7311,
+          0.7042,
+          0.5416
+        ],
+        "bbox_corners": [
+          [
+            1.6998,
+            -0.9784,
+            0.542
+          ],
+          [
+            1.213,
+            -0.6974,
+            0.542
+          ],
+          [
+            1.4573,
+            -0.2742,
+            0.542
+          ],
+          [
+            1.9441,
+            -0.5553,
+            0.542
+          ],
+          [
+            1.6998,
+            -0.9784,
+            0.0004
+          ],
+          [
+            1.213,
+            -0.6974,
+            0.0004
+          ],
+          [
+            1.4573,
+            -0.2742,
+            0.0004
+          ],
+          [
+            1.9441,
+            -0.5553,
+            0.0004
+          ]
+        ],
+        "volume": 0.14875
+      },
+      "anchors": [
+        {
+          "object_id": "11",
+          "label": "coffee pot",
+          "phrase": "the coffee pot"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds coffee pot#11 (top 0.54 m, its underside 0.54 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the glass on top of the tray.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "on",
+      "target_objects": [
+        "glass",
+        "tray"
+      ],
+      "answer": {
+        "object_id": "16",
+        "region": "0",
+        "label": "glass",
+        "raw_label": "glass",
+        "nyu_label": "glass",
+        "colors": [
+          "gray",
+          "yellow"
+        ],
+        "center": [
+          2.3865,
+          -0.6655,
+          0.5741
+        ],
+        "size": [
+          0.0845,
+          0.0805,
+          0.0601
+        ],
+        "yaw": 1.6559,
+        "aabb": {
+          "min": [
+            2.3428,
+            -0.711,
+            0.544
+          ],
+          "max": [
+            2.4302,
+            -0.62,
+            0.6041
+          ]
+        },
+        "size_aabb": [
+          0.0874,
+          0.091,
+          0.0601
+        ],
+        "bbox_corners": [
+          [
+            2.35,
+            -0.711,
+            0.6041
+          ],
+          [
+            2.3428,
+            -0.6268,
+            0.6041
+          ],
+          [
+            2.423,
+            -0.62,
+            0.6041
+          ],
+          [
+            2.4302,
+            -0.7041,
+            0.6041
+          ],
+          [
+            2.35,
+            -0.711,
+            0.544
+          ],
+          [
+            2.3428,
+            -0.6268,
+            0.544
+          ],
+          [
+            2.423,
+            -0.62,
+            0.544
+          ],
+          [
+            2.4302,
+            -0.7041,
+            0.544
+          ]
+        ],
+        "volume": 0.00041
+      },
+      "anchors": [
+        {
+          "object_id": "19",
+          "label": "tray",
+          "phrase": "the tray"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "on: rests on tray#19 (underside 0.54 m, top 0.56 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the vase that is near the book.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "near",
+      "target_objects": [
+        "vase",
+        "book"
+      ],
+      "answer": {
+        "object_id": "24",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "gray",
+          "navy",
+          "purple"
+        ],
+        "center": [
+          -1.3602,
+          -2.2491,
+          0.2802
+        ],
+        "size": [
+          0.3491,
+          0.3442,
+          0.5599
+        ],
+        "yaw": 0.5236,
+        "aabb": {
+          "min": [
+            -1.5974,
+            -2.4854,
+            0.0002
+          ],
+          "max": [
+            -1.1229,
+            -2.0127,
+            0.5602
+          ]
+        },
+        "size_aabb": [
+          0.4745,
+          0.4727,
+          0.5599
+        ],
+        "bbox_corners": [
+          [
+            -1.5974,
+            -2.1873,
+            0.5602
+          ],
+          [
+            -1.295,
+            -2.0127,
+            0.5602
+          ],
+          [
+            -1.1229,
+            -2.3109,
+            0.5602
+          ],
+          [
+            -1.4253,
+            -2.4854,
+            0.5602
+          ],
+          [
+            -1.5974,
+            -2.1873,
+            0.0002
+          ],
+          [
+            -1.295,
+            -2.0127,
+            0.0002
+          ],
+          [
+            -1.1229,
+            -2.3109,
+            0.0002
+          ],
+          [
+            -1.4253,
+            -2.4854,
+            0.0002
+          ]
+        ],
+        "volume": 0.0673
+      },
+      "anchors": [
+        {
+          "object_id": "10",
+          "label": "book",
+          "phrase": "the book"
+        }
+      ],
+      "distractor_ids": [
+        "42"
+      ],
+      "competitors": 1,
+      "margin": 4.092,
+      "evidence": "near: box-gap 1.14 m; next vase is 5.23 m away",
+      "statement": "the vase that is near the book",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the potted plant that is closest to the tray.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "potted plant",
+        "tray"
+      ],
+      "answer": {
+        "object_id": "18",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "purple",
+          "olive",
+          "gray"
+        ],
+        "center": [
+          3.5584,
+          -2.0044,
+          0.5558
+        ],
+        "size": [
+          0.5445,
+          0.5374,
+          1.1113
+        ],
+        "yaw": 1.0576,
+        "aabb": {
+          "min": [
+            3.1907,
+            -2.3735,
+            0.0002
+          ],
+          "max": [
+            3.9262,
+            -1.6353,
+            1.1115
+          ]
+        },
+        "size_aabb": [
+          0.7355,
+          0.7382,
+          1.1113
+        ],
+        "bbox_corners": [
+          [
+            3.1907,
+            -2.1097,
+            1.1115
+          ],
+          [
+            3.458,
+            -1.6353,
+            1.1115
+          ],
+          [
+            3.9262,
+            -1.8992,
+            1.1115
+          ],
+          [
+            3.6588,
+            -2.3735,
+            1.1115
+          ],
+          [
+            3.1907,
+            -2.1097,
+            0.0002
+          ],
+          [
+            3.458,
+            -1.6353,
+            0.0002
+          ],
+          [
+            3.9262,
+            -1.8992,
+            0.0002
+          ],
+          [
+            3.6588,
+            -2.3735,
+            0.0002
+          ]
+        ],
+        "volume": 0.32517
+      },
+      "anchors": [
+        {
+          "object_id": "19",
+          "label": "tray",
+          "phrase": "the tray"
+        }
+      ],
+      "distractor_ids": [
+        "0"
+      ],
+      "competitors": 1,
+      "margin": 4.817,
+      "evidence": "closest: centre 1.76 m vs runner-up potted plant#0 6.74 m; box-gap 0.98 m vs runner-up potted plant#0 5.80 m",
+      "statement": "the plant that is closest to the tray",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the vase that is farthest from the shoes.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "vase",
+        "shoes"
+      ],
+      "answer": {
+        "object_id": "42",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          3.8018,
+          2.179,
+          0.2081
+        ],
+        "size": [
+          0.4028,
+          0.3983,
+          0.4159
+        ],
+        "yaw": -0.1731,
+        "aabb": {
+          "min": [
+            3.5691,
+            1.9481,
+            0.0002
+          ],
+          "max": [
+            4.0346,
+            2.4099,
+            0.4161
+          ]
+        },
+        "size_aabb": [
+          0.4654,
+          0.4618,
+          0.4159
+        ],
+        "bbox_corners": [
+          [
+            3.6377,
+            2.4099,
+            0.4161
+          ],
+          [
+            4.0346,
+            2.3405,
+            0.4161
+          ],
+          [
+            3.9659,
+            1.9481,
+            0.4161
+          ],
+          [
+            3.5691,
+            2.0175,
+            0.4161
+          ],
+          [
+            3.6377,
+            2.4099,
+            0.0002
+          ],
+          [
+            4.0346,
+            2.3405,
+            0.0002
+          ],
+          [
+            3.9659,
+            1.9481,
+            0.0002
+          ],
+          [
+            3.5691,
+            2.0175,
+            0.0002
+          ]
+        ],
+        "volume": 0.06674
+      },
+      "anchors": [
+        {
+          "object_id": "1",
+          "label": "shoes",
+          "phrase": "the shoes"
+        }
+      ],
+      "distractor_ids": [
+        "24"
+      ],
+      "competitors": 1,
+      "margin": 5.901,
+      "evidence": "farthest: centre 8.00 m vs runner-up vase#24 2.08 m; box-gap 7.48 m vs runner-up vase#24 1.58 m",
+      "statement": "the vase that is farthest from the shoe",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the potted plant that is farthest from the arabic jar.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "arabic jar"
+      ],
+      "answer": {
+        "object_id": "0",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "purple"
+        ],
+        "center": [
+          -3.7469,
+          2.0009,
+          0.6164
+        ],
+        "size": [
+          0.7477,
+          0.791,
+          1.2324
+        ],
+        "yaw": -2.2502,
+        "aabb": {
+          "min": [
+            -4.2895,
+            1.4615,
+            0.0002
+          ],
+          "max": [
+            -3.2044,
+            2.5402,
+            1.2326
+          ]
+        },
+        "size_aabb": [
+          1.0851,
+          1.0786,
+          1.2324
+        ],
+        "bbox_corners": [
+          [
+            -3.2044,
+            2.0432,
+            1.2326
+          ],
+          [
+            -3.6741,
+            1.4615,
+            1.2326
+          ],
+          [
+            -4.2895,
+            1.9585,
+            1.2326
+          ],
+          [
+            -3.8197,
+            2.5402,
+            1.2326
+          ],
+          [
+            -3.2044,
+            2.0432,
+            0.0002
+          ],
+          [
+            -3.6741,
+            1.4615,
+            0.0002
+          ],
+          [
+            -4.2895,
+            1.9585,
+            0.0002
+          ],
+          [
+            -3.8197,
+            2.5402,
+            0.0002
+          ]
+        ],
+        "volume": 0.72883
+      },
+      "anchors": [
+        {
+          "object_id": "9",
+          "label": "arabic jar",
+          "phrase": "the arabic jar"
+        }
+      ],
+      "distractor_ids": [
+        "18"
+      ],
+      "competitors": 1,
+      "margin": 4.779,
+      "evidence": "farthest: centre 6.76 m vs runner-up potted plant#18 1.79 m; box-gap 5.95 m vs runner-up potted plant#18 1.17 m",
+      "statement": "the plant that is farthest from the jar",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the carpet that is between the arabic jar and the hookah wire.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "carpet",
+        "arabic jar",
+        "hookah wire"
+      ],
+      "answer": {
+        "object_id": "32",
+        "region": "0",
+        "label": "carpet",
+        "raw_label": "carpet",
+        "nyu_label": "rug",
+        "colors": [
+          "maroon",
+          "gray",
+          "aqua"
+        ],
+        "center": [
+          1.9441,
+          -0.5847,
+          0.0282
+        ],
+        "size": [
+          2.1621,
+          1.4338,
+          0.0203
+        ],
+        "yaw": -3.1385,
+        "aabb": {
+          "min": [
+            0.8609,
+            -1.3049,
+            0.0181
+          ],
+          "max": [
+            3.0274,
+            0.1355,
+            0.0384
+          ]
+        },
+        "size_aabb": [
+          2.1665,
+          1.4404,
+          0.0203
+        ],
+        "bbox_corners": [
+          [
+            3.0274,
+            -1.2982,
+            0.0384
+          ],
+          [
+            0.8653,
+            -1.3049,
+            0.0384
+          ],
+          [
+            0.8609,
+            0.1288,
+            0.0384
+          ],
+          [
+            3.023,
+            0.1355,
+            0.0384
+          ],
+          [
+            3.0274,
+            -1.2982,
+            0.0181
+          ],
+          [
+            0.8653,
+            -1.3049,
+            0.0181
+          ],
+          [
+            0.8609,
+            0.1288,
+            0.0181
+          ],
+          [
+            3.023,
+            0.1355,
+            0.0181
+          ]
+        ],
+        "volume": 0.06297
+      },
+      "anchors": [
+        {
+          "object_id": "9",
+          "label": "arabic jar",
+          "phrase": "the arabic jar"
+        },
+        {
+          "object_id": "15",
+          "label": "hookah wire",
+          "phrase": "the hookah wire"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "between: between arabic jar#9 and hookah wire#15 (lateral offset 0.01 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the stool with the book on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "stool",
+        "book"
+      ],
+      "answer": {
+        "object_id": "63",
+        "region": "0",
+        "label": "stool",
+        "raw_label": "stool",
+        "nyu_label": "stool",
+        "colors": [
+          "brown",
+          "maroon",
+          "aqua"
+        ],
+        "center": [
+          -0.017,
+          -2.207,
+          0.2468
+        ],
+        "size": [
+          0.7257,
+          0.4012,
+          0.4844
+        ],
+        "yaw": 0.0,
+        "aabb": {
+          "min": [
+            -0.3799,
+            -2.4076,
+            0.0046
+          ],
+          "max": [
+            0.3459,
+            -2.0064,
+            0.489
+          ]
+        },
+        "size_aabb": [
+          0.7257,
+          0.4012,
+          0.4844
+        ],
+        "bbox_corners": [
+          [
+            -0.3799,
+            -2.0064,
+            0.489
+          ],
+          [
+            0.3459,
+            -2.0064,
+            0.489
+          ],
+          [
+            0.3459,
+            -2.4076,
+            0.489
+          ],
+          [
+            -0.3799,
+            -2.4076,
+            0.489
+          ],
+          [
+            -0.3799,
+            -2.0064,
+            0.0046
+          ],
+          [
+            0.3459,
+            -2.0064,
+            0.0046
+          ],
+          [
+            0.3459,
+            -2.4076,
+            0.0046
+          ],
+          [
+            -0.3799,
+            -2.4076,
+            0.0046
+          ]
+        ],
+        "volume": 0.14105
+      },
+      "anchors": [
+        {
+          "object_id": "10",
+          "label": "book",
+          "phrase": "the book"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds book#10 (top 0.49 m, its underside 0.49 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    }
+  ]
+}

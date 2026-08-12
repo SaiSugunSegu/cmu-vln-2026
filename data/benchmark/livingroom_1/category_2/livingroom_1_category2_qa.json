@@ -1,0 +1,1171 @@
+{
+  "scene": "livingroom_1",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/livingroom_1/iref_vla_metadata/livingroom_1_referential_statements.json",
+    "source_objects: bags/livingroom_1/iref_vla_metadata/livingroom_1_objects.json"
+  ],
+  "difficulty_counts": {
+    "hard": 7,
+    "medium": 2,
+    "easy": 1
+  },
+  "relation_counts": {
+    "on": 2,
+    "between": 1,
+    "supports": 1,
+    "above": 1,
+    "below": 1,
+    "near": 1,
+    "closest": 2,
+    "farthest": 1
+  },
+  "target_object_coverage": [
+    "books",
+    "bottle",
+    "bowl",
+    "cabinet",
+    "chair",
+    "light switch",
+    "picture",
+    "pillow",
+    "plant stand",
+    "potted plant",
+    "round table",
+    "shelf",
+    "sofa",
+    "tv remote",
+    "vase",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the vase on the cabinet below the picture.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "vase",
+        "cabinet",
+        "picture"
+      ],
+      "answer": {
+        "object_id": "23",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "olive",
+          "brown"
+        ],
+        "center": [
+          -2.386,
+          -7.1115,
+          0.9342
+        ],
+        "size": [
+          0.1761,
+          0.1745,
+          0.1805
+        ],
+        "yaw": 1.5708,
+        "aabb": {
+          "min": [
+            -2.4732,
+            -7.1995,
+            0.844
+          ],
+          "max": [
+            -2.2988,
+            -7.0234,
+            1.0245
+          ]
+        },
+        "size_aabb": [
+          0.1745,
+          0.1761,
+          0.1805
+        ],
+        "bbox_corners": [
+          [
+            -2.4732,
+            -7.1995,
+            1.0245
+          ],
+          [
+            -2.4732,
+            -7.0234,
+            1.0245
+          ],
+          [
+            -2.2988,
+            -7.0234,
+            1.0245
+          ],
+          [
+            -2.2988,
+            -7.1995,
+            1.0245
+          ],
+          [
+            -2.4732,
+            -7.1995,
+            0.844
+          ],
+          [
+            -2.4732,
+            -7.0234,
+            0.844
+          ],
+          [
+            -2.2988,
+            -7.0234,
+            0.844
+          ],
+          [
+            -2.2988,
+            -7.1995,
+            0.844
+          ]
+        ],
+        "volume": 0.00554
+      },
+      "anchors": [
+        {
+          "object_id": "2",
+          "label": "cabinet"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "42",
+        "71"
+      ],
+      "evidence": "solved from geometry: below: vase#23 is the only match",
+      "statement": "the vase that is on the big cabinet",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_1/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='vase' color='' hops=[{'relation': 'on', 'phrases': ['cabinet']}, {'relation': 'below', 'phrases': ['picture']}]",
+        "head candidates: [vase#11, vase#23, vase#42, vase#71]",
+        "anchor hop 1 (below): host already unique, applying it to the target instead",
+        "target hop (on): on: 1 match(es) -> [vase#23]",
+        "deferred hop 1 (below): below: 1 match(es) -> [vase#23]",
+        "pick: below: vase#23 is the only match",
+        "result: below: vase#23 is the only match"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the pillow on the sofa that is closest to the windows.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "pillow",
+        "sofa",
+        "window"
+      ],
+      "answer": {
+        "object_id": "34",
+        "region": "0",
+        "label": "pillow",
+        "raw_label": "pillow",
+        "nyu_label": "pillow",
+        "colors": [
+          "olive"
+        ],
+        "center": [
+          -2.0427,
+          -1.0052,
+          0.6101
+        ],
+        "size": [
+          0.4176,
+          0.6129,
+          0.4055
+        ],
+        "yaw": 2.6531,
+        "aabb": {
+          "min": [
+            -2.3709,
+            -1.3738,
+            0.4074
+          ],
+          "max": [
+            -1.7145,
+            -0.6366,
+            0.8129
+          ]
+        },
+        "size_aabb": [
+          0.6564,
+          0.7372,
+          0.4055
+        ],
+        "bbox_corners": [
+          [
+            -2.0021,
+            -1.3738,
+            0.8129
+          ],
+          [
+            -2.3709,
+            -1.1778,
+            0.8129
+          ],
+          [
+            -2.0833,
+            -0.6366,
+            0.8129
+          ],
+          [
+            -1.7145,
+            -0.8325,
+            0.8129
+          ],
+          [
+            -2.0021,
+            -1.3738,
+            0.4074
+          ],
+          [
+            -2.3709,
+            -1.1778,
+            0.4074
+          ],
+          [
+            -2.0833,
+            -0.6366,
+            0.4074
+          ],
+          [
+            -1.7145,
+            -0.8325,
+            0.4074
+          ]
+        ],
+        "volume": 0.10379
+      },
+      "anchors": [
+        {
+          "object_id": "0",
+          "label": "sofa"
+        }
+      ],
+      "distractor_ids": [
+        "16",
+        "20",
+        "41"
+      ],
+      "evidence": "solved from geometry: closest: centre 1.70 m (next 3.08 m); box-gap 0.68 m (next 2.28 m)",
+      "statement": "the olive pillow that is on the sofa",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_1/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='pillow' color='' hops=[{'relation': 'on', 'phrases': ['sofa']}, {'relation': 'closest', 'phrases': ['windows']}]",
+        "head candidates: [pillow#16, pillow#34, pillow#41]",
+        "anchor hop 1 (closest): host already unique, applying it to the target instead",
+        "target hop (on): on: 3 match(es) -> [pillow#16, pillow#34, pillow#41]",
+        "deferred hop 1 (closest): closest: ranked [pillow#34, pillow#16, pillow#41]",
+        "pick: closest: centre 1.70 m (next 3.08 m); box-gap 0.68 m (next 2.28 m)",
+        "result: closest: centre 1.70 m (next 3.08 m); box-gap 0.68 m (next 2.28 m)"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the pillow that is between the plant stand and the bottle.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "pillow",
+        "plant stand",
+        "bottle"
+      ],
+      "answer": {
+        "object_id": "41",
+        "region": "0",
+        "label": "pillow",
+        "raw_label": "pillow",
+        "nyu_label": "pillow",
+        "colors": [
+          "maroon"
+        ],
+        "center": [
+          -1.9369,
+          -3.3542,
+          0.5833
+        ],
+        "size": [
+          0.4181,
+          0.6125,
+          0.4058
+        ],
+        "yaw": -2.5167,
+        "aabb": {
+          "min": [
+            -2.2856,
+            -3.7248,
+            0.3804
+          ],
+          "max": [
+            -1.5882,
+            -2.9835,
+            0.7862
+          ]
+        },
+        "size_aabb": [
+          0.6974,
+          0.7413,
+          0.4058
+        ],
+        "bbox_corners": [
+          [
+            -1.5882,
+            -3.4802,
+            0.7862
+          ],
+          [
+            -1.9273,
+            -3.7248,
+            0.7862
+          ],
+          [
+            -2.2856,
+            -3.2281,
+            0.7862
+          ],
+          [
+            -1.9466,
+            -2.9835,
+            0.7862
+          ],
+          [
+            -1.5882,
+            -3.4802,
+            0.3804
+          ],
+          [
+            -1.9273,
+            -3.7248,
+            0.3804
+          ],
+          [
+            -2.2856,
+            -3.2281,
+            0.3804
+          ],
+          [
+            -1.9466,
+            -2.9835,
+            0.3804
+          ]
+        ],
+        "volume": 0.10391
+      },
+      "anchors": [
+        {
+          "object_id": "25",
+          "label": "plant stand",
+          "phrase": "the plant stand"
+        },
+        {
+          "object_id": "96",
+          "label": "bottle",
+          "phrase": "the bottle"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "between: between plant stand#25 and bottle#96 (lateral offset 0.62 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the round table with the bottle on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "round table",
+        "bottle"
+      ],
+      "answer": {
+        "object_id": "102",
+        "region": "0",
+        "label": "round table",
+        "raw_label": "round table",
+        "nyu_label": "table",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -0.4852,
+          -2.9478,
+          0.1953
+        ],
+        "size": [
+          0.7937,
+          0.7933,
+          0.3713
+        ],
+        "yaw": -2.389,
+        "aabb": {
+          "min": [
+            -1.046,
+            -3.5086,
+            0.0096
+          ],
+          "max": [
+            0.0756,
+            -2.387,
+            0.3809
+          ]
+        },
+        "size_aabb": [
+          1.1216,
+          1.1216,
+          0.3713
+        ],
+        "bbox_corners": [
+          [
+            0.0756,
+            -2.9661,
+            0.3809
+          ],
+          [
+            -0.5038,
+            -3.5086,
+            0.3809
+          ],
+          [
+            -1.046,
+            -2.9295,
+            0.3809
+          ],
+          [
+            -0.4666,
+            -2.387,
+            0.3809
+          ],
+          [
+            0.0756,
+            -2.9661,
+            0.0096
+          ],
+          [
+            -0.5038,
+            -3.5086,
+            0.0096
+          ],
+          [
+            -1.046,
+            -2.9295,
+            0.0096
+          ],
+          [
+            -0.4666,
+            -2.387,
+            0.0096
+          ]
+        ],
+        "volume": 0.2338
+      },
+      "anchors": [
+        {
+          "object_id": "96",
+          "label": "bottle",
+          "phrase": "the bottle"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds bottle#96 (top 0.38 m, its underside 0.37 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the potted plant that is above the shelf.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "above",
+      "target_objects": [
+        "potted plant",
+        "shelf"
+      ],
+      "answer": {
+        "object_id": "33",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "aqua",
+          "olive"
+        ],
+        "center": [
+          -0.7837,
+          2.2873,
+          1.9867
+        ],
+        "size": [
+          0.2658,
+          0.1897,
+          0.5083
+        ],
+        "yaw": -2.1958,
+        "aabb": {
+          "min": [
+            -0.9383,
+            2.124,
+            1.7326
+          ],
+          "max": [
+            -0.629,
+            2.4506,
+            2.2409
+          ]
+        },
+        "size_aabb": [
+          0.3093,
+          0.3265,
+          0.5083
+        ],
+        "bbox_corners": [
+          [
+            -0.629,
+            2.3396,
+            2.2409
+          ],
+          [
+            -0.7845,
+            2.124,
+            2.2409
+          ],
+          [
+            -0.9383,
+            2.235,
+            2.2409
+          ],
+          [
+            -0.7829,
+            2.4506,
+            2.2409
+          ],
+          [
+            -0.629,
+            2.3396,
+            1.7326
+          ],
+          [
+            -0.7845,
+            2.124,
+            1.7326
+          ],
+          [
+            -0.9383,
+            2.235,
+            1.7326
+          ],
+          [
+            -0.7829,
+            2.4506,
+            1.7326
+          ]
+        ],
+        "volume": 0.02563
+      },
+      "anchors": [
+        {
+          "object_id": "73",
+          "label": "shelf",
+          "phrase": "the shelf"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 5,
+      "evidence": "above: underside 1.73 m clears shelf#73 top 1.73 m, footprints overlap 83%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the potted plant that is below the bowl.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "below",
+      "target_objects": [
+        "potted plant",
+        "bowl"
+      ],
+      "answer": {
+        "object_id": "21",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "gray",
+          "olive"
+        ],
+        "center": [
+          2.2187,
+          -0.8626,
+          0.7865
+        ],
+        "size": [
+          0.1661,
+          0.1729,
+          0.207
+        ],
+        "yaw": 2.3171,
+        "aabb": {
+          "min": [
+            2.0988,
+            -0.9823,
+            0.683
+          ],
+          "max": [
+            2.3386,
+            -0.7429,
+            0.89
+          ]
+        },
+        "size_aabb": [
+          0.2398,
+          0.2394,
+          0.207
+        ],
+        "bbox_corners": [
+          [
+            2.2116,
+            -0.9823,
+            0.89
+          ],
+          [
+            2.0988,
+            -0.8603,
+            0.89
+          ],
+          [
+            2.2258,
+            -0.7429,
+            0.89
+          ],
+          [
+            2.3386,
+            -0.8648,
+            0.89
+          ],
+          [
+            2.2116,
+            -0.9823,
+            0.683
+          ],
+          [
+            2.0988,
+            -0.8603,
+            0.683
+          ],
+          [
+            2.2258,
+            -0.7429,
+            0.683
+          ],
+          [
+            2.3386,
+            -0.8648,
+            0.683
+          ]
+        ],
+        "volume": 0.00595
+      },
+      "anchors": [
+        {
+          "object_id": "68",
+          "label": "bowl",
+          "phrase": "the bowl"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 5,
+      "evidence": "below: top 0.89 m under bowl#68 underside 1.62 m, footprints overlap 0%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the chair that is near the shelf.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "near",
+      "target_objects": [
+        "chair",
+        "shelf"
+      ],
+      "answer": {
+        "object_id": "22",
+        "region": "0",
+        "label": "chair",
+        "raw_label": "chair",
+        "nyu_label": "chair",
+        "colors": [
+          "black",
+          "brown"
+        ],
+        "center": [
+          -1.8058,
+          1.6963,
+          0.4279
+        ],
+        "size": [
+          0.7194,
+          0.82,
+          0.8341
+        ],
+        "yaw": 0.3936,
+        "aabb": {
+          "min": [
+            -2.2952,
+            1.1798,
+            0.0108
+          ],
+          "max": [
+            -1.3164,
+            2.2129,
+            0.845
+          ]
+        },
+        "size_aabb": [
+          0.9788,
+          1.0331,
+          0.8341
+        ],
+        "bbox_corners": [
+          [
+            -2.2952,
+            1.937,
+            0.845
+          ],
+          [
+            -1.6308,
+            2.2129,
+            0.845
+          ],
+          [
+            -1.3164,
+            1.4556,
+            0.845
+          ],
+          [
+            -1.9807,
+            1.1798,
+            0.845
+          ],
+          [
+            -2.2952,
+            1.937,
+            0.0108
+          ],
+          [
+            -1.6308,
+            2.2129,
+            0.0108
+          ],
+          [
+            -1.3164,
+            1.4556,
+            0.0108
+          ],
+          [
+            -1.9807,
+            1.1798,
+            0.0108
+          ]
+        ],
+        "volume": 0.492
+      },
+      "anchors": [
+        {
+          "object_id": "73",
+          "label": "shelf",
+          "phrase": "the shelf"
+        }
+      ],
+      "distractor_ids": [
+        "54",
+        "61",
+        "64",
+        "74",
+        "8",
+        "81",
+        "90",
+        "98"
+      ],
+      "competitors": 8,
+      "margin": 7.05,
+      "evidence": "near: box-gap 0.84 m; next chair is 7.89 m away",
+      "statement": "the chair that is near the bookshelf",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the vase that is closest to the bowl.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "vase",
+        "bowl"
+      ],
+      "answer": {
+        "object_id": "42",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          2.2393,
+          -0.905,
+          1.2983
+        ],
+        "size": [
+          0.1965,
+          0.1961,
+          0.3485
+        ],
+        "yaw": -1.7714,
+        "aabb": {
+          "min": [
+            2.1236,
+            -1.0207,
+            1.124
+          ],
+          "max": [
+            2.3549,
+            -0.7892,
+            1.4725
+          ]
+        },
+        "size_aabb": [
+          0.2313,
+          0.2316,
+          0.3485
+        ],
+        "bbox_corners": [
+          [
+            2.3549,
+            -0.8282,
+            1.4725
+          ],
+          [
+            2.3158,
+            -1.0207,
+            1.4725
+          ],
+          [
+            2.1236,
+            -0.9817,
+            1.4725
+          ],
+          [
+            2.1627,
+            -0.7892,
+            1.4725
+          ],
+          [
+            2.3549,
+            -0.8282,
+            1.124
+          ],
+          [
+            2.3158,
+            -1.0207,
+            1.124
+          ],
+          [
+            2.1236,
+            -0.9817,
+            1.124
+          ],
+          [
+            2.1627,
+            -0.7892,
+            1.124
+          ]
+        ],
+        "volume": 0.01343
+      },
+      "anchors": [
+        {
+          "object_id": "68",
+          "label": "bowl",
+          "phrase": "the bowl"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "23",
+        "71"
+      ],
+      "competitors": 3,
+      "margin": 3.908,
+      "evidence": "closest: centre 0.51 m vs runner-up vase#11 4.45 m; box-gap 0.17 m vs runner-up vase#11 4.08 m",
+      "statement": "the vase that is closest to the bowl",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the books that are closest to the light switch.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "closest",
+      "target_objects": [
+        "books",
+        "light switch"
+      ],
+      "answer": {
+        "object_id": "78",
+        "region": "0",
+        "label": "books",
+        "raw_label": "books",
+        "nyu_label": "books",
+        "colors": [
+          "gray",
+          "brown",
+          "olive"
+        ],
+        "center": [
+          2.2236,
+          -0.5726,
+          1.2505
+        ],
+        "size": [
+          0.1868,
+          0.2669,
+          0.2521
+        ],
+        "yaw": 3.1334,
+        "aabb": {
+          "min": [
+            2.1291,
+            -0.7068,
+            1.1244
+          ],
+          "max": [
+            2.3181,
+            -0.4384,
+            1.3765
+          ]
+        },
+        "size_aabb": [
+          0.189,
+          0.2684,
+          0.2521
+        ],
+        "bbox_corners": [
+          [
+            2.3159,
+            -0.7068,
+            1.3765
+          ],
+          [
+            2.1291,
+            -0.7053,
+            1.3765
+          ],
+          [
+            2.1313,
+            -0.4384,
+            1.3765
+          ],
+          [
+            2.3181,
+            -0.44,
+            1.3765
+          ],
+          [
+            2.3159,
+            -0.7068,
+            1.1244
+          ],
+          [
+            2.1291,
+            -0.7053,
+            1.1244
+          ],
+          [
+            2.1313,
+            -0.4384,
+            1.1244
+          ],
+          [
+            2.3181,
+            -0.44,
+            1.1244
+          ]
+        ],
+        "volume": 0.01257
+      },
+      "anchors": [
+        {
+          "object_id": "80",
+          "label": "light switch",
+          "phrase": "the light switch"
+        }
+      ],
+      "distractor_ids": [
+        "101"
+      ],
+      "competitors": 4,
+      "margin": 3.242,
+      "evidence": "closest: centre 0.74 m vs runner-up book#32 3.99 m; box-gap 0.50 m vs runner-up book#31 3.75 m",
+      "statement": "the books that are closest to the light switch",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the tv remote that is farthest from the sofa.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "tv remote",
+        "sofa"
+      ],
+      "answer": {
+        "object_id": "91",
+        "region": "0",
+        "label": "tv remote",
+        "raw_label": "tv remote",
+        "nyu_label": "remote control",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          2.103,
+          -2.528,
+          1.3849
+        ],
+        "size": [
+          1.6971,
+          0.0193,
+          0.9764
+        ],
+        "yaw": -1.579,
+        "aabb": {
+          "min": [
+            2.0864,
+            -3.3766,
+            0.8967
+          ],
+          "max": [
+            2.1196,
+            -1.6794,
+            1.8731
+          ]
+        },
+        "size_aabb": [
+          0.0333,
+          1.6972,
+          0.9764
+        ],
+        "bbox_corners": [
+          [
+            2.1196,
+            -1.6796,
+            1.8731
+          ],
+          [
+            2.1057,
+            -3.3766,
+            1.8731
+          ],
+          [
+            2.0864,
+            -3.3764,
+            1.8731
+          ],
+          [
+            2.1003,
+            -1.6794,
+            1.8731
+          ],
+          [
+            2.1196,
+            -1.6796,
+            0.8967
+          ],
+          [
+            2.1057,
+            -3.3766,
+            0.8967
+          ],
+          [
+            2.0864,
+            -3.3764,
+            0.8967
+          ],
+          [
+            2.1003,
+            -1.6794,
+            0.8967
+          ]
+        ],
+        "volume": 0.03202
+      },
+      "anchors": [
+        {
+          "object_id": "0",
+          "label": "sofa",
+          "phrase": "the sofa"
+        }
+      ],
+      "distractor_ids": [
+        "72"
+      ],
+      "competitors": 1,
+      "margin": 2.401,
+      "evidence": "farthest: centre 3.89 m vs runner-up tv remote#72 1.46 m; box-gap 2.79 m vs runner-up tv remote#72 0.39 m",
+      "statement": "the remote control that is farthest from the sofa",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

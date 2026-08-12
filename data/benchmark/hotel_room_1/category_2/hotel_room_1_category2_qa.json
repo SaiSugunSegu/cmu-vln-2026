@@ -1,0 +1,1165 @@
+{
+  "scene": "hotel_room_1",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/hotel_room_1/iref_vla_metadata/hotel_room_1_referential_statements.json",
+    "source_objects: bags/hotel_room_1/iref_vla_metadata/hotel_room_1_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 2,
+    "hard": 3,
+    "easy": 5
+  },
+  "relation_counts": {
+    "farthest": 2,
+    "above": 1,
+    "between": 2,
+    "near": 2,
+    "closest": 3
+  },
+  "target_object_coverage": [
+    "bed",
+    "bedside table",
+    "book",
+    "chair",
+    "curtains",
+    "eye glasses",
+    "floor",
+    "lamp",
+    "magazine",
+    "phone",
+    "picture",
+    "shower tap",
+    "suitcase",
+    "towel",
+    "towel rack",
+    "trash bin",
+    "trash can",
+    "vase",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the bedside table farthest from the window.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "bedside table",
+        "window"
+      ],
+      "answer": {
+        "object_id": "72",
+        "region": "2",
+        "label": "bedside table",
+        "raw_label": "bedside table",
+        "nyu_label": "night stand",
+        "colors": [
+          "brown"
+        ],
+        "center": [
+          3.5303,
+          0.181,
+          0.3238
+        ],
+        "size": [
+          0.8723,
+          0.7947,
+          0.6507
+        ],
+        "yaw": -3.1416,
+        "aabb": {
+          "min": [
+            3.0942,
+            -0.2163,
+            -0.0015
+          ],
+          "max": [
+            3.9664,
+            0.5783,
+            0.6492
+          ]
+        },
+        "size_aabb": [
+          0.8723,
+          0.7947,
+          0.6507
+        ],
+        "bbox_corners": [
+          [
+            3.9664,
+            -0.2163,
+            0.6492
+          ],
+          [
+            3.0942,
+            -0.2163,
+            0.6492
+          ],
+          [
+            3.0942,
+            0.5783,
+            0.6492
+          ],
+          [
+            3.9664,
+            0.5783,
+            0.6492
+          ],
+          [
+            3.9664,
+            -0.2163,
+            -0.0015
+          ],
+          [
+            3.0942,
+            -0.2163,
+            -0.0015
+          ],
+          [
+            3.0942,
+            0.5783,
+            -0.0015
+          ],
+          [
+            3.9664,
+            0.5783,
+            -0.0015
+          ]
+        ],
+        "volume": 0.45102
+      },
+      "anchors": [
+        {
+          "object_id": "58",
+          "label": "window"
+        }
+      ],
+      "distractor_ids": [
+        "85"
+      ],
+      "evidence": "solved from geometry: farthest: centre 7.12 m (next 4.18 m); box-gap 5.77 m (next 1.91 m)",
+      "statement": "the night stand that is farthest from the window",
+      "region": "2",
+      "images": [
+        "data/pdf_assets/hotel_room_1/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='bedside table' color='' hops=[{'relation': 'farthest', 'phrases': ['window']}]",
+        "head candidates: [bedside table#72, bedside table#85]",
+        "target hop (farthest): farthest: ranked [bedside table#72, bedside table#85]",
+        "pick: farthest: centre 7.12 m (next 4.18 m); box-gap 5.77 m (next 1.91 m)",
+        "result: farthest: centre 7.12 m (next 4.18 m); box-gap 5.77 m (next 1.91 m)"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the picture above the suitcase furthest from the floor.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "above",
+      "target_objects": [
+        "picture",
+        "suitcase",
+        "floor"
+      ],
+      "answer": {
+        "object_id": "19",
+        "region": "2",
+        "label": "picture",
+        "raw_label": "picture",
+        "nyu_label": "picture",
+        "colors": [
+          "gray",
+          "brown"
+        ],
+        "center": [
+          -1.9112,
+          -3.395,
+          2.2743
+        ],
+        "size": [
+          0.3896,
+          0.0154,
+          0.4548
+        ],
+        "yaw": 1.5707,
+        "aabb": {
+          "min": [
+            -1.919,
+            -3.5898,
+            2.0469
+          ],
+          "max": [
+            -1.9035,
+            -3.2002,
+            2.5016
+          ]
+        },
+        "size_aabb": [
+          0.0155,
+          0.3896,
+          0.4548
+        ],
+        "bbox_corners": [
+          [
+            -1.919,
+            -3.5898,
+            2.5016
+          ],
+          [
+            -1.9189,
+            -3.2002,
+            2.5016
+          ],
+          [
+            -1.9035,
+            -3.2002,
+            2.5016
+          ],
+          [
+            -1.9035,
+            -3.5898,
+            2.5016
+          ],
+          [
+            -1.919,
+            -3.5898,
+            2.0469
+          ],
+          [
+            -1.9189,
+            -3.2002,
+            2.0469
+          ],
+          [
+            -1.9035,
+            -3.2002,
+            2.0469
+          ],
+          [
+            -1.9035,
+            -3.5898,
+            2.0469
+          ]
+        ],
+        "volume": 0.00273
+      },
+      "anchors": [
+        {
+          "object_id": "84",
+          "label": "suitcase"
+        }
+      ],
+      "distractor_ids": [
+        "6"
+      ],
+      "evidence": "solved from geometry: farthest: height 2.05 m (next 1.47 m)",
+      "statement": "the picture that is farthest from the telephone",
+      "region": "2",
+      "images": [
+        "data/pdf_assets/hotel_room_1/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='picture' color='' hops=[{'relation': 'above', 'phrases': ['suitcase']}, {'relation': 'farthest', 'phrases': ['floor']}]",
+        "head candidates: [picture#6, picture#19]",
+        "anchor hop 1 (farthest): host already unique, applying it to the target instead",
+        "target hop (above): above: 2 match(es) -> [picture#6, picture#19]",
+        "deferred hop 1 (farthest): farthest: ranked [picture#19, picture#6]",
+        "pick: farthest: height 2.05 m (next 1.47 m)",
+        "result: farthest: height 2.05 m (next 1.47 m)"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the chair that is between the bed and the eye glasses.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "chair",
+        "bed",
+        "eye glasses"
+      ],
+      "answer": {
+        "object_id": "15",
+        "region": "2",
+        "label": "chair",
+        "raw_label": "chair",
+        "nyu_label": "chair",
+        "colors": [
+          "gray",
+          "black"
+        ],
+        "center": [
+          -0.8552,
+          -2.0344,
+          0.5795
+        ],
+        "size": [
+          0.5538,
+          0.7193,
+          1.162
+        ],
+        "yaw": 1.5772,
+        "aabb": {
+          "min": [
+            -1.2166,
+            -2.3136,
+            -0.0015
+          ],
+          "max": [
+            -0.4937,
+            -1.7552,
+            1.1605
+          ]
+        },
+        "size_aabb": [
+          0.7229,
+          0.5584,
+          1.162
+        ],
+        "bbox_corners": [
+          [
+            -1.2131,
+            -2.3136,
+            1.1605
+          ],
+          [
+            -1.2166,
+            -1.7598,
+            1.1605
+          ],
+          [
+            -0.4973,
+            -1.7552,
+            1.1605
+          ],
+          [
+            -0.4937,
+            -2.309,
+            1.1605
+          ],
+          [
+            -1.2131,
+            -2.3136,
+            -0.0015
+          ],
+          [
+            -1.2166,
+            -1.7598,
+            -0.0015
+          ],
+          [
+            -0.4973,
+            -1.7552,
+            -0.0015
+          ],
+          [
+            -0.4937,
+            -2.309,
+            -0.0015
+          ]
+        ],
+        "volume": 0.46289
+      },
+      "anchors": [
+        {
+          "object_id": "11",
+          "label": "bed",
+          "phrase": "the bed"
+        },
+        {
+          "object_id": "66",
+          "label": "eye glasses",
+          "phrase": "the eye glasses"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "between: between bed#11 and eye glasses#66 (lateral offset 0.17 m)",
+      "statement": "",
+      "region": "2",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the towel that is near the trash can.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "near",
+      "target_objects": [
+        "towel",
+        "trash can"
+      ],
+      "answer": {
+        "object_id": "24",
+        "region": "0",
+        "label": "towel",
+        "raw_label": "towel",
+        "nyu_label": "towel",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          1.2619,
+          4.5944,
+          0.7322
+        ],
+        "size": [
+          0.3238,
+          0.1724,
+          0.4792
+        ],
+        "yaw": -0.25,
+        "aabb": {
+          "min": [
+            1.0837,
+            4.4709,
+            0.4926
+          ],
+          "max": [
+            1.4401,
+            4.718,
+            0.9718
+          ]
+        },
+        "size_aabb": [
+          0.3564,
+          0.2471,
+          0.4792
+        ],
+        "bbox_corners": [
+          [
+            1.1263,
+            4.718,
+            0.9718
+          ],
+          [
+            1.4401,
+            4.6379,
+            0.9718
+          ],
+          [
+            1.3974,
+            4.4709,
+            0.9718
+          ],
+          [
+            1.0837,
+            4.551,
+            0.9718
+          ],
+          [
+            1.1263,
+            4.718,
+            0.4926
+          ],
+          [
+            1.4401,
+            4.6379,
+            0.4926
+          ],
+          [
+            1.3974,
+            4.4709,
+            0.4926
+          ],
+          [
+            1.0837,
+            4.551,
+            0.4926
+          ]
+        ],
+        "volume": 0.02674
+      },
+      "anchors": [
+        {
+          "object_id": "69",
+          "label": "trash can",
+          "phrase": "the trash can"
+        }
+      ],
+      "distractor_ids": [
+        "64"
+      ],
+      "competitors": 1,
+      "margin": 3.299,
+      "evidence": "near: box-gap 0.09 m; next towel is 3.39 m away",
+      "statement": "the towel that is near the garbage bin",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the towel rack that is closest to the shower tap.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "towel rack",
+        "shower tap"
+      ],
+      "answer": {
+        "object_id": "25",
+        "region": "0",
+        "label": "towel rack",
+        "raw_label": "towel rack",
+        "nyu_label": "towel rod",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          1.2768,
+          4.6122,
+          1.0587
+        ],
+        "size": [
+          0.3581,
+          0.0694,
+          0.2229
+        ],
+        "yaw": -3.1366,
+        "aabb": {
+          "min": [
+            1.0976,
+            4.5766,
+            0.9472
+          ],
+          "max": [
+            1.4561,
+            4.6478,
+            1.1701
+          ]
+        },
+        "size_aabb": [
+          0.3584,
+          0.0712,
+          0.2229
+        ],
+        "bbox_corners": [
+          [
+            1.4561,
+            4.5784,
+            1.1701
+          ],
+          [
+            1.098,
+            4.5766,
+            1.1701
+          ],
+          [
+            1.0976,
+            4.646,
+            1.1701
+          ],
+          [
+            1.4557,
+            4.6478,
+            1.1701
+          ],
+          [
+            1.4561,
+            4.5784,
+            0.9472
+          ],
+          [
+            1.098,
+            4.5766,
+            0.9472
+          ],
+          [
+            1.0976,
+            4.646,
+            0.9472
+          ],
+          [
+            1.4557,
+            4.6478,
+            0.9472
+          ]
+        ],
+        "volume": 0.00554
+      },
+      "anchors": [
+        {
+          "object_id": "12",
+          "label": "shower tap",
+          "phrase": "the shower tap"
+        }
+      ],
+      "distractor_ids": [
+        "18"
+      ],
+      "competitors": 1,
+      "margin": 3.076,
+      "evidence": "closest: centre 2.27 m vs runner-up towel rack#18 5.34 m; box-gap 1.75 m vs runner-up towel rack#18 4.86 m",
+      "statement": "the towel rod that is closest to the faucet",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the bedside table that is closest to the window.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "bedside table",
+        "window"
+      ],
+      "answer": {
+        "object_id": "85",
+        "region": "2",
+        "label": "bedside table",
+        "raw_label": "bedside table",
+        "nyu_label": "night stand",
+        "colors": [
+          "brown"
+        ],
+        "center": [
+          3.5303,
+          -3.7011,
+          0.3238
+        ],
+        "size": [
+          0.8722,
+          0.7946,
+          0.6507
+        ],
+        "yaw": -3.1416,
+        "aabb": {
+          "min": [
+            3.0942,
+            -4.0985,
+            -0.0015
+          ],
+          "max": [
+            3.9664,
+            -3.3038,
+            0.6492
+          ]
+        },
+        "size_aabb": [
+          0.8722,
+          0.7947,
+          0.6507
+        ],
+        "bbox_corners": [
+          [
+            3.9664,
+            -4.0985,
+            0.6492
+          ],
+          [
+            3.0942,
+            -4.0985,
+            0.6492
+          ],
+          [
+            3.0942,
+            -3.3038,
+            0.6492
+          ],
+          [
+            3.9664,
+            -3.3038,
+            0.6492
+          ],
+          [
+            3.9664,
+            -4.0985,
+            -0.0015
+          ],
+          [
+            3.0942,
+            -4.0985,
+            -0.0015
+          ],
+          [
+            3.0942,
+            -3.3038,
+            -0.0015
+          ],
+          [
+            3.9664,
+            -3.3038,
+            -0.0015
+          ]
+        ],
+        "volume": 0.451
+      },
+      "anchors": [
+        {
+          "object_id": "58",
+          "label": "window",
+          "phrase": "the window"
+        }
+      ],
+      "distractor_ids": [
+        "72"
+      ],
+      "competitors": 1,
+      "margin": 2.946,
+      "evidence": "closest: centre 4.18 m vs runner-up bedside table#72 7.12 m; box-gap 1.91 m vs runner-up bedside table#72 5.77 m",
+      "statement": "the night stand that is closest to the window",
+      "region": "2",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the chair that is farthest from the phone.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "chair",
+        "phone"
+      ],
+      "answer": {
+        "object_id": "36",
+        "region": "2",
+        "label": "chair",
+        "raw_label": "chair",
+        "nyu_label": "chair",
+        "colors": [
+          "black",
+          "aqua"
+        ],
+        "center": [
+          1.7675,
+          -4.9211,
+          0.4503
+        ],
+        "size": [
+          0.8938,
+          0.8006,
+          0.9036
+        ],
+        "yaw": -2.2597,
+        "aabb": {
+          "min": [
+            1.1744,
+            -5.5206,
+            -0.0015
+          ],
+          "max": [
+            2.3607,
+            -4.3217,
+            0.9021
+          ]
+        },
+        "size_aabb": [
+          1.1862,
+          1.1989,
+          0.9036
+        ],
+        "bbox_corners": [
+          [
+            2.3607,
+            -4.8306,
+            0.9021
+          ],
+          [
+            1.7925,
+            -5.5206,
+            0.9021
+          ],
+          [
+            1.1744,
+            -5.0116,
+            0.9021
+          ],
+          [
+            1.7426,
+            -4.3217,
+            0.9021
+          ],
+          [
+            2.3607,
+            -4.8306,
+            -0.0015
+          ],
+          [
+            1.7925,
+            -5.5206,
+            -0.0015
+          ],
+          [
+            1.1744,
+            -5.0116,
+            -0.0015
+          ],
+          [
+            1.7426,
+            -4.3217,
+            -0.0015
+          ]
+        ],
+        "volume": 0.64665
+      },
+      "anchors": [
+        {
+          "object_id": "65",
+          "label": "phone",
+          "phrase": "the phone"
+        }
+      ],
+      "distractor_ids": [
+        "15"
+      ],
+      "competitors": 1,
+      "margin": 3.414,
+      "evidence": "farthest: centre 5.10 m vs runner-up chair#15 1.25 m; box-gap 4.00 m vs runner-up chair#15 0.59 m",
+      "statement": "the chair that is farthest from the telephone",
+      "region": "2",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the vase that is between the magazine and the eye glasses.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "vase",
+        "magazine",
+        "eye glasses"
+      ],
+      "answer": {
+        "object_id": "20",
+        "region": "2",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -1.5359,
+          -2.1261,
+          2.8689
+        ],
+        "size": [
+          0.2643,
+          0.1475,
+          0.4492
+        ],
+        "yaw": -1.5857,
+        "aabb": {
+          "min": [
+            -1.6117,
+            -2.2594,
+            2.6443
+          ],
+          "max": [
+            -1.4602,
+            -1.9928,
+            3.0936
+          ]
+        },
+        "size_aabb": [
+          0.1515,
+          0.2665,
+          0.4492
+        ],
+        "bbox_corners": [
+          [
+            -1.4602,
+            -1.995,
+            3.0936
+          ],
+          [
+            -1.4641,
+            -2.2594,
+            3.0936
+          ],
+          [
+            -1.6117,
+            -2.2572,
+            3.0936
+          ],
+          [
+            -1.6077,
+            -1.9928,
+            3.0936
+          ],
+          [
+            -1.4602,
+            -1.995,
+            2.6443
+          ],
+          [
+            -1.4641,
+            -2.2594,
+            2.6443
+          ],
+          [
+            -1.6117,
+            -2.2572,
+            2.6443
+          ],
+          [
+            -1.6077,
+            -1.9928,
+            2.6443
+          ]
+        ],
+        "volume": 0.01752
+      },
+      "anchors": [
+        {
+          "object_id": "23",
+          "label": "magazine",
+          "phrase": "the magazine"
+        },
+        {
+          "object_id": "66",
+          "label": "eye glasses",
+          "phrase": "the eye glasses"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "between: between magazine#23 and eye glasses#66 (lateral offset 0.00 m)",
+      "statement": "",
+      "region": "2",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the lamp that is near the book.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "near",
+      "target_objects": [
+        "lamp",
+        "book"
+      ],
+      "answer": {
+        "object_id": "80",
+        "region": "2",
+        "label": "lamp",
+        "raw_label": "lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          3.5463,
+          0.1909,
+          0.873
+        ],
+        "size": [
+          0.4017,
+          0.3989,
+          0.4476
+        ],
+        "yaw": -1.5725,
+        "aabb": {
+          "min": [
+            3.3465,
+            -0.0103,
+            0.6492
+          ],
+          "max": [
+            3.7461,
+            0.392,
+            1.0968
+          ]
+        },
+        "size_aabb": [
+          0.3996,
+          0.4023,
+          0.4476
+        ],
+        "bbox_corners": [
+          [
+            3.7461,
+            0.3914,
+            1.0968
+          ],
+          [
+            3.7454,
+            -0.0103,
+            1.0968
+          ],
+          [
+            3.3465,
+            -0.0096,
+            1.0968
+          ],
+          [
+            3.3472,
+            0.392,
+            1.0968
+          ],
+          [
+            3.7461,
+            0.3914,
+            0.6492
+          ],
+          [
+            3.7454,
+            -0.0103,
+            0.6492
+          ],
+          [
+            3.3465,
+            -0.0096,
+            0.6492
+          ],
+          [
+            3.3472,
+            0.392,
+            0.6492
+          ]
+        ],
+        "volume": 0.07172
+      },
+      "anchors": [
+        {
+          "object_id": "1",
+          "label": "book",
+          "phrase": "the book"
+        }
+      ],
+      "distractor_ids": [
+        "74",
+        "82"
+      ],
+      "competitors": 2,
+      "margin": 2.556,
+      "evidence": "near: box-gap 0.00 m; next lamp is 3.36 m away",
+      "statement": "the lamp that is near the book",
+      "region": "2",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the curtains that are closest to the trash bin.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "curtains",
+        "trash bin"
+      ],
+      "answer": {
+        "object_id": "45",
+        "region": "2",
+        "label": "curtains",
+        "raw_label": "curtains",
+        "nyu_label": "curtain",
+        "colors": [
+          "aqua",
+          "gray"
+        ],
+        "center": [
+          -1.4445,
+          -5.8658,
+          1.6091
+        ],
+        "size": [
+          1.0971,
+          0.0719,
+          3.2212
+        ],
+        "yaw": -0.0165,
+        "aabb": {
+          "min": [
+            -1.9936,
+            -5.9109,
+            -0.0015
+          ],
+          "max": [
+            -0.8955,
+            -5.8208,
+            3.2197
+          ]
+        },
+        "size_aabb": [
+          1.0982,
+          0.09,
+          3.2212
+        ],
+        "bbox_corners": [
+          [
+            -1.9924,
+            -5.8208,
+            3.2197
+          ],
+          [
+            -0.8955,
+            -5.8389,
+            3.2197
+          ],
+          [
+            -0.8966,
+            -5.9109,
+            3.2197
+          ],
+          [
+            -1.9936,
+            -5.8927,
+            3.2197
+          ],
+          [
+            -1.9924,
+            -5.8208,
+            -0.0015
+          ],
+          [
+            -0.8955,
+            -5.8389,
+            -0.0015
+          ],
+          [
+            -0.8966,
+            -5.9109,
+            -0.0015
+          ],
+          [
+            -1.9936,
+            -5.8927,
+            -0.0015
+          ]
+        ],
+        "volume": 0.25423
+      },
+      "anchors": [
+        {
+          "object_id": "32",
+          "label": "trash bin",
+          "phrase": "the trash bin"
+        }
+      ],
+      "distractor_ids": [
+        "8"
+      ],
+      "competitors": 1,
+      "margin": 2.708,
+      "evidence": "closest: centre 2.45 m vs runner-up curtains#8 5.45 m; box-gap 1.71 m vs runner-up curtains#8 4.41 m",
+      "statement": "the curtain that is closest to the garbage bin",
+      "region": "2",
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

@@ -1,0 +1,1153 @@
+{
+  "scene": "office_1",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/office_1/iref_vla_metadata/office_1_referential_statements.json",
+    "source_objects: bags/office_1/iref_vla_metadata/office_1_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 4,
+    "hard": 3,
+    "easy": 3
+  },
+  "relation_counts": {
+    "on": 2,
+    "between": 1,
+    "in": 1,
+    "supports": 1,
+    "above": 1,
+    "near": 1,
+    "closest": 2,
+    "farthest": 1
+  },
+  "target_object_coverage": [
+    "bottle",
+    "clock",
+    "coffee machine",
+    "eye glasses",
+    "file cabinet",
+    "map wall decal",
+    "paper",
+    "paper cup",
+    "pen",
+    "potted plant",
+    "projector screen",
+    "table",
+    "trash bin"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the potted plant on the file cabinet.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "on",
+      "target_objects": [
+        "potted plant",
+        "file cabinet"
+      ],
+      "answer": {
+        "object_id": "55",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "aqua"
+        ],
+        "center": [
+          1.1335,
+          1.2769,
+          1.326
+        ],
+        "size": [
+          0.2953,
+          0.2858,
+          0.2992
+        ],
+        "yaw": 0.8113,
+        "aabb": {
+          "min": [
+            0.9282,
+            1.0714,
+            1.1764
+          ],
+          "max": [
+            1.3388,
+            1.4823,
+            1.4756
+          ]
+        },
+        "size_aabb": [
+          0.4106,
+          0.4109,
+          0.2992
+        ],
+        "bbox_corners": [
+          [
+            0.9282,
+            1.2682,
+            1.4756
+          ],
+          [
+            1.1315,
+            1.4823,
+            1.4756
+          ],
+          [
+            1.3388,
+            1.2855,
+            1.4756
+          ],
+          [
+            1.1354,
+            1.0714,
+            1.4756
+          ],
+          [
+            0.9282,
+            1.2682,
+            1.1764
+          ],
+          [
+            1.1315,
+            1.4823,
+            1.1764
+          ],
+          [
+            1.3388,
+            1.2855,
+            1.1764
+          ],
+          [
+            1.1354,
+            1.0714,
+            1.1764
+          ]
+        ],
+        "volume": 0.02525
+      },
+      "anchors": [
+        {
+          "object_id": "69",
+          "label": "file cabinet"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "67",
+        "71"
+      ],
+      "evidence": "solved from geometry: on: potted plant#55 is the only match",
+      "statement": "the plant that is on the cabinet",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/office_1/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='potted plant' color='' hops=[{'relation': 'on', 'phrases': ['file cabinet']}]",
+        "head candidates: [potted plant#11, potted plant#55, potted plant#67, potted plant#71]",
+        "target hop (on): on: 1 match(es) -> [potted plant#55]",
+        "pick: on: potted plant#55 is the only match",
+        "result: on: potted plant#55 is the only match"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the paper cup on the table closest to the projector screen.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "paper cup",
+        "table",
+        "projector screen"
+      ],
+      "answer": {
+        "object_id": "84",
+        "region": "0",
+        "label": "paper cup",
+        "raw_label": "paper cup",
+        "nyu_label": "cup",
+        "colors": [
+          "gray",
+          "brown"
+        ],
+        "center": [
+          -1.6287,
+          -1.9811,
+          0.8099
+        ],
+        "size": [
+          0.0883,
+          0.0881,
+          0.106
+        ],
+        "yaw": 1.7517,
+        "aabb": {
+          "min": [
+            -1.68,
+            -2.0324,
+            0.7569
+          ],
+          "max": [
+            -1.5775,
+            -1.9297,
+            0.8629
+          ]
+        },
+        "size_aabb": [
+          0.1025,
+          0.1027,
+          0.106
+        ],
+        "bbox_corners": [
+          [
+            -1.6641,
+            -2.0324,
+            0.8629
+          ],
+          [
+            -1.68,
+            -1.9456,
+            0.8629
+          ],
+          [
+            -1.5934,
+            -1.9297,
+            0.8629
+          ],
+          [
+            -1.5775,
+            -2.0166,
+            0.8629
+          ],
+          [
+            -1.6641,
+            -2.0324,
+            0.7569
+          ],
+          [
+            -1.68,
+            -1.9456,
+            0.7569
+          ],
+          [
+            -1.5934,
+            -1.9297,
+            0.7569
+          ],
+          [
+            -1.5775,
+            -2.0166,
+            0.7569
+          ]
+        ],
+        "volume": 0.00082
+      },
+      "anchors": [
+        {
+          "object_id": "50",
+          "label": "table"
+        }
+      ],
+      "distractor_ids": [
+        "79",
+        "97"
+      ],
+      "evidence": "solved from geometry: on: paper cup#84 is the only match",
+      "statement": "the cup that is on the black table",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/office_1/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='paper cup' color='' hops=[{'relation': 'on', 'phrases': ['table']}, {'relation': 'closest', 'phrases': ['projector screen']}]",
+        "head candidates: [paper cup#79, paper cup#84, paper cup#97]",
+        "anchor hop 1 (closest): closest: ranked [table#50, table#53]; closest: centre 2.74 m (next 7.18 m); box-gap 1.76 m (next 5.53 m)",
+        "target hop (on): on: 1 match(es) -> [paper cup#84]",
+        "pick: on: paper cup#84 is the only match",
+        "result: on: paper cup#84 is the only match"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the paper that is between the eye glasses and the pen.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "paper",
+        "eye glasses",
+        "pen"
+      ],
+      "answer": {
+        "object_id": "1",
+        "region": "0",
+        "label": "paper",
+        "raw_label": "paper",
+        "nyu_label": "papers",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -1.5697,
+          -1.6668,
+          0.7578
+        ],
+        "size": [
+          0.3284,
+          0.3118,
+          0.0021
+        ],
+        "yaw": -1.6147,
+        "aabb": {
+          "min": [
+            -1.7326,
+            -1.8377,
+            0.7568
+          ],
+          "max": [
+            -1.4067,
+            -1.4959,
+            0.7589
+          ]
+        },
+        "size_aabb": [
+          0.3259,
+          0.3418,
+          0.0021
+        ],
+        "bbox_corners": [
+          [
+            -1.4067,
+            -1.5096,
+            0.7589
+          ],
+          [
+            -1.4211,
+            -1.8377,
+            0.7589
+          ],
+          [
+            -1.7326,
+            -1.8241,
+            0.7589
+          ],
+          [
+            -1.7182,
+            -1.4959,
+            0.7589
+          ],
+          [
+            -1.4067,
+            -1.5096,
+            0.7568
+          ],
+          [
+            -1.4211,
+            -1.8377,
+            0.7568
+          ],
+          [
+            -1.7326,
+            -1.8241,
+            0.7568
+          ],
+          [
+            -1.7182,
+            -1.4959,
+            0.7568
+          ]
+        ],
+        "volume": 0.00021
+      },
+      "anchors": [
+        {
+          "object_id": "44",
+          "label": "eye glasses",
+          "phrase": "the eye glasses"
+        },
+        {
+          "object_id": "73",
+          "label": "pen",
+          "phrase": "the pen"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 6,
+      "evidence": "between: between eye glasses#44 and pen#73 (lateral offset 0.07 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the paper cup inside the coffee machine.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "in",
+      "target_objects": [
+        "paper cup",
+        "coffee machine"
+      ],
+      "answer": {
+        "object_id": "79",
+        "region": "0",
+        "label": "paper cup",
+        "raw_label": "paper cup",
+        "nyu_label": "cup",
+        "colors": [
+          "gray",
+          "brown"
+        ],
+        "center": [
+          2.0754,
+          1.1512,
+          1.2435
+        ],
+        "size": [
+          0.0883,
+          0.0868,
+          0.1059
+        ],
+        "yaw": 0.1989,
+        "aabb": {
+          "min": [
+            2.0236,
+            1.1,
+            1.1905
+          ],
+          "max": [
+            2.1272,
+            1.2025,
+            1.2965
+          ]
+        },
+        "size_aabb": [
+          0.1037,
+          0.1026,
+          0.1059
+        ],
+        "bbox_corners": [
+          [
+            2.0236,
+            1.1851,
+            1.2965
+          ],
+          [
+            2.1101,
+            1.2025,
+            1.2965
+          ],
+          [
+            2.1272,
+            1.1174,
+            1.2965
+          ],
+          [
+            2.0407,
+            1.1,
+            1.2965
+          ],
+          [
+            2.0236,
+            1.1851,
+            1.1905
+          ],
+          [
+            2.1101,
+            1.2025,
+            1.1905
+          ],
+          [
+            2.1272,
+            1.1174,
+            1.1905
+          ],
+          [
+            2.0407,
+            1.1,
+            1.1905
+          ]
+        ],
+        "volume": 0.00081
+      },
+      "anchors": [
+        {
+          "object_id": "78",
+          "label": "coffee machine",
+          "phrase": "the coffee machine"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "in: inside coffee machine#78: base 1.19 m sits 0.41 m below its rim",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the table with the eye glasses on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "eye glasses"
+      ],
+      "answer": {
+        "object_id": "50",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          -1.838,
+          -1.8824,
+          0.3659
+        ],
+        "size": [
+          2.7107,
+          1.0505,
+          0.7703
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -2.3633,
+            -3.2378,
+            -0.0193
+          ],
+          "max": [
+            -1.3127,
+            -0.527,
+            0.7511
+          ]
+        },
+        "size_aabb": [
+          1.0505,
+          2.7107,
+          0.7703
+        ],
+        "bbox_corners": [
+          [
+            -1.3127,
+            -0.527,
+            0.7511
+          ],
+          [
+            -1.3127,
+            -3.2377,
+            0.7511
+          ],
+          [
+            -2.3633,
+            -3.2378,
+            0.7511
+          ],
+          [
+            -2.3633,
+            -0.527,
+            0.7511
+          ],
+          [
+            -1.3127,
+            -0.527,
+            -0.0193
+          ],
+          [
+            -1.3127,
+            -3.2377,
+            -0.0193
+          ],
+          [
+            -2.3633,
+            -3.2378,
+            -0.0193
+          ],
+          [
+            -2.3633,
+            -0.527,
+            -0.0193
+          ]
+        ],
+        "volume": 2.19372
+      },
+      "anchors": [
+        {
+          "object_id": "44",
+          "label": "eye glasses",
+          "phrase": "the eye glasses"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds eye glasses#44 (top 0.75 m, its underside 0.76 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the paper that is above the trash bin.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "above",
+      "target_objects": [
+        "paper",
+        "trash bin"
+      ],
+      "answer": {
+        "object_id": "46",
+        "region": "0",
+        "label": "paper",
+        "raw_label": "paper",
+        "nyu_label": "papers",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          4.1433,
+          -2.0268,
+          0.8195
+        ],
+        "size": [
+          0.3124,
+          0.2428,
+          0.0021
+        ],
+        "yaw": 1.8893,
+        "aabb": {
+          "min": [
+            3.9791,
+            -2.2132,
+            0.8185
+          ],
+          "max": [
+            4.3075,
+            -1.8405,
+            0.8206
+          ]
+        },
+        "size_aabb": [
+          0.3284,
+          0.3727,
+          0.0021
+        ],
+        "bbox_corners": [
+          [
+            4.0769,
+            -2.2132,
+            0.8206
+          ],
+          [
+            3.9791,
+            -1.9165,
+            0.8206
+          ],
+          [
+            4.2097,
+            -1.8405,
+            0.8206
+          ],
+          [
+            4.3075,
+            -2.1372,
+            0.8206
+          ],
+          [
+            4.0769,
+            -2.2132,
+            0.8185
+          ],
+          [
+            3.9791,
+            -1.9165,
+            0.8185
+          ],
+          [
+            4.2097,
+            -1.8405,
+            0.8185
+          ],
+          [
+            4.3075,
+            -2.1372,
+            0.8185
+          ]
+        ],
+        "volume": 0.00016
+      },
+      "anchors": [
+        {
+          "object_id": "31",
+          "label": "trash bin",
+          "phrase": "the trash bin"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 6,
+      "evidence": "above: underside 0.82 m clears trash bin#31 top 0.41 m, footprints overlap 5%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the table that is near the trash bin.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "near",
+      "target_objects": [
+        "table",
+        "trash bin"
+      ],
+      "answer": {
+        "object_id": "53",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          2.86,
+          -1.813,
+          0.4061
+        ],
+        "size": [
+          2.888,
+          1.158,
+          0.8173
+        ],
+        "yaw": 3.1416,
+        "aabb": {
+          "min": [
+            1.416,
+            -2.392,
+            -0.0025
+          ],
+          "max": [
+            4.304,
+            -1.234,
+            0.8148
+          ]
+        },
+        "size_aabb": [
+          2.888,
+          1.158,
+          0.8173
+        ],
+        "bbox_corners": [
+          [
+            4.304,
+            -2.392,
+            0.8148
+          ],
+          [
+            1.416,
+            -2.392,
+            0.8148
+          ],
+          [
+            1.416,
+            -1.234,
+            0.8148
+          ],
+          [
+            4.304,
+            -1.234,
+            0.8148
+          ],
+          [
+            4.304,
+            -2.392,
+            -0.0025
+          ],
+          [
+            1.416,
+            -2.392,
+            -0.0025
+          ],
+          [
+            1.416,
+            -1.234,
+            -0.0025
+          ],
+          [
+            4.304,
+            -1.234,
+            -0.0025
+          ]
+        ],
+        "volume": 2.73309
+      },
+      "anchors": [
+        {
+          "object_id": "31",
+          "label": "trash bin",
+          "phrase": "the trash bin"
+        }
+      ],
+      "distractor_ids": [
+        "50"
+      ],
+      "competitors": 1,
+      "margin": 5.601,
+      "evidence": "near: box-gap 0.00 m; next table is 5.60 m away",
+      "statement": "the table that is near the garbage bin",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the bottle that is closest to the clock.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "bottle",
+        "clock"
+      ],
+      "answer": {
+        "object_id": "100",
+        "region": "0",
+        "label": "bottle",
+        "raw_label": "bottle",
+        "nyu_label": "bottle",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          1.6081,
+          1.1962,
+          1.2942
+        ],
+        "size": [
+          0.0673,
+          0.0663,
+          0.2283
+        ],
+        "yaw": 1.474,
+        "aabb": {
+          "min": [
+            1.5719,
+            1.1594,
+            1.18
+          ],
+          "max": [
+            1.6444,
+            1.2329,
+            1.4083
+          ]
+        },
+        "size_aabb": [
+          0.0725,
+          0.0734,
+          0.2283
+        ],
+        "bbox_corners": [
+          [
+            1.5719,
+            1.1658,
+            1.4083
+          ],
+          [
+            1.5784,
+            1.2329,
+            1.4083
+          ],
+          [
+            1.6444,
+            1.2265,
+            1.4083
+          ],
+          [
+            1.6379,
+            1.1594,
+            1.4083
+          ],
+          [
+            1.5719,
+            1.1658,
+            1.18
+          ],
+          [
+            1.5784,
+            1.2329,
+            1.18
+          ],
+          [
+            1.6444,
+            1.2265,
+            1.18
+          ],
+          [
+            1.6379,
+            1.1594,
+            1.18
+          ]
+        ],
+        "volume": 0.00102
+      },
+      "anchors": [
+        {
+          "object_id": "80",
+          "label": "clock",
+          "phrase": "the clock"
+        }
+      ],
+      "distractor_ids": [
+        "93"
+      ],
+      "competitors": 1,
+      "margin": 2.996,
+      "evidence": "closest: centre 1.06 m vs runner-up bottle#93 4.06 m; box-gap 0.73 m vs runner-up bottle#93 3.82 m",
+      "statement": "the bottle that is closest to the clock",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the bottle that is closest to the map wall decal.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "bottle",
+        "map wall decal"
+      ],
+      "answer": {
+        "object_id": "93",
+        "region": "0",
+        "label": "bottle",
+        "raw_label": "bottle",
+        "nyu_label": "bottle",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          3.334,
+          -1.9523,
+          0.9326
+        ],
+        "size": [
+          0.0667,
+          0.0674,
+          0.2283
+        ],
+        "yaw": 1.5973,
+        "aabb": {
+          "min": [
+            3.2994,
+            -1.9865,
+            0.8185
+          ],
+          "max": [
+            3.3686,
+            -1.918,
+            1.0467
+          ]
+        },
+        "size_aabb": [
+          0.0691,
+          0.0684,
+          0.2283
+        ],
+        "bbox_corners": [
+          [
+            3.3012,
+            -1.9865,
+            1.0467
+          ],
+          [
+            3.2994,
+            -1.9198,
+            1.0467
+          ],
+          [
+            3.3668,
+            -1.918,
+            1.0467
+          ],
+          [
+            3.3686,
+            -1.9847,
+            1.0467
+          ],
+          [
+            3.3012,
+            -1.9865,
+            0.8185
+          ],
+          [
+            3.2994,
+            -1.9198,
+            0.8185
+          ],
+          [
+            3.3668,
+            -1.918,
+            0.8185
+          ],
+          [
+            3.3686,
+            -1.9847,
+            0.8185
+          ]
+        ],
+        "volume": 0.00103
+      },
+      "anchors": [
+        {
+          "object_id": "108",
+          "label": "map wall decal",
+          "phrase": "the map wall decal"
+        }
+      ],
+      "distractor_ids": [
+        "100"
+      ],
+      "competitors": 1,
+      "margin": 2.915,
+      "evidence": "closest: centre 3.07 m vs runner-up bottle#100 6.26 m; box-gap 2.66 m vs runner-up bottle#100 5.58 m",
+      "statement": "the bottle that is closest to the wall decoration",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the potted plant that is farthest from the projector screen.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "projector screen"
+      ],
+      "answer": {
+        "object_id": "67",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "gray"
+        ],
+        "center": [
+          5.6664,
+          1.2307,
+          1.0457
+        ],
+        "size": [
+          0.785,
+          0.6685,
+          2.0964
+        ],
+        "yaw": -0.2174,
+        "aabb": {
+          "min": [
+            5.2111,
+            0.8197,
+            -0.0025
+          ],
+          "max": [
+            6.1218,
+            1.6418,
+            2.0939
+          ]
+        },
+        "size_aabb": [
+          0.9107,
+          0.8221,
+          2.0964
+        ],
+        "bbox_corners": [
+          [
+            5.3553,
+            1.6418,
+            2.0939
+          ],
+          [
+            6.1218,
+            1.4725,
+            2.0939
+          ],
+          [
+            5.9776,
+            0.8197,
+            2.0939
+          ],
+          [
+            5.2111,
+            0.989,
+            2.0939
+          ],
+          [
+            5.3553,
+            1.6418,
+            -0.0025
+          ],
+          [
+            6.1218,
+            1.4725,
+            -0.0025
+          ],
+          [
+            5.9776,
+            0.8197,
+            -0.0025
+          ],
+          [
+            5.2111,
+            0.989,
+            -0.0025
+          ]
+        ],
+        "volume": 1.10014
+      },
+      "anchors": [
+        {
+          "object_id": "105",
+          "label": "projector screen",
+          "phrase": "the projector screen"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "55",
+        "71"
+      ],
+      "competitors": 3,
+      "margin": 4.165,
+      "evidence": "farthest: centre 10.29 m vs runner-up potted plant#55 6.08 m; box-gap 9.39 m vs runner-up potted plant#55 5.22 m",
+      "statement": "the plant that is farthest from the projector screen",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

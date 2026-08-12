@@ -1,0 +1,1157 @@
+{
+  "scene": "office_2",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by bags/cat2_text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions are mined from the scene's referential statements and re-derived from the boxes: the answer wins by at least 0.3 m under both centre-to-centre and box-gap distance, against both raw-label and NYU-label competitors, and every anchor is uniquely named in its region.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: bags/office_2/iref_vla_metadata/office_2_referential_statements.json",
+    "source_objects: bags/office_2/iref_vla_metadata/office_2_objects.json"
+  ],
+  "difficulty_counts": {
+    "hard": 5,
+    "medium": 4,
+    "easy": 1
+  },
+  "relation_counts": {
+    "closest": 2,
+    "on": 1,
+    "between": 1,
+    "in": 1,
+    "supports": 1,
+    "below": 1,
+    "near": 1,
+    "farthest": 2
+  },
+  "target_object_coverage": [
+    "box",
+    "cabinet",
+    "calendar",
+    "clock",
+    "coffee cup",
+    "coffee machine",
+    "computer",
+    "computer monitor",
+    "fire alarm",
+    "headphones",
+    "laptop",
+    "phone",
+    "poster",
+    "potted plant",
+    "whiteboard"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the computer monitor closest to the cabinet with a phone on it.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "closest",
+      "target_objects": [
+        "computer monitor",
+        "cabinet",
+        "phone"
+      ],
+      "answer": {
+        "object_id": "75",
+        "region": "0",
+        "label": "computer monitor",
+        "raw_label": "computer monitor",
+        "nyu_label": "monitor",
+        "colors": [
+          "black",
+          "gray"
+        ],
+        "center": [
+          3.704,
+          3.078,
+          1.114
+        ],
+        "size": [
+          0.5563,
+          0.1496,
+          0.4691
+        ],
+        "yaw": -1.5703,
+        "aabb": {
+          "min": [
+            3.6291,
+            2.7998,
+            0.8795
+          ],
+          "max": [
+            3.779,
+            3.3562,
+            1.3485
+          ]
+        },
+        "size_aabb": [
+          0.1499,
+          0.5564,
+          0.4691
+        ],
+        "bbox_corners": [
+          [
+            3.7787,
+            3.3562,
+            1.3485
+          ],
+          [
+            3.779,
+            2.7999,
+            1.3485
+          ],
+          [
+            3.6293,
+            2.7998,
+            1.3485
+          ],
+          [
+            3.6291,
+            3.3561,
+            1.3485
+          ],
+          [
+            3.7787,
+            3.3562,
+            0.8795
+          ],
+          [
+            3.779,
+            2.7999,
+            0.8795
+          ],
+          [
+            3.6293,
+            2.7998,
+            0.8795
+          ],
+          [
+            3.6291,
+            3.3561,
+            0.8795
+          ]
+        ],
+        "volume": 0.03905
+      },
+      "anchors": [
+        {
+          "object_id": "160",
+          "label": "cabinet"
+        }
+      ],
+      "distractor_ids": [
+        "141",
+        "151"
+      ],
+      "evidence": "solved from geometry: closest: centre 2.36 m (next 4.78 m); box-gap 1.75 m (next 4.33 m)",
+      "statement": "the monitor that is closest to the big wall divider",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/office_2/p1_img2.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='computer monitor' color='' hops=[{'relation': 'closest', 'phrases': ['cabinet']}, {'relation': 'supports', 'phrases': ['phone']}]",
+        "head candidates: [computer monitor#75, computer monitor#141, computer monitor#151]",
+        "anchor hop 1 (supports): supports: 1 match(es) -> [cabinet#160]; supports: cabinet#160 is the only match",
+        "target hop (closest): closest: ranked [computer monitor#75, computer monitor#151, computer monitor#141]",
+        "pick: closest: centre 2.36 m (next 4.78 m); box-gap 1.75 m (next 4.33 m)",
+        "result: closest: centre 2.36 m (next 4.78 m); box-gap 1.75 m (next 4.33 m)"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the box on the cabinet that is closest to the whiteboard.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "box",
+        "cabinet",
+        "whiteboard"
+      ],
+      "answer": {
+        "object_id": "36",
+        "region": "0",
+        "label": "box",
+        "raw_label": "box",
+        "nyu_label": "box",
+        "colors": [
+          "brown",
+          "gray",
+          "red"
+        ],
+        "center": [
+          5.8875,
+          2.6166,
+          0.8985
+        ],
+        "size": [
+          0.2833,
+          0.2017,
+          0.1412
+        ],
+        "yaw": -0.0,
+        "aabb": {
+          "min": [
+            5.7459,
+            2.5158,
+            0.8279
+          ],
+          "max": [
+            6.0292,
+            2.7175,
+            0.9691
+          ]
+        },
+        "size_aabb": [
+          0.2833,
+          0.2017,
+          0.1412
+        ],
+        "bbox_corners": [
+          [
+            5.7459,
+            2.7175,
+            0.9691
+          ],
+          [
+            6.0292,
+            2.7175,
+            0.9691
+          ],
+          [
+            6.0292,
+            2.5158,
+            0.9691
+          ],
+          [
+            5.7459,
+            2.5158,
+            0.9691
+          ],
+          [
+            5.7459,
+            2.7175,
+            0.8279
+          ],
+          [
+            6.0292,
+            2.7175,
+            0.8279
+          ],
+          [
+            6.0292,
+            2.5158,
+            0.8279
+          ],
+          [
+            5.7459,
+            2.5158,
+            0.8279
+          ]
+        ],
+        "volume": 0.00807
+      },
+      "anchors": [],
+      "distractor_ids": [],
+      "evidence": "target pinned by override to box#36",
+      "statement": "",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/office_2/p2_img1.png"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='box' color='' hops=[{'relation': 'on', 'phrases': ['cabinet']}, {'relation': 'closest', 'phrases': ['whiteboard']}]",
+        "head candidates: [box#36, box#42]",
+        "anchor hop 1 (closest): closest: ranked [cabinet#160, cabinet#155, cabinet#56]; closest by centre is a tie: cabinet#160 1.88 m vs cabinet#155 2.13 m",
+        "result: could not resolve the anchor of hop 1: closest by centre is a tie: cabinet#160 1.88 m vs cabinet#155 2.13 m"
+      ],
+      "review_note": "Cabinet 160 is 0.21 m from whiteboard 113 but its centre distance ties with cabinet 155 across the room. Box 36 is the one resting on cabinet 160, next to the phone, as outlined in the PDF screenshot."
+    },
+    {
+      "id": "Q03",
+      "question": "Find the computer that is between the laptop and the clock.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "computer",
+        "laptop",
+        "clock"
+      ],
+      "answer": {
+        "object_id": "106",
+        "region": "0",
+        "label": "computer",
+        "raw_label": "computer",
+        "nyu_label": "computer",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          3.664,
+          3.077,
+          0.841
+        ],
+        "size": [
+          0.3728,
+          0.3646,
+          0.0785
+        ],
+        "yaw": 3.1416,
+        "aabb": {
+          "min": [
+            3.4776,
+            2.8947,
+            0.8017
+          ],
+          "max": [
+            3.8504,
+            3.2593,
+            0.8803
+          ]
+        },
+        "size_aabb": [
+          0.3728,
+          0.3646,
+          0.0785
+        ],
+        "bbox_corners": [
+          [
+            3.8504,
+            2.8947,
+            0.8803
+          ],
+          [
+            3.4776,
+            2.8947,
+            0.8803
+          ],
+          [
+            3.4776,
+            3.2593,
+            0.8803
+          ],
+          [
+            3.8504,
+            3.2593,
+            0.8803
+          ],
+          [
+            3.8504,
+            2.8947,
+            0.8017
+          ],
+          [
+            3.4776,
+            2.8947,
+            0.8017
+          ],
+          [
+            3.4776,
+            3.2593,
+            0.8017
+          ],
+          [
+            3.8504,
+            3.2593,
+            0.8017
+          ]
+        ],
+        "volume": 0.01067
+      },
+      "anchors": [
+        {
+          "object_id": "102",
+          "label": "laptop",
+          "phrase": "the laptop"
+        },
+        {
+          "object_id": "119",
+          "label": "clock",
+          "phrase": "the clock"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "between: between laptop#102 and clock#119 (lateral offset 0.73 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the coffee cup inside the coffee machine.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "in",
+      "target_objects": [
+        "coffee cup",
+        "coffee machine"
+      ],
+      "answer": {
+        "object_id": "136",
+        "region": "0",
+        "label": "coffee cup",
+        "raw_label": "coffee cup",
+        "nyu_label": "cup",
+        "colors": [
+          "gray",
+          "brown"
+        ],
+        "center": [
+          3.6692,
+          -0.303,
+          0.918
+        ],
+        "size": [
+          0.0955,
+          0.0946,
+          0.1138
+        ],
+        "yaw": -1.8847,
+        "aabb": {
+          "min": [
+            3.6095,
+            -0.363,
+            0.8611
+          ],
+          "max": [
+            3.7289,
+            -0.243,
+            0.9749
+          ]
+        },
+        "size_aabb": [
+          0.1194,
+          0.12,
+          0.1138
+        ],
+        "bbox_corners": [
+          [
+            3.7289,
+            -0.2722,
+            0.9749
+          ],
+          [
+            3.6994,
+            -0.363,
+            0.9749
+          ],
+          [
+            3.6095,
+            -0.3338,
+            0.9749
+          ],
+          [
+            3.639,
+            -0.243,
+            0.9749
+          ],
+          [
+            3.7289,
+            -0.2722,
+            0.8611
+          ],
+          [
+            3.6994,
+            -0.363,
+            0.8611
+          ],
+          [
+            3.6095,
+            -0.3338,
+            0.8611
+          ],
+          [
+            3.639,
+            -0.243,
+            0.8611
+          ]
+        ],
+        "volume": 0.00103
+      },
+      "anchors": [
+        {
+          "object_id": "15",
+          "label": "coffee machine",
+          "phrase": "the coffee machine"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 4,
+      "evidence": "in: inside coffee machine#15: base 0.86 m sits 0.30 m below its rim",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the cabinet with the coffee machine on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "cabinet",
+        "coffee machine"
+      ],
+      "answer": {
+        "object_id": "132",
+        "region": "0",
+        "label": "cabinet",
+        "raw_label": "cabinet",
+        "nyu_label": "cabinet",
+        "colors": [
+          "black",
+          "brown",
+          "red"
+        ],
+        "center": [
+          3.6133,
+          -0.4512,
+          0.4131
+        ],
+        "size": [
+          1.0095,
+          0.5224,
+          0.8286
+        ],
+        "yaw": -0.0,
+        "aabb": {
+          "min": [
+            3.1086,
+            -0.7124,
+            -0.0012
+          ],
+          "max": [
+            4.118,
+            -0.19,
+            0.8274
+          ]
+        },
+        "size_aabb": [
+          1.0095,
+          0.5224,
+          0.8286
+        ],
+        "bbox_corners": [
+          [
+            3.1086,
+            -0.19,
+            0.8274
+          ],
+          [
+            4.118,
+            -0.19,
+            0.8274
+          ],
+          [
+            4.118,
+            -0.7124,
+            0.8274
+          ],
+          [
+            3.1086,
+            -0.7124,
+            0.8274
+          ],
+          [
+            3.1086,
+            -0.19,
+            -0.0012
+          ],
+          [
+            4.118,
+            -0.19,
+            -0.0012
+          ],
+          [
+            4.118,
+            -0.7124,
+            -0.0012
+          ],
+          [
+            3.1086,
+            -0.7124,
+            -0.0012
+          ]
+        ],
+        "volume": 0.43694
+      },
+      "anchors": [
+        {
+          "object_id": "15",
+          "label": "coffee machine",
+          "phrase": "the coffee machine"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 3,
+      "evidence": "supports: holds coffee machine#15 (top 0.83 m, its underside 0.83 m)",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the cabinet that is below the whiteboard.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "below",
+      "target_objects": [
+        "cabinet",
+        "whiteboard"
+      ],
+      "answer": {
+        "object_id": "160",
+        "region": "0",
+        "label": "cabinet",
+        "raw_label": "cabinet",
+        "nyu_label": "cabinet",
+        "colors": [
+          "black",
+          "brown",
+          "red"
+        ],
+        "center": [
+          5.7903,
+          2.2173,
+          0.4131
+        ],
+        "size": [
+          1.0095,
+          0.5224,
+          0.8287
+        ],
+        "yaw": 1.5752,
+        "aabb": {
+          "min": [
+            5.5268,
+            1.7114,
+            -0.0012
+          ],
+          "max": [
+            6.0537,
+            2.7232,
+            0.8274
+          ]
+        },
+        "size_aabb": [
+          0.5268,
+          1.0118,
+          0.8287
+        ],
+        "bbox_corners": [
+          [
+            5.5313,
+            1.7114,
+            0.8274
+          ],
+          [
+            5.5268,
+            2.7209,
+            0.8274
+          ],
+          [
+            6.0492,
+            2.7232,
+            0.8274
+          ],
+          [
+            6.0537,
+            1.7137,
+            0.8274
+          ],
+          [
+            5.5313,
+            1.7114,
+            -0.0012
+          ],
+          [
+            5.5268,
+            2.7209,
+            -0.0012
+          ],
+          [
+            6.0492,
+            2.7232,
+            -0.0012
+          ],
+          [
+            6.0537,
+            1.7137,
+            -0.0012
+          ]
+        ],
+        "volume": 0.43696
+      },
+      "anchors": [
+        {
+          "object_id": "113",
+          "label": "whiteboard",
+          "phrase": "the whiteboard"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 3,
+      "evidence": "below: top 0.83 m under whiteboard#113 underside 1.00 m, footprints overlap 0%",
+      "statement": "",
+      "region": "0",
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the poster that is near the fire alarm.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "near",
+      "target_objects": [
+        "poster",
+        "fire alarm"
+      ],
+      "answer": {
+        "object_id": "82",
+        "region": "0",
+        "label": "poster",
+        "raw_label": "poster",
+        "nyu_label": "poster board",
+        "colors": [
+          "aqua"
+        ],
+        "center": [
+          6.1144,
+          -1.7166,
+          1.4769
+        ],
+        "size": [
+          0.3129,
+          0.0076,
+          0.0888
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            6.1107,
+            -1.8731,
+            1.4325
+          ],
+          "max": [
+            6.1182,
+            -1.5602,
+            1.5213
+          ]
+        },
+        "size_aabb": [
+          0.0076,
+          0.3129,
+          0.0888
+        ],
+        "bbox_corners": [
+          [
+            6.1182,
+            -1.5602,
+            1.5213
+          ],
+          [
+            6.1182,
+            -1.8731,
+            1.5213
+          ],
+          [
+            6.1107,
+            -1.8731,
+            1.5213
+          ],
+          [
+            6.1107,
+            -1.5602,
+            1.5213
+          ],
+          [
+            6.1182,
+            -1.5602,
+            1.4325
+          ],
+          [
+            6.1182,
+            -1.8731,
+            1.4325
+          ],
+          [
+            6.1107,
+            -1.8731,
+            1.4325
+          ],
+          [
+            6.1107,
+            -1.5602,
+            1.4325
+          ]
+        ],
+        "volume": 0.00021
+      },
+      "anchors": [
+        {
+          "object_id": "120",
+          "label": "fire alarm",
+          "phrase": "the fire alarm"
+        }
+      ],
+      "distractor_ids": [
+        "33",
+        "34",
+        "5",
+        "96"
+      ],
+      "competitors": 4,
+      "margin": 7.195,
+      "evidence": "near: box-gap 0.62 m; next framed record is 7.82 m away",
+      "statement": "the poster board that is near the fire alarm",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the potted plant that is closest to the calendar.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "potted plant",
+        "calendar"
+      ],
+      "answer": {
+        "object_id": "30",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "black"
+        ],
+        "center": [
+          4.5865,
+          -0.6037,
+          0.9284
+        ],
+        "size": [
+          0.1979,
+          0.1724,
+          0.2032
+        ],
+        "yaw": 1.3965,
+        "aabb": {
+          "min": [
+            4.4844,
+            -0.7161,
+            0.8267
+          ],
+          "max": [
+            4.6885,
+            -0.4913,
+            1.03
+          ]
+        },
+        "size_aabb": [
+          0.2041,
+          0.2248,
+          0.2032
+        ],
+        "bbox_corners": [
+          [
+            4.4844,
+            -0.6862,
+            1.03
+          ],
+          [
+            4.5187,
+            -0.4913,
+            1.03
+          ],
+          [
+            4.6885,
+            -0.5212,
+            1.03
+          ],
+          [
+            4.6542,
+            -0.7161,
+            1.03
+          ],
+          [
+            4.4844,
+            -0.6862,
+            0.8267
+          ],
+          [
+            4.5187,
+            -0.4913,
+            0.8267
+          ],
+          [
+            4.6885,
+            -0.5212,
+            0.8267
+          ],
+          [
+            4.6542,
+            -0.7161,
+            0.8267
+          ]
+        ],
+        "volume": 0.00693
+      },
+      "anchors": [
+        {
+          "object_id": "84",
+          "label": "calendar",
+          "phrase": "the calendar"
+        }
+      ],
+      "distractor_ids": [
+        "110",
+        "12"
+      ],
+      "competitors": 2,
+      "margin": 4.326,
+      "evidence": "closest: centre 2.30 m vs runner-up potted plant#110 6.64 m; box-gap 2.11 m vs runner-up potted plant#110 6.44 m",
+      "statement": "the plant that is closest to the calendar",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the potted plant that is farthest from the whiteboard.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "whiteboard"
+      ],
+      "answer": {
+        "object_id": "12",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "black",
+          "olive",
+          "brown"
+        ],
+        "center": [
+          -1.0265,
+          3.629,
+          0.5701
+        ],
+        "size": [
+          0.5607,
+          0.5293,
+          1.1462
+        ],
+        "yaw": -0.5133,
+        "aabb": {
+          "min": [
+            -1.4007,
+            3.2608,
+            -0.003
+          ],
+          "max": [
+            -0.6523,
+            3.9973,
+            1.1432
+          ]
+        },
+        "size_aabb": [
+          0.7484,
+          0.7365,
+          1.1462
+        ],
+        "bbox_corners": [
+          [
+            -1.1407,
+            3.9973,
+            1.1432
+          ],
+          [
+            -0.6523,
+            3.7219,
+            1.1432
+          ],
+          [
+            -0.9122,
+            3.2608,
+            1.1432
+          ],
+          [
+            -1.4007,
+            3.5362,
+            1.1432
+          ],
+          [
+            -1.1407,
+            3.9973,
+            -0.003
+          ],
+          [
+            -0.6523,
+            3.7219,
+            -0.003
+          ],
+          [
+            -0.9122,
+            3.2608,
+            -0.003
+          ],
+          [
+            -1.4007,
+            3.5362,
+            -0.003
+          ]
+        ],
+        "volume": 0.34018
+      },
+      "anchors": [
+        {
+          "object_id": "113",
+          "label": "whiteboard",
+          "phrase": "the whiteboard"
+        }
+      ],
+      "distractor_ids": [
+        "110",
+        "30"
+      ],
+      "competitors": 2,
+      "margin": 3.555,
+      "evidence": "farthest: centre 7.69 m vs runner-up potted plant#110 4.07 m; box-gap 6.80 m vs runner-up potted plant#110 3.24 m",
+      "statement": "the plant that is farthest from the whiteboard",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the phone that is farthest from the headphones.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "phone",
+        "headphones"
+      ],
+      "answer": {
+        "object_id": "22",
+        "region": "0",
+        "label": "phone",
+        "raw_label": "phone",
+        "nyu_label": "cell phone",
+        "colors": [
+          "aqua"
+        ],
+        "center": [
+          5.8117,
+          1.986,
+          0.8828
+        ],
+        "size": [
+          0.2727,
+          0.1836,
+          0.1176
+        ],
+        "yaw": -0.1687,
+        "aabb": {
+          "min": [
+            5.6619,
+            1.8726,
+            0.824
+          ],
+          "max": [
+            5.9615,
+            2.0994,
+            0.9416
+          ]
+        },
+        "size_aabb": [
+          0.2996,
+          0.2268,
+          0.1176
+        ],
+        "bbox_corners": [
+          [
+            5.6927,
+            2.0994,
+            0.9416
+          ],
+          [
+            5.9615,
+            2.0536,
+            0.9416
+          ],
+          [
+            5.9307,
+            1.8726,
+            0.9416
+          ],
+          [
+            5.6619,
+            1.9184,
+            0.9416
+          ],
+          [
+            5.6927,
+            2.0994,
+            0.824
+          ],
+          [
+            5.9615,
+            2.0536,
+            0.824
+          ],
+          [
+            5.9307,
+            1.8726,
+            0.824
+          ],
+          [
+            5.6619,
+            1.9184,
+            0.824
+          ]
+        ],
+        "volume": 0.00589
+      },
+      "anchors": [
+        {
+          "object_id": "122",
+          "label": "headphones",
+          "phrase": "the headphones"
+        }
+      ],
+      "distractor_ids": [
+        "41"
+      ],
+      "competitors": 1,
+      "margin": 2.596,
+      "evidence": "farthest: centre 4.54 m vs runner-up phone#41 1.91 m; box-gap 4.25 m vs runner-up phone#41 1.66 m",
+      "statement": "the cell phone that is farthest from the headphones",
+      "region": "0",
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}
