@@ -9,8 +9,10 @@
 #
 # Then pick a flow:
 #   scored eval   just eval-cat1 arabic_room 2 gt 0.1 cloud   # one command, per-question relaunch
+#                 just eval-cat2 chinese_room 2               # the same for object reference
 #   free dev loop just vqa-up, then the same with `local` instead of `cloud`
-#   compare VLMs  just cache-views   (once, hours) then just bench-views  (per model, minutes)
+#   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
+#                 just cache-cat2                then just bench-cat2  (per selection mode)
 #   live sim      just sim          | just vqa-up && just ai | just ask "How many …"
 #   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
 
@@ -410,12 +412,27 @@ cat1-reasoner backend="auto" views="3":
 # the second sweep overwrites the first.
 # Crops land in data/crops/<report name>/<scene>/<question id>-<question>/ and the report
 # records the directory, so any sweep's report doubles as the cache index that
-# `just bench-views` replays from -- and a second sweep with its own report= keeps its
+# `just bench-cat1` replays from -- and a second sweep with its own report= keeps its
 # own crops rather than overwriting the first one's question by question.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
 eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" report="/data/runs/challenge_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p report_file:={{report}}"
+
+# The same driver against the object-reference questions: same per-question relaunch, same
+# gates, but the answer arrives as a Marker on /selected_object_marker and is graded on
+# overlap -- twice the axis-aligned 3D IoU against the answer's box, the challenge's own
+# formula -- so a question scores partial credit rather than pass/fail. 122 questions at
+# roughly 3 minutes each is about 6 hours, so use a scene + limit as the dev loop:
+#   just eval-cat2 chinese_room 2
+# mode= is how the reasoner chooses: hybrid (ships: solver, model only where the geometry
+# is not decisive), solver (no model call), vlm, naive. See cat2_utils.select_object.
+# A row records the score, not what was reachable: whether a zero is selection or perception
+# takes the run's obj_map.json against the answer's box. bench-cat2 carries that ceiling.
+[group('eval')]
+[doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
+eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" backend="auto" report="/data/runs/cat2_report.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p report_file:={{report}}"
 
 # Phase 1 of the two-phase VLM comparison: eval-cat1 minus the counting call, so it
 # costs one cheap text-only extraction per question instead of a 3-image one.
@@ -428,21 +445,47 @@ eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" re
 # delete the cache= report first.
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
-cache-views scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
+cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
 
 # Phase 2: answer-only replay over those crops. No TARE, no SAM, no bag -- minutes per
 # model instead of hours, and every model sees byte-identical images, which is what
-# makes the comparison about the model. cache= is any sweep's report, cache-views or not.
-#   just bench-views /data/runs/views_cache.json 3 all 0 /data/runs/bench_gemini.json
+# makes the comparison about the model. cache= is any sweep's report, cache-cat1 or not.
+#   just bench-cat1 /data/runs/views_cache.json 3 all 0 /data/runs/bench_gemini.json
 # Which model answers comes from VLM_PROVIDER / VLM_MODEL in .env, so comparing two
 # providers is: edit .env, re-run with a different report=. The summary records which
 # model produced the numbers. Only the counting step is replayed -- a model that would
-# have extracted different SAM targets needs a full `just cache-views` of its own.
+# have extracted different SAM targets needs a full `just cache-cat1` of its own.
+# The cache paths still say `views`: they name crops already on disk from earlier sweeps,
+# and renaming the default would hide 14 scenes of them from the recipe that reads them.
 [group('eval')]
 [doc('Benchmark a VLM against the cached best views (no SAM, no bag)')]
-bench-views cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/views_bench_report.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm views_bench --cache {{cache}} --views {{views}} --scene {{scene}} --limit {{limit}} --report {{report}}"
+bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/cat1_bench_report.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat1_bench --cache {{cache}} --views {{views}} --scene {{scene}} --limit {{limit}} --report {{report}}"
+
+# The category-2 half of the same two-phase split, and the same warning: 122 questions at
+# roughly 2.5 minutes each is about 5.5 hours, so run it in tmux. Resumable question by
+# question. What it caches is the 3D map as much as the crops -- a reference question is
+# answered by choosing one entry of obj_map.json, so a run whose map never landed is a hole
+# in the cache and gets replayed rather than counted as done.
+[group('eval')]
+[doc('Cache maps + crops for every category-2 question, without answering')]
+cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/cat2_cache.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+
+# Phase 2 for category 2, the same shape as bench-cat1: replay the selection step over
+# those cached maps and crops. Seconds per mode for solver and naive, which ask no model,
+# so this is the loop a change to selection is measured in.
+#   just bench-cat2 hybrid    # what ships: solver, model only where the geometry is not decisive
+#   just bench-cat2 solver    # no model call at all
+#   just bench-cat2 naive     # the floor: largest instance of the named class
+# Every row carries ceiling_score -- twice the best IoU reachable against the cached boxes --
+# so one run says whether a low score is selection or perception. Give a separate report=
+# when A/B-ing two modes, or the second run overwrites the first.
+[group('eval')]
+[doc('Score category-2 object selection over the cached maps (no SAM, no bag)')]
+bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3

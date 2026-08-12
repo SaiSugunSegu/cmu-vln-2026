@@ -17,7 +17,7 @@ answer from the top `max_context_views` best-view images (+ manifest).
 
 `crops_only:=true` stops after saving the crops and publishes a placeholder answer.
 That is how the best-view cache is built: extraction still runs on a real model, so SAM
-is armed exactly as it would be on a scored run, and `views_bench` replays the counting
+is armed exactly as it would be on a scored run, and `cat1_bench` replays the counting
 step over the saved images afterwards, once per model instead of once per sweep.
 
 Both model steps go through `captioner.vlm_backends`, so the same pipeline runs against
@@ -98,7 +98,7 @@ class NumericalReasoner(Node):
         self.declare_parameter("run_id", "")
         # Produce the crops and stop: extract targets, arm SAM, then publish a
         # placeholder answer instead of paying a model to count. This is how the
-        # best-view cache is built; views_bench does the counting later, once per model.
+        # best-view cache is built; cat1_bench does the counting later, once per model.
         self.declare_parameter("crops_only", False)
         self.declare_parameter("vqa_timeout_s", 120.0)
         # local | cloud | auto (auto defers to VLM_BACKEND in the environment).

@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[2]
-BAGS = REPO / "bags"
+BAGS = REPO / "data" / "bags"
 QUESTIONS_JSON = REPO / "questions" / "questions.json"
 DEFAULT_BENCHMARK = REPO / "data" / "benchmark"
 DEFAULT_IREF_UNITY = Path("/home/ubuntu/myspace/SORT3D/data/IRef-VLA/Unity")
