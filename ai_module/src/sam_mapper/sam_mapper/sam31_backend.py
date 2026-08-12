@@ -320,6 +320,24 @@ class Sam31Backend:
 
     # -- setup -------------------------------------------------------------
 
+    def _bf16(self):
+        """The autocast the model assumes is always on.
+
+        Sam3MultiplexBase.__init__ does `self.bf16_context.__enter__()` and comments "keep
+        using for the entire model process" (sam3_multiplex_base.py:171-172) — but
+        torch.autocast is THREAD-LOCAL. sam_node builds the backend on the main thread and
+        calls process_frame on its worker thread, where that context does not exist.
+
+        The failure is not a clean one. `use_early_fusion=True` means set_prompts (main
+        thread, autocast on) encodes text to bf16, those language features are fused into the
+        ViT trunk, and the trunk's fp32 weights then meet bf16 activations on the worker
+        thread with no autocast to reconcile them:
+            RuntimeError: mat1 and mat2 must have the same dtype, but got BFloat16 and Float
+        Entering it per call is what upstream's own request handler does
+        (sam3_base_predictor.py:205), and re-entering an active autocast is a no-op.
+        """
+        return self._torch.autocast(device_type="cuda", dtype=self._torch.bfloat16)
+
     def _normalisation(self):
         """Match io_utils.load_resource_as_video_frames exactly — a different mean/std is a
         silent accuracy regression, not a crash."""
@@ -403,7 +421,7 @@ class Sam31Backend:
         import torch
         from PIL import Image
 
-        with torch.inference_mode():
+        with torch.inference_mode(), self._bf16():
             # One throwaway frame: init_state only needs it to build the scaffolding, which
             # _construct_initial_input_batch then re-lays over the preallocated buffer.
             blank = Image.new("RGB", (width, height))
@@ -445,7 +463,7 @@ class Sam31Backend:
         frame_start = time.perf_counter()
         timer = self.timer
         t = self._t
-        with torch.inference_mode():
+        with torch.inference_mode(), self._bf16():
             with timer.stage("preprocess"):
                 buf = self.state["input_batch"].img_batch
                 # upstream's own both-shapes idiom (necks.py:235)
