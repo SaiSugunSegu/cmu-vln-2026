@@ -121,8 +121,39 @@ print('kernels OK:', kernels.__version__)"
 #   flash-attn-3      Hopper-only (sm_90); both deploy targets are Ada sm_89.
 #   cc_torch          named only in a transformers DOCSTRING inherited from the native repo;
 #                     the code calls cv_utils_kernel.cc_2d. Installing it does nothing.
-#   einops, ninja     einops is unused by transformers' sam3* modules; ninja only mattered
-#                     for the source builds we no longer do.
+#   ninja             only mattered for the source builds we no longer do.
+#                     (einops IS needed — but by the native sam3 package below, not by
+#                     transformers' sam3* modules.)
+
+# Native SAM 3.1 (Object Multiplex). transformers has NO multiplex support, so this is the
+# only way to get it — the sam3.1_multiplex.pt checkpoint loads here directly, no conversion.
+# Pinned to a sha: the integration drives internals (_run_single_frame_inference and the
+# per-frame session lists) that carry no API guarantee; tests/test_sam31_contract.py fails
+# loudly if a bump moves them.
+# --no-deps is load-bearing: sam3 pins ftfy==6.1.1 and would downgrade ours (open_clip needs
+# it), and an unconstrained resolve could move torch or numpy — numpy 1.26's ABI is what
+# cv_bridge/rclpy are built against.
+#
+# So its deps are named explicitly. This list is what the import chain from
+# build_sam3_multiplex_video_predictor actually reaches, not sam3's pyproject:
+#   einops        sam3/sam/rope.py:15 — top-level, and NOT declared in sam3's pyproject
+#                 (it sits under the `notebooks` extra), so --no-deps is not to blame
+#   pycocotools   sam3/train/masks_ops.py:8, pulled top-level by sam3_multiplex_detector_utils
+#                 and sam3_video_base
+#   iopath        declared dep, used by model_builder
+# Deliberately NOT installed, having checked each: hydra (imported inside a function, for the
+# config-driven build path we bypass), skimage (only visualization_utils, off the model path),
+# and cc_torch / decord / torchcodec / xformers / torch_generic_nms / flash_attn_interface
+# (all deferred or try-guarded).
+ARG SAM31_SHA=96914d2425f90a64f45ca977c2b5165418099543
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m pip install einops iopath pycocotools \
+    && python3 -m pip install --no-deps \
+       "git+https://github.com/facebookresearch/sam3.git@${SAM31_SHA}" \
+    && python3 -c "\
+import ftfy, numpy, torch; \
+from sam3.model_builder import build_sam3_multiplex_video_predictor; \
+print(f'sam3 OK — ftfy {ftfy.__version__}, numpy {numpy.__version__}, torch {torch.__version__}')"
 
 # semantic_mapping's 3D stage: open3d is the big one (~400 MB), hence its own layer.
 RUN --mount=type=cache,target=/root/.cache/pip \

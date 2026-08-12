@@ -6,6 +6,9 @@ detection_linear_state_time_bias: 0.0
 detection_angular_state_time_bias: 0.0
 
 sam3:
+  # hf_sam3      transformers Sam3VideoModel (the measured baseline)
+  # native_sam31 facebookresearch/sam3 Object Multiplex. 
+  backend: native_sam31
   model_id: facebook/sam3
   device: cuda
   dtype: bfloat16
@@ -30,6 +33,13 @@ sam3:
   new_det_thresh: 0.8
   det_nms_thresh: 0.1
   recondition_every_nth_frame: 16
+
+  # Read ONLY when backend: native_sam31.
+  native_sam31:
+    # session_frames slots of 1008x1008 fp16 are preallocated on the GPU (~6.1 MB each).
+    # At the end the backend rolls to a new session and carries its own id offset, 
+    session_frames: 256
+    max_num_objects: 32          # builder default 16 clips a 20-object scene
 
 # One SAM 3 text prompt per entry (a short noun phrase). Prompts must be unique.
 # instance: false -> background class: negative id, re-created each frame, never tracked.
