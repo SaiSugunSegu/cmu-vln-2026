@@ -50,9 +50,6 @@ ai_module/build/
 ai_module/install/
 ai_module/log/
 
-# Recorded scenes and their IRef-VLA metadata are too big to track, but the benchmark
-# generators next to them are source -- and category2_overrides.json is the record of a
-# human review pass, which `just gen-cat2` needs to reproduce the benchmark.
-bags/*
-!bags/*.py
-!bags/category2_overrides.json
+# Recorded scenes and their IRef-VLA metadata, too big to track. Nothing here is source:
+# the tools that read it live in scripts/bench and scripts/utils.
+bags/

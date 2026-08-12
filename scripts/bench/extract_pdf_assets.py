@@ -14,9 +14,9 @@ Output (untracked, see .gitignore)::
 
 Usage::
 
-    python3 bags/extract_pdf_assets.py                 # every scene under questions/
-    python3 bags/extract_pdf_assets.py arabic_room
-    python3 bags/extract_pdf_assets.py --dpi 200 --force
+    python3 scripts/bench/extract_pdf_assets.py                 # every scene under questions/
+    python3 scripts/bench/extract_pdf_assets.py arabic_room
+    python3 scripts/bench/extract_pdf_assets.py --dpi 200 --force
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from pathlib import Path
 
 import fitz  # PyMuPDF
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 QUESTIONS_ROOT = REPO / "questions"
 DEFAULT_OUT_ROOT = REPO / "data" / "pdf_assets"
 

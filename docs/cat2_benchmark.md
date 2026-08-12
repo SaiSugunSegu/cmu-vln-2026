@@ -15,7 +15,7 @@ Unlike category 1, **there is no cache to build** — no SAM, no VLM, no bag rep
 ground truth is a join over data already on disk, so regenerating the whole benchmark is
 cheap, and regenerating is the *only* supported way to change it: hand edits to the QA
 files are overwritten by the next `gen-cat2`. Corrections go in
-[`bags/category2_overrides.json`](../bags/category2_overrides.json).
+[`scripts/bench/category2_overrides.json`](../scripts/bench/category2_overrides.json).
 
 One input is not on disk to begin with: **which objects the robot's camera actually saw**.
 That is measured from the bags by `just visibility`, which is the one step in this loop that
@@ -37,7 +37,7 @@ flowchart LR
   Ref["referential_statements.json"] --> Mine["mine + geometrically verify"]
   Objs["objects.json"] --> Mine
   Objs --> Synth["synthesise on / in / above / below / between / supports"] --> Mine
-  Objs --> Solve["cat2_text_solver: solve from text"]
+  Objs --> Solve["utils.text_solver: solve from text"]
   Off["questions.json (official)"] --> Solve
   Bag["scene bag: /camera/image + lidar + odom"] --> Vis["object_visibility.py"]
   Objs --> Vis
@@ -56,18 +56,22 @@ flowchart LR
 
 | File | Role |
 |---|---|
-| [`bags/cat2_geometry.py`](../bags/cat2_geometry.py) | boxes, distance metrics, spatial predicates — one definition of "closest" for all three consumers |
-| [`bags/cat2_text_solver.py`](../bags/cat2_text_solver.py) | parses an official question into head noun + relation hops and resolves it against the boxes |
+| [`scripts/utils/geometry.py`](../scripts/utils/geometry.py) | boxes, distance metrics, spatial predicates — one definition of "closest" for all three consumers |
+| [`scripts/utils/text_solver.py`](../scripts/utils/text_solver.py) | parses an official question into head noun + relation hops and resolves it against the boxes |
+| [`scripts/utils/visibility.py`](../scripts/utils/visibility.py) | reads the visibility reports; the gate the generator and verifier both apply |
+| [`scripts/bench/generate_category2_qa.py`](../scripts/bench/generate_category2_qa.py) | mines candidates from the statements, synthesises the rest from the boxes, applies overrides, selects 10 per scene, writes the QA file |
+| [`scripts/bench/extract_pdf_assets.py`](../scripts/bench/extract_pdf_assets.py) | `just pdf-assets` — dumps the PDF screenshots into `data/pdf_assets/` (untracked) |
 | [`scripts/eval/object_visibility.py`](../scripts/eval/object_visibility.py) | `just visibility` — projects every box into the robot's own camera frames and measures what it resolved |
-| [`bags/cat2_visibility.py`](../bags/cat2_visibility.py) | reads those reports; the gate the generator and verifier both apply |
-| [`bags/generate_category2_qa.py`](../bags/generate_category2_qa.py) | mines candidates from the statements, synthesises the rest from the boxes, applies overrides, selects 10 per scene, writes the QA file |
 | [`scripts/eval/verify_category2.py`](../scripts/eval/verify_category2.py) | independent audit: reloads the metadata and re-checks every claim |
-| [`bags/extract_pdf_assets.py`](../bags/extract_pdf_assets.py) | `just pdf-assets` — dumps the PDF screenshots into `data/pdf_assets/` (untracked) |
 
-`bags/` is otherwise gitignored, since it holds the recorded scenes and their metadata. These
-scripts and `category2_overrides.json` are negated back in: without them the benchmark cannot
-be regenerated, and the overrides file is the record of the review pass. The QA JSON under
-`data/benchmark/` is tracked; `data/pdf_assets/` is not — rebuild it with `just pdf-assets`.
+`scripts/utils/` is library code and `scripts/bench/` builds the benchmark, while
+`scripts/eval/` runs and audits it; nothing but recordings lives under `bags/`, which is
+gitignored whole. Consumers put `scripts/` on `sys.path` and import `utils.<module>`. That
+one import root is why `object_visibility.py` can share the generator's geometry from inside
+the ai_module container, which bind-mounts `scripts/` and never sees the repo root.
+
+The QA JSON under `data/benchmark/` is tracked; `data/pdf_assets/` is not — rebuild it with
+`just pdf-assets`.
 
 ## The visibility gate
 
@@ -261,7 +265,7 @@ recovered. String-matching them against the generated utterances does not work: 
 lamp that is between a door frame and a window" has no generated counterpart in
 `arabic_room`, and the nearest string is a *farthest-from* statement about a different lamp.
 
-So `cat2_text_solver` parses the question and solves it geometrically:
+So `utils.text_solver` parses the question and solves it geometrically:
 
 ```
 Find the pillow closest to the book on the stool.
@@ -293,14 +297,14 @@ fact about the recording, and the fix is a longer bag.
 Nothing else is dropped by hand: the two `hotel_room_2`
 drops that the review pass once carried — questions anchored on "the camera", a 13 cm photo
 camera in the metadata — became a rule instead, since the reason generalises. `BAD_LANDMARKS`
-in `cat2_geometry` is where that judgement lives now.
+in `utils.geometry` is where that judgement lives now.
 
 ## The review loop
 
 ```bash
 just visibility                     # only when the bags or the camera model change
 just pdf-assets                     # data/pdf_assets/<scene>/*.png + pdf_text.json
-$EDITOR bags/category2_overrides.json
+$EDITOR scripts/bench/category2_overrides.json
 just gen-cat2 && just verify-cat2
 ```
 
@@ -330,7 +334,7 @@ only brings the same object back as "the vase below the flower".
 
 Today: 5 pins, each explained by a note, and 1 hide. When a correction's reason generalises —
 "a photo camera is a confusing landmark", "a wall is a room-sized datum" — it belongs in
-`cat2_geometry` as a rule, not in one scene's override list.
+`utils.geometry` as a rule, not in one scene's override list.
 
 `gen-cat2` prints any rule that matched nothing this run, which is how the file stays honest:
 after a threshold moves, a correction whose question the generator no longer produces still

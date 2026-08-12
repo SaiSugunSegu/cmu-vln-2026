@@ -491,12 +491,12 @@ cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
 # container, and its committed report is what lets gen-cat2 stay host-only.
 #   just gen-cat2                     # all 13 scenes with referential statements
 #   just gen-cat2 "--scenes loft -v"
-# Hand corrections belong in bags/category2_overrides.json (pin / reword / drop),
-# never in the generated QA files: the next gen-cat2 would overwrite them.
+# Hand corrections belong in scripts/bench/category2_overrides.json (pin / reword /
+# drop / hide), never in the generated QA files: the next gen-cat2 would overwrite them.
 [group('cat2')]
 [doc('Generate the category-2 object-reference benchmark from IRef-VLA metadata')]
 gen-cat2 args="":
-    python3 bags/generate_category2_qa.py {{args}}
+    python3 scripts/bench/generate_category2_qa.py {{args}}
 
 # Re-derives every answer box from the scene metadata, re-checks every relation, and
 # re-solves every question -- generated as well as official -- from its own text. Non-zero
@@ -513,7 +513,7 @@ verify-cat2 args="":
 [group('cat2')]
 [doc('Extract questions.pdf images and text into data/pdf_assets')]
 pdf-assets args="":
-    python3 bags/extract_pdf_assets.py {{args}}
+    python3 scripts/bench/extract_pdf_assets.py {{args}}
 
 # Measures which IRef-VLA boxes the robot's camera actually resolved, by projecting them
 # into the recorded /camera/image frames (see docs/cat2_benchmark.md "Visibility gate").

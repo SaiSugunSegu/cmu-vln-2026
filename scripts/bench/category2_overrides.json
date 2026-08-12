@@ -1,6 +1,6 @@
 {
   "_readme": [
-    "Hand corrections for bags/generate_category2_qa.py, applied on every run so the",
+    "Hand corrections for scripts/bench/generate_category2_qa.py, applied on every run so the",
     "benchmark stays reproducible from the metadata rather than hand-edited afterwards.",
     "Rules are keyed by question text (case- and period-insensitive), not by question id,",
     "so renumbering cannot silently move a correction onto a different question.",
@@ -14,7 +14,7 @@
     "          same object, since the answer box is not re-derived from the new wording.",
     "  drop:   list of question texts to exclude. Generated questions are backfilled from",
     "          the candidate pool, so a scene still lands on 10. Prefer a rule in",
-    "          cat2_geometry over a drop when the reason generalises: 'the camera is a",
+    "          utils.geometry over a drop when the reason generalises: 'the camera is a",
     "          confusing landmark' belongs in BAD_LANDMARKS, not in one scene's drop list.",
     "  hide:   object id -> why. Overrules the visibility report for one object: it is then",
     "          neither a target nor an anchor anywhere in the scene. Use this, not drop,",

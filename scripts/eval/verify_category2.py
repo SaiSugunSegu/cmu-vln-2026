@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit the category-2 (object reference) benchmark against the IRef-VLA metadata.
 
-``bags/generate_category2_qa.py`` writes the QA files; this re-reads the scene metadata
+``scripts/bench/generate_category2_qa.py`` writes the QA files; this re-reads the metadata
 from scratch and checks that what they claim still holds, so a stale QA file, a hand edit,
 or a metadata refresh cannot quietly ship a wrong ground-truth box.
 
@@ -29,15 +29,16 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from functools import cache
 from pathlib import Path
 from typing import Any
 
-REPO = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO / "bags"))
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "scripts"))
 
-import cat2_text_solver as solver  # noqa: E402
-from cat2_visibility import Visibility, load_visibility  # noqa: E402
-from cat2_geometry import (  # noqa: E402
+import utils.text_solver as solver  # noqa: E402
+from utils.visibility import Visibility, load_visibility  # noqa: E402
+from utils.geometry import (  # noqa: E402
     STRUCTURAL,
     Obj,
     answer_payload,
@@ -49,7 +50,7 @@ from cat2_geometry import (  # noqa: E402
 )
 
 BENCH_ROOT = REPO / "data" / "benchmark"
-OVERRIDES = REPO / "bags" / "category2_overrides.json"
+OVERRIDES = REPO / "scripts" / "bench" / "category2_overrides.json"
 
 COMPARATIVE = {"closest", "farthest", "near"}
 
@@ -62,28 +63,23 @@ def qa_files(scenes: list[str] | None) -> list[Path]:
     return found
 
 
-def pinned_targets(scene: str) -> dict[str, str]:
-    """Official questions whose answer was set by hand during the review pass."""
-    if not OVERRIDES.exists():
-        return {}
-    rules = json.loads(OVERRIDES.read_text()).get(scene) or {}
-    return {solver.normalize(k): str(v) for k, v in (rules.get("pin") or {}).items()}
+@cache
+def review_rules(scene: str) -> dict[str, dict[str, str]]:
+    """The review pass's hand corrections for one scene, in the shapes the checks need.
 
+    ``pin``    question text -> the object id a human chose when the solver could not.
+    ``reword`` new text -> original, so a reworded question can still be re-solved.
+    ``hide``   object id -> why it was ruled out whatever the measurement says.
 
-def hidden_objects(scene: str) -> dict[str, str]:
-    """Objects the review pass ruled out by hand, whatever the measurement says."""
-    if not OVERRIDES.exists():
-        return {}
-    rules = json.loads(OVERRIDES.read_text()).get(scene) or {}
-    return {str(k): v for k, v in (rules.get("hide") or {}).items()}
-
-
-def reworded(scene: str) -> dict[str, str]:
-    """New text -> original text, so a reworded question can still be re-solved."""
-    if not OVERRIDES.exists():
-        return {}
-    rules = json.loads(OVERRIDES.read_text()).get(scene) or {}
-    return {solver.normalize(v): k for k, v in (rules.get("reword") or {}).items()}
+    ``drop`` is not here: it removes a question before it is ever written, so nothing in
+    a QA file can refer to it.
+    """
+    rules = (json.loads(OVERRIDES.read_text()) if OVERRIDES.exists() else {}).get(scene) or {}
+    return {
+        "pin": {solver.normalize(k): str(v) for k, v in (rules.get("pin") or {}).items()},
+        "reword": {solver.normalize(v): k for k, v in (rules.get("reword") or {}).items()},
+        "hide": {str(k): v for k, v in (rules.get("hide") or {}).items()},
+    }
 
 
 def geometry_problems(answer: dict[str, Any], obj: Obj) -> list[str]:
@@ -200,8 +196,9 @@ def verify_scene(path: Path, expect: int, verbose: bool) -> tuple[int, int]:
     questions = qa.get("questions") or []
     objects = load_objects(scene)
     statements = load_statements(scene)
-    pins, rewords = pinned_targets(scene), reworded(scene)
-    vis = Visibility(load_visibility(scene), hidden_objects(scene))
+    rules = review_rules(scene)
+    pins, rewords = rules["pin"], rules["reword"]
+    vis = Visibility(load_visibility(scene), rules["hide"])
 
     n_ok = n_bad = 0
     ids = [q.get("id") for q in questions]

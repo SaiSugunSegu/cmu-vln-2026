@@ -152,6 +152,22 @@ def match_class(phrase: str, objects: list[Obj], strict: bool = False) -> list[O
     return [o for o in objects if wanted & (stems(o.raw_label) | stems(o.nyu_label))]
 
 
+def mentioned_labels(text: str, objects: list[Obj]) -> list[str]:
+    """Labels of every scene object the question names, for SAM prompts.
+
+    Includes nouns from the deeper hops ("... on the stool"), which the resolved answer
+    and its immediate anchor leave out but a grounding model still has to detect.
+    """
+    spec = parse(text)
+    phrases = [spec["head"]] + [p for hop in spec["hops"] for p in hop["phrases"]]
+    labels: list[str] = []
+    for phrase in phrases:
+        for obj in match_class(phrase, objects, strict=True):
+            if obj.display not in labels:
+                labels.append(obj.display)
+    return labels
+
+
 def metrics_for(anchors: list[Obj]) -> dict[str, Any]:
     """Distance metrics appropriate to the anchors.
 

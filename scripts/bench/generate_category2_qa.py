@@ -11,7 +11,7 @@ The join alone is not enough, in two directions.
 
 It says too much: IRef-VLA emits every statement its grammar allows, including ones no human
 could resolve ("the pillow closest to the plant", with three plants in the room), so each
-candidate is re-derived from the geometry in ``cat2_geometry`` and kept only when its answer
+candidate is re-derived from the geometry in ``utils.geometry`` and kept only when its answer
 is unique by a margin under both distance metrics and both class granularities.
 
 And it says too little: that grammar wrote 16330 "near" statements for these scenes and 155
@@ -20,7 +20,7 @@ predicates — on, in, supports, above, below, between — are also synthesised 
 boxes, under the same checks, or the benchmark would be three quarters distance comparisons.
 
 The two official questions per scene come from the PDF text verbatim and are resolved by
-``cat2_text_solver`` rather than by the join, because the organizers' phrasing usually has no
+``utils.text_solver`` rather than by the join, because the organizers' phrasing usually has no
 generated counterpart. That solver then vets every generated question too: a question that
 does not read back to its own answer across the whole scene is not asked.
 
@@ -29,9 +29,9 @@ Default output:
 
 Usage::
 
-    python3 bags/generate_category2_qa.py                        # all scenes with statements
-    python3 bags/generate_category2_qa.py --scenes arabic_room -v
-    python3 bags/generate_category2_qa.py --n 10 --out-root data/benchmark
+    python3 scripts/bench/generate_category2_qa.py                  # all scenes with statements
+    python3 scripts/bench/generate_category2_qa.py --scenes arabic_room -v
+    python3 scripts/bench/generate_category2_qa.py --n 10 --out-root data/benchmark
 """
 
 from __future__ import annotations
@@ -39,13 +39,17 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import sys
 from collections import Counter, defaultdict
+from functools import cache
 from pathlib import Path
 from typing import Any
 
-import cat2_text_solver as solver
-from cat2_visibility import Visibility, load_visibility, report_path
-from cat2_geometry import (
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import utils.text_solver as solver  # noqa: E402
+from utils.visibility import Visibility, load_visibility, report_path  # noqa: E402
+from utils.geometry import (  # noqa: E402
     BAGS,
     MIN_MARGIN,
     REPO,
@@ -67,7 +71,7 @@ from cat2_geometry import (
 QUESTIONS_JSON = REPO / "questions" / "questions.json"
 PDF_ASSETS = REPO / "data" / "pdf_assets"
 DEFAULT_BENCHMARK = REPO / "data" / "benchmark"
-DEFAULT_OVERRIDES = BAGS / "category2_overrides.json"
+DEFAULT_OVERRIDES = Path(__file__).resolve().parent / "category2_overrides.json"
 DEFAULT_CANDIDATES = REPO / "data" / "runs" / "cat2_candidates"
 
 TEMPLATES = {
@@ -397,7 +401,9 @@ def build_candidates(
 # ---------------------------------------------------------------- official questions
 
 
+@cache
 def official_questions() -> dict[str, list[str]]:
+    """Scene -> the organizers' object-reference questions, verbatim. Read once."""
     if not QUESTIONS_JSON.exists():
         return {}
     data = json.loads(QUESTIONS_JSON.read_text())
@@ -687,8 +693,9 @@ def generate_scene(
     candidates, rejected = build_candidates(objects, statements, vis)
     images = official_images(scene)
 
+    official = official_questions().get(scene, [])
     questions: list[dict] = []
-    for text in official_questions().get(scene, []):
+    for text in official:
         if solver.normalize(text) in rules["drop"]:
             continue
         questions.append(
@@ -697,7 +704,7 @@ def generate_scene(
 
     taken = {q["answer"]["object_id"] for q in questions if q.get("answer")}
     offered = {solver.normalize(c["question"]) for c in candidates}
-    offered |= {solver.normalize(t) for t in official_questions().get(scene, [])}
+    offered |= {solver.normalize(t) for t in official}
     pool = [
         c
         for c in candidates
@@ -735,7 +742,7 @@ def generate_scene(
             "answer.size_aabb are the axis-aligned equivalent for scorers that ignore "
             "orientation. Answer with a CUBE marker, never the RViz wireframe.",
             "source=official questions are verbatim from questions/<scene>/questions.pdf; "
-            "their target object is solved from the geometry by bags/cat2_text_solver.py and "
+            "their target object is solved from the geometry by scripts/utils/text_solver.py and "
             "solver_trace records how. images points at the screenshot the PDF shows next to "
             "the question, in which the expected answer is outlined.",
             "source=generated questions carry derivation=statement when mined from one of the "
@@ -747,7 +754,7 @@ def generate_scene(
             f"{MIN_MARGIN} m under both centre-to-centre and box-gap distance (comparatives) or "
             "is the only object the relation holds for, against both raw-label and NYU-label "
             "competitors, every anchor is uniquely named in its region, and the question read "
-            "back by bags/cat2_text_solver.py resolves to this answer across the whole scene.",
+            "back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
             "Every generated question's target and anchors were seen by the robot's own "
             "camera: scripts/eval/object_visibility.py projects each box into the recorded "
             "/camera/image frames and requires lidar returns off the object inside the 120 "

@@ -246,7 +246,7 @@ keeps only the objects the sensors resolved. It turned out to disqualify 47 of t
 questions — recessed downlights, a book 270 px² across, geometry behind a wall — and its
 committed per-scene report is what lets `gen-cat2` stay bag-free.
 
-Corrections go in `bags/category2_overrides.json` (pin / reword / drop), never into the
+Corrections go in `scripts/bench/category2_overrides.json` (pin / reword / drop / hide), never into the
 generated JSON — the next `gen-cat2` overwrites it. These answers are also the target set
 `just map3d-score` measures its category-2 marker score over.
 

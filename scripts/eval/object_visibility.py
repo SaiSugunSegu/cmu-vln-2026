@@ -39,14 +39,15 @@ import os
 import sys
 import time
 from bisect import bisect_left
+from pathlib import Path
 
 import numpy as np
 
-# The generator's object model, so "the box" means the same thing in both places.
-for _cand in ("/data/bags", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "bags")):
-    if os.path.isdir(_cand) and _cand not in sys.path:
-        sys.path.insert(0, os.path.abspath(_cand))
-import cat2_geometry as geom  # noqa: E402
+# The generator's object model, so "the box" means the same thing in both places. One
+# path works here and on the host: the container bind-mounts scripts/ at
+# /home/docker/scripts, so utils/ is always the sibling of this file's directory.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import utils.geometry as geom  # noqa: E402
 
 CLOUD_TOPIC = "/registered_scan"
 ODOM_TOPIC = "/state_estimation"
@@ -310,7 +311,9 @@ def measure_scene(scene: str, args) -> dict:
     scene_dir = os.path.join(args.bags_dir, scene)
     if not os.path.isdir(scene_dir):
         raise SystemExit(f"no bag directory {scene_dir}")
-    objects = geom.load_objects(scene)
+    # Explicit, because the module's default (<repo>/bags) does not exist in the container:
+    # only data/ and scripts/ are mounted, and the recordings arrive under --bags-dir.
+    objects = geom.load_objects(scene, Path(args.bags_dir))
     clouds, cloud_stamps, odom_stack, odom_stamps = read_geometry(scene_dir)
     if not clouds:
         raise SystemExit(f"{scene}: bag has no {CLOUD_TOPIC}")
@@ -410,8 +413,10 @@ def measure_scene(scene: str, args) -> dict:
         "objects": len(objects),
         "visible": visible,
         "hidden": len(objects) - visible,
-        "seconds": round(time.perf_counter() - started, 1),
     }
+    # Printed, not stored: the report is tracked, and a wall-clock field would make every
+    # re-run a diff that says nothing about what the robot saw.
+    report["_seconds"] = round(time.perf_counter() - started, 1)
     return report
 
 
@@ -447,12 +452,13 @@ def main() -> None:
     os.makedirs(args.out, exist_ok=True)
     for scene in scenes:
         report = measure_scene(scene, args)
+        seconds = report.pop("_seconds")
         path = os.path.join(args.out, f"{scene}_visibility.json")
         with open(path, "w") as handle:
             json.dump(report, handle, indent=2)
         summary = report["summary"]
         print(f"{scene:16s} {summary['visible']:3d}/{summary['objects']:3d} visible "
-              f"({summary['seconds']}s) -> {path}", flush=True)
+              f"({seconds}s) -> {path}", flush=True)
 
 
 if __name__ == "__main__":
