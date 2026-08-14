@@ -8,7 +8,8 @@ or a metadata refresh cannot quietly ship a wrong ground-truth box.
 Per question::
 
     answer.object_id exists in <scene>_objects.json
-    every geometry field (centre, size, yaw, aabb, corners, volume) matches the metadata
+    every geometry field (centre, size, yaw, aabb, corners, volume) matches the metadata,
+    for both the answer and every anchor
     the answer is not a structural class nobody can point at
     anchors exist, and none of them is the answer
     the stated relation still holds and still picks out this object uniquely
@@ -128,6 +129,20 @@ def check_question(
         problems.append(f"anchors {anchor_ids} include ids missing from the metadata")
     if target.id in anchor_ids:
         problems.append("the answer is also listed as one of its own anchors")
+
+    # Anchors carry the same box payload as the answer (see generate_category2_qa.py's
+    # build_candidate/build_official), so a stale or hand-edited anchor box is caught
+    # exactly like a stale answer box.
+    for a in q.get("anchors") or []:
+        aid = str(a.get("object_id"))
+        anchor_obj = objects.get(aid)
+        if anchor_obj is None:
+            continue  # already reported above
+        if "bbox_corners" not in a:
+            problems.append(f"anchor {aid} has no stored box geometry")
+            continue
+        if diffs := geometry_problems(a, anchor_obj):
+            problems.append(f"anchor {aid} geometry disagrees with metadata: {diffs}")
     for oid in q.get("distractor_ids") or []:
         if str(oid) not in objects:
             problems.append(f"distractor id {oid!r} is not in the metadata")
