@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/office_1/visibility/office_1_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/office_1/iref_vla_metadata/office_1_referential_statements.json",
-    "source_objects: bags/office_1/iref_vla_metadata/office_1_objects.json"
+    "source_statements: data/bags/office_1/iref_vla_metadata/office_1_referential_statements.json",
+    "source_objects: data/bags/office_1/iref_vla_metadata/office_1_objects.json"
   ],
   "difficulty_counts": {
     "medium": 6,
@@ -140,7 +141,84 @@
       "anchors": [
         {
           "object_id": "69",
-          "label": "file cabinet"
+          "region": "0",
+          "label": "file cabinet",
+          "raw_label": "file cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            1.9843,
+            1.2608,
+            0.589
+          ],
+          "size": [
+            2.312,
+            0.586,
+            1.1748
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              0.8283,
+              0.9678,
+              0.0016
+            ],
+            "max": [
+              3.1403,
+              1.5538,
+              1.1764
+            ]
+          },
+          "size_aabb": [
+            2.312,
+            0.586,
+            1.1748
+          ],
+          "bbox_corners": [
+            [
+              0.8283,
+              1.5538,
+              1.1764
+            ],
+            [
+              3.1403,
+              1.5538,
+              1.1764
+            ],
+            [
+              3.1403,
+              0.9678,
+              1.1764
+            ],
+            [
+              0.8283,
+              0.9678,
+              1.1764
+            ],
+            [
+              0.8283,
+              1.5538,
+              0.0016
+            ],
+            [
+              3.1403,
+              1.5538,
+              0.0016
+            ],
+            [
+              3.1403,
+              0.9678,
+              0.0016
+            ],
+            [
+              0.8283,
+              0.9678,
+              0.0016
+            ]
+          ],
+          "volume": 1.59168
         }
       ],
       "distractor_ids": [
@@ -283,7 +361,84 @@
       "anchors": [
         {
           "object_id": "50",
-          "label": "table"
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -1.838,
+            -1.8824,
+            0.3659
+          ],
+          "size": [
+            2.7107,
+            1.0505,
+            0.7703
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -2.3633,
+              -3.2378,
+              -0.0193
+            ],
+            "max": [
+              -1.3127,
+              -0.527,
+              0.7511
+            ]
+          },
+          "size_aabb": [
+            1.0505,
+            2.7107,
+            0.7703
+          ],
+          "bbox_corners": [
+            [
+              -1.3127,
+              -0.527,
+              0.7511
+            ],
+            [
+              -1.3127,
+              -3.2377,
+              0.7511
+            ],
+            [
+              -2.3633,
+              -3.2378,
+              0.7511
+            ],
+            [
+              -2.3633,
+              -0.527,
+              0.7511
+            ],
+            [
+              -1.3127,
+              -0.527,
+              -0.0193
+            ],
+            [
+              -1.3127,
+              -3.2377,
+              -0.0193
+            ],
+            [
+              -2.3633,
+              -3.2378,
+              -0.0193
+            ],
+            [
+              -2.3633,
+              -0.527,
+              -0.0193
+            ]
+          ],
+          "volume": 2.19372
         }
       ],
       "distractor_ids": [
@@ -418,12 +573,166 @@
       "anchors": [
         {
           "object_id": "6",
+          "region": "0",
           "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -0.3073,
+            -5.0778,
+            1.5198
+          ],
+          "size": [
+            7.8078,
+            0.4815,
+            2.1022
+          ],
+          "yaw": -0.0034,
+          "aabb": {
+            "min": [
+              -4.212,
+              -5.3319,
+              0.4687
+            ],
+            "max": [
+              3.5974,
+              -4.8237,
+              2.5709
+            ]
+          },
+          "size_aabb": [
+            7.8094,
+            0.5082,
+            2.1022
+          ],
+          "bbox_corners": [
+            [
+              -4.2104,
+              -4.8237,
+              2.5709
+            ],
+            [
+              3.5974,
+              -4.8503,
+              2.5709
+            ],
+            [
+              3.5958,
+              -5.3319,
+              2.5709
+            ],
+            [
+              -4.212,
+              -5.3052,
+              2.5709
+            ],
+            [
+              -4.2104,
+              -4.8237,
+              0.4687
+            ],
+            [
+              3.5974,
+              -4.8503,
+              0.4687
+            ],
+            [
+              3.5958,
+              -5.3319,
+              0.4687
+            ],
+            [
+              -4.212,
+              -5.3052,
+              0.4687
+            ]
+          ],
+          "volume": 7.90402,
           "phrase": "the window"
         },
         {
           "object_id": "70",
+          "region": "0",
           "label": "laptop",
+          "raw_label": "laptop",
+          "nyu_label": "laptop",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            -1.5966,
+            -2.3638,
+            0.8943
+          ],
+          "size": [
+            0.3514,
+            0.4529,
+            0.275
+          ],
+          "yaw": 3.0498,
+          "aabb": {
+            "min": [
+              -1.7923,
+              -2.6054,
+              0.7568
+            ],
+            "max": [
+              -1.4009,
+              -2.1223,
+              1.0318
+            ]
+          },
+          "size_aabb": [
+            0.3914,
+            0.4832,
+            0.275
+          ],
+          "bbox_corners": [
+            [
+              -1.4424,
+              -2.6054,
+              1.0318
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              1.0318
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              1.0318
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              1.0318
+            ],
+            [
+              -1.4424,
+              -2.6054,
+              0.7568
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              0.7568
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              0.7568
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              0.7568
+            ]
+          ],
+          "volume": 0.04376,
           "phrase": "the laptop"
         }
       ],
@@ -565,7 +874,84 @@
       "anchors": [
         {
           "object_id": "78",
+          "region": "0",
           "label": "coffee machine",
+          "raw_label": "coffee machine",
+          "nyu_label": "coffee machine",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.068,
+            1.3161,
+            1.3861
+          ],
+          "size": [
+            0.5009,
+            0.338,
+            0.4194
+          ],
+          "yaw": -1.577,
+          "aabb": {
+            "min": [
+              1.8975,
+              1.0646,
+              1.1764
+            ],
+            "max": [
+              2.2385,
+              1.5676,
+              1.5959
+            ]
+          },
+          "size_aabb": [
+            0.3411,
+            0.503,
+            0.4194
+          ],
+          "bbox_corners": [
+            [
+              2.2385,
+              1.5656,
+              1.5959
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.5959
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.5959
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.5959
+            ],
+            [
+              2.2385,
+              1.5656,
+              1.1764
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.1764
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.1764
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.1764
+            ]
+          ],
+          "volume": 0.07102,
           "phrase": "the coffee machine"
         }
       ],
@@ -695,7 +1081,84 @@
       "anchors": [
         {
           "object_id": "70",
+          "region": "0",
           "label": "laptop",
+          "raw_label": "laptop",
+          "nyu_label": "laptop",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            -1.5966,
+            -2.3638,
+            0.8943
+          ],
+          "size": [
+            0.3514,
+            0.4529,
+            0.275
+          ],
+          "yaw": 3.0498,
+          "aabb": {
+            "min": [
+              -1.7923,
+              -2.6054,
+              0.7568
+            ],
+            "max": [
+              -1.4009,
+              -2.1223,
+              1.0318
+            ]
+          },
+          "size_aabb": [
+            0.3914,
+            0.4832,
+            0.275
+          ],
+          "bbox_corners": [
+            [
+              -1.4424,
+              -2.6054,
+              1.0318
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              1.0318
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              1.0318
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              1.0318
+            ],
+            [
+              -1.4424,
+              -2.6054,
+              0.7568
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              0.7568
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              0.7568
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              0.7568
+            ]
+          ],
+          "volume": 0.04376,
           "phrase": "the laptop"
         }
       ],
@@ -826,7 +1289,84 @@
       "anchors": [
         {
           "object_id": "31",
+          "region": "0",
           "label": "trash bin",
+          "raw_label": "trash bin",
+          "nyu_label": "garbage bin",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            4.5636,
+            -1.903,
+            0.2038
+          ],
+          "size": [
+            0.3912,
+            0.3889,
+            0.4126
+          ],
+          "yaw": -0.7029,
+          "aabb": {
+            "min": [
+              4.2887,
+              -2.1778,
+              -0.0025
+            ],
+            "max": [
+              4.8386,
+              -1.6282,
+              0.4101
+            ]
+          },
+          "size_aabb": [
+            0.5499,
+            0.5496,
+            0.4126
+          ],
+          "bbox_corners": [
+            [
+              4.5401,
+              -1.6282,
+              0.4101
+            ],
+            [
+              4.8386,
+              -1.881,
+              0.4101
+            ],
+            [
+              4.5872,
+              -2.1778,
+              0.4101
+            ],
+            [
+              4.2887,
+              -1.9249,
+              0.4101
+            ],
+            [
+              4.5401,
+              -1.6282,
+              -0.0025
+            ],
+            [
+              4.8386,
+              -1.881,
+              -0.0025
+            ],
+            [
+              4.5872,
+              -2.1778,
+              -0.0025
+            ],
+            [
+              4.2887,
+              -1.9249,
+              -0.0025
+            ]
+          ],
+          "volume": 0.06277,
           "phrase": "the trash bin"
         }
       ],
@@ -956,7 +1496,84 @@
       "anchors": [
         {
           "object_id": "31",
+          "region": "0",
           "label": "trash bin",
+          "raw_label": "trash bin",
+          "nyu_label": "garbage bin",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            4.5636,
+            -1.903,
+            0.2038
+          ],
+          "size": [
+            0.3912,
+            0.3889,
+            0.4126
+          ],
+          "yaw": -0.7029,
+          "aabb": {
+            "min": [
+              4.2887,
+              -2.1778,
+              -0.0025
+            ],
+            "max": [
+              4.8386,
+              -1.6282,
+              0.4101
+            ]
+          },
+          "size_aabb": [
+            0.5499,
+            0.5496,
+            0.4126
+          ],
+          "bbox_corners": [
+            [
+              4.5401,
+              -1.6282,
+              0.4101
+            ],
+            [
+              4.8386,
+              -1.881,
+              0.4101
+            ],
+            [
+              4.5872,
+              -2.1778,
+              0.4101
+            ],
+            [
+              4.2887,
+              -1.9249,
+              0.4101
+            ],
+            [
+              4.5401,
+              -1.6282,
+              -0.0025
+            ],
+            [
+              4.8386,
+              -1.881,
+              -0.0025
+            ],
+            [
+              4.5872,
+              -2.1778,
+              -0.0025
+            ],
+            [
+              4.2887,
+              -1.9249,
+              -0.0025
+            ]
+          ],
+          "volume": 0.06277,
           "phrase": "the trash bin"
         }
       ],
@@ -1089,7 +1706,85 @@
       "anchors": [
         {
           "object_id": "80",
+          "region": "0",
           "label": "clock",
+          "raw_label": "clock",
+          "nyu_label": "clock",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            1.8025,
+            1.5558,
+            2.2714
+          ],
+          "size": [
+            0.3996,
+            0.0505,
+            0.4003
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              1.6027,
+              1.5305,
+              2.0712
+            ],
+            "max": [
+              2.0023,
+              1.581,
+              2.4715
+            ]
+          },
+          "size_aabb": [
+            0.3996,
+            0.0505,
+            0.4003
+          ],
+          "bbox_corners": [
+            [
+              2.0023,
+              1.5305,
+              2.4715
+            ],
+            [
+              1.6027,
+              1.5305,
+              2.4715
+            ],
+            [
+              1.6027,
+              1.581,
+              2.4715
+            ],
+            [
+              2.0023,
+              1.581,
+              2.4715
+            ],
+            [
+              2.0023,
+              1.5305,
+              2.0712
+            ],
+            [
+              1.6027,
+              1.5305,
+              2.0712
+            ],
+            [
+              1.6027,
+              1.581,
+              2.0712
+            ],
+            [
+              2.0023,
+              1.581,
+              2.0712
+            ]
+          ],
+          "volume": 0.00807,
           "phrase": "the clock"
         }
       ],
@@ -1223,7 +1918,84 @@
       "anchors": [
         {
           "object_id": "108",
+          "region": "0",
           "label": "map wall decal",
+          "raw_label": "map wall decal",
+          "nyu_label": "wall decoration",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            6.0355,
+            -3.2075,
+            1.6731
+          ],
+          "size": [
+            1.793,
+            0.0466,
+            1.1552
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              6.0122,
+              -4.104,
+              1.0955
+            ],
+            "max": [
+              6.0588,
+              -2.3109,
+              2.2507
+            ]
+          },
+          "size_aabb": [
+            0.0466,
+            1.793,
+            1.1552
+          ],
+          "bbox_corners": [
+            [
+              6.0588,
+              -2.3109,
+              2.2507
+            ],
+            [
+              6.0588,
+              -4.104,
+              2.2507
+            ],
+            [
+              6.0122,
+              -4.104,
+              2.2507
+            ],
+            [
+              6.0122,
+              -2.3109,
+              2.2507
+            ],
+            [
+              6.0588,
+              -2.3109,
+              1.0955
+            ],
+            [
+              6.0588,
+              -4.104,
+              1.0955
+            ],
+            [
+              6.0122,
+              -4.104,
+              1.0955
+            ],
+            [
+              6.0122,
+              -2.3109,
+              1.0955
+            ]
+          ],
+          "volume": 0.09642,
           "phrase": "the map wall decal"
         }
       ],
@@ -1359,7 +2131,84 @@
       "anchors": [
         {
           "object_id": "78",
+          "region": "0",
           "label": "coffee machine",
+          "raw_label": "coffee machine",
+          "nyu_label": "coffee machine",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.068,
+            1.3161,
+            1.3861
+          ],
+          "size": [
+            0.5009,
+            0.338,
+            0.4194
+          ],
+          "yaw": -1.577,
+          "aabb": {
+            "min": [
+              1.8975,
+              1.0646,
+              1.1764
+            ],
+            "max": [
+              2.2385,
+              1.5676,
+              1.5959
+            ]
+          },
+          "size_aabb": [
+            0.3411,
+            0.503,
+            0.4194
+          ],
+          "bbox_corners": [
+            [
+              2.2385,
+              1.5656,
+              1.5959
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.5959
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.5959
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.5959
+            ],
+            [
+              2.2385,
+              1.5656,
+              1.1764
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.1764
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.1764
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.1764
+            ]
+          ],
+          "volume": 0.07102,
           "phrase": "the coffee machine"
         }
       ],

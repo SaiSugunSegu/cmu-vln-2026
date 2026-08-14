@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/chinese_room/visibility/chinese_room_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/chinese_room/iref_vla_metadata/chinese_room_referential_statements.json",
-    "source_objects: bags/chinese_room/iref_vla_metadata/chinese_room_objects.json"
+    "source_statements: data/bags/chinese_room/iref_vla_metadata/chinese_room_referential_statements.json",
+    "source_objects: data/bags/chinese_room/iref_vla_metadata/chinese_room_objects.json"
   ],
   "difficulty_counts": {
     "hard": 3,
@@ -259,7 +260,84 @@
       "anchors": [
         {
           "object_id": "60",
-          "label": "chair"
+          "region": "0",
+          "label": "chair",
+          "raw_label": "chair",
+          "nyu_label": "chair",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            -0.4212,
+            -3.692,
+            0.4349
+          ],
+          "size": [
+            0.6318,
+            0.6392,
+            0.9131
+          ],
+          "yaw": -3.1131,
+          "aabb": {
+            "min": [
+              -0.7461,
+              -4.0205,
+              -0.0216
+            ],
+            "max": [
+              -0.0964,
+              -3.3635,
+              0.8914
+            ]
+          },
+          "size_aabb": [
+            0.6498,
+            0.657,
+            0.9131
+          ],
+          "bbox_corners": [
+            [
+              -0.0964,
+              -4.0025,
+              0.8914
+            ],
+            [
+              -0.7279,
+              -4.0205,
+              0.8914
+            ],
+            [
+              -0.7461,
+              -3.3816,
+              0.8914
+            ],
+            [
+              -0.1146,
+              -3.3635,
+              0.8914
+            ],
+            [
+              -0.0964,
+              -4.0025,
+              -0.0216
+            ],
+            [
+              -0.7279,
+              -4.0205,
+              -0.0216
+            ],
+            [
+              -0.7461,
+              -3.3816,
+              -0.0216
+            ],
+            [
+              -0.1146,
+              -3.3635,
+              -0.0216
+            ]
+          ],
+          "volume": 0.36873
         }
       ],
       "distractor_ids": [
@@ -409,12 +487,169 @@
       "anchors": [
         {
           "object_id": "19",
+          "region": "0",
           "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "aqua",
+            "black",
+            "gray"
+          ],
+          "center": [
+            -2.2451,
+            -2.0804,
+            1.1614
+          ],
+          "size": [
+            0.9744,
+            0.0391,
+            0.611
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            "max": [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ]
+          },
+          "size_aabb": [
+            0.0391,
+            0.9744,
+            0.611
+          ],
+          "bbox_corners": [
+            [
+              -2.2646,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              0.8559
+            ]
+          ],
+          "volume": 0.0233,
           "phrase": "the tv"
         },
         {
           "object_id": "48",
+          "region": "0",
           "label": "sofa",
+          "raw_label": "sofa",
+          "nyu_label": "sofa",
+          "colors": [
+            "black",
+            "aqua"
+          ],
+          "center": [
+            1.7299,
+            -2.2527,
+            0.4328
+          ],
+          "size": [
+            2.1292,
+            0.9532,
+            0.88
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              1.2533,
+              -3.3173,
+              -0.0072
+            ],
+            "max": [
+              2.2065,
+              -1.1881,
+              0.8728
+            ]
+          },
+          "size_aabb": [
+            0.9532,
+            2.1292,
+            0.88
+          ],
+          "bbox_corners": [
+            [
+              2.2065,
+              -1.1881,
+              0.8728
+            ],
+            [
+              2.2065,
+              -3.3173,
+              0.8728
+            ],
+            [
+              1.2533,
+              -3.3173,
+              0.8728
+            ],
+            [
+              1.2533,
+              -1.1881,
+              0.8728
+            ],
+            [
+              2.2065,
+              -1.1881,
+              -0.0072
+            ],
+            [
+              2.2065,
+              -3.3173,
+              -0.0072
+            ],
+            [
+              1.2533,
+              -3.3173,
+              -0.0072
+            ],
+            [
+              1.2533,
+              -1.1881,
+              -0.0072
+            ]
+          ],
+          "volume": 1.78593,
           "phrase": "the sofa"
         }
       ],
@@ -555,7 +790,84 @@
       "anchors": [
         {
           "object_id": "4",
+          "region": "0",
           "label": "tablecloth",
+          "raw_label": "tablecloth",
+          "nyu_label": "tablecloth",
+          "colors": [
+            "maroon"
+          ],
+          "center": [
+            4.2476,
+            -0.5345,
+            0.7283
+          ],
+          "size": [
+            1.1942,
+            0.3478,
+            0.1075
+          ],
+          "yaw": 1.5713,
+          "aabb": {
+            "min": [
+              4.0734,
+              -1.1316,
+              0.6745
+            ],
+            "max": [
+              4.4218,
+              0.0627,
+              0.782
+            ]
+          },
+          "size_aabb": [
+            0.3484,
+            1.1943,
+            0.1075
+          ],
+          "bbox_corners": [
+            [
+              4.074,
+              -1.1316,
+              0.782
+            ],
+            [
+              4.0734,
+              0.0625,
+              0.782
+            ],
+            [
+              4.4212,
+              0.0627,
+              0.782
+            ],
+            [
+              4.4218,
+              -1.1315,
+              0.782
+            ],
+            [
+              4.074,
+              -1.1316,
+              0.6745
+            ],
+            [
+              4.0734,
+              0.0625,
+              0.6745
+            ],
+            [
+              4.4212,
+              0.0627,
+              0.6745
+            ],
+            [
+              4.4218,
+              -1.1315,
+              0.6745
+            ]
+          ],
+          "volume": 0.04465,
           "phrase": "the tablecloth"
         }
       ],
@@ -686,7 +998,84 @@
       "anchors": [
         {
           "object_id": "4",
+          "region": "0",
           "label": "tablecloth",
+          "raw_label": "tablecloth",
+          "nyu_label": "tablecloth",
+          "colors": [
+            "maroon"
+          ],
+          "center": [
+            4.2476,
+            -0.5345,
+            0.7283
+          ],
+          "size": [
+            1.1942,
+            0.3478,
+            0.1075
+          ],
+          "yaw": 1.5713,
+          "aabb": {
+            "min": [
+              4.0734,
+              -1.1316,
+              0.6745
+            ],
+            "max": [
+              4.4218,
+              0.0627,
+              0.782
+            ]
+          },
+          "size_aabb": [
+            0.3484,
+            1.1943,
+            0.1075
+          ],
+          "bbox_corners": [
+            [
+              4.074,
+              -1.1316,
+              0.782
+            ],
+            [
+              4.0734,
+              0.0625,
+              0.782
+            ],
+            [
+              4.4212,
+              0.0627,
+              0.782
+            ],
+            [
+              4.4218,
+              -1.1315,
+              0.782
+            ],
+            [
+              4.074,
+              -1.1316,
+              0.6745
+            ],
+            [
+              4.0734,
+              0.0625,
+              0.6745
+            ],
+            [
+              4.4212,
+              0.0627,
+              0.6745
+            ],
+            [
+              4.4218,
+              -1.1315,
+              0.6745
+            ]
+          ],
+          "volume": 0.04465,
           "phrase": "the tablecloth"
         }
       ],
@@ -818,7 +1207,86 @@
       "anchors": [
         {
           "object_id": "19",
+          "region": "0",
           "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "aqua",
+            "black",
+            "gray"
+          ],
+          "center": [
+            -2.2451,
+            -2.0804,
+            1.1614
+          ],
+          "size": [
+            0.9744,
+            0.0391,
+            0.611
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            "max": [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ]
+          },
+          "size_aabb": [
+            0.0391,
+            0.9744,
+            0.611
+          ],
+          "bbox_corners": [
+            [
+              -2.2646,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              0.8559
+            ]
+          ],
+          "volume": 0.0233,
           "phrase": "the tv"
         }
       ],
@@ -954,7 +1422,85 @@
       "anchors": [
         {
           "object_id": "32",
+          "region": "0",
           "label": "carpet",
+          "raw_label": "carpet",
+          "nyu_label": "rug",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            -0.1158,
+            -2.1866,
+            0.0079
+          ],
+          "size": [
+            2.4756,
+            1.9128,
+            0.035
+          ],
+          "yaw": -3.1381,
+          "aabb": {
+            "min": [
+              -1.357,
+              -3.1474,
+              -0.0096
+            ],
+            "max": [
+              1.1253,
+              -1.2259,
+              0.0253
+            ]
+          },
+          "size_aabb": [
+            2.4823,
+            1.9215,
+            0.035
+          ],
+          "bbox_corners": [
+            [
+              1.1253,
+              -3.1387,
+              0.0253
+            ],
+            [
+              -1.3503,
+              -3.1474,
+              0.0253
+            ],
+            [
+              -1.357,
+              -1.2345,
+              0.0253
+            ],
+            [
+              1.1186,
+              -1.2259,
+              0.0253
+            ],
+            [
+              1.1253,
+              -3.1387,
+              -0.0096
+            ],
+            [
+              -1.3503,
+              -3.1474,
+              -0.0096
+            ],
+            [
+              -1.357,
+              -1.2345,
+              -0.0096
+            ],
+            [
+              1.1186,
+              -1.2259,
+              -0.0096
+            ]
+          ],
+          "volume": 0.1657,
           "phrase": "the carpet"
         }
       ],
@@ -1088,7 +1634,85 @@
       "anchors": [
         {
           "object_id": "32",
+          "region": "0",
           "label": "carpet",
+          "raw_label": "carpet",
+          "nyu_label": "rug",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            -0.1158,
+            -2.1866,
+            0.0079
+          ],
+          "size": [
+            2.4756,
+            1.9128,
+            0.035
+          ],
+          "yaw": -3.1381,
+          "aabb": {
+            "min": [
+              -1.357,
+              -3.1474,
+              -0.0096
+            ],
+            "max": [
+              1.1253,
+              -1.2259,
+              0.0253
+            ]
+          },
+          "size_aabb": [
+            2.4823,
+            1.9215,
+            0.035
+          ],
+          "bbox_corners": [
+            [
+              1.1253,
+              -3.1387,
+              0.0253
+            ],
+            [
+              -1.3503,
+              -3.1474,
+              0.0253
+            ],
+            [
+              -1.357,
+              -1.2345,
+              0.0253
+            ],
+            [
+              1.1186,
+              -1.2259,
+              0.0253
+            ],
+            [
+              1.1253,
+              -3.1387,
+              -0.0096
+            ],
+            [
+              -1.3503,
+              -3.1474,
+              -0.0096
+            ],
+            [
+              -1.357,
+              -1.2345,
+              -0.0096
+            ],
+            [
+              1.1186,
+              -1.2259,
+              -0.0096
+            ]
+          ],
+          "volume": 0.1657,
           "phrase": "the carpet"
         }
       ],
@@ -1225,7 +1849,85 @@
       "anchors": [
         {
           "object_id": "48",
+          "region": "0",
           "label": "sofa",
+          "raw_label": "sofa",
+          "nyu_label": "sofa",
+          "colors": [
+            "black",
+            "aqua"
+          ],
+          "center": [
+            1.7299,
+            -2.2527,
+            0.4328
+          ],
+          "size": [
+            2.1292,
+            0.9532,
+            0.88
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              1.2533,
+              -3.3173,
+              -0.0072
+            ],
+            "max": [
+              2.2065,
+              -1.1881,
+              0.8728
+            ]
+          },
+          "size_aabb": [
+            0.9532,
+            2.1292,
+            0.88
+          ],
+          "bbox_corners": [
+            [
+              2.2065,
+              -1.1881,
+              0.8728
+            ],
+            [
+              2.2065,
+              -3.3173,
+              0.8728
+            ],
+            [
+              1.2533,
+              -3.3173,
+              0.8728
+            ],
+            [
+              1.2533,
+              -1.1881,
+              0.8728
+            ],
+            [
+              2.2065,
+              -1.1881,
+              -0.0072
+            ],
+            [
+              2.2065,
+              -3.3173,
+              -0.0072
+            ],
+            [
+              1.2533,
+              -3.3173,
+              -0.0072
+            ],
+            [
+              1.2533,
+              -1.1881,
+              -0.0072
+            ]
+          ],
+          "volume": 1.78593,
           "phrase": "the sofa"
         }
       ],
@@ -1360,7 +2062,86 @@
       "anchors": [
         {
           "object_id": "19",
+          "region": "0",
           "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "aqua",
+            "black",
+            "gray"
+          ],
+          "center": [
+            -2.2451,
+            -2.0804,
+            1.1614
+          ],
+          "size": [
+            0.9744,
+            0.0391,
+            0.611
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            "max": [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ]
+          },
+          "size_aabb": [
+            0.0391,
+            0.9744,
+            0.611
+          ],
+          "bbox_corners": [
+            [
+              -2.2646,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              0.8559
+            ]
+          ],
+          "volume": 0.0233,
           "phrase": "the tv"
         }
       ],

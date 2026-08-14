@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/arabic_room/visibility/arabic_room_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/arabic_room/iref_vla_metadata/arabic_room_referential_statements.json",
-    "source_objects: bags/arabic_room/iref_vla_metadata/arabic_room_objects.json"
+    "source_statements: data/bags/arabic_room/iref_vla_metadata/arabic_room_referential_statements.json",
+    "source_objects: data/bags/arabic_room/iref_vla_metadata/arabic_room_objects.json"
   ],
   "difficulty_counts": {
     "hard": 1,
@@ -133,7 +134,85 @@
       "anchors": [
         {
           "object_id": "10",
-          "label": "book"
+          "region": "0",
+          "label": "book",
+          "raw_label": "book",
+          "nyu_label": "book",
+          "colors": [
+            "aqua",
+            "gray"
+          ],
+          "center": [
+            0.1182,
+            -2.1845,
+            0.5041
+          ],
+          "size": [
+            0.1879,
+            0.1374,
+            0.0302
+          ],
+          "yaw": 1.095,
+          "aabb": {
+            "min": [
+              0.0142,
+              -2.2994,
+              0.489
+            ],
+            "max": [
+              0.2223,
+              -2.0695,
+              0.5192
+            ]
+          },
+          "size_aabb": [
+            0.2082,
+            0.2299,
+            0.0302
+          ],
+          "bbox_corners": [
+            [
+              0.0142,
+              -2.2365,
+              0.5192
+            ],
+            [
+              0.1002,
+              -2.0695,
+              0.5192
+            ],
+            [
+              0.2223,
+              -2.1324,
+              0.5192
+            ],
+            [
+              0.1363,
+              -2.2994,
+              0.5192
+            ],
+            [
+              0.0142,
+              -2.2365,
+              0.489
+            ],
+            [
+              0.1002,
+              -2.0695,
+              0.489
+            ],
+            [
+              0.2223,
+              -2.1324,
+              0.489
+            ],
+            [
+              0.1363,
+              -2.2994,
+              0.489
+            ]
+          ],
+          "volume": 0.00078
         }
       ],
       "distractor_ids": [
@@ -278,27 +357,501 @@
       "anchors": [
         {
           "object_id": "39",
-          "label": "door frame"
+          "region": "0",
+          "label": "door frame",
+          "raw_label": "door frame",
+          "nyu_label": "door frame",
+          "colors": [
+            "brown",
+            "black",
+            "gray"
+          ],
+          "center": [
+            -4.024,
+            0.024,
+            1.1224
+          ],
+          "size": [
+            1.7222,
+            0.0957,
+            2.2477
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.0718,
+              -0.8371,
+              -0.0014
+            ],
+            "max": [
+              -3.9761,
+              0.8851,
+              2.2463
+            ]
+          },
+          "size_aabb": [
+            0.0957,
+            1.7222,
+            2.2477
+          ],
+          "bbox_corners": [
+            [
+              -3.9761,
+              0.8851,
+              2.2463
+            ],
+            [
+              -3.9761,
+              -0.8371,
+              2.2463
+            ],
+            [
+              -4.0718,
+              -0.8371,
+              2.2463
+            ],
+            [
+              -4.0718,
+              0.8851,
+              2.2463
+            ],
+            [
+              -3.9761,
+              0.8851,
+              -0.0014
+            ],
+            [
+              -3.9761,
+              -0.8371,
+              -0.0014
+            ],
+            [
+              -4.0718,
+              -0.8371,
+              -0.0014
+            ],
+            [
+              -4.0718,
+              0.8851,
+              -0.0014
+            ]
+          ],
+          "volume": 0.37046
         },
         {
           "object_id": "45",
-          "label": "door frame"
+          "region": "0",
+          "label": "door frame",
+          "raw_label": "door frame",
+          "nyu_label": "door frame",
+          "colors": [
+            "brown",
+            "black",
+            "gray"
+          ],
+          "center": [
+            -2.49,
+            -2.429,
+            1.1224
+          ],
+          "size": [
+            1.7222,
+            0.0957,
+            2.2477
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              -3.3511,
+              -2.4768,
+              -0.0014
+            ],
+            "max": [
+              -1.6289,
+              -2.3811,
+              2.2463
+            ]
+          },
+          "size_aabb": [
+            1.7222,
+            0.0957,
+            2.2477
+          ],
+          "bbox_corners": [
+            [
+              -3.3511,
+              -2.3811,
+              2.2463
+            ],
+            [
+              -1.6289,
+              -2.3811,
+              2.2463
+            ],
+            [
+              -1.6289,
+              -2.4768,
+              2.2463
+            ],
+            [
+              -3.3511,
+              -2.4768,
+              2.2463
+            ],
+            [
+              -3.3511,
+              -2.3811,
+              -0.0014
+            ],
+            [
+              -1.6289,
+              -2.3811,
+              -0.0014
+            ],
+            [
+              -1.6289,
+              -2.4768,
+              -0.0014
+            ],
+            [
+              -3.3511,
+              -2.4768,
+              -0.0014
+            ]
+          ],
+          "volume": 0.37046
         },
         {
           "object_id": "20",
-          "label": "window"
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black",
+            "purple"
+          ],
+          "center": [
+            2.333,
+            -2.449,
+            1.8073
+          ],
+          "size": [
+            0.6019,
+            0.0446,
+            0.8986
+          ],
+          "yaw": -0.0,
+          "aabb": {
+            "min": [
+              2.0321,
+              -2.4713,
+              1.358
+            ],
+            "max": [
+              2.6339,
+              -2.4267,
+              2.2566
+            ]
+          },
+          "size_aabb": [
+            0.6019,
+            0.0446,
+            0.8986
+          ],
+          "bbox_corners": [
+            [
+              2.0321,
+              -2.4267,
+              2.2566
+            ],
+            [
+              2.6339,
+              -2.4267,
+              2.2566
+            ],
+            [
+              2.6339,
+              -2.4713,
+              2.2566
+            ],
+            [
+              2.0321,
+              -2.4713,
+              2.2566
+            ],
+            [
+              2.0321,
+              -2.4267,
+              1.358
+            ],
+            [
+              2.6339,
+              -2.4267,
+              1.358
+            ],
+            [
+              2.6339,
+              -2.4713,
+              1.358
+            ],
+            [
+              2.0321,
+              -2.4713,
+              1.358
+            ]
+          ],
+          "volume": 0.02412
         },
         {
           "object_id": "65",
-          "label": "window"
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black",
+            "purple"
+          ],
+          "center": [
+            0.221,
+            -2.449,
+            1.8073
+          ],
+          "size": [
+            0.6019,
+            0.0446,
+            0.8986
+          ],
+          "yaw": -0.0,
+          "aabb": {
+            "min": [
+              -0.0799,
+              -2.4713,
+              1.358
+            ],
+            "max": [
+              0.5219,
+              -2.4267,
+              2.2566
+            ]
+          },
+          "size_aabb": [
+            0.6019,
+            0.0446,
+            0.8986
+          ],
+          "bbox_corners": [
+            [
+              -0.0799,
+              -2.4267,
+              2.2566
+            ],
+            [
+              0.5219,
+              -2.4267,
+              2.2566
+            ],
+            [
+              0.5219,
+              -2.4713,
+              2.2566
+            ],
+            [
+              -0.0799,
+              -2.4713,
+              2.2566
+            ],
+            [
+              -0.0799,
+              -2.4267,
+              1.358
+            ],
+            [
+              0.5219,
+              -2.4267,
+              1.358
+            ],
+            [
+              0.5219,
+              -2.4713,
+              1.358
+            ],
+            [
+              -0.0799,
+              -2.4713,
+              1.358
+            ]
+          ],
+          "volume": 0.02412
         },
         {
           "object_id": "75",
-          "label": "window"
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black",
+            "purple"
+          ],
+          "center": [
+            4.011,
+            -0.971,
+            1.8073
+          ],
+          "size": [
+            0.6019,
+            0.0446,
+            0.8986
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              3.9887,
+              -1.2719,
+              1.358
+            ],
+            "max": [
+              4.0333,
+              -0.6701,
+              2.2566
+            ]
+          },
+          "size_aabb": [
+            0.0446,
+            0.6019,
+            0.8986
+          ],
+          "bbox_corners": [
+            [
+              3.9887,
+              -1.2719,
+              2.2566
+            ],
+            [
+              3.9887,
+              -0.6701,
+              2.2566
+            ],
+            [
+              4.0333,
+              -0.6701,
+              2.2566
+            ],
+            [
+              4.0333,
+              -1.2719,
+              2.2566
+            ],
+            [
+              3.9887,
+              -1.2719,
+              1.358
+            ],
+            [
+              3.9887,
+              -0.6701,
+              1.358
+            ],
+            [
+              4.0333,
+              -0.6701,
+              1.358
+            ],
+            [
+              4.0333,
+              -1.2719,
+              1.358
+            ]
+          ],
+          "volume": 0.02412
         },
         {
           "object_id": "76",
-          "label": "window"
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black",
+            "purple"
+          ],
+          "center": [
+            4.011,
+            1.027,
+            1.8073
+          ],
+          "size": [
+            0.6019,
+            0.0446,
+            0.8986
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              3.9887,
+              0.7261,
+              1.358
+            ],
+            "max": [
+              4.0333,
+              1.3279,
+              2.2566
+            ]
+          },
+          "size_aabb": [
+            0.0446,
+            0.6019,
+            0.8986
+          ],
+          "bbox_corners": [
+            [
+              3.9887,
+              0.7261,
+              2.2566
+            ],
+            [
+              3.9887,
+              1.3279,
+              2.2566
+            ],
+            [
+              4.0333,
+              1.3279,
+              2.2566
+            ],
+            [
+              4.0333,
+              0.7261,
+              2.2566
+            ],
+            [
+              3.9887,
+              0.7261,
+              1.358
+            ],
+            [
+              3.9887,
+              1.3279,
+              1.358
+            ],
+            [
+              4.0333,
+              1.3279,
+              1.358
+            ],
+            [
+              4.0333,
+              0.7261,
+              1.358
+            ]
+          ],
+          "volume": 0.02412
         }
       ],
       "distractor_ids": [
@@ -496,7 +1049,84 @@
       "anchors": [
         {
           "object_id": "14",
+          "region": "0",
           "label": "hookah",
+          "raw_label": "hookah",
+          "nyu_label": "hookah",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.4946,
+            -0.5941,
+            0.7488
+          ],
+          "size": [
+            0.0979,
+            0.0956,
+            0.4069
+          ],
+          "yaw": 2.3953,
+          "aabb": {
+            "min": [
+              1.4262,
+              -0.6624,
+              0.5454
+            ],
+            "max": [
+              1.563,
+              -0.5257,
+              0.9522
+            ]
+          },
+          "size_aabb": [
+            0.1368,
+            0.1367,
+            0.4069
+          ],
+          "bbox_corners": [
+            [
+              1.4981,
+              -0.6624,
+              0.9522
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.9522
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.9522
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.9522
+            ],
+            [
+              1.4981,
+              -0.6624,
+              0.5454
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.5454
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.5454
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.5454
+            ]
+          ],
+          "volume": 0.00381,
           "phrase": "the hookah"
         }
       ],
@@ -628,7 +1258,84 @@
       "anchors": [
         {
           "object_id": "14",
+          "region": "0",
           "label": "hookah",
+          "raw_label": "hookah",
+          "nyu_label": "hookah",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.4946,
+            -0.5941,
+            0.7488
+          ],
+          "size": [
+            0.0979,
+            0.0956,
+            0.4069
+          ],
+          "yaw": 2.3953,
+          "aabb": {
+            "min": [
+              1.4262,
+              -0.6624,
+              0.5454
+            ],
+            "max": [
+              1.563,
+              -0.5257,
+              0.9522
+            ]
+          },
+          "size_aabb": [
+            0.1368,
+            0.1367,
+            0.4069
+          ],
+          "bbox_corners": [
+            [
+              1.4981,
+              -0.6624,
+              0.9522
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.9522
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.9522
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.9522
+            ],
+            [
+              1.4981,
+              -0.6624,
+              0.5454
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.5454
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.5454
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.5454
+            ]
+          ],
+          "volume": 0.00381,
           "phrase": "the hookah"
         }
       ],
@@ -762,7 +1469,84 @@
       "anchors": [
         {
           "object_id": "14",
+          "region": "0",
           "label": "hookah",
+          "raw_label": "hookah",
+          "nyu_label": "hookah",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.4946,
+            -0.5941,
+            0.7488
+          ],
+          "size": [
+            0.0979,
+            0.0956,
+            0.4069
+          ],
+          "yaw": 2.3953,
+          "aabb": {
+            "min": [
+              1.4262,
+              -0.6624,
+              0.5454
+            ],
+            "max": [
+              1.563,
+              -0.5257,
+              0.9522
+            ]
+          },
+          "size_aabb": [
+            0.1368,
+            0.1367,
+            0.4069
+          ],
+          "bbox_corners": [
+            [
+              1.4981,
+              -0.6624,
+              0.9522
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.9522
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.9522
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.9522
+            ],
+            [
+              1.4981,
+              -0.6624,
+              0.5454
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.5454
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.5454
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.5454
+            ]
+          ],
+          "volume": 0.00381,
           "phrase": "the hookah"
         }
       ],
@@ -897,7 +1681,84 @@
       "anchors": [
         {
           "object_id": "14",
+          "region": "0",
           "label": "hookah",
+          "raw_label": "hookah",
+          "nyu_label": "hookah",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.4946,
+            -0.5941,
+            0.7488
+          ],
+          "size": [
+            0.0979,
+            0.0956,
+            0.4069
+          ],
+          "yaw": 2.3953,
+          "aabb": {
+            "min": [
+              1.4262,
+              -0.6624,
+              0.5454
+            ],
+            "max": [
+              1.563,
+              -0.5257,
+              0.9522
+            ]
+          },
+          "size_aabb": [
+            0.1368,
+            0.1367,
+            0.4069
+          ],
+          "bbox_corners": [
+            [
+              1.4981,
+              -0.6624,
+              0.9522
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.9522
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.9522
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.9522
+            ],
+            [
+              1.4981,
+              -0.6624,
+              0.5454
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.5454
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.5454
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.5454
+            ]
+          ],
+          "volume": 0.00381,
           "phrase": "the hookah"
         }
       ],

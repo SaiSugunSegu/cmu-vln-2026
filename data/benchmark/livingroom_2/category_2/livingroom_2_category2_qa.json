@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/livingroom_2/visibility/livingroom_2_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/livingroom_2/iref_vla_metadata/livingroom_2_referential_statements.json",
-    "source_objects: bags/livingroom_2/iref_vla_metadata/livingroom_2_objects.json"
+    "source_statements: data/bags/livingroom_2/iref_vla_metadata/livingroom_2_referential_statements.json",
+    "source_objects: data/bags/livingroom_2/iref_vla_metadata/livingroom_2_objects.json"
   ],
   "difficulty_counts": {
     "hard": 3,
@@ -138,7 +139,85 @@
       "anchors": [
         {
           "object_id": "29",
-          "label": "shelf"
+          "region": "0",
+          "label": "shelf",
+          "raw_label": "shelf",
+          "nyu_label": "shelves",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            2.6295,
+            -0.8859,
+            0.9815
+          ],
+          "size": [
+            1.3795,
+            0.4,
+            1.9988
+          ],
+          "yaw": -1.5709,
+          "aabb": {
+            "min": [
+              2.4295,
+              -1.5757,
+              -0.0179
+            ],
+            "max": [
+              2.8296,
+              -0.1961,
+              1.9809
+            ]
+          },
+          "size_aabb": [
+            0.4001,
+            1.3795,
+            1.9988
+          ],
+          "bbox_corners": [
+            [
+              2.8296,
+              -0.1962,
+              1.9809
+            ],
+            [
+              2.8295,
+              -1.5757,
+              1.9809
+            ],
+            [
+              2.4295,
+              -1.5756,
+              1.9809
+            ],
+            [
+              2.4296,
+              -0.1961,
+              1.9809
+            ],
+            [
+              2.8296,
+              -0.1962,
+              -0.0179
+            ],
+            [
+              2.8295,
+              -1.5757,
+              -0.0179
+            ],
+            [
+              2.4295,
+              -1.5756,
+              -0.0179
+            ],
+            [
+              2.4296,
+              -0.1961,
+              -0.0179
+            ]
+          ],
+          "volume": 1.10286
         }
       ],
       "distractor_ids": [
@@ -408,12 +487,168 @@
       "anchors": [
         {
           "object_id": "41",
+          "region": "1",
           "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "gray",
+            "black",
+            "brown"
+          ],
+          "center": [
+            0.0625,
+            -7.3349,
+            0.1684
+          ],
+          "size": [
+            1.2726,
+            0.7718,
+            0.3729
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -0.3234,
+              -7.9712,
+              -0.018
+            ],
+            "max": [
+              0.4484,
+              -6.6986,
+              0.3549
+            ]
+          },
+          "size_aabb": [
+            0.7718,
+            1.2726,
+            0.3729
+          ],
+          "bbox_corners": [
+            [
+              0.4484,
+              -6.6986,
+              0.3549
+            ],
+            [
+              0.4484,
+              -7.9712,
+              0.3549
+            ],
+            [
+              -0.3234,
+              -7.9712,
+              0.3549
+            ],
+            [
+              -0.3234,
+              -6.6986,
+              0.3549
+            ],
+            [
+              0.4484,
+              -6.6986,
+              -0.018
+            ],
+            [
+              0.4484,
+              -7.9712,
+              -0.018
+            ],
+            [
+              -0.3234,
+              -7.9712,
+              -0.018
+            ],
+            [
+              -0.3234,
+              -6.6986,
+              -0.018
+            ]
+          ],
+          "volume": 0.36624,
           "phrase": "the table"
         },
         {
           "object_id": "63",
+          "region": "1",
           "label": "soccer ball",
+          "raw_label": "soccer ball",
+          "nyu_label": "ball",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.8663,
+            -6.8126,
+            0.1984
+          ],
+          "size": [
+            0.3602,
+            0.3612,
+            0.3609
+          ],
+          "yaw": 1.2808,
+          "aabb": {
+            "min": [
+              2.6417,
+              -7.0368,
+              0.018
+            ],
+            "max": [
+              3.0909,
+              -6.5884,
+              0.3789
+            ]
+          },
+          "size_aabb": [
+            0.4491,
+            0.4484,
+            0.3609
+          ],
+          "bbox_corners": [
+            [
+              2.6417,
+              -6.9335,
+              0.3789
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.3789
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.3789
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.3789
+            ],
+            [
+              2.6417,
+              -6.9335,
+              0.018
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.018
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.018
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.018
+            ]
+          ],
+          "volume": 0.04695,
           "phrase": "the soccer ball"
         }
       ],
@@ -558,7 +793,84 @@
       "anchors": [
         {
           "object_id": "63",
+          "region": "1",
           "label": "soccer ball",
+          "raw_label": "soccer ball",
+          "nyu_label": "ball",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.8663,
+            -6.8126,
+            0.1984
+          ],
+          "size": [
+            0.3602,
+            0.3612,
+            0.3609
+          ],
+          "yaw": 1.2808,
+          "aabb": {
+            "min": [
+              2.6417,
+              -7.0368,
+              0.018
+            ],
+            "max": [
+              3.0909,
+              -6.5884,
+              0.3789
+            ]
+          },
+          "size_aabb": [
+            0.4491,
+            0.4484,
+            0.3609
+          ],
+          "bbox_corners": [
+            [
+              2.6417,
+              -6.9335,
+              0.3789
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.3789
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.3789
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.3789
+            ],
+            [
+              2.6417,
+              -6.9335,
+              0.018
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.018
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.018
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.018
+            ]
+          ],
+          "volume": 0.04695,
           "phrase": "the soccer ball"
         }
       ],
@@ -693,7 +1005,85 @@
       "anchors": [
         {
           "object_id": "28",
+          "region": "0",
           "label": "chair",
+          "raw_label": "chair",
+          "nyu_label": "chair",
+          "colors": [
+            "brown",
+            "gray"
+          ],
+          "center": [
+            -1.5034,
+            2.2251,
+            0.4694
+          ],
+          "size": [
+            0.6483,
+            0.6923,
+            0.9353
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -1.8496,
+              1.9009,
+              0.0018
+            ],
+            "max": [
+              -1.1572,
+              2.5493,
+              0.9371
+            ]
+          },
+          "size_aabb": [
+            0.6924,
+            0.6483,
+            0.9353
+          ],
+          "bbox_corners": [
+            [
+              -1.8496,
+              1.9009,
+              0.9371
+            ],
+            [
+              -1.8496,
+              2.5492,
+              0.9371
+            ],
+            [
+              -1.1573,
+              2.5493,
+              0.9371
+            ],
+            [
+              -1.1572,
+              1.901,
+              0.9371
+            ],
+            [
+              -1.8496,
+              1.9009,
+              0.0018
+            ],
+            [
+              -1.8496,
+              2.5492,
+              0.0018
+            ],
+            [
+              -1.1573,
+              2.5493,
+              0.0018
+            ],
+            [
+              -1.1572,
+              1.901,
+              0.0018
+            ]
+          ],
+          "volume": 0.41979,
           "phrase": "the chair"
         }
       ],
@@ -827,7 +1217,84 @@
       "anchors": [
         {
           "object_id": "38",
+          "region": "0",
           "label": "bottle",
+          "raw_label": "bottle",
+          "nyu_label": "bottle",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.6076,
+            -0.3918,
+            2.1843
+          ],
+          "size": [
+            0.2991,
+            0.2987,
+            0.4134
+          ],
+          "yaw": -1.4855,
+          "aabb": {
+            "min": [
+              2.446,
+              -0.5535,
+              1.9776
+            ],
+            "max": [
+              2.7691,
+              -0.23,
+              2.391
+            ]
+          },
+          "size_aabb": [
+            0.3231,
+            0.3235,
+            0.4134
+          ],
+          "bbox_corners": [
+            [
+              2.7436,
+              -0.23,
+              2.391
+            ],
+            [
+              2.7691,
+              -0.5281,
+              2.391
+            ],
+            [
+              2.4715,
+              -0.5535,
+              2.391
+            ],
+            [
+              2.446,
+              -0.2555,
+              2.391
+            ],
+            [
+              2.7436,
+              -0.23,
+              1.9776
+            ],
+            [
+              2.7691,
+              -0.5281,
+              1.9776
+            ],
+            [
+              2.4715,
+              -0.5535,
+              1.9776
+            ],
+            [
+              2.446,
+              -0.2555,
+              1.9776
+            ]
+          ],
+          "volume": 0.03693,
           "phrase": "the bottle"
         }
       ],
@@ -963,7 +1430,85 @@
       "anchors": [
         {
           "object_id": "74",
+          "region": "0",
           "label": "kitchen counter",
+          "raw_label": "kitchen counter",
+          "nyu_label": "counter",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            1.5633,
+            3.9909,
+            0.5038
+          ],
+          "size": [
+            2.6699,
+            1.6078,
+            1.0558
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              0.2283,
+              3.187,
+              -0.0241
+            ],
+            "max": [
+              2.8982,
+              4.7947,
+              1.0317
+            ]
+          },
+          "size_aabb": [
+            2.6699,
+            1.6078,
+            1.0558
+          ],
+          "bbox_corners": [
+            [
+              0.2283,
+              4.7947,
+              1.0317
+            ],
+            [
+              2.8982,
+              4.7947,
+              1.0317
+            ],
+            [
+              2.8982,
+              3.187,
+              1.0317
+            ],
+            [
+              0.2283,
+              3.187,
+              1.0317
+            ],
+            [
+              0.2283,
+              4.7947,
+              -0.0241
+            ],
+            [
+              2.8982,
+              4.7947,
+              -0.0241
+            ],
+            [
+              2.8982,
+              3.187,
+              -0.0241
+            ],
+            [
+              0.2283,
+              3.187,
+              -0.0241
+            ]
+          ],
+          "volume": 4.53219,
           "phrase": "the kitchen counter"
         }
       ],
@@ -1097,7 +1642,84 @@
       "anchors": [
         {
           "object_id": "63",
+          "region": "1",
           "label": "soccer ball",
+          "raw_label": "soccer ball",
+          "nyu_label": "ball",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.8663,
+            -6.8126,
+            0.1984
+          ],
+          "size": [
+            0.3602,
+            0.3612,
+            0.3609
+          ],
+          "yaw": 1.2808,
+          "aabb": {
+            "min": [
+              2.6417,
+              -7.0368,
+              0.018
+            ],
+            "max": [
+              3.0909,
+              -6.5884,
+              0.3789
+            ]
+          },
+          "size_aabb": [
+            0.4491,
+            0.4484,
+            0.3609
+          ],
+          "bbox_corners": [
+            [
+              2.6417,
+              -6.9335,
+              0.3789
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.3789
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.3789
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.3789
+            ],
+            [
+              2.6417,
+              -6.9335,
+              0.018
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.018
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.018
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.018
+            ]
+          ],
+          "volume": 0.04695,
           "phrase": "the soccer ball"
         }
       ],

@@ -195,8 +195,11 @@ def build_candidate(
         "relation": relation,
         "target_objects": object_nouns([target.display] + [a.display for a in anchors]),
         "answer": answer_payload(target),
+        # Anchors get the same box payload as the answer -- taken straight from the
+        # same IRef-VLA metadata, not recomputed -- so a consumer can point at every
+        # object a question names, not just the one it is asking for.
         "anchors": [
-            {"object_id": a.id, "label": a.display, "phrase": p}
+            {**answer_payload(a), "phrase": p}
             for a, p in zip(anchors, phrases)
         ],
         "distractor_ids": sorted(set(distractor_ids or []), key=str),
@@ -465,9 +468,10 @@ def build_official(
     # The solver only reports a relation when it resolved the question; a pinned answer
     # still has one, and it is right there in the text.
     relation = result.get("relation") or (spec["hops"][0]["relation"] if spec["hops"] else "")
-    anchors = [
-        {"object_id": a.id, "label": a.display} for a in (result.get("anchors") or [])
-    ]
+    # Same box payload as a generated question's anchors (see build_candidate) -- an
+    # official question's anchors are otherwise indistinguishable from a generated
+    # one's once the text is solved.
+    anchors = [answer_payload(a) for a in (result.get("anchors") or [])]
 
     question: dict[str, Any] = {
         "question": solver.normalize(text).capitalize() + ".",
@@ -741,6 +745,10 @@ def generate_scene(
             "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + "
             "answer.size_aabb are the axis-aligned equivalent for scorers that ignore "
             "orientation. Answer with a CUBE marker, never the RViz wireframe.",
+            "Every entry under anchors carries the same box fields as answer (center, size, "
+            "yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA "
+            "metadata -- not just object_id/label -- so every object a question names, not "
+            "only the one it asks for, has a 3D box to point at.",
             "source=official questions are verbatim from questions/<scene>/questions.pdf; "
             "their target object is solved from the geometry by scripts/utils/text_solver.py and "
             "solver_trace records how. images points at the screenshot the PDF shows next to "

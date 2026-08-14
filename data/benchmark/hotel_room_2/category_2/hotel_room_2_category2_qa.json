@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/hotel_room_2/visibility/hotel_room_2_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/hotel_room_2/iref_vla_metadata/hotel_room_2_referential_statements.json",
-    "source_objects: bags/hotel_room_2/iref_vla_metadata/hotel_room_2_objects.json"
+    "source_statements: data/bags/hotel_room_2/iref_vla_metadata/hotel_room_2_referential_statements.json",
+    "source_objects: data/bags/hotel_room_2/iref_vla_metadata/hotel_room_2_objects.json"
   ],
   "difficulty_counts": {
     "medium": 3,
@@ -136,7 +137,84 @@
       "anchors": [
         {
           "object_id": "63",
-          "label": "window"
+          "region": "1",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -4.6345,
+            0.5617,
+            1.1527
+          ],
+          "size": [
+            2.9193,
+            0.097,
+            2.3184
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.683,
+              -0.8979,
+              -0.0065
+            ],
+            "max": [
+              -4.586,
+              2.0214,
+              2.3119
+            ]
+          },
+          "size_aabb": [
+            0.097,
+            2.9193,
+            2.3184
+          ],
+          "bbox_corners": [
+            [
+              -4.586,
+              2.0214,
+              2.3119
+            ],
+            [
+              -4.586,
+              -0.8979,
+              2.3119
+            ],
+            [
+              -4.683,
+              -0.8979,
+              2.3119
+            ],
+            [
+              -4.683,
+              2.0214,
+              2.3119
+            ],
+            [
+              -4.586,
+              2.0214,
+              -0.0065
+            ],
+            [
+              -4.586,
+              -0.8979,
+              -0.0065
+            ],
+            [
+              -4.683,
+              -0.8979,
+              -0.0065
+            ],
+            [
+              -4.683,
+              2.0214,
+              -0.0065
+            ]
+          ],
+          "volume": 0.65617
         }
       ],
       "distractor_ids": [],
@@ -274,7 +352,86 @@
       "anchors": [
         {
           "object_id": "61",
-          "label": "bench"
+          "region": "1",
+          "label": "bench",
+          "raw_label": "bench",
+          "nyu_label": "bench",
+          "colors": [
+            "brown",
+            "gray",
+            "black"
+          ],
+          "center": [
+            0.4024,
+            1.4037,
+            0.1735
+          ],
+          "size": [
+            1.1778,
+            0.4096,
+            0.3572
+          ],
+          "yaw": 1.5733,
+          "aabb": {
+            "min": [
+              0.1961,
+              0.8143,
+              -0.0051
+            ],
+            "max": [
+              0.6087,
+              1.9931,
+              0.3522
+            ]
+          },
+          "size_aabb": [
+            0.4126,
+            1.1788,
+            0.3572
+          ],
+          "bbox_corners": [
+            [
+              0.1991,
+              0.8143,
+              0.3522
+            ],
+            [
+              0.1961,
+              1.9921,
+              0.3522
+            ],
+            [
+              0.6057,
+              1.9931,
+              0.3522
+            ],
+            [
+              0.6087,
+              0.8153,
+              0.3522
+            ],
+            [
+              0.1991,
+              0.8143,
+              -0.0051
+            ],
+            [
+              0.1961,
+              1.9921,
+              -0.0051
+            ],
+            [
+              0.6057,
+              1.9931,
+              -0.0051
+            ],
+            [
+              0.6087,
+              0.8153,
+              -0.0051
+            ]
+          ],
+          "volume": 0.17235
         }
       ],
       "distractor_ids": [
@@ -416,12 +573,166 @@
       "anchors": [
         {
           "object_id": "59",
+          "region": "1",
           "label": "blanket",
+          "raw_label": "blanket",
+          "nyu_label": "blanket",
+          "colors": [
+            "purple"
+          ],
+          "center": [
+            -1.8526,
+            1.1445,
+            0.3883
+          ],
+          "size": [
+            1.7532,
+            0.5579,
+            0.2851
+          ],
+          "yaw": -3.1337,
+          "aabb": {
+            "min": [
+              -2.7314,
+              0.8586,
+              0.2457
+            ],
+            "max": [
+              -0.9738,
+              1.4304,
+              0.5309
+            ]
+          },
+          "size_aabb": [
+            1.7576,
+            0.5718,
+            0.2851
+          ],
+          "bbox_corners": [
+            [
+              -0.9738,
+              0.8725,
+              0.5309
+            ],
+            [
+              -2.7269,
+              0.8586,
+              0.5309
+            ],
+            [
+              -2.7314,
+              1.4165,
+              0.5309
+            ],
+            [
+              -0.9782,
+              1.4304,
+              0.5309
+            ],
+            [
+              -0.9738,
+              0.8725,
+              0.2457
+            ],
+            [
+              -2.7269,
+              0.8586,
+              0.2457
+            ],
+            [
+              -2.7314,
+              1.4165,
+              0.2457
+            ],
+            [
+              -0.9782,
+              1.4304,
+              0.2457
+            ]
+          ],
+          "volume": 0.27891,
           "phrase": "the blanket"
         },
         {
           "object_id": "63",
+          "region": "1",
           "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -4.6345,
+            0.5617,
+            1.1527
+          ],
+          "size": [
+            2.9193,
+            0.097,
+            2.3184
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.683,
+              -0.8979,
+              -0.0065
+            ],
+            "max": [
+              -4.586,
+              2.0214,
+              2.3119
+            ]
+          },
+          "size_aabb": [
+            0.097,
+            2.9193,
+            2.3184
+          ],
+          "bbox_corners": [
+            [
+              -4.586,
+              2.0214,
+              2.3119
+            ],
+            [
+              -4.586,
+              -0.8979,
+              2.3119
+            ],
+            [
+              -4.683,
+              -0.8979,
+              2.3119
+            ],
+            [
+              -4.683,
+              2.0214,
+              2.3119
+            ],
+            [
+              -4.586,
+              2.0214,
+              -0.0065
+            ],
+            [
+              -4.586,
+              -0.8979,
+              -0.0065
+            ],
+            [
+              -4.683,
+              -0.8979,
+              -0.0065
+            ],
+            [
+              -4.683,
+              2.0214,
+              -0.0065
+            ]
+          ],
+          "volume": 0.65617,
           "phrase": "the window"
         }
       ],
@@ -562,7 +873,85 @@
       "anchors": [
         {
           "object_id": "62",
+          "region": "1",
           "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.9908,
+            -1.2883,
+            1.2616
+          ],
+          "size": [
+            0.9936,
+            0.0399,
+            0.6231
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.4876,
+              -1.3082,
+              0.9501
+            ],
+            "max": [
+              -1.4939,
+              -1.2683,
+              1.5732
+            ]
+          },
+          "size_aabb": [
+            0.9936,
+            0.0399,
+            0.6231
+          ],
+          "bbox_corners": [
+            [
+              -1.4939,
+              -1.3082,
+              1.5732
+            ],
+            [
+              -2.4876,
+              -1.3082,
+              1.5732
+            ],
+            [
+              -2.4876,
+              -1.2683,
+              1.5732
+            ],
+            [
+              -1.4939,
+              -1.2683,
+              1.5732
+            ],
+            [
+              -1.4939,
+              -1.3082,
+              0.9501
+            ],
+            [
+              -2.4876,
+              -1.3082,
+              0.9501
+            ],
+            [
+              -2.4876,
+              -1.2683,
+              0.9501
+            ],
+            [
+              -1.4939,
+              -1.2683,
+              0.9501
+            ]
+          ],
+          "volume": 0.02471,
           "phrase": "the tv"
         }
       ],
@@ -693,7 +1082,86 @@
       "anchors": [
         {
           "object_id": "61",
+          "region": "1",
           "label": "bench",
+          "raw_label": "bench",
+          "nyu_label": "bench",
+          "colors": [
+            "brown",
+            "gray",
+            "black"
+          ],
+          "center": [
+            0.4024,
+            1.4037,
+            0.1735
+          ],
+          "size": [
+            1.1778,
+            0.4096,
+            0.3572
+          ],
+          "yaw": 1.5733,
+          "aabb": {
+            "min": [
+              0.1961,
+              0.8143,
+              -0.0051
+            ],
+            "max": [
+              0.6087,
+              1.9931,
+              0.3522
+            ]
+          },
+          "size_aabb": [
+            0.4126,
+            1.1788,
+            0.3572
+          ],
+          "bbox_corners": [
+            [
+              0.1991,
+              0.8143,
+              0.3522
+            ],
+            [
+              0.1961,
+              1.9921,
+              0.3522
+            ],
+            [
+              0.6057,
+              1.9931,
+              0.3522
+            ],
+            [
+              0.6087,
+              0.8153,
+              0.3522
+            ],
+            [
+              0.1991,
+              0.8143,
+              -0.0051
+            ],
+            [
+              0.1961,
+              1.9921,
+              -0.0051
+            ],
+            [
+              0.6057,
+              1.9931,
+              -0.0051
+            ],
+            [
+              0.6087,
+              0.8153,
+              -0.0051
+            ]
+          ],
+          "volume": 0.17235,
           "phrase": "the bench"
         }
       ],
@@ -826,7 +1294,85 @@
       "anchors": [
         {
           "object_id": "62",
+          "region": "1",
           "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.9908,
+            -1.2883,
+            1.2616
+          ],
+          "size": [
+            0.9936,
+            0.0399,
+            0.6231
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.4876,
+              -1.3082,
+              0.9501
+            ],
+            "max": [
+              -1.4939,
+              -1.2683,
+              1.5732
+            ]
+          },
+          "size_aabb": [
+            0.9936,
+            0.0399,
+            0.6231
+          ],
+          "bbox_corners": [
+            [
+              -1.4939,
+              -1.3082,
+              1.5732
+            ],
+            [
+              -2.4876,
+              -1.3082,
+              1.5732
+            ],
+            [
+              -2.4876,
+              -1.2683,
+              1.5732
+            ],
+            [
+              -1.4939,
+              -1.2683,
+              1.5732
+            ],
+            [
+              -1.4939,
+              -1.3082,
+              0.9501
+            ],
+            [
+              -2.4876,
+              -1.3082,
+              0.9501
+            ],
+            [
+              -2.4876,
+              -1.2683,
+              0.9501
+            ],
+            [
+              -1.4939,
+              -1.2683,
+              0.9501
+            ]
+          ],
+          "volume": 0.02471,
           "phrase": "the tv"
         }
       ],
@@ -959,7 +1505,84 @@
       "anchors": [
         {
           "object_id": "38",
+          "region": "1",
           "label": "flowers",
+          "raw_label": "flowers",
+          "nyu_label": "flower",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -3.9799,
+            1.2628,
+            0.653
+          ],
+          "size": [
+            0.2526,
+            0.1858,
+            0.5176
+          ],
+          "yaw": 1.1266,
+          "aabb": {
+            "min": [
+              -4.1181,
+              1.1089,
+              0.3942
+            ],
+            "max": [
+              -3.8418,
+              1.4168,
+              0.9117
+            ]
+          },
+          "size_aabb": [
+            0.2763,
+            0.3079,
+            0.5176
+          ],
+          "bbox_corners": [
+            [
+              -4.1181,
+              1.1887,
+              0.9117
+            ],
+            [
+              -4.0095,
+              1.4168,
+              0.9117
+            ],
+            [
+              -3.8418,
+              1.337,
+              0.9117
+            ],
+            [
+              -3.9503,
+              1.1089,
+              0.9117
+            ],
+            [
+              -4.1181,
+              1.1887,
+              0.3942
+            ],
+            [
+              -4.0095,
+              1.4168,
+              0.3942
+            ],
+            [
+              -3.8418,
+              1.337,
+              0.3942
+            ],
+            [
+              -3.9503,
+              1.1089,
+              0.3942
+            ]
+          ],
+          "volume": 0.02429,
           "phrase": "the flowers"
         }
       ],
@@ -1093,7 +1716,85 @@
       "anchors": [
         {
           "object_id": "72",
+          "region": "1",
           "label": "tv cabinet",
+          "raw_label": "tv cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.5133,
+            -1.0303,
+            0.3702
+          ],
+          "size": [
+            2.8009,
+            0.5179,
+            0.7534
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              -2.9138,
+              -1.2892,
+              -0.0065
+            ],
+            "max": [
+              -0.1129,
+              -0.7714,
+              0.7469
+            ]
+          },
+          "size_aabb": [
+            2.8009,
+            0.5179,
+            0.7534
+          ],
+          "bbox_corners": [
+            [
+              -2.9138,
+              -0.7714,
+              0.7469
+            ],
+            [
+              -0.1129,
+              -0.7714,
+              0.7469
+            ],
+            [
+              -0.1129,
+              -1.2892,
+              0.7469
+            ],
+            [
+              -2.9138,
+              -1.2892,
+              0.7469
+            ],
+            [
+              -2.9138,
+              -0.7714,
+              -0.0065
+            ],
+            [
+              -0.1129,
+              -0.7714,
+              -0.0065
+            ],
+            [
+              -0.1129,
+              -1.2892,
+              -0.0065
+            ],
+            [
+              -2.9138,
+              -1.2892,
+              -0.0065
+            ]
+          ],
+          "volume": 1.09275,
           "phrase": "the tv cabinet"
         }
       ],
@@ -1227,7 +1928,86 @@
       "anchors": [
         {
           "object_id": "61",
+          "region": "1",
           "label": "bench",
+          "raw_label": "bench",
+          "nyu_label": "bench",
+          "colors": [
+            "brown",
+            "gray",
+            "black"
+          ],
+          "center": [
+            0.4024,
+            1.4037,
+            0.1735
+          ],
+          "size": [
+            1.1778,
+            0.4096,
+            0.3572
+          ],
+          "yaw": 1.5733,
+          "aabb": {
+            "min": [
+              0.1961,
+              0.8143,
+              -0.0051
+            ],
+            "max": [
+              0.6087,
+              1.9931,
+              0.3522
+            ]
+          },
+          "size_aabb": [
+            0.4126,
+            1.1788,
+            0.3572
+          ],
+          "bbox_corners": [
+            [
+              0.1991,
+              0.8143,
+              0.3522
+            ],
+            [
+              0.1961,
+              1.9921,
+              0.3522
+            ],
+            [
+              0.6057,
+              1.9931,
+              0.3522
+            ],
+            [
+              0.6087,
+              0.8153,
+              0.3522
+            ],
+            [
+              0.1991,
+              0.8143,
+              -0.0051
+            ],
+            [
+              0.1961,
+              1.9921,
+              -0.0051
+            ],
+            [
+              0.6057,
+              1.9931,
+              -0.0051
+            ],
+            [
+              0.6087,
+              0.8153,
+              -0.0051
+            ]
+          ],
+          "volume": 0.17235,
           "phrase": "the bench"
         }
       ],
@@ -1361,12 +2141,166 @@
       "anchors": [
         {
           "object_id": "40",
+          "region": "1",
           "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            0.5935,
+            1.4137,
+            0.9555
+          ],
+          "size": [
+            1.087,
+            0.0678,
+            0.4648
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              0.5596,
+              0.8702,
+              0.7231
+            ],
+            "max": [
+              0.6274,
+              1.9572,
+              1.188
+            ]
+          },
+          "size_aabb": [
+            0.0678,
+            1.087,
+            0.4648
+          ],
+          "bbox_corners": [
+            [
+              0.5596,
+              0.8702,
+              1.188
+            ],
+            [
+              0.5596,
+              1.9572,
+              1.188
+            ],
+            [
+              0.6274,
+              1.9572,
+              1.188
+            ],
+            [
+              0.6274,
+              0.8702,
+              1.188
+            ],
+            [
+              0.5596,
+              0.8702,
+              0.7231
+            ],
+            [
+              0.5596,
+              1.9572,
+              0.7231
+            ],
+            [
+              0.6274,
+              1.9572,
+              0.7231
+            ],
+            [
+              0.6274,
+              0.8702,
+              0.7231
+            ]
+          ],
+          "volume": 0.03426,
           "phrase": "the fireplace"
         },
         {
           "object_id": "59",
+          "region": "1",
           "label": "blanket",
+          "raw_label": "blanket",
+          "nyu_label": "blanket",
+          "colors": [
+            "purple"
+          ],
+          "center": [
+            -1.8526,
+            1.1445,
+            0.3883
+          ],
+          "size": [
+            1.7532,
+            0.5579,
+            0.2851
+          ],
+          "yaw": -3.1337,
+          "aabb": {
+            "min": [
+              -2.7314,
+              0.8586,
+              0.2457
+            ],
+            "max": [
+              -0.9738,
+              1.4304,
+              0.5309
+            ]
+          },
+          "size_aabb": [
+            1.7576,
+            0.5718,
+            0.2851
+          ],
+          "bbox_corners": [
+            [
+              -0.9738,
+              0.8725,
+              0.5309
+            ],
+            [
+              -2.7269,
+              0.8586,
+              0.5309
+            ],
+            [
+              -2.7314,
+              1.4165,
+              0.5309
+            ],
+            [
+              -0.9782,
+              1.4304,
+              0.5309
+            ],
+            [
+              -0.9738,
+              0.8725,
+              0.2457
+            ],
+            [
+              -2.7269,
+              0.8586,
+              0.2457
+            ],
+            [
+              -2.7314,
+              1.4165,
+              0.2457
+            ],
+            [
+              -0.9782,
+              1.4304,
+              0.2457
+            ]
+          ],
+          "volume": 0.27891,
           "phrase": "the blanket"
         }
       ],

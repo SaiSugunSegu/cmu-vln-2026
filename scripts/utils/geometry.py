@@ -37,6 +37,9 @@ BAGS = REPO / "data" / "bags"
 # byte-identical, so this is a fallback, not a second source of truth. Same two-root union
 # scripts/eval/build_dimension_priors.py already walks.
 DATASET = REPO.parent / "IRef-VLA" / "unity" / "Unity"
+# The generated benchmark, host-only -- gen-cat2 writes here, verify-cat2 and the
+# visual-verification tools (project_bboxes.py, make_bbox_mcap.py) read from here.
+BENCHMARK = REPO / "data" / "benchmark"
 
 SCENE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
 
@@ -310,6 +313,71 @@ def load_statements(scene: str, bags: Path | None = None) -> dict[str, Any]:
 
 def region_objects(objects: dict[str, Obj], region: str) -> list[Obj]:
     return [o for o in objects.values() if o.region == str(region)]
+
+
+class QaObj:
+    """A box read straight from a category-2 QA file's own `answer` block, not
+    re-derived from `<scene>_objects.json`.
+
+    A tool built on this checks the exact numbers a downstream consumer (a scorer, a
+    reasoner) would actually read from the shipped QA file, which is a stronger claim
+    than "the metadata this file was generated from is correct" -- a hand edit, a
+    stale file from before a metadata refresh, or a `verify-cat2` that was never rerun
+    would all be geometry-correct by that weaker check and invisible to it.
+
+    Same attribute surface as `Obj` (id/corners/lo/hi/center/size/display), so anything
+    written against one works unchanged against the other.
+    """
+
+    __slots__ = ("id", "corners", "lo", "hi", "center", "size", "display")
+
+    def __init__(self, answer: dict[str, Any]):
+        self.id = str(answer["object_id"])
+        self.corners = np.asarray(answer["bbox_corners"], dtype=float)
+        self.lo = self.corners.min(axis=0)
+        self.hi = self.corners.max(axis=0)
+        center = answer.get("center")
+        self.center = np.asarray(center, dtype=float) if center else self.corners.mean(axis=0)
+        size = answer.get("size")
+        self.size = np.asarray(size, dtype=float) if size else (self.hi - self.lo)
+        self.display = str(answer.get("label") or "object")
+
+    def __repr__(self) -> str:
+        return f"{self.display}#{self.id} (from QA file)"
+
+
+def category2_qa_path(scene: str, path: Path | None = None) -> Path:
+    """Default location of a scene's category-2 QA file, or `path` if one was given."""
+    return Path(path) if path else BENCHMARK / scene / "category_2" / f"{scene}_category2_qa.json"
+
+
+def load_qa_answers(scene: str, path: Path | None = None) -> dict[str, QaObj]:
+    """Every object with full box geometry actually stored in a category-2 QA file.
+
+    Both a question's *answer* and its *anchors* carry a full box (`bbox_corners`,
+    `center`, `size`, `yaw`, `aabb`, ...) -- see the QA schema in docs/cat2_benchmark.md
+    -- so this covers every object a question names, target or anchor. It is still
+    necessarily a subset of the scene's objects: only the ones some question mentions,
+    which is exactly what a QA-file verification can check (`--source objects` reads
+    `<scene>_objects.json` instead, for objects the QA file never names).
+    """
+    path = category2_qa_path(scene, path)
+    if not path.exists():
+        raise FileNotFoundError(f"no category-2 QA file at {path}")
+    qa = json.loads(path.read_text())
+    boxes: dict[str, QaObj] = {}
+    for q in qa.get("questions", []):
+        answer = q.get("answer") or {}
+        oid = answer.get("object_id")
+        if oid is not None and str(oid) not in boxes:
+            boxes[str(oid)] = QaObj(answer)
+        for anchor in q.get("anchors") or []:
+            aid = anchor.get("object_id")
+            # Older QA files (pre anchor-geometry) only carry object_id/label/phrase
+            # here -- skip those rather than raising on the missing bbox_corners.
+            if aid is not None and str(aid) not in boxes and anchor.get("bbox_corners") is not None:
+                boxes[str(aid)] = QaObj(anchor)
+    return boxes
 
 
 # ---------------------------------------------------------------- distances

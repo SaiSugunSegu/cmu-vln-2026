@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/studio/visibility/studio_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/studio/iref_vla_metadata/studio_referential_statements.json",
-    "source_objects: bags/studio/iref_vla_metadata/studio_objects.json"
+    "source_statements: data/bags/studio/iref_vla_metadata/studio_referential_statements.json",
+    "source_objects: data/bags/studio/iref_vla_metadata/studio_objects.json"
   ],
   "difficulty_counts": {
     "medium": 5,
@@ -138,7 +139,86 @@
       "anchors": [
         {
           "object_id": "48",
-          "label": "guitar"
+          "region": "0",
+          "label": "guitar",
+          "raw_label": "guitar",
+          "nyu_label": "guitar",
+          "colors": [
+            "black",
+            "brown",
+            "aqua"
+          ],
+          "center": [
+            3.8548,
+            -2.7278,
+            0.61
+          ],
+          "size": [
+            0.6734,
+            0.5088,
+            1.2615
+          ],
+          "yaw": 0.3731,
+          "aabb": {
+            "min": [
+              3.4485,
+              -3.0875,
+              -0.0208
+            ],
+            "max": [
+              4.261,
+              -2.3682,
+              1.2407
+            ]
+          },
+          "size_aabb": [
+            0.8126,
+            0.7193,
+            1.2615
+          ],
+          "bbox_corners": [
+            [
+              3.4485,
+              -2.6136,
+              1.2407
+            ],
+            [
+              4.0756,
+              -2.3682,
+              1.2407
+            ],
+            [
+              4.261,
+              -2.842,
+              1.2407
+            ],
+            [
+              3.6339,
+              -3.0875,
+              1.2407
+            ],
+            [
+              3.4485,
+              -2.6136,
+              -0.0208
+            ],
+            [
+              4.0756,
+              -2.3682,
+              -0.0208
+            ],
+            [
+              4.261,
+              -2.842,
+              -0.0208
+            ],
+            [
+              3.6339,
+              -3.0875,
+              -0.0208
+            ]
+          ],
+          "volume": 0.43224
         }
       ],
       "distractor_ids": [
@@ -273,7 +353,84 @@
       "anchors": [
         {
           "object_id": "16",
-          "label": "couch"
+          "region": "0",
+          "label": "couch",
+          "raw_label": "couch",
+          "nyu_label": "sofa",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            4.4676,
+            -1.0772,
+            0.4627
+          ],
+          "size": [
+            3.2047,
+            1.2649,
+            0.9227
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              3.8351,
+              -2.6796,
+              0.0013
+            ],
+            "max": [
+              5.1,
+              0.5251,
+              0.924
+            ]
+          },
+          "size_aabb": [
+            1.2649,
+            3.2047,
+            0.9227
+          ],
+          "bbox_corners": [
+            [
+              3.8351,
+              -2.6796,
+              0.924
+            ],
+            [
+              3.8351,
+              0.5251,
+              0.924
+            ],
+            [
+              5.1,
+              0.5251,
+              0.924
+            ],
+            [
+              5.1,
+              -2.6796,
+              0.924
+            ],
+            [
+              3.8351,
+              -2.6796,
+              0.0013
+            ],
+            [
+              3.8351,
+              0.5251,
+              0.0013
+            ],
+            [
+              5.1,
+              0.5251,
+              0.0013
+            ],
+            [
+              5.1,
+              -2.6796,
+              0.0013
+            ]
+          ],
+          "volume": 3.74015
         }
       ],
       "distractor_ids": [],
@@ -403,12 +560,167 @@
       "anchors": [
         {
           "object_id": "6",
+          "region": "0",
           "label": "hanger",
+          "raw_label": "hanger",
+          "nyu_label": "hangers",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -1.8874,
+            -3.8565,
+            0.8669
+          ],
+          "size": [
+            0.457,
+            0.4381,
+            1.731
+          ],
+          "yaw": 2.5589,
+          "aabb": {
+            "min": [
+              -2.1988,
+              -4.1652,
+              0.0014
+            ],
+            "max": [
+              -1.5761,
+              -3.5479,
+              1.7324
+            ]
+          },
+          "size_aabb": [
+            0.6227,
+            0.6173,
+            1.731
+          ],
+          "bbox_corners": [
+            [
+              -1.8171,
+              -4.1652,
+              1.7324
+            ],
+            [
+              -2.1988,
+              -3.9137,
+              1.7324
+            ],
+            [
+              -1.9577,
+              -3.5479,
+              1.7324
+            ],
+            [
+              -1.5761,
+              -3.7994,
+              1.7324
+            ],
+            [
+              -1.8171,
+              -4.1652,
+              0.0014
+            ],
+            [
+              -2.1988,
+              -3.9137,
+              0.0014
+            ],
+            [
+              -1.9577,
+              -3.5479,
+              0.0014
+            ],
+            [
+              -1.5761,
+              -3.7994,
+              0.0014
+            ]
+          ],
+          "volume": 0.34657,
           "phrase": "the hanger"
         },
         {
           "object_id": "71",
+          "region": "0",
           "label": "shelf",
+          "raw_label": "shelf",
+          "nyu_label": "shelves",
+          "colors": [
+            "black",
+            "aqua"
+          ],
+          "center": [
+            1.4021,
+            -4.825,
+            0.1461
+          ],
+          "size": [
+            7.6047,
+            0.993,
+            0.2897
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.4003,
+              -5.3215,
+              0.0012
+            ],
+            "max": [
+              5.2045,
+              -4.3285,
+              0.2909
+            ]
+          },
+          "size_aabb": [
+            7.6047,
+            0.993,
+            0.2897
+          ],
+          "bbox_corners": [
+            [
+              5.2045,
+              -5.3215,
+              0.2909
+            ],
+            [
+              -2.4003,
+              -5.3215,
+              0.2909
+            ],
+            [
+              -2.4003,
+              -4.3285,
+              0.2909
+            ],
+            [
+              5.2045,
+              -4.3285,
+              0.2909
+            ],
+            [
+              5.2045,
+              -5.3215,
+              0.0012
+            ],
+            [
+              -2.4003,
+              -5.3215,
+              0.0012
+            ],
+            [
+              -2.4003,
+              -4.3285,
+              0.0012
+            ],
+            [
+              5.2045,
+              -4.3285,
+              0.0012
+            ]
+          ],
+          "volume": 2.18739,
           "phrase": "the shelf"
         }
       ],
@@ -551,7 +863,84 @@
       "anchors": [
         {
           "object_id": "55",
+          "region": "0",
           "label": "cabinet",
+          "raw_label": "cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.803,
+            2.228,
+            0.3004
+          ],
+          "size": [
+            2.5777,
+            0.4844,
+            0.5982
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              1.5141,
+              1.9858,
+              0.0013
+            ],
+            "max": [
+              4.0919,
+              2.4702,
+              0.5995
+            ]
+          },
+          "size_aabb": [
+            2.5777,
+            0.4844,
+            0.5982
+          ],
+          "bbox_corners": [
+            [
+              1.5141,
+              2.4702,
+              0.5995
+            ],
+            [
+              4.0919,
+              2.4702,
+              0.5995
+            ],
+            [
+              4.0919,
+              1.9858,
+              0.5995
+            ],
+            [
+              1.5141,
+              1.9858,
+              0.5995
+            ],
+            [
+              1.5141,
+              2.4702,
+              0.0013
+            ],
+            [
+              4.0919,
+              2.4702,
+              0.0013
+            ],
+            [
+              4.0919,
+              1.9858,
+              0.0013
+            ],
+            [
+              1.5141,
+              1.9858,
+              0.0013
+            ]
+          ],
+          "volume": 0.74706,
           "phrase": "the cabinet"
         }
       ],
@@ -689,7 +1078,84 @@
       "anchors": [
         {
           "object_id": "16",
+          "region": "0",
           "label": "couch",
+          "raw_label": "couch",
+          "nyu_label": "sofa",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            4.4676,
+            -1.0772,
+            0.4627
+          ],
+          "size": [
+            3.2047,
+            1.2649,
+            0.9227
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              3.8351,
+              -2.6796,
+              0.0013
+            ],
+            "max": [
+              5.1,
+              0.5251,
+              0.924
+            ]
+          },
+          "size_aabb": [
+            1.2649,
+            3.2047,
+            0.9227
+          ],
+          "bbox_corners": [
+            [
+              3.8351,
+              -2.6796,
+              0.924
+            ],
+            [
+              3.8351,
+              0.5251,
+              0.924
+            ],
+            [
+              5.1,
+              0.5251,
+              0.924
+            ],
+            [
+              5.1,
+              -2.6796,
+              0.924
+            ],
+            [
+              3.8351,
+              -2.6796,
+              0.0013
+            ],
+            [
+              3.8351,
+              0.5251,
+              0.0013
+            ],
+            [
+              5.1,
+              0.5251,
+              0.0013
+            ],
+            [
+              5.1,
+              -2.6796,
+              0.0013
+            ]
+          ],
+          "volume": 3.74015,
           "phrase": "the couch"
         }
       ],
@@ -821,7 +1287,85 @@
       "anchors": [
         {
           "object_id": "71",
+          "region": "0",
           "label": "shelf",
+          "raw_label": "shelf",
+          "nyu_label": "shelves",
+          "colors": [
+            "black",
+            "aqua"
+          ],
+          "center": [
+            1.4021,
+            -4.825,
+            0.1461
+          ],
+          "size": [
+            7.6047,
+            0.993,
+            0.2897
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.4003,
+              -5.3215,
+              0.0012
+            ],
+            "max": [
+              5.2045,
+              -4.3285,
+              0.2909
+            ]
+          },
+          "size_aabb": [
+            7.6047,
+            0.993,
+            0.2897
+          ],
+          "bbox_corners": [
+            [
+              5.2045,
+              -5.3215,
+              0.2909
+            ],
+            [
+              -2.4003,
+              -5.3215,
+              0.2909
+            ],
+            [
+              -2.4003,
+              -4.3285,
+              0.2909
+            ],
+            [
+              5.2045,
+              -4.3285,
+              0.2909
+            ],
+            [
+              5.2045,
+              -5.3215,
+              0.0012
+            ],
+            [
+              -2.4003,
+              -5.3215,
+              0.0012
+            ],
+            [
+              -2.4003,
+              -4.3285,
+              0.0012
+            ],
+            [
+              5.2045,
+              -4.3285,
+              0.0012
+            ]
+          ],
+          "volume": 2.18739,
           "phrase": "the shelf"
         }
       ],
@@ -959,7 +1503,84 @@
       "anchors": [
         {
           "object_id": "6",
+          "region": "0",
           "label": "hanger",
+          "raw_label": "hanger",
+          "nyu_label": "hangers",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -1.8874,
+            -3.8565,
+            0.8669
+          ],
+          "size": [
+            0.457,
+            0.4381,
+            1.731
+          ],
+          "yaw": 2.5589,
+          "aabb": {
+            "min": [
+              -2.1988,
+              -4.1652,
+              0.0014
+            ],
+            "max": [
+              -1.5761,
+              -3.5479,
+              1.7324
+            ]
+          },
+          "size_aabb": [
+            0.6227,
+            0.6173,
+            1.731
+          ],
+          "bbox_corners": [
+            [
+              -1.8171,
+              -4.1652,
+              1.7324
+            ],
+            [
+              -2.1988,
+              -3.9137,
+              1.7324
+            ],
+            [
+              -1.9577,
+              -3.5479,
+              1.7324
+            ],
+            [
+              -1.5761,
+              -3.7994,
+              1.7324
+            ],
+            [
+              -1.8171,
+              -4.1652,
+              0.0014
+            ],
+            [
+              -2.1988,
+              -3.9137,
+              0.0014
+            ],
+            [
+              -1.9577,
+              -3.5479,
+              0.0014
+            ],
+            [
+              -1.5761,
+              -3.7994,
+              0.0014
+            ]
+          ],
+          "volume": 0.34657,
           "phrase": "the hanger"
         }
       ],
@@ -1093,7 +1714,86 @@
       "anchors": [
         {
           "object_id": "48",
+          "region": "0",
           "label": "guitar",
+          "raw_label": "guitar",
+          "nyu_label": "guitar",
+          "colors": [
+            "black",
+            "brown",
+            "aqua"
+          ],
+          "center": [
+            3.8548,
+            -2.7278,
+            0.61
+          ],
+          "size": [
+            0.6734,
+            0.5088,
+            1.2615
+          ],
+          "yaw": 0.3731,
+          "aabb": {
+            "min": [
+              3.4485,
+              -3.0875,
+              -0.0208
+            ],
+            "max": [
+              4.261,
+              -2.3682,
+              1.2407
+            ]
+          },
+          "size_aabb": [
+            0.8126,
+            0.7193,
+            1.2615
+          ],
+          "bbox_corners": [
+            [
+              3.4485,
+              -2.6136,
+              1.2407
+            ],
+            [
+              4.0756,
+              -2.3682,
+              1.2407
+            ],
+            [
+              4.261,
+              -2.842,
+              1.2407
+            ],
+            [
+              3.6339,
+              -3.0875,
+              1.2407
+            ],
+            [
+              3.4485,
+              -2.6136,
+              -0.0208
+            ],
+            [
+              4.0756,
+              -2.3682,
+              -0.0208
+            ],
+            [
+              4.261,
+              -2.842,
+              -0.0208
+            ],
+            [
+              3.6339,
+              -3.0875,
+              -0.0208
+            ]
+          ],
+          "volume": 0.43224,
           "phrase": "the guitar"
         }
       ],
@@ -1227,7 +1927,85 @@
       "anchors": [
         {
           "object_id": "18",
+          "region": "0",
           "label": "clothes",
+          "raw_label": "clothes",
+          "nyu_label": "clothes",
+          "colors": [
+            "aqua",
+            "gray"
+          ],
+          "center": [
+            -1.6668,
+            -3.7869,
+            1.3056
+          ],
+          "size": [
+            0.2143,
+            0.1521,
+            0.8709
+          ],
+          "yaw": -1.5141,
+          "aabb": {
+            "min": [
+              -1.7488,
+              -3.8982,
+              0.8701
+            ],
+            "max": [
+              -1.5847,
+              -3.6756,
+              1.7411
+            ]
+          },
+          "size_aabb": [
+            0.164,
+            0.2226,
+            0.8709
+          ],
+          "bbox_corners": [
+            [
+              -1.5969,
+              -3.6756,
+              1.7411
+            ],
+            [
+              -1.5847,
+              -3.8896,
+              1.7411
+            ],
+            [
+              -1.7366,
+              -3.8982,
+              1.7411
+            ],
+            [
+              -1.7488,
+              -3.6843,
+              1.7411
+            ],
+            [
+              -1.5969,
+              -3.6756,
+              0.8701
+            ],
+            [
+              -1.5847,
+              -3.8896,
+              0.8701
+            ],
+            [
+              -1.7366,
+              -3.8982,
+              0.8701
+            ],
+            [
+              -1.7488,
+              -3.6843,
+              0.8701
+            ]
+          ],
+          "volume": 0.02839,
           "phrase": "the clothes"
         }
       ],
@@ -1364,7 +2142,84 @@
       "anchors": [
         {
           "object_id": "1",
+          "region": "0",
           "label": "door",
+          "raw_label": "door",
+          "nyu_label": "door",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -2.2322,
+            -1.7151,
+            1.2016
+          ],
+          "size": [
+            0.2017,
+            0.9615,
+            2.3961
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -2.3331,
+              -2.1958,
+              0.0036
+            ],
+            "max": [
+              -2.1314,
+              -1.2343,
+              2.3997
+            ]
+          },
+          "size_aabb": [
+            0.2017,
+            0.9615,
+            2.3961
+          ],
+          "bbox_corners": [
+            [
+              -2.1314,
+              -2.1958,
+              2.3997
+            ],
+            [
+              -2.3331,
+              -2.1958,
+              2.3997
+            ],
+            [
+              -2.3331,
+              -1.2343,
+              2.3997
+            ],
+            [
+              -2.1314,
+              -1.2343,
+              2.3997
+            ],
+            [
+              -2.1314,
+              -2.1958,
+              0.0036
+            ],
+            [
+              -2.3331,
+              -2.1958,
+              0.0036
+            ],
+            [
+              -2.3331,
+              -1.2343,
+              0.0036
+            ],
+            [
+              -2.1314,
+              -1.2343,
+              0.0036
+            ]
+          ],
+          "volume": 0.46467,
           "phrase": "the door"
         }
       ],

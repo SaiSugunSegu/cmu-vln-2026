@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/livingroom_1/visibility/livingroom_1_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/livingroom_1/iref_vla_metadata/livingroom_1_referential_statements.json",
-    "source_objects: bags/livingroom_1/iref_vla_metadata/livingroom_1_objects.json"
+    "source_statements: data/bags/livingroom_1/iref_vla_metadata/livingroom_1_referential_statements.json",
+    "source_objects: data/bags/livingroom_1/iref_vla_metadata/livingroom_1_objects.json"
   ],
   "difficulty_counts": {
     "hard": 7,
@@ -142,7 +143,84 @@
       "anchors": [
         {
           "object_id": "2",
-          "label": "cabinet"
+          "region": "0",
+          "label": "cabinet",
+          "raw_label": "cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -2.4121,
+            -6.5773,
+            0.4216
+          ],
+          "size": [
+            1.7464,
+            0.3662,
+            0.8371
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -2.5952,
+              -7.4505,
+              0.0031
+            ],
+            "max": [
+              -2.229,
+              -5.7041,
+              0.8402
+            ]
+          },
+          "size_aabb": [
+            0.3662,
+            1.7464,
+            0.8371
+          ],
+          "bbox_corners": [
+            [
+              -2.5952,
+              -7.4505,
+              0.8402
+            ],
+            [
+              -2.5952,
+              -5.7041,
+              0.8402
+            ],
+            [
+              -2.229,
+              -5.7041,
+              0.8402
+            ],
+            [
+              -2.229,
+              -7.4505,
+              0.8402
+            ],
+            [
+              -2.5952,
+              -7.4505,
+              0.0031
+            ],
+            [
+              -2.5952,
+              -5.7041,
+              0.0031
+            ],
+            [
+              -2.229,
+              -5.7041,
+              0.0031
+            ],
+            [
+              -2.229,
+              -7.4505,
+              0.0031
+            ]
+          ],
+          "volume": 0.53529
         }
       ],
       "distractor_ids": [
@@ -278,7 +356,85 @@
       "anchors": [
         {
           "object_id": "0",
-          "label": "sofa"
+          "region": "0",
+          "label": "sofa",
+          "raw_label": "sofa",
+          "nyu_label": "sofa",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            -1.646,
+            -2.1702,
+            0.4283
+          ],
+          "size": [
+            3.0579,
+            1.8678,
+            0.8538
+          ],
+          "yaw": -1.5655,
+          "aabb": {
+            "min": [
+              -2.5879,
+              -3.7041,
+              0.0014
+            ],
+            "max": [
+              -0.704,
+              -0.6364,
+              0.8551
+            ]
+          },
+          "size_aabb": [
+            1.8839,
+            3.0677,
+            0.8538
+          ],
+          "bbox_corners": [
+            [
+              -0.7201,
+              -0.6364,
+              0.8551
+            ],
+            [
+              -0.704,
+              -3.6942,
+              0.8551
+            ],
+            [
+              -2.5719,
+              -3.7041,
+              0.8551
+            ],
+            [
+              -2.5879,
+              -0.6462,
+              0.8551
+            ],
+            [
+              -0.7201,
+              -0.6364,
+              0.0014
+            ],
+            [
+              -0.704,
+              -3.6942,
+              0.0014
+            ],
+            [
+              -2.5719,
+              -3.7041,
+              0.0014
+            ],
+            [
+              -2.5879,
+              -0.6462,
+              0.0014
+            ]
+          ],
+          "volume": 4.87655
         }
       ],
       "distractor_ids": [
@@ -422,12 +578,167 @@
       "anchors": [
         {
           "object_id": "96",
+          "region": "0",
           "label": "bottle",
+          "raw_label": "bottle",
+          "nyu_label": "bottle",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -0.6035,
+            -3.0817,
+            0.4933
+          ],
+          "size": [
+            0.0935,
+            0.0935,
+            0.2492
+          ],
+          "yaw": -0.888,
+          "aabb": {
+            "min": [
+              -0.6692,
+              -3.1474,
+              0.3687
+            ],
+            "max": [
+              -0.5377,
+              -3.0159,
+              0.6179
+            ]
+          },
+          "size_aabb": [
+            0.1315,
+            0.1315,
+            0.2492
+          ],
+          "bbox_corners": [
+            [
+              -0.5967,
+              -3.0159,
+              0.6179
+            ],
+            [
+              -0.5377,
+              -3.0884,
+              0.6179
+            ],
+            [
+              -0.6102,
+              -3.1474,
+              0.6179
+            ],
+            [
+              -0.6692,
+              -3.0749,
+              0.6179
+            ],
+            [
+              -0.5967,
+              -3.0159,
+              0.3687
+            ],
+            [
+              -0.5377,
+              -3.0884,
+              0.3687
+            ],
+            [
+              -0.6102,
+              -3.1474,
+              0.3687
+            ],
+            [
+              -0.6692,
+              -3.0749,
+              0.3687
+            ]
+          ],
+          "volume": 0.00218,
           "phrase": "the bottle"
         },
         {
           "object_id": "104",
+          "region": "0",
           "label": "trophy decoration",
+          "raw_label": "trophy decoration",
+          "nyu_label": "trophy",
+          "colors": [
+            "brown",
+            "black"
+          ],
+          "center": [
+            2.2277,
+            -0.5153,
+            0.7842
+          ],
+          "size": [
+            0.1825,
+            0.061,
+            0.2205
+          ],
+          "yaw": 1.8283,
+          "aabb": {
+            "min": [
+              2.175,
+              -0.6113,
+              0.674
+            ],
+            "max": [
+              2.2804,
+              -0.4194,
+              0.8945
+            ]
+          },
+          "size_aabb": [
+            0.1054,
+            0.192,
+            0.2205
+          ],
+          "bbox_corners": [
+            [
+              2.2215,
+              -0.6113,
+              0.8945
+            ],
+            [
+              2.175,
+              -0.4349,
+              0.8945
+            ],
+            [
+              2.2339,
+              -0.4194,
+              0.8945
+            ],
+            [
+              2.2804,
+              -0.5958,
+              0.8945
+            ],
+            [
+              2.2215,
+              -0.6113,
+              0.674
+            ],
+            [
+              2.175,
+              -0.4349,
+              0.674
+            ],
+            [
+              2.2339,
+              -0.4194,
+              0.674
+            ],
+            [
+              2.2804,
+              -0.5958,
+              0.674
+            ]
+          ],
+          "volume": 0.00245,
           "phrase": "the trophy decoration"
         }
       ],
@@ -568,7 +879,84 @@
       "anchors": [
         {
           "object_id": "96",
+          "region": "0",
           "label": "bottle",
+          "raw_label": "bottle",
+          "nyu_label": "bottle",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -0.6035,
+            -3.0817,
+            0.4933
+          ],
+          "size": [
+            0.0935,
+            0.0935,
+            0.2492
+          ],
+          "yaw": -0.888,
+          "aabb": {
+            "min": [
+              -0.6692,
+              -3.1474,
+              0.3687
+            ],
+            "max": [
+              -0.5377,
+              -3.0159,
+              0.6179
+            ]
+          },
+          "size_aabb": [
+            0.1315,
+            0.1315,
+            0.2492
+          ],
+          "bbox_corners": [
+            [
+              -0.5967,
+              -3.0159,
+              0.6179
+            ],
+            [
+              -0.5377,
+              -3.0884,
+              0.6179
+            ],
+            [
+              -0.6102,
+              -3.1474,
+              0.6179
+            ],
+            [
+              -0.6692,
+              -3.0749,
+              0.6179
+            ],
+            [
+              -0.5967,
+              -3.0159,
+              0.3687
+            ],
+            [
+              -0.5377,
+              -3.0884,
+              0.3687
+            ],
+            [
+              -0.6102,
+              -3.1474,
+              0.3687
+            ],
+            [
+              -0.6692,
+              -3.0749,
+              0.3687
+            ]
+          ],
+          "volume": 0.00218,
           "phrase": "the bottle"
         }
       ],
@@ -698,7 +1086,84 @@
       "anchors": [
         {
           "object_id": "68",
+          "region": "0",
           "label": "bowl",
+          "raw_label": "bowl",
+          "nyu_label": "bowl",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            2.2184,
+            -0.556,
+            1.673
+          ],
+          "size": [
+            0.1999,
+            0.1999,
+            0.1145
+          ],
+          "yaw": 2.5495,
+          "aabb": {
+            "min": [
+              2.0798,
+              -0.6947,
+              1.6158
+            ],
+            "max": [
+              2.3571,
+              -0.4173,
+              1.7303
+            ]
+          },
+          "size_aabb": [
+            0.2774,
+            0.2774,
+            0.1145
+          ],
+          "bbox_corners": [
+            [
+              2.2456,
+              -0.6947,
+              1.7303
+            ],
+            [
+              2.0798,
+              -0.5832,
+              1.7303
+            ],
+            [
+              2.1913,
+              -0.4173,
+              1.7303
+            ],
+            [
+              2.3571,
+              -0.5289,
+              1.7303
+            ],
+            [
+              2.2456,
+              -0.6947,
+              1.6158
+            ],
+            [
+              2.0798,
+              -0.5832,
+              1.6158
+            ],
+            [
+              2.1913,
+              -0.4173,
+              1.6158
+            ],
+            [
+              2.3571,
+              -0.5289,
+              1.6158
+            ]
+          ],
+          "volume": 0.00457,
           "phrase": "the bowl"
         }
       ],
@@ -829,7 +1294,84 @@
       "anchors": [
         {
           "object_id": "73",
+          "region": "0",
           "label": "shelf",
+          "raw_label": "shelf",
+          "nyu_label": "bookshelf",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.149,
+            2.341,
+            1.7092
+          ],
+          "size": [
+            1.3318,
+            0.3242,
+            0.0445
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              -1.8149,
+              2.1789,
+              1.687
+            ],
+            "max": [
+              -0.4831,
+              2.5031,
+              1.7315
+            ]
+          },
+          "size_aabb": [
+            1.3318,
+            0.3242,
+            0.0445
+          ],
+          "bbox_corners": [
+            [
+              -1.8149,
+              2.5031,
+              1.7315
+            ],
+            [
+              -0.4831,
+              2.5031,
+              1.7315
+            ],
+            [
+              -0.4831,
+              2.1789,
+              1.7315
+            ],
+            [
+              -1.8149,
+              2.1789,
+              1.7315
+            ],
+            [
+              -1.8149,
+              2.5031,
+              1.687
+            ],
+            [
+              -0.4831,
+              2.5031,
+              1.687
+            ],
+            [
+              -0.4831,
+              2.1789,
+              1.687
+            ],
+            [
+              -1.8149,
+              2.1789,
+              1.687
+            ]
+          ],
+          "volume": 0.01922,
           "phrase": "the shelf"
         }
       ],
@@ -971,7 +1513,84 @@
       "anchors": [
         {
           "object_id": "68",
+          "region": "0",
           "label": "bowl",
+          "raw_label": "bowl",
+          "nyu_label": "bowl",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            2.2184,
+            -0.556,
+            1.673
+          ],
+          "size": [
+            0.1999,
+            0.1999,
+            0.1145
+          ],
+          "yaw": 2.5495,
+          "aabb": {
+            "min": [
+              2.0798,
+              -0.6947,
+              1.6158
+            ],
+            "max": [
+              2.3571,
+              -0.4173,
+              1.7303
+            ]
+          },
+          "size_aabb": [
+            0.2774,
+            0.2774,
+            0.1145
+          ],
+          "bbox_corners": [
+            [
+              2.2456,
+              -0.6947,
+              1.7303
+            ],
+            [
+              2.0798,
+              -0.5832,
+              1.7303
+            ],
+            [
+              2.1913,
+              -0.4173,
+              1.7303
+            ],
+            [
+              2.3571,
+              -0.5289,
+              1.7303
+            ],
+            [
+              2.2456,
+              -0.6947,
+              1.6158
+            ],
+            [
+              2.0798,
+              -0.5832,
+              1.6158
+            ],
+            [
+              2.1913,
+              -0.4173,
+              1.6158
+            ],
+            [
+              2.3571,
+              -0.5289,
+              1.6158
+            ]
+          ],
+          "volume": 0.00457,
           "phrase": "the bowl"
         }
       ],
@@ -1105,7 +1724,85 @@
       "anchors": [
         {
           "object_id": "104",
+          "region": "0",
           "label": "trophy decoration",
+          "raw_label": "trophy decoration",
+          "nyu_label": "trophy",
+          "colors": [
+            "brown",
+            "black"
+          ],
+          "center": [
+            2.2277,
+            -0.5153,
+            0.7842
+          ],
+          "size": [
+            0.1825,
+            0.061,
+            0.2205
+          ],
+          "yaw": 1.8283,
+          "aabb": {
+            "min": [
+              2.175,
+              -0.6113,
+              0.674
+            ],
+            "max": [
+              2.2804,
+              -0.4194,
+              0.8945
+            ]
+          },
+          "size_aabb": [
+            0.1054,
+            0.192,
+            0.2205
+          ],
+          "bbox_corners": [
+            [
+              2.2215,
+              -0.6113,
+              0.8945
+            ],
+            [
+              2.175,
+              -0.4349,
+              0.8945
+            ],
+            [
+              2.2339,
+              -0.4194,
+              0.8945
+            ],
+            [
+              2.2804,
+              -0.5958,
+              0.8945
+            ],
+            [
+              2.2215,
+              -0.6113,
+              0.674
+            ],
+            [
+              2.175,
+              -0.4349,
+              0.674
+            ],
+            [
+              2.2339,
+              -0.4194,
+              0.674
+            ],
+            [
+              2.2804,
+              -0.5958,
+              0.674
+            ]
+          ],
+          "volume": 0.00245,
           "phrase": "the trophy decoration"
         }
       ],
@@ -1243,7 +1940,85 @@
       "anchors": [
         {
           "object_id": "0",
+          "region": "0",
           "label": "sofa",
+          "raw_label": "sofa",
+          "nyu_label": "sofa",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            -1.646,
+            -2.1702,
+            0.4283
+          ],
+          "size": [
+            3.0579,
+            1.8678,
+            0.8538
+          ],
+          "yaw": -1.5655,
+          "aabb": {
+            "min": [
+              -2.5879,
+              -3.7041,
+              0.0014
+            ],
+            "max": [
+              -0.704,
+              -0.6364,
+              0.8551
+            ]
+          },
+          "size_aabb": [
+            1.8839,
+            3.0677,
+            0.8538
+          ],
+          "bbox_corners": [
+            [
+              -0.7201,
+              -0.6364,
+              0.8551
+            ],
+            [
+              -0.704,
+              -3.6942,
+              0.8551
+            ],
+            [
+              -2.5719,
+              -3.7041,
+              0.8551
+            ],
+            [
+              -2.5879,
+              -0.6462,
+              0.8551
+            ],
+            [
+              -0.7201,
+              -0.6364,
+              0.0014
+            ],
+            [
+              -0.704,
+              -3.6942,
+              0.0014
+            ],
+            [
+              -2.5719,
+              -3.7041,
+              0.0014
+            ],
+            [
+              -2.5879,
+              -0.6462,
+              0.0014
+            ]
+          ],
+          "volume": 4.87655,
           "phrase": "the sofa"
         }
       ],
@@ -1378,7 +2153,84 @@
       "anchors": [
         {
           "object_id": "27",
+          "region": "0",
           "label": "carpet",
+          "raw_label": "carpet",
+          "nyu_label": "rug",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -0.4671,
+            -2.6614,
+            0.0093
+          ],
+          "size": [
+            2.8516,
+            1.9952,
+            0.0194
+          ],
+          "yaw": 1.5707,
+          "aabb": {
+            "min": [
+              -1.4648,
+              -4.0873,
+              -0.0004
+            ],
+            "max": [
+              0.5307,
+              -1.2355,
+              0.019
+            ]
+          },
+          "size_aabb": [
+            1.9955,
+            2.8518,
+            0.0194
+          ],
+          "bbox_corners": [
+            [
+              -1.4648,
+              -4.0871,
+              0.019
+            ],
+            [
+              -1.4645,
+              -1.2355,
+              0.019
+            ],
+            [
+              0.5307,
+              -1.2357,
+              0.019
+            ],
+            [
+              0.5304,
+              -4.0873,
+              0.019
+            ],
+            [
+              -1.4648,
+              -4.0871,
+              -0.0004
+            ],
+            [
+              -1.4645,
+              -1.2355,
+              -0.0004
+            ],
+            [
+              0.5307,
+              -1.2357,
+              -0.0004
+            ],
+            [
+              0.5304,
+              -4.0873,
+              -0.0004
+            ]
+          ],
+          "volume": 0.11021,
           "phrase": "the carpet"
         }
       ],

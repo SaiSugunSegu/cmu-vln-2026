@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/japanese_room/visibility/japanese_room_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/japanese_room/iref_vla_metadata/japanese_room_referential_statements.json",
-    "source_objects: bags/japanese_room/iref_vla_metadata/japanese_room_objects.json"
+    "source_statements: data/bags/japanese_room/iref_vla_metadata/japanese_room_referential_statements.json",
+    "source_objects: data/bags/japanese_room/iref_vla_metadata/japanese_room_objects.json"
   ],
   "difficulty_counts": {
     "hard": 1,
@@ -135,15 +136,249 @@
       "anchors": [
         {
           "object_id": "28",
-          "label": "vase"
+          "region": "0",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "brown",
+            "black"
+          ],
+          "center": [
+            -0.9446,
+            5.1345,
+            0.4641
+          ],
+          "size": [
+            0.3465,
+            0.3434,
+            0.6094
+          ],
+          "yaw": 3.0051,
+          "aabb": {
+            "min": [
+              -1.1396,
+              4.9408,
+              0.1594
+            ],
+            "max": [
+              -0.7496,
+              5.3282,
+              0.7688
+            ]
+          },
+          "size_aabb": [
+            0.39,
+            0.3874,
+            0.6094
+          ],
+          "bbox_corners": [
+            [
+              -0.7963,
+              4.9408,
+              0.7688
+            ],
+            [
+              -1.1396,
+              4.9879,
+              0.7688
+            ],
+            [
+              -1.0929,
+              5.3282,
+              0.7688
+            ],
+            [
+              -0.7496,
+              5.281,
+              0.7688
+            ],
+            [
+              -0.7963,
+              4.9408,
+              0.1594
+            ],
+            [
+              -1.1396,
+              4.9879,
+              0.1594
+            ],
+            [
+              -1.0929,
+              5.3282,
+              0.1594
+            ],
+            [
+              -0.7496,
+              5.281,
+              0.1594
+            ]
+          ],
+          "volume": 0.07252
         },
         {
           "object_id": "55",
-          "label": "vase"
+          "region": "0",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "aqua",
+            "olive"
+          ],
+          "center": [
+            1.9895,
+            0.1671,
+            0.5385
+          ],
+          "size": [
+            0.1747,
+            0.1858,
+            0.6729
+          ],
+          "yaw": -0.0672,
+          "aabb": {
+            "min": [
+              1.8961,
+              0.0685,
+              0.202
+            ],
+            "max": [
+              2.0829,
+              0.2656,
+              0.8749
+            ]
+          },
+          "size_aabb": [
+            0.1868,
+            0.1971,
+            0.6729
+          ],
+          "bbox_corners": [
+            [
+              1.9086,
+              0.2656,
+              0.8749
+            ],
+            [
+              2.0829,
+              0.2539,
+              0.8749
+            ],
+            [
+              2.0704,
+              0.0685,
+              0.8749
+            ],
+            [
+              1.8961,
+              0.0802,
+              0.8749
+            ],
+            [
+              1.9086,
+              0.2656,
+              0.202
+            ],
+            [
+              2.0829,
+              0.2539,
+              0.202
+            ],
+            [
+              2.0704,
+              0.0685,
+              0.202
+            ],
+            [
+              1.8961,
+              0.0802,
+              0.202
+            ]
+          ],
+          "volume": 0.02184
         },
         {
           "object_id": "23",
-          "label": "zen stone decoration"
+          "region": "0",
+          "label": "zen stone decoration",
+          "raw_label": "zen stone decoration",
+          "nyu_label": "decoration item",
+          "colors": [
+            "gray",
+            "aqua"
+          ],
+          "center": [
+            -2.29,
+            5.0874,
+            0.2111
+          ],
+          "size": [
+            0.2042,
+            0.1768,
+            0.118
+          ],
+          "yaw": -2.8522,
+          "aabb": {
+            "min": [
+              -2.4131,
+              4.9736,
+              0.1521
+            ],
+            "max": [
+              -2.167,
+              5.2013,
+              0.2701
+            ]
+          },
+          "size_aabb": [
+            0.2461,
+            0.2277,
+            0.118
+          ],
+          "bbox_corners": [
+            [
+              -2.167,
+              5.0319,
+              0.2701
+            ],
+            [
+              -2.3626,
+              4.9736,
+              0.2701
+            ],
+            [
+              -2.4131,
+              5.143,
+              0.2701
+            ],
+            [
+              -2.2174,
+              5.2013,
+              0.2701
+            ],
+            [
+              -2.167,
+              5.0319,
+              0.1521
+            ],
+            [
+              -2.3626,
+              4.9736,
+              0.1521
+            ],
+            [
+              -2.4131,
+              5.143,
+              0.1521
+            ],
+            [
+              -2.2174,
+              5.2013,
+              0.1521
+            ]
+          ],
+          "volume": 0.00426
         }
       ],
       "distractor_ids": [
@@ -436,7 +671,84 @@
       "anchors": [
         {
           "object_id": "32",
+          "region": "0",
           "label": "teapot",
+          "raw_label": "teapot",
+          "nyu_label": "tea pot",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -0.6354,
+            2.1158,
+            0.3411
+          ],
+          "size": [
+            0.1358,
+            0.1267,
+            0.0937
+          ],
+          "yaw": -2.2805,
+          "aabb": {
+            "min": [
+              -0.7277,
+              2.023,
+              0.2942
+            ],
+            "max": [
+              -0.5431,
+              2.2085,
+              0.3879
+            ]
+          },
+          "size_aabb": [
+            0.1846,
+            0.1855,
+            0.0937
+          ],
+          "bbox_corners": [
+            [
+              -0.5431,
+              2.126,
+              0.3879
+            ],
+            [
+              -0.6316,
+              2.023,
+              0.3879
+            ],
+            [
+              -0.7277,
+              2.1056,
+              0.3879
+            ],
+            [
+              -0.6392,
+              2.2085,
+              0.3879
+            ],
+            [
+              -0.5431,
+              2.126,
+              0.2942
+            ],
+            [
+              -0.6316,
+              2.023,
+              0.2942
+            ],
+            [
+              -0.7277,
+              2.1056,
+              0.2942
+            ],
+            [
+              -0.6392,
+              2.2085,
+              0.2942
+            ]
+          ],
+          "volume": 0.00161,
           "phrase": "the teapot"
         }
       ],
@@ -568,7 +880,85 @@
       "anchors": [
         {
           "object_id": "16",
+          "region": "0",
           "label": "display ledge",
+          "raw_label": "display ledge",
+          "nyu_label": "mini display platform",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            -1.8645,
+            4.9215,
+            0.0671
+          ],
+          "size": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            "max": [
+              -0.7366,
+              5.3685,
+              0.1569
+            ]
+          },
+          "size_aabb": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "bbox_corners": [
+            [
+              -0.7366,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              5.3685,
+              -0.0227
+            ],
+            [
+              -0.7366,
+              5.3685,
+              -0.0227
+            ]
+          ],
+          "volume": 0.36229,
           "phrase": "the display ledge"
         }
       ],
@@ -702,7 +1092,85 @@
       "anchors": [
         {
           "object_id": "16",
+          "region": "0",
           "label": "display ledge",
+          "raw_label": "display ledge",
+          "nyu_label": "mini display platform",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            -1.8645,
+            4.9215,
+            0.0671
+          ],
+          "size": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            "max": [
+              -0.7366,
+              5.3685,
+              0.1569
+            ]
+          },
+          "size_aabb": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "bbox_corners": [
+            [
+              -0.7366,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              5.3685,
+              -0.0227
+            ],
+            [
+              -0.7366,
+              5.3685,
+              -0.0227
+            ]
+          ],
+          "volume": 0.36229,
           "phrase": "the display ledge"
         }
       ],
@@ -836,7 +1304,84 @@
       "anchors": [
         {
           "object_id": "60",
+          "region": "0",
           "label": "jar",
+          "raw_label": "jar",
+          "nyu_label": "jar",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            1.9974,
+            3.8931,
+            0.4088
+          ],
+          "size": [
+            0.2933,
+            0.2933,
+            0.4415
+          ],
+          "yaw": -0.8519,
+          "aabb": {
+            "min": [
+              1.7905,
+              3.6861,
+              0.188
+            ],
+            "max": [
+              2.2044,
+              4.1,
+              0.6295
+            ]
+          },
+          "size_aabb": [
+            0.4139,
+            0.4139,
+            0.4415
+          ],
+          "bbox_corners": [
+            [
+              2.0113,
+              4.1,
+              0.6295
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.6295
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.6295
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.6295
+            ],
+            [
+              2.0113,
+              4.1,
+              0.188
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.188
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.188
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.188
+            ]
+          ],
+          "volume": 0.03798,
           "phrase": "the jar"
         }
       ],
@@ -971,7 +1516,84 @@
       "anchors": [
         {
           "object_id": "60",
+          "region": "0",
           "label": "jar",
+          "raw_label": "jar",
+          "nyu_label": "jar",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            1.9974,
+            3.8931,
+            0.4088
+          ],
+          "size": [
+            0.2933,
+            0.2933,
+            0.4415
+          ],
+          "yaw": -0.8519,
+          "aabb": {
+            "min": [
+              1.7905,
+              3.6861,
+              0.188
+            ],
+            "max": [
+              2.2044,
+              4.1,
+              0.6295
+            ]
+          },
+          "size_aabb": [
+            0.4139,
+            0.4139,
+            0.4415
+          ],
+          "bbox_corners": [
+            [
+              2.0113,
+              4.1,
+              0.6295
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.6295
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.6295
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.6295
+            ],
+            [
+              2.0113,
+              4.1,
+              0.188
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.188
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.188
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.188
+            ]
+          ],
+          "volume": 0.03798,
           "phrase": "the jar"
         }
       ],
@@ -1106,7 +1728,84 @@
       "anchors": [
         {
           "object_id": "32",
+          "region": "0",
           "label": "teapot",
+          "raw_label": "teapot",
+          "nyu_label": "tea pot",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -0.6354,
+            2.1158,
+            0.3411
+          ],
+          "size": [
+            0.1358,
+            0.1267,
+            0.0937
+          ],
+          "yaw": -2.2805,
+          "aabb": {
+            "min": [
+              -0.7277,
+              2.023,
+              0.2942
+            ],
+            "max": [
+              -0.5431,
+              2.2085,
+              0.3879
+            ]
+          },
+          "size_aabb": [
+            0.1846,
+            0.1855,
+            0.0937
+          ],
+          "bbox_corners": [
+            [
+              -0.5431,
+              2.126,
+              0.3879
+            ],
+            [
+              -0.6316,
+              2.023,
+              0.3879
+            ],
+            [
+              -0.7277,
+              2.1056,
+              0.3879
+            ],
+            [
+              -0.6392,
+              2.2085,
+              0.3879
+            ],
+            [
+              -0.5431,
+              2.126,
+              0.2942
+            ],
+            [
+              -0.6316,
+              2.023,
+              0.2942
+            ],
+            [
+              -0.7277,
+              2.1056,
+              0.2942
+            ],
+            [
+              -0.6392,
+              2.2085,
+              0.2942
+            ]
+          ],
+          "volume": 0.00161,
           "phrase": "the teapot"
         }
       ],
@@ -1240,7 +1939,85 @@
       "anchors": [
         {
           "object_id": "16",
+          "region": "0",
           "label": "display ledge",
+          "raw_label": "display ledge",
+          "nyu_label": "mini display platform",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            -1.8645,
+            4.9215,
+            0.0671
+          ],
+          "size": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            "max": [
+              -0.7366,
+              5.3685,
+              0.1569
+            ]
+          },
+          "size_aabb": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "bbox_corners": [
+            [
+              -0.7366,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              5.3685,
+              -0.0227
+            ],
+            [
+              -0.7366,
+              5.3685,
+              -0.0227
+            ]
+          ],
+          "volume": 0.36229,
           "phrase": "the display ledge"
         }
       ],
@@ -1374,7 +2151,84 @@
       "anchors": [
         {
           "object_id": "60",
+          "region": "0",
           "label": "jar",
+          "raw_label": "jar",
+          "nyu_label": "jar",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            1.9974,
+            3.8931,
+            0.4088
+          ],
+          "size": [
+            0.2933,
+            0.2933,
+            0.4415
+          ],
+          "yaw": -0.8519,
+          "aabb": {
+            "min": [
+              1.7905,
+              3.6861,
+              0.188
+            ],
+            "max": [
+              2.2044,
+              4.1,
+              0.6295
+            ]
+          },
+          "size_aabb": [
+            0.4139,
+            0.4139,
+            0.4415
+          ],
+          "bbox_corners": [
+            [
+              2.0113,
+              4.1,
+              0.6295
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.6295
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.6295
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.6295
+            ],
+            [
+              2.0113,
+              4.1,
+              0.188
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.188
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.188
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.188
+            ]
+          ],
+          "volume": 0.03798,
           "phrase": "the jar"
         }
       ],

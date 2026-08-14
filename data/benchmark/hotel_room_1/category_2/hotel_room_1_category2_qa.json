@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/hotel_room_1/visibility/hotel_room_1_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/hotel_room_1/iref_vla_metadata/hotel_room_1_referential_statements.json",
-    "source_objects: bags/hotel_room_1/iref_vla_metadata/hotel_room_1_objects.json"
+    "source_statements: data/bags/hotel_room_1/iref_vla_metadata/hotel_room_1_referential_statements.json",
+    "source_objects: data/bags/hotel_room_1/iref_vla_metadata/hotel_room_1_objects.json"
   ],
   "difficulty_counts": {
     "medium": 2,
@@ -138,7 +139,84 @@
       "anchors": [
         {
           "object_id": "58",
-          "label": "window"
+          "region": "2",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            0.3286,
+            -6.047,
+            1.6189
+          ],
+          "size": [
+            4.9288,
+            0.1324,
+            2.8421
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.1358,
+              -6.1132,
+              0.1978
+            ],
+            "max": [
+              2.793,
+              -5.9808,
+              3.04
+            ]
+          },
+          "size_aabb": [
+            4.9288,
+            0.1324,
+            2.8421
+          ],
+          "bbox_corners": [
+            [
+              2.793,
+              -6.1132,
+              3.04
+            ],
+            [
+              -2.1358,
+              -6.1132,
+              3.04
+            ],
+            [
+              -2.1358,
+              -5.9808,
+              3.04
+            ],
+            [
+              2.793,
+              -5.9808,
+              3.04
+            ],
+            [
+              2.793,
+              -6.1132,
+              0.1978
+            ],
+            [
+              -2.1358,
+              -6.1132,
+              0.1978
+            ],
+            [
+              -2.1358,
+              -5.9808,
+              0.1978
+            ],
+            [
+              2.793,
+              -5.9808,
+              0.1978
+            ]
+          ],
+          "volume": 1.85444
         }
       ],
       "distractor_ids": [
@@ -279,7 +357,84 @@
       "anchors": [
         {
           "object_id": "84",
-          "label": "suitcase"
+          "region": "2",
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "nyu_label": "suitcase",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -1.4162,
+            -3.0438,
+            0.6408
+          ],
+          "size": [
+            0.8264,
+            0.507,
+            0.2647
+          ],
+          "yaw": -1.8932,
+          "aabb": {
+            "min": [
+              -1.7876,
+              -3.516,
+              0.5084
+            ],
+            "max": [
+              -1.0448,
+              -2.5715,
+              0.7731
+            ]
+          },
+          "size_aabb": [
+            0.7427,
+            0.9445,
+            0.2647
+          ],
+          "bbox_corners": [
+            [
+              -1.0448,
+              -2.7322,
+              0.7731
+            ],
+            [
+              -1.3067,
+              -3.516,
+              0.7731
+            ],
+            [
+              -1.7876,
+              -3.3554,
+              0.7731
+            ],
+            [
+              -1.5257,
+              -2.5715,
+              0.7731
+            ],
+            [
+              -1.0448,
+              -2.7322,
+              0.5084
+            ],
+            [
+              -1.3067,
+              -3.516,
+              0.5084
+            ],
+            [
+              -1.7876,
+              -3.3554,
+              0.5084
+            ],
+            [
+              -1.5257,
+              -2.5715,
+              0.5084
+            ]
+          ],
+          "volume": 0.11091
         }
       ],
       "distractor_ids": [
@@ -422,12 +577,167 @@
       "anchors": [
         {
           "object_id": "11",
+          "region": "2",
           "label": "bed",
+          "raw_label": "bed",
+          "nyu_label": "bed",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            2.4545,
+            -1.762,
+            0.8696
+          ],
+          "size": [
+            2.544,
+            2.582,
+            1.7332
+          ],
+          "yaw": -1.5684,
+          "aabb": {
+            "min": [
+              1.1605,
+              -3.037,
+              0.003
+            ],
+            "max": [
+              3.7485,
+              -0.4869,
+              1.7362
+            ]
+          },
+          "size_aabb": [
+            2.588,
+            2.5501,
+            1.7332
+          ],
+          "bbox_corners": [
+            [
+              3.7425,
+              -0.4869,
+              1.7362
+            ],
+            [
+              3.7485,
+              -3.0309,
+              1.7362
+            ],
+            [
+              1.1666,
+              -3.037,
+              1.7362
+            ],
+            [
+              1.1605,
+              -0.4931,
+              1.7362
+            ],
+            [
+              3.7425,
+              -0.4869,
+              0.003
+            ],
+            [
+              3.7485,
+              -3.0309,
+              0.003
+            ],
+            [
+              1.1666,
+              -3.037,
+              0.003
+            ],
+            [
+              1.1605,
+              -0.4931,
+              0.003
+            ]
+          ],
+          "volume": 11.38478,
           "phrase": "the bed"
         },
         {
           "object_id": "23",
+          "region": "2",
           "label": "magazine",
+          "raw_label": "magazine",
+          "nyu_label": "magazine",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            -1.5963,
+            -1.8728,
+            0.9566
+          ],
+          "size": [
+            0.3417,
+            0.3191,
+            0.0576
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -1.7672,
+              -2.0323,
+              0.9278
+            ],
+            "max": [
+              -1.4254,
+              -1.7132,
+              0.9855
+            ]
+          },
+          "size_aabb": [
+            0.3417,
+            0.3191,
+            0.0576
+          ],
+          "bbox_corners": [
+            [
+              -1.4254,
+              -2.0323,
+              0.9855
+            ],
+            [
+              -1.7672,
+              -2.0323,
+              0.9855
+            ],
+            [
+              -1.7672,
+              -1.7132,
+              0.9855
+            ],
+            [
+              -1.4254,
+              -1.7132,
+              0.9855
+            ],
+            [
+              -1.4254,
+              -2.0323,
+              0.9278
+            ],
+            [
+              -1.7672,
+              -2.0323,
+              0.9278
+            ],
+            [
+              -1.7672,
+              -1.7132,
+              0.9278
+            ],
+            [
+              -1.4254,
+              -1.7132,
+              0.9278
+            ]
+          ],
+          "volume": 0.00629,
           "phrase": "the magazine"
         }
       ],
@@ -568,7 +878,84 @@
       "anchors": [
         {
           "object_id": "69",
+          "region": "0",
           "label": "trash can",
+          "raw_label": "trash can",
+          "nyu_label": "garbage bin",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.6755,
+            4.4103,
+            0.2101
+          ],
+          "size": [
+            0.2777,
+            0.2712,
+            0.4185
+          ],
+          "yaw": -1.044,
+          "aabb": {
+            "min": [
+              1.4884,
+              4.222,
+              0.0009
+            ],
+            "max": [
+              1.8625,
+              4.5985,
+              0.4194
+            ]
+          },
+          "size_aabb": [
+            0.3741,
+            0.3765,
+            0.4185
+          ],
+          "bbox_corners": [
+            [
+              1.7229,
+              4.5985,
+              0.4194
+            ],
+            [
+              1.8625,
+              4.3584,
+              0.4194
+            ],
+            [
+              1.6281,
+              4.222,
+              0.4194
+            ],
+            [
+              1.4884,
+              4.4621,
+              0.4194
+            ],
+            [
+              1.7229,
+              4.5985,
+              0.0009
+            ],
+            [
+              1.8625,
+              4.3584,
+              0.0009
+            ],
+            [
+              1.6281,
+              4.222,
+              0.0009
+            ],
+            [
+              1.4884,
+              4.4621,
+              0.0009
+            ]
+          ],
+          "volume": 0.03153,
           "phrase": "the trash can"
         }
       ],
@@ -701,7 +1088,84 @@
       "anchors": [
         {
           "object_id": "58",
+          "region": "2",
           "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            0.3286,
+            -6.047,
+            1.6189
+          ],
+          "size": [
+            4.9288,
+            0.1324,
+            2.8421
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.1358,
+              -6.1132,
+              0.1978
+            ],
+            "max": [
+              2.793,
+              -5.9808,
+              3.04
+            ]
+          },
+          "size_aabb": [
+            4.9288,
+            0.1324,
+            2.8421
+          ],
+          "bbox_corners": [
+            [
+              2.793,
+              -6.1132,
+              3.04
+            ],
+            [
+              -2.1358,
+              -6.1132,
+              3.04
+            ],
+            [
+              -2.1358,
+              -5.9808,
+              3.04
+            ],
+            [
+              2.793,
+              -5.9808,
+              3.04
+            ],
+            [
+              2.793,
+              -6.1132,
+              0.1978
+            ],
+            [
+              -2.1358,
+              -6.1132,
+              0.1978
+            ],
+            [
+              -2.1358,
+              -5.9808,
+              0.1978
+            ],
+            [
+              2.793,
+              -5.9808,
+              0.1978
+            ]
+          ],
+          "volume": 1.85444,
           "phrase": "the window"
         }
       ],
@@ -834,7 +1298,84 @@
       "anchors": [
         {
           "object_id": "16",
+          "region": "0",
           "label": "shower",
+          "raw_label": "shower",
+          "nyu_label": "shower curtain",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            3.2797,
+            3.6084,
+            1.3594
+          ],
+          "size": [
+            2.08,
+            1.3,
+            2.717
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              2.6297,
+              2.5684,
+              0.0009
+            ],
+            "max": [
+              3.9297,
+              4.6484,
+              2.7179
+            ]
+          },
+          "size_aabb": [
+            1.3,
+            2.08,
+            2.717
+          ],
+          "bbox_corners": [
+            [
+              2.6297,
+              2.5684,
+              2.7179
+            ],
+            [
+              2.6297,
+              4.6484,
+              2.7179
+            ],
+            [
+              3.9297,
+              4.6484,
+              2.7179
+            ],
+            [
+              3.9297,
+              2.5684,
+              2.7179
+            ],
+            [
+              2.6297,
+              2.5684,
+              0.0009
+            ],
+            [
+              2.6297,
+              4.6484,
+              0.0009
+            ],
+            [
+              3.9297,
+              4.6484,
+              0.0009
+            ],
+            [
+              3.9297,
+              2.5684,
+              0.0009
+            ]
+          ],
+          "volume": 7.34664,
           "phrase": "the shower"
         }
       ],
@@ -968,7 +1509,84 @@
       "anchors": [
         {
           "object_id": "65",
+          "region": "2",
           "label": "phone",
+          "raw_label": "phone",
+          "nyu_label": "telephone",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.5103,
+            -1.0462,
+            0.983
+          ],
+          "size": [
+            0.4311,
+            0.2525,
+            0.1105
+          ],
+          "yaw": 3.141,
+          "aabb": {
+            "min": [
+              -1.7259,
+              -1.1726,
+              0.9278
+            ],
+            "max": [
+              -1.2947,
+              -0.9198,
+              1.0383
+            ]
+          },
+          "size_aabb": [
+            0.4313,
+            0.2528,
+            0.1105
+          ],
+          "bbox_corners": [
+            [
+              -1.2948,
+              -1.1726,
+              1.0383
+            ],
+            [
+              -1.7259,
+              -1.1723,
+              1.0383
+            ],
+            [
+              -1.7258,
+              -0.9198,
+              1.0383
+            ],
+            [
+              -1.2947,
+              -0.9201,
+              1.0383
+            ],
+            [
+              -1.2948,
+              -1.1726,
+              0.9278
+            ],
+            [
+              -1.7259,
+              -1.1723,
+              0.9278
+            ],
+            [
+              -1.7258,
+              -0.9198,
+              0.9278
+            ],
+            [
+              -1.2947,
+              -0.9201,
+              0.9278
+            ]
+          ],
+          "volume": 0.01203,
           "phrase": "the phone"
         }
       ],
@@ -1101,7 +1719,84 @@
       "anchors": [
         {
           "object_id": "16",
+          "region": "0",
           "label": "shower",
+          "raw_label": "shower",
+          "nyu_label": "shower curtain",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            3.2797,
+            3.6084,
+            1.3594
+          ],
+          "size": [
+            2.08,
+            1.3,
+            2.717
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              2.6297,
+              2.5684,
+              0.0009
+            ],
+            "max": [
+              3.9297,
+              4.6484,
+              2.7179
+            ]
+          },
+          "size_aabb": [
+            1.3,
+            2.08,
+            2.717
+          ],
+          "bbox_corners": [
+            [
+              2.6297,
+              2.5684,
+              2.7179
+            ],
+            [
+              2.6297,
+              4.6484,
+              2.7179
+            ],
+            [
+              3.9297,
+              4.6484,
+              2.7179
+            ],
+            [
+              3.9297,
+              2.5684,
+              2.7179
+            ],
+            [
+              2.6297,
+              2.5684,
+              0.0009
+            ],
+            [
+              2.6297,
+              4.6484,
+              0.0009
+            ],
+            [
+              3.9297,
+              4.6484,
+              0.0009
+            ],
+            [
+              3.9297,
+              2.5684,
+              0.0009
+            ]
+          ],
+          "volume": 7.34664,
           "phrase": "the shower"
         }
       ],
@@ -1235,7 +1930,85 @@
       "anchors": [
         {
           "object_id": "10",
+          "region": "2",
           "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -1.8892,
+            -1.708,
+            1.508
+          ],
+          "size": [
+            0.8487,
+            0.0595,
+            0.6379
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.9189,
+              -2.1324,
+              1.1891
+            ],
+            "max": [
+              -1.8594,
+              -1.2837,
+              1.827
+            ]
+          },
+          "size_aabb": [
+            0.0595,
+            0.8487,
+            0.6379
+          ],
+          "bbox_corners": [
+            [
+              -1.8594,
+              -1.2837,
+              1.827
+            ],
+            [
+              -1.8594,
+              -2.1324,
+              1.827
+            ],
+            [
+              -1.9189,
+              -2.1324,
+              1.827
+            ],
+            [
+              -1.9189,
+              -1.2837,
+              1.827
+            ],
+            [
+              -1.8594,
+              -1.2837,
+              1.1891
+            ],
+            [
+              -1.8594,
+              -2.1324,
+              1.1891
+            ],
+            [
+              -1.9189,
+              -2.1324,
+              1.1891
+            ],
+            [
+              -1.9189,
+              -1.2837,
+              1.1891
+            ]
+          ],
+          "volume": 0.03223,
           "phrase": "the tv"
         }
       ],
@@ -1368,7 +2141,85 @@
       "anchors": [
         {
           "object_id": "23",
+          "region": "2",
           "label": "magazine",
+          "raw_label": "magazine",
+          "nyu_label": "magazine",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            -1.5963,
+            -1.8728,
+            0.9566
+          ],
+          "size": [
+            0.3417,
+            0.3191,
+            0.0576
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -1.7672,
+              -2.0323,
+              0.9278
+            ],
+            "max": [
+              -1.4254,
+              -1.7132,
+              0.9855
+            ]
+          },
+          "size_aabb": [
+            0.3417,
+            0.3191,
+            0.0576
+          ],
+          "bbox_corners": [
+            [
+              -1.4254,
+              -2.0323,
+              0.9855
+            ],
+            [
+              -1.7672,
+              -2.0323,
+              0.9855
+            ],
+            [
+              -1.7672,
+              -1.7132,
+              0.9855
+            ],
+            [
+              -1.4254,
+              -1.7132,
+              0.9855
+            ],
+            [
+              -1.4254,
+              -2.0323,
+              0.9278
+            ],
+            [
+              -1.7672,
+              -2.0323,
+              0.9278
+            ],
+            [
+              -1.7672,
+              -1.7132,
+              0.9278
+            ],
+            [
+              -1.4254,
+              -1.7132,
+              0.9278
+            ]
+          ],
+          "volume": 0.00629,
           "phrase": "the magazine"
         }
       ],

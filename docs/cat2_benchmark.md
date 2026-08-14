@@ -63,6 +63,9 @@ flowchart LR
 | [`scripts/bench/extract_pdf_assets.py`](../scripts/bench/extract_pdf_assets.py) | `just pdf-assets` — dumps the PDF screenshots into `data/pdf_assets/` (untracked) |
 | [`scripts/eval/object_visibility.py`](../scripts/eval/object_visibility.py) | `just visibility` — projects every box into the robot's own camera frames and measures what it resolved |
 | [`scripts/eval/verify_category2.py`](../scripts/eval/verify_category2.py) | independent audit: reloads the metadata and re-checks every claim |
+| [`scripts/utils/mcap_io.py`](../scripts/utils/mcap_io.py) | host-only bag reading (camera/lidar/odometry) and the deployed camera model, no docker/ROS2 needed — see [manual visual verification](#manual-visual-verification) |
+| [`scripts/eval/project_bboxes.py`](../scripts/eval/project_bboxes.py) | `just check-bboxes` — draws a GT box's own 8 corners on the camera frame that saw it best |
+| [`scripts/eval/make_bbox_mcap.py`](../scripts/eval/make_bbox_mcap.py) | `just bbox-mcap` — copies a scene bag and adds a `/gt_boxes` MarkerArray, for Foxglove |
 
 `scripts/utils/` is library code and `scripts/bench/` builds the benchmark, while
 `scripts/eval/` runs and audits it; nothing but recordings lives under `bags/`, which is
@@ -160,6 +163,64 @@ are kept (below).
 Rivals are deliberately **not** filtered by visibility. An unseen twin still makes "the vase
 closest to the sofa" ambiguous in the room the question is asked about, so uniqueness is
 checked against every object in the region and only targets and anchors have to be visible.
+
+## Manual visual verification
+
+The visibility report and the QA file are both numbers derived from the bag; neither is a
+picture. Two tools sanity-check that the numbers actually line up with what the robot
+recorded, and both run **on the host, with no docker and no ROS2** — they read the mcap
+directly with `pip install mcap mcap-ros2-support` and reuse the deployed camera model
+and pose-sync math from `ai_module/src/sam_mapper`, which is pure numpy/scipy already (the
+container is only needed there for `rosbag2_py`, not the maths). `scripts/utils/mcap_io.py`
+is the shared bag-reading layer both tools use.
+
+```bash
+just check-bboxes arabic_room                 # data/crops/bbox_check/arabic_room/*.png
+just check-bboxes arabic_room "--object-id 73"
+just bbox-mcap arabic_room                    # data/runs/foxglove/arabic_room_gt_boxes.mcap
+just bbox-mcap arabic_room "--object-id 73"
+```
+
+By default both tools read box corners **straight out of the category-2 QA file's own
+`bbox_corners`** for whichever object id(s) you point them at — not a fresh recomputation
+from `<scene>_objects.json`. That is the check the previous paragraph's "neither is a
+picture" gap actually calls for: it verifies the exact numbers a scorer would read out of
+the shipped QA file, which a metadata-only check cannot — a stale QA file, a hand edit, or
+a `gen-cat2` run before a metadata fix would all look correct under a metadata-only check.
+Both a question's *answer* and its *anchors* carry geometry in the QA file, so this default
+scope (`--source qa`) covers every object any question names, target or anchor, and both
+tools also print/label a numeric `qa-vs-metadata` diff for every object checked this way,
+flagging anything that drifts from `<scene>_objects.json` by more than 0.5mm as `MISMATCH`.
+Pass `--source objects` (and `--all`/`--objects all` on the mcap tool) to fall back to
+reading straight from `<scene>_objects.json` instead — needed only for a full-scene sweep,
+since that is the one case the QA file has no geometry for (objects no question names).
+
+**`check-bboxes`** projects an object's own 8 `bbox_corners` — not just its axis-aligned
+extent — onto the camera frame `object_visibility.py` already picked as its best view, and
+draws all 12 edges. This is a stricter check than the crops under `data/crops/visibility/`:
+an axis-aligned crop looks the same whichever way a rotated box points, so it cannot catch
+a wrong yaw or a box read in the wrong frame, and the wireframe can. It also prints, per
+object, its own recomputed pixel bbox next to the one stored in the visibility report —
+an independent re-implementation agreeing with the shipped numbers is worth more than either
+alone. Default scope (`--source qa`) is every object any question names, answer or anchor;
+`--object-id` narrows that to specific ids, and `--source objects --all` widens it to the
+whole scene, metadata-sourced. `--no-points` skips the lidar-in-box overlay.
+
+**`bbox-mcap`** copies `/camera/image`, `/registered_scan`, `/state_estimation`, `/tf` and
+`/tf_static` through byte-for-byte and adds one more topic, `/gt_boxes`
+(`visualization_msgs/msg/MarkerArray`, hand-embedded schema — no rosidl/colcon build
+needed), with a wireframe + text label per object, republished at every lidar frame so
+scrubbing the timeline always shows them. Boxes are green if the visibility gate accepted
+the object and orange if it did not, and any QA-vs-metadata `MISMATCH` gets its label
+prefixed `!! MISMATCH !!` so it stands out in the 3D panel, not just in the console. `--objects
+qa` (default) matches `check-bboxes`'s default scope — every object any question names,
+answer or anchor, geometry read straight from the QA file; `--object-id` picks specific ids;
+`--objects all`/`visible` dump the whole scene (implicitly `--source objects`, since the QA
+file has no geometry to draw for objects no question names). Open the output file in
+Foxglove and add a 3D panel — no other setup needed.
+
+Neither tool changes a threshold or a QA file; they are read-only review aids on top of the
+pipeline above.
 
 ## The join is not enough
 
@@ -361,7 +422,13 @@ never stale — its question is gone because the rule worked, and the explanatio
     "bbox_corners": ["... 8 corners ..."],
     "volume": 0.0673, "colors": ["gray", "navy", "purple"]
   },
-  "anchors": [{"object_id": "1", "label": "shoes", "phrase": "the shoes"}],
+  "anchors": [{
+    "object_id": "1", "label": "shoes", "region": "0",
+    "center": [-0.9, -1.1, 0.05], "size": [0.32, 0.24, 0.11], "yaw": 0.0,
+    "aabb": {"min": [-1.06, -1.22, 0.0], "max": [-0.74, -0.98, 0.11]},
+    "size_aabb": [0.32, 0.24, 0.11], "bbox_corners": ["... 8 corners ..."],
+    "volume": 0.0084, "colors": ["brown"], "phrase": "the shoes"
+  }],
   "distractor_ids": ["42"],
   "competitors": 1,
   "margin": 5.901,
@@ -380,6 +447,12 @@ never stale — its question is gone because the rule worked, and the explanatio
 equivalent for a scorer that ignores orientation — [`scripts/eval/score.py`](../scripts/eval/score.py)
 reads centre and size. **Answer with a `CUBE` marker, never the RViz wireframe**: see the
 structural-zero guard in [`map3d_bench.md`](map3d_bench.md#the-category-2-marker-score).
+
+Every entry in `anchors` carries that same box payload — `center`/`size`/`yaw`/`aabb`/
+`size_aabb`/`bbox_corners`/`volume`/`colors`, taken from the same IRef-VLA metadata as
+the answer, not recomputed — plus `phrase` (a generated question's uniquely-naming noun
+phrase for it; official questions' anchors have no `phrase`). So every object a question
+names, not only the one it asks for, has a 3D box to point at.
 
 `margin` appears only on the comparative relations (`closest`, `farthest`, `near`), because
 it is a distance in metres and there is no such number for `on` or `between`; `competitors`

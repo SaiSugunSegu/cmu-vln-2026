@@ -578,3 +578,23 @@ visibility scene="all" args="":
       cp "$report" "data/benchmark/${s}/visibility/"
     done
     echo "reports copied to data/benchmark/<scene>/visibility/ -- now run: just gen-cat2"
+
+# Host-only, no docker/ROS2 -- reads the mcap directly (`pip install mcap mcap-ros2-support`,
+# see scripts/utils/mcap_io.py) and re-projects each category-2 target/anchor's own 8
+# corners onto the camera frame object_visibility.py already picked as its best view.
+# Catches a wrong yaw or a frame mixup that the axis-aligned crops under
+# data/crops/visibility/ would not show. Output: data/crops/bbox_check/<scene>/*_{full,crop}.png.
+[group('cat2')]
+[doc('Draw each category-2 GT box on its best camera frame, for visual/numeric review')]
+check-bboxes scene="arabic_room" args="":
+    python3 scripts/eval/project_bboxes.py --scene {{scene}} {{args}}
+
+# Also host-only. Copies the scene bag's camera/lidar/odometry through untouched and adds
+# a /gt_boxes MarkerArray (green = visibility gate passed, orange = did not), republished
+# at every lidar frame so scrubbing Foxglove's timeline always shows the boxes. Default
+# --objects qa keeps it to what the category-2 QA file names; pass "--objects all" for a
+# full-scene dump. Output is untracked (data/runs/foxglove/<scene>_gt_boxes.mcap).
+[group('cat2')]
+[doc('Build a scene mcap + GT-box MarkerArray to open in Foxglove')]
+bbox-mcap scene="arabic_room" args="":
+    python3 scripts/eval/make_bbox_mcap.py --scene {{scene}} {{args}}

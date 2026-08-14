@@ -5,13 +5,14 @@
   "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
   "notes": [
     "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
     "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
     "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
     "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
     "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/loft/visibility/loft_visibility.json.",
     "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
-    "source_statements: bags/loft/iref_vla_metadata/loft_referential_statements.json",
-    "source_objects: bags/loft/iref_vla_metadata/loft_objects.json"
+    "source_statements: data/bags/loft/iref_vla_metadata/loft_referential_statements.json",
+    "source_objects: data/bags/loft/iref_vla_metadata/loft_objects.json"
   ],
   "difficulty_counts": {
     "medium": 6,
@@ -268,19 +269,328 @@
       "anchors": [
         {
           "object_id": "13",
-          "label": "vase"
+          "region": "2",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            5.3428,
+            -1.582,
+            0.6489
+          ],
+          "size": [
+            0.1437,
+            0.1427,
+            0.1476
+          ],
+          "yaw": 0.1745,
+          "aabb": {
+            "min": [
+              5.2596,
+              -1.6648,
+              0.5751
+            ],
+            "max": [
+              5.4259,
+              -1.4993,
+              0.7227
+            ]
+          },
+          "size_aabb": [
+            0.1663,
+            0.1655,
+            0.1476
+          ],
+          "bbox_corners": [
+            [
+              5.2596,
+              -1.5243,
+              0.7227
+            ],
+            [
+              5.4012,
+              -1.4993,
+              0.7227
+            ],
+            [
+              5.4259,
+              -1.6398,
+              0.7227
+            ],
+            [
+              5.2844,
+              -1.6648,
+              0.7227
+            ],
+            [
+              5.2596,
+              -1.5243,
+              0.5751
+            ],
+            [
+              5.4012,
+              -1.4993,
+              0.5751
+            ],
+            [
+              5.4259,
+              -1.6398,
+              0.5751
+            ],
+            [
+              5.2844,
+              -1.6648,
+              0.5751
+            ]
+          ],
+          "volume": 0.00303
         },
         {
           "object_id": "14",
-          "label": "vase"
+          "region": "2",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            3.095,
+            -1.3229,
+            0.6663
+          ],
+          "size": [
+            0.2905,
+            0.2903,
+            1.3282
+          ],
+          "yaw": 0.1886,
+          "aabb": {
+            "min": [
+              2.9252,
+              -1.4928,
+              0.0022
+            ],
+            "max": [
+              3.2649,
+              -1.1531,
+              1.3304
+            ]
+          },
+          "size_aabb": [
+            0.3397,
+            0.3396,
+            1.3282
+          ],
+          "bbox_corners": [
+            [
+              2.9252,
+              -1.2076,
+              1.3304
+            ],
+            [
+              3.2105,
+              -1.1531,
+              1.3304
+            ],
+            [
+              3.2649,
+              -1.4383,
+              1.3304
+            ],
+            [
+              2.9796,
+              -1.4928,
+              1.3304
+            ],
+            [
+              2.9252,
+              -1.2076,
+              0.0022
+            ],
+            [
+              3.2105,
+              -1.1531,
+              0.0022
+            ],
+            [
+              3.2649,
+              -1.4383,
+              0.0022
+            ],
+            [
+              2.9796,
+              -1.4928,
+              0.0022
+            ]
+          ],
+          "volume": 0.11201
         },
         {
           "object_id": "15",
-          "label": "vase"
+          "region": "2",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            3.4683,
+            -1.4603,
+            0.516
+          ],
+          "size": [
+            0.3604,
+            0.3603,
+            1.0355
+          ],
+          "yaw": -1.3788,
+          "aabb": {
+            "min": [
+              3.2571,
+              -1.6715,
+              -0.0018
+            ],
+            "max": [
+              3.6795,
+              -1.249,
+              1.0338
+            ]
+          },
+          "size_aabb": [
+            0.4224,
+            0.4225,
+            1.0355
+          ],
+          "bbox_corners": [
+            [
+              3.6108,
+              -1.249,
+              1.0338
+            ],
+            [
+              3.6795,
+              -1.6028,
+              1.0338
+            ],
+            [
+              3.3259,
+              -1.6715,
+              1.0338
+            ],
+            [
+              3.2571,
+              -1.3177,
+              1.0338
+            ],
+            [
+              3.6108,
+              -1.249,
+              -0.0018
+            ],
+            [
+              3.6795,
+              -1.6028,
+              -0.0018
+            ],
+            [
+              3.3259,
+              -1.6715,
+              -0.0018
+            ],
+            [
+              3.2571,
+              -1.3177,
+              -0.0018
+            ]
+          ],
+          "volume": 0.13444
         },
         {
           "object_id": "17",
-          "label": "tv cabinet"
+          "region": "2",
+          "label": "tv cabinet",
+          "raw_label": "tv cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            6.013,
+            -1.511,
+            0.282
+          ],
+          "size": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            "max": [
+              7.1208,
+              -1.2895,
+              0.5735
+            ]
+          },
+          "size_aabb": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "bbox_corners": [
+            [
+              7.1208,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.2895,
+              -0.0095
+            ],
+            [
+              7.1208,
+              -1.2895,
+              -0.0095
+            ]
+          ],
+          "volume": 0.57232
         }
       ],
       "distractor_ids": [
@@ -428,7 +738,86 @@
       "anchors": [
         {
           "object_id": "7",
+          "region": "2",
           "label": "bowl of apples",
+          "raw_label": "bowl of apples",
+          "nyu_label": "apple",
+          "colors": [
+            "black",
+            "brown",
+            "maroon"
+          ],
+          "center": [
+            0.7814,
+            1.9992,
+            0.8378
+          ],
+          "size": [
+            0.2882,
+            0.2894,
+            0.1765
+          ],
+          "yaw": -2.5069,
+          "aabb": {
+            "min": [
+              0.5796,
+              1.7973,
+              0.7496
+            ],
+            "max": [
+              0.9833,
+              2.2012,
+              0.9261
+            ]
+          },
+          "size_aabb": [
+            0.4037,
+            0.4039,
+            0.1765
+          ],
+          "bbox_corners": [
+            [
+              0.9833,
+              1.9682,
+              0.9261
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.9261
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.9261
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.9261
+            ],
+            [
+              0.9833,
+              1.9682,
+              0.7496
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.7496
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.7496
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.7496
+            ]
+          ],
+          "volume": 0.01472,
           "phrase": "the bowl of apples"
         }
       ],
@@ -559,7 +948,85 @@
       "anchors": [
         {
           "object_id": "12",
+          "region": "2",
           "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.646,
+            0.97,
+            1.08
+          ],
+          "size": [
+            1.2868,
+            0.0803,
+            0.5503
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            "max": [
+              -1.6059,
+              1.6134,
+              1.3551
+            ]
+          },
+          "size_aabb": [
+            0.0803,
+            1.2868,
+            0.5503
+          ],
+          "bbox_corners": [
+            [
+              -1.6059,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              1.6134,
+              0.8049
+            ],
+            [
+              -1.6059,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              1.6134,
+              0.8049
+            ]
+          ],
+          "volume": 0.05683,
           "phrase": "the fireplace"
         }
       ],
@@ -694,7 +1161,85 @@
       "anchors": [
         {
           "object_id": "12",
+          "region": "2",
           "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.646,
+            0.97,
+            1.08
+          ],
+          "size": [
+            1.2868,
+            0.0803,
+            0.5503
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            "max": [
+              -1.6059,
+              1.6134,
+              1.3551
+            ]
+          },
+          "size_aabb": [
+            0.0803,
+            1.2868,
+            0.5503
+          ],
+          "bbox_corners": [
+            [
+              -1.6059,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              1.6134,
+              0.8049
+            ],
+            [
+              -1.6059,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              1.6134,
+              0.8049
+            ]
+          ],
+          "volume": 0.05683,
           "phrase": "the fireplace"
         }
       ],
@@ -830,7 +1375,84 @@
       "anchors": [
         {
           "object_id": "69",
+          "region": "2",
           "label": "stairs",
+          "raw_label": "stairs",
+          "nyu_label": "stairs",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.8161,
+            -0.3169,
+            1.9529
+          ],
+          "size": [
+            2.5335,
+            1.7805,
+            3.9203
+          ],
+          "yaw": 2.4487,
+          "aabb": {
+            "min": [
+              0.2728,
+              -1.811,
+              -0.0072
+            ],
+            "max": [
+              3.3594,
+              1.1772,
+              3.9131
+            ]
+          },
+          "size_aabb": [
+            3.0866,
+            2.9882,
+            3.9203
+          ],
+          "bbox_corners": [
+            [
+              2.2221,
+              -1.811,
+              3.9131
+            ],
+            [
+              0.2728,
+              -0.1927,
+              3.9131
+            ],
+            [
+              1.4101,
+              1.1772,
+              3.9131
+            ],
+            [
+              3.3594,
+              -0.4411,
+              3.9131
+            ],
+            [
+              2.2221,
+              -1.811,
+              -0.0072
+            ],
+            [
+              0.2728,
+              -0.1927,
+              -0.0072
+            ],
+            [
+              1.4101,
+              1.1772,
+              -0.0072
+            ],
+            [
+              3.3594,
+              -0.4411,
+              -0.0072
+            ]
+          ],
+          "volume": 17.68341,
           "phrase": "the stairs"
         }
       ],
@@ -964,7 +1586,86 @@
       "anchors": [
         {
           "object_id": "7",
+          "region": "2",
           "label": "bowl of apples",
+          "raw_label": "bowl of apples",
+          "nyu_label": "apple",
+          "colors": [
+            "black",
+            "brown",
+            "maroon"
+          ],
+          "center": [
+            0.7814,
+            1.9992,
+            0.8378
+          ],
+          "size": [
+            0.2882,
+            0.2894,
+            0.1765
+          ],
+          "yaw": -2.5069,
+          "aabb": {
+            "min": [
+              0.5796,
+              1.7973,
+              0.7496
+            ],
+            "max": [
+              0.9833,
+              2.2012,
+              0.9261
+            ]
+          },
+          "size_aabb": [
+            0.4037,
+            0.4039,
+            0.1765
+          ],
+          "bbox_corners": [
+            [
+              0.9833,
+              1.9682,
+              0.9261
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.9261
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.9261
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.9261
+            ],
+            [
+              0.9833,
+              1.9682,
+              0.7496
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.7496
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.7496
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.7496
+            ]
+          ],
+          "volume": 0.01472,
           "phrase": "the bowl of apples"
         }
       ],
@@ -1100,12 +1801,167 @@
       "anchors": [
         {
           "object_id": "12",
+          "region": "2",
           "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.646,
+            0.97,
+            1.08
+          ],
+          "size": [
+            1.2868,
+            0.0803,
+            0.5503
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            "max": [
+              -1.6059,
+              1.6134,
+              1.3551
+            ]
+          },
+          "size_aabb": [
+            0.0803,
+            1.2868,
+            0.5503
+          ],
+          "bbox_corners": [
+            [
+              -1.6059,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              1.6134,
+              0.8049
+            ],
+            [
+              -1.6059,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              1.6134,
+              0.8049
+            ]
+          ],
+          "volume": 0.05683,
           "phrase": "the fireplace"
         },
         {
           "object_id": "69",
+          "region": "2",
           "label": "stairs",
+          "raw_label": "stairs",
+          "nyu_label": "stairs",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.8161,
+            -0.3169,
+            1.9529
+          ],
+          "size": [
+            2.5335,
+            1.7805,
+            3.9203
+          ],
+          "yaw": 2.4487,
+          "aabb": {
+            "min": [
+              0.2728,
+              -1.811,
+              -0.0072
+            ],
+            "max": [
+              3.3594,
+              1.1772,
+              3.9131
+            ]
+          },
+          "size_aabb": [
+            3.0866,
+            2.9882,
+            3.9203
+          ],
+          "bbox_corners": [
+            [
+              2.2221,
+              -1.811,
+              3.9131
+            ],
+            [
+              0.2728,
+              -0.1927,
+              3.9131
+            ],
+            [
+              1.4101,
+              1.1772,
+              3.9131
+            ],
+            [
+              3.3594,
+              -0.4411,
+              3.9131
+            ],
+            [
+              2.2221,
+              -1.811,
+              -0.0072
+            ],
+            [
+              0.2728,
+              -0.1927,
+              -0.0072
+            ],
+            [
+              1.4101,
+              1.1772,
+              -0.0072
+            ],
+            [
+              3.3594,
+              -0.4411,
+              -0.0072
+            ]
+          ],
+          "volume": 17.68341,
           "phrase": "the stairs"
         }
       ],
