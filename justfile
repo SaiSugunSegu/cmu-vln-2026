@@ -275,6 +275,25 @@ map3d-audit run="":
 map3d-priors args="":
     python3 scripts/eval/build_dimension_priors.py {{args}}
 
+# ---------- Category-3 (instruction following) benchmark -------------------
+# The GT is a reading of the organizers' demo trajectories in questions/<scene>/*.ply.
+# Both recipes run on the HOST — they read ../IRef-VLA, which no container mounts, same
+# reason as map3d-priors above. Guide: docs/cat3_benchmark.md
+#
+# cat3-verify is the gate: it replays every demo through score.py::score_instruction and
+# requires 6/6. If a radius, an order or an avoid zone is wrong, this is what says so.
+[group('bench')]
+[doc('Audit the category-3 GT: every demo trajectory must score 6/6')]
+cat3-verify args="":
+    python3 scripts/eval/verify_category3.py {{args}}
+
+# --dry-run reports without writing; --write regenerates all 15 files. Hand decisions live
+# in scripts/bench/category3_overrides.json, so a rerun reproduces them exactly.
+[group('bench')]
+[doc('Rebuild the category-3 QA files from the demo trajectories')]
+cat3-build args="--dry-run":
+    python3 scripts/bench/generate_category3_qa.py {{args}}
+
 [group('map3d')]
 [doc('One-shot JSON dump of every 3D instance the mapper has built')]
 sam-map-json:

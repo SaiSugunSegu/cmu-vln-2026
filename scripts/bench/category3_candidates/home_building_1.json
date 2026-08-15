@@ -1,0 +1,72 @@
+{
+  "Q05": [
+    {
+      "clause": 1,
+      "kind": "pass_between",
+      "text": "the dining table and the picture",
+      "reason": "grounded to dining table, photo but the demo stays 3.13 m away",
+      "candidates": [
+        {
+          "object_id": "266",
+          "label": "dining table",
+          "region": "4",
+          "matches_phrase": true,
+          "min_dist_m": 1.523,
+          "end_dist_m": 6.266,
+          "traj_index": 202,
+          "traj_frac": 0.1
+        },
+        {
+          "object_id": "76",
+          "label": "photo",
+          "region": "4",
+          "matches_phrase": true,
+          "min_dist_m": 3.932,
+          "end_dist_m": 9.206,
+          "traj_index": 0,
+          "traj_frac": 0.0
+        },
+        {
+          "object_id": "162",
+          "label": "photo",
+          "region": "4",
+          "matches_phrase": true,
+          "min_dist_m": 4.903,
+          "end_dist_m": 12.434,
+          "traj_index": 230,
+          "traj_frac": 0.114
+        },
+        {
+          "object_id": "112",
+          "label": "photo",
+          "region": "4",
+          "matches_phrase": true,
+          "min_dist_m": 5.213,
+          "end_dist_m": 12.767,
+          "traj_index": 236,
+          "traj_frac": 0.117
+        },
+        {
+          "object_id": "176",
+          "label": "coffee table",
+          "region": "4",
+          "matches_phrase": true,
+          "min_dist_m": 5.907,
+          "end_dist_m": 12.608,
+          "traj_index": 120,
+          "traj_frac": 0.06
+        },
+        {
+          "object_id": "149",
+          "label": "picture",
+          "region": "4",
+          "matches_phrase": true,
+          "min_dist_m": 7.601,
+          "end_dist_m": 13.646,
+          "traj_index": 8,
+          "traj_frac": 0.004
+        }
+      ]
+    }
+  ]
+}

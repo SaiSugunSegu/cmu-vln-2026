@@ -1,0 +1,1557 @@
+{
+  "scene": "livingroom_2",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "hard": 1
+  },
+  "target_object_coverage": [
+    "chair",
+    "coffee table",
+    "couch",
+    "crystal ball decoration",
+    "kitchen counter",
+    "microwave",
+    "shelf",
+    "soccer ball",
+    "tv",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go to the microwave on the kitchen counter and then go to the crystal ball decoration on the shelf near the TV.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "microwave",
+        "kitchen counter",
+        "crystal ball decoration",
+        "shelf",
+        "tv"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the microwave on the kitchen counter",
+            "label": "microwave",
+            "object_ids": [
+              "85"
+            ],
+            "anchor_ids": [
+              "74"
+            ],
+            "center": [
+              0.5725,
+              4.5131
+            ],
+            "radius": 1.5,
+            "traj_index": 304,
+            "traj_frac": 0.385,
+            "min_dist_m": 1.098,
+            "why": "on: microwave#85 is the only match",
+            "anchor_why": "on 'kitchen counter': the boxes put kitchen counter#74 there"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the crystal ball decoration on the shelf near the tv",
+          "label": "crystal ball decoration",
+          "object_ids": [
+            "59"
+          ],
+          "anchor_ids": [
+            "29",
+            "9"
+          ],
+          "center": [
+            2.5733,
+            -1.4787
+          ],
+          "radius": 1.5,
+          "traj_index": 790,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.792,
+          "why": "near: crystal ball decoration#59 is the only match",
+          "anchor_why": "on 'shelf': the boxes put shelf#29 there; near 'tv': the boxes put tv#8, tv#9 there; nearest of 2 is tv#9 at 0.69 m"
+        }
+      },
+      "objects": {
+        "85": {
+          "object_id": "85",
+          "region": "0",
+          "label": "microwave",
+          "raw_label": "microwave",
+          "nyu_label": "microwave",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            0.5725,
+            4.5131,
+            1.0764
+          ],
+          "size": [
+            0.4173,
+            0.5324,
+            0.3373
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              0.3063,
+              4.3044,
+              0.9078
+            ],
+            "max": [
+              0.8387,
+              4.7218,
+              1.2451
+            ]
+          },
+          "size_aabb": [
+            0.5324,
+            0.4173,
+            0.3373
+          ],
+          "bbox_corners": [
+            [
+              0.3063,
+              4.3044,
+              1.2451
+            ],
+            [
+              0.3063,
+              4.7218,
+              1.2451
+            ],
+            [
+              0.8387,
+              4.7218,
+              1.2451
+            ],
+            [
+              0.8387,
+              4.3044,
+              1.2451
+            ],
+            [
+              0.3063,
+              4.3044,
+              0.9078
+            ],
+            [
+              0.3063,
+              4.7218,
+              0.9078
+            ],
+            [
+              0.8387,
+              4.7218,
+              0.9078
+            ],
+            [
+              0.8387,
+              4.3044,
+              0.9078
+            ]
+          ],
+          "volume": 0.07495,
+          "role": "constraint"
+        },
+        "74": {
+          "object_id": "74",
+          "region": "0",
+          "label": "kitchen counter",
+          "raw_label": "kitchen counter",
+          "nyu_label": "counter",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            1.5633,
+            3.9909,
+            0.5038
+          ],
+          "size": [
+            2.6699,
+            1.6078,
+            1.0558
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              0.2283,
+              3.187,
+              -0.0241
+            ],
+            "max": [
+              2.8982,
+              4.7947,
+              1.0317
+            ]
+          },
+          "size_aabb": [
+            2.6699,
+            1.6078,
+            1.0558
+          ],
+          "bbox_corners": [
+            [
+              0.2283,
+              4.7947,
+              1.0317
+            ],
+            [
+              2.8982,
+              4.7947,
+              1.0317
+            ],
+            [
+              2.8982,
+              3.187,
+              1.0317
+            ],
+            [
+              0.2283,
+              3.187,
+              1.0317
+            ],
+            [
+              0.2283,
+              4.7947,
+              -0.0241
+            ],
+            [
+              2.8982,
+              4.7947,
+              -0.0241
+            ],
+            [
+              2.8982,
+              3.187,
+              -0.0241
+            ],
+            [
+              0.2283,
+              3.187,
+              -0.0241
+            ]
+          ],
+          "volume": 4.53219,
+          "role": "reference"
+        },
+        "59": {
+          "object_id": "59",
+          "region": "0",
+          "label": "crystal ball decoration",
+          "raw_label": "crystal ball decoration",
+          "nyu_label": "decoration item",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.5733,
+            -1.4787,
+            1.0741
+          ],
+          "size": [
+            0.1332,
+            0.1329,
+            0.1329
+          ],
+          "yaw": 1.5673,
+          "aabb": {
+            "min": [
+              2.5067,
+              -1.5456,
+              1.0077
+            ],
+            "max": [
+              2.64,
+              -1.4119,
+              1.1405
+            ]
+          },
+          "size_aabb": [
+            0.1333,
+            0.1337,
+            0.1329
+          ],
+          "bbox_corners": [
+            [
+              2.5067,
+              -1.5451,
+              1.1405
+            ],
+            [
+              2.5071,
+              -1.4119,
+              1.1405
+            ],
+            [
+              2.64,
+              -1.4124,
+              1.1405
+            ],
+            [
+              2.6395,
+              -1.5456,
+              1.1405
+            ],
+            [
+              2.5067,
+              -1.5451,
+              1.0077
+            ],
+            [
+              2.5071,
+              -1.4119,
+              1.0077
+            ],
+            [
+              2.64,
+              -1.4124,
+              1.0077
+            ],
+            [
+              2.6395,
+              -1.5456,
+              1.0077
+            ]
+          ],
+          "volume": 0.00235,
+          "role": "constraint"
+        },
+        "29": {
+          "object_id": "29",
+          "region": "0",
+          "label": "shelf",
+          "raw_label": "shelf",
+          "nyu_label": "shelves",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            2.6295,
+            -0.8859,
+            0.9815
+          ],
+          "size": [
+            1.3795,
+            0.4,
+            1.9988
+          ],
+          "yaw": -1.5709,
+          "aabb": {
+            "min": [
+              2.4295,
+              -1.5757,
+              -0.0179
+            ],
+            "max": [
+              2.8296,
+              -0.1961,
+              1.9809
+            ]
+          },
+          "size_aabb": [
+            0.4001,
+            1.3795,
+            1.9988
+          ],
+          "bbox_corners": [
+            [
+              2.8296,
+              -0.1962,
+              1.9809
+            ],
+            [
+              2.8295,
+              -1.5757,
+              1.9809
+            ],
+            [
+              2.4295,
+              -1.5756,
+              1.9809
+            ],
+            [
+              2.4296,
+              -0.1961,
+              1.9809
+            ],
+            [
+              2.8296,
+              -0.1962,
+              -0.0179
+            ],
+            [
+              2.8295,
+              -1.5757,
+              -0.0179
+            ],
+            [
+              2.4295,
+              -1.5756,
+              -0.0179
+            ],
+            [
+              2.4296,
+              -0.1961,
+              -0.0179
+            ]
+          ],
+          "volume": 1.10286,
+          "role": "reference"
+        },
+        "9": {
+          "object_id": "9",
+          "region": "0",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.5,
+            -2.8949,
+            0.9764
+          ],
+          "size": [
+            1.2619,
+            0.1823,
+            0.7552
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              2.4089,
+              -3.5259,
+              0.5988
+            ],
+            "max": [
+              2.5912,
+              -2.2639,
+              1.354
+            ]
+          },
+          "size_aabb": [
+            0.1823,
+            1.2619,
+            0.7552
+          ],
+          "bbox_corners": [
+            [
+              2.5911,
+              -2.2639,
+              1.354
+            ],
+            [
+              2.5912,
+              -3.5259,
+              1.354
+            ],
+            [
+              2.4089,
+              -3.5259,
+              1.354
+            ],
+            [
+              2.4089,
+              -2.2639,
+              1.354
+            ],
+            [
+              2.5911,
+              -2.2639,
+              0.5988
+            ],
+            [
+              2.5912,
+              -3.5259,
+              0.5988
+            ],
+            [
+              2.4089,
+              -3.5259,
+              0.5988
+            ],
+            [
+              2.4089,
+              -2.2639,
+              0.5988
+            ]
+          ],
+          "volume": 0.1737,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/livingroom_2/trajectory_q4.ply",
+        "n_vertices": 791,
+        "length_m": 9.102,
+        "z": 0.75,
+        "start": [
+          -0.005,
+          0.009
+        ],
+        "end": [
+          1.786,
+          -1.397
+        ],
+        "polyline": [
+          [
+            -0.005,
+            0.009
+          ],
+          [
+            -0.09,
+            0.254
+          ],
+          [
+            -0.146,
+            0.507
+          ],
+          [
+            -0.171,
+            0.758
+          ],
+          [
+            -0.167,
+            1.009
+          ],
+          [
+            -0.14,
+            1.263
+          ],
+          [
+            -0.113,
+            1.515
+          ],
+          [
+            -0.085,
+            1.765
+          ],
+          [
+            -0.047,
+            2.015
+          ],
+          [
+            0.001,
+            2.262
+          ],
+          [
+            0.068,
+            2.509
+          ],
+          [
+            0.14,
+            2.756
+          ],
+          [
+            0.213,
+            3.006
+          ],
+          [
+            0.286,
+            3.255
+          ],
+          [
+            0.18,
+            3.024
+          ],
+          [
+            0.083,
+            2.789
+          ],
+          [
+            -0.002,
+            2.542
+          ],
+          [
+            -0.076,
+            2.296
+          ],
+          [
+            -0.125,
+            2.046
+          ],
+          [
+            -0.145,
+            1.796
+          ],
+          [
+            -0.136,
+            1.544
+          ],
+          [
+            -0.102,
+            1.296
+          ],
+          [
+            -0.06,
+            1.044
+          ],
+          [
+            0.008,
+            0.793
+          ],
+          [
+            0.102,
+            0.558
+          ],
+          [
+            0.223,
+            0.337
+          ],
+          [
+            0.369,
+            0.121
+          ],
+          [
+            0.523,
+            -0.089
+          ],
+          [
+            0.691,
+            -0.286
+          ],
+          [
+            0.859,
+            -0.481
+          ],
+          [
+            1.033,
+            -0.664
+          ],
+          [
+            1.213,
+            -0.842
+          ],
+          [
+            1.392,
+            -1.019
+          ],
+          [
+            1.574,
+            -1.198
+          ],
+          [
+            1.763,
+            -1.376
+          ],
+          [
+            1.786,
+            -1.397
+          ]
+        ]
+      },
+      "evidence": "Demo path passes microwave at 1.10 m (38% along), and ends 0.79 m from crystal ball decoration.",
+      "solver_trace": [
+        "head='microwave' color='' hops=[{'relation': 'on', 'phrases': ['kitchen counter']}]",
+        "head candidates: [microwave#85]",
+        "target hop (on): on: 1 match(es) -> [microwave#85]",
+        "pick: on: microwave#85 is the only match",
+        "head='crystal ball decoration' color='' hops=[{'relation': 'on', 'phrases': ['shelf']}, {'relation': 'near', 'phrases': ['tv']}]",
+        "head candidates: [crystal ball decoration#59]",
+        "anchor hop 1 (near): host already unique, applying it to the target instead",
+        "target hop (on): on: 1 match(es) -> [crystal ball decoration#59]",
+        "deferred hop 1 (near): near: 1 match(es) -> [crystal ball decoration#59]",
+        "pick: near: crystal ball decoration#59 is the only match"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go to the chair near the window, then stop at the soccer ball near the couch, avoiding the path between the TV and the tea table.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "hard",
+      "target_objects": [
+        "chair",
+        "window",
+        "soccer ball",
+        "couch",
+        "tv",
+        "coffee table"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the chair near the window",
+            "label": "chair",
+            "object_ids": [
+              "28"
+            ],
+            "anchor_ids": [
+              "86"
+            ],
+            "center": [
+              -1.5034,
+              2.2251
+            ],
+            "radius": 1.5,
+            "traj_index": 150,
+            "traj_frac": 0.162,
+            "min_dist_m": 1.07,
+            "why": "near: chair#28 is the only match",
+            "anchor_why": "near 'window': the boxes put window#86 there"
+          }
+        ],
+        "avoid": [
+          {
+            "kind": "avoid_between",
+            "phrase": "the tv and the tea table",
+            "label": "tv, coffee table",
+            "object_ids": [
+              "8",
+              "9",
+              "83"
+            ],
+            "anchor_ids": [],
+            "polygon": [
+              [
+                2.169,
+                -3.639
+              ],
+              [
+                0.692,
+                -3.662
+              ],
+              [
+                0.668,
+                -2.185
+              ],
+              [
+                2.145,
+                -2.161
+              ]
+            ],
+            "why": "2 co-located tvs the demo visits together; text was indecisive (resolves in more than one region: 0->coffee table#83, 1->table#41); the demo picks coffee table#83 at 0.81 m"
+          }
+        ],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the soccer ball near the couch",
+          "label": "soccer ball",
+          "object_ids": [
+            "63"
+          ],
+          "anchor_ids": [
+            "6"
+          ],
+          "center": [
+            2.8663,
+            -6.8126
+          ],
+          "radius": 1.5,
+          "traj_index": 927,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.582,
+          "why": "near: soccer ball#63 is the only match",
+          "anchor_why": "near 'couch': the boxes put couch#6 there"
+        }
+      },
+      "objects": {
+        "28": {
+          "object_id": "28",
+          "region": "0",
+          "label": "chair",
+          "raw_label": "chair",
+          "nyu_label": "chair",
+          "colors": [
+            "brown",
+            "gray"
+          ],
+          "center": [
+            -1.5034,
+            2.2251,
+            0.4694
+          ],
+          "size": [
+            0.6483,
+            0.6923,
+            0.9353
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -1.8496,
+              1.9009,
+              0.0018
+            ],
+            "max": [
+              -1.1572,
+              2.5493,
+              0.9371
+            ]
+          },
+          "size_aabb": [
+            0.6924,
+            0.6483,
+            0.9353
+          ],
+          "bbox_corners": [
+            [
+              -1.8496,
+              1.9009,
+              0.9371
+            ],
+            [
+              -1.8496,
+              2.5492,
+              0.9371
+            ],
+            [
+              -1.1573,
+              2.5493,
+              0.9371
+            ],
+            [
+              -1.1572,
+              1.901,
+              0.9371
+            ],
+            [
+              -1.8496,
+              1.9009,
+              0.0018
+            ],
+            [
+              -1.8496,
+              2.5492,
+              0.0018
+            ],
+            [
+              -1.1573,
+              2.5493,
+              0.0018
+            ],
+            [
+              -1.1572,
+              1.901,
+              0.0018
+            ]
+          ],
+          "volume": 0.41979,
+          "role": "constraint"
+        },
+        "86": {
+          "object_id": "86",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -1.9915,
+            2.9321,
+            1.4804
+          ],
+          "size": [
+            1.9992,
+            0.1373,
+            2.0816
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -2.0602,
+              1.9325,
+              0.4396
+            ],
+            "max": [
+              -1.9228,
+              3.9317,
+              2.5212
+            ]
+          },
+          "size_aabb": [
+            0.1373,
+            1.9992,
+            2.0816
+          ],
+          "bbox_corners": [
+            [
+              -1.9228,
+              3.9317,
+              2.5212
+            ],
+            [
+              -1.9228,
+              1.9325,
+              2.5212
+            ],
+            [
+              -2.0602,
+              1.9325,
+              2.5212
+            ],
+            [
+              -2.0602,
+              3.9317,
+              2.5212
+            ],
+            [
+              -1.9228,
+              3.9317,
+              0.4396
+            ],
+            [
+              -1.9228,
+              1.9325,
+              0.4396
+            ],
+            [
+              -2.0602,
+              1.9325,
+              0.4396
+            ],
+            [
+              -2.0602,
+              3.9317,
+              0.4396
+            ]
+          ],
+          "volume": 0.57158,
+          "role": "reference"
+        },
+        "63": {
+          "object_id": "63",
+          "region": "1",
+          "label": "soccer ball",
+          "raw_label": "soccer ball",
+          "nyu_label": "ball",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.8663,
+            -6.8126,
+            0.1984
+          ],
+          "size": [
+            0.3602,
+            0.3612,
+            0.3609
+          ],
+          "yaw": 1.2808,
+          "aabb": {
+            "min": [
+              2.6417,
+              -7.0368,
+              0.018
+            ],
+            "max": [
+              3.0909,
+              -6.5884,
+              0.3789
+            ]
+          },
+          "size_aabb": [
+            0.4491,
+            0.4484,
+            0.3609
+          ],
+          "bbox_corners": [
+            [
+              2.6417,
+              -6.9335,
+              0.3789
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.3789
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.3789
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.3789
+            ],
+            [
+              2.6417,
+              -6.9335,
+              0.018
+            ],
+            [
+              2.7447,
+              -6.5884,
+              0.018
+            ],
+            [
+              3.0909,
+              -6.6917,
+              0.018
+            ],
+            [
+              2.9879,
+              -7.0368,
+              0.018
+            ]
+          ],
+          "volume": 0.04695,
+          "role": "constraint"
+        },
+        "6": {
+          "object_id": "6",
+          "region": "1",
+          "label": "couch",
+          "raw_label": "couch",
+          "nyu_label": "sofa",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            1.7244,
+            -7.3781,
+            0.5497
+          ],
+          "size": [
+            0.9774,
+            1.1793,
+            1.0863
+          ],
+          "yaw": 3.132,
+          "aabb": {
+            "min": [
+              1.2301,
+              -7.9725,
+              0.0066
+            ],
+            "max": [
+              2.2188,
+              -6.7838,
+              1.0929
+            ]
+          },
+          "size_aabb": [
+            0.9887,
+            1.1886,
+            1.0863
+          ],
+          "bbox_corners": [
+            [
+              2.2074,
+              -7.9725,
+              1.0929
+            ],
+            [
+              1.2301,
+              -7.9631,
+              1.0929
+            ],
+            [
+              1.2414,
+              -6.7838,
+              1.0929
+            ],
+            [
+              2.2188,
+              -6.7932,
+              1.0929
+            ],
+            [
+              2.2074,
+              -7.9725,
+              0.0066
+            ],
+            [
+              1.2301,
+              -7.9631,
+              0.0066
+            ],
+            [
+              1.2414,
+              -6.7838,
+              0.0066
+            ],
+            [
+              2.2188,
+              -6.7932,
+              0.0066
+            ]
+          ],
+          "volume": 1.25214,
+          "role": "reference"
+        },
+        "8": {
+          "object_id": "8",
+          "region": "0",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "brown",
+            "blue",
+            "purple"
+          ],
+          "center": [
+            2.4477,
+            -2.8949,
+            0.9905
+          ],
+          "size": [
+            1.2434,
+            0.0697,
+            0.7059
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              2.4128,
+              -3.5166,
+              0.6375
+            ],
+            "max": [
+              2.4826,
+              -2.2732,
+              1.3434
+            ]
+          },
+          "size_aabb": [
+            0.0698,
+            1.2434,
+            0.7059
+          ],
+          "bbox_corners": [
+            [
+              2.4826,
+              -2.2732,
+              1.3434
+            ],
+            [
+              2.4826,
+              -3.5166,
+              1.3434
+            ],
+            [
+              2.4129,
+              -3.5166,
+              1.3434
+            ],
+            [
+              2.4128,
+              -2.2732,
+              1.3434
+            ],
+            [
+              2.4826,
+              -2.2732,
+              0.6375
+            ],
+            [
+              2.4826,
+              -3.5166,
+              0.6375
+            ],
+            [
+              2.4129,
+              -3.5166,
+              0.6375
+            ],
+            [
+              2.4128,
+              -2.2732,
+              0.6375
+            ]
+          ],
+          "volume": 0.06121,
+          "role": "constraint"
+        },
+        "9": {
+          "object_id": "9",
+          "region": "0",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.5,
+            -2.8949,
+            0.9764
+          ],
+          "size": [
+            1.2619,
+            0.1823,
+            0.7552
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              2.4089,
+              -3.5259,
+              0.5988
+            ],
+            "max": [
+              2.5912,
+              -2.2639,
+              1.354
+            ]
+          },
+          "size_aabb": [
+            0.1823,
+            1.2619,
+            0.7552
+          ],
+          "bbox_corners": [
+            [
+              2.5911,
+              -2.2639,
+              1.354
+            ],
+            [
+              2.5912,
+              -3.5259,
+              1.354
+            ],
+            [
+              2.4089,
+              -3.5259,
+              1.354
+            ],
+            [
+              2.4089,
+              -2.2639,
+              1.354
+            ],
+            [
+              2.5911,
+              -2.2639,
+              0.5988
+            ],
+            [
+              2.5912,
+              -3.5259,
+              0.5988
+            ],
+            [
+              2.4089,
+              -3.5259,
+              0.5988
+            ],
+            [
+              2.4089,
+              -2.2639,
+              0.5988
+            ]
+          ],
+          "volume": 0.1737,
+          "role": "constraint"
+        },
+        "83": {
+          "object_id": "83",
+          "region": "0",
+          "label": "coffee table",
+          "raw_label": "coffee table",
+          "nyu_label": "coffee table",
+          "colors": [
+            "gray",
+            "black",
+            "maroon"
+          ],
+          "center": [
+            0.3635,
+            -2.9289,
+            0.2584
+          ],
+          "size": [
+            1.2793,
+            0.7769,
+            0.5305
+          ],
+          "yaw": -1.5713,
+          "aabb": {
+            "min": [
+              -0.0253,
+              -3.5687,
+              -0.0068
+            ],
+            "max": [
+              0.7523,
+              -2.2891,
+              0.5237
+            ]
+          },
+          "size_aabb": [
+            0.7776,
+            1.2796,
+            0.5305
+          ],
+          "bbox_corners": [
+            [
+              0.7523,
+              -2.2895,
+              0.5237
+            ],
+            [
+              0.7516,
+              -3.5687,
+              0.5237
+            ],
+            [
+              -0.0253,
+              -3.5684,
+              0.5237
+            ],
+            [
+              -0.0247,
+              -2.2891,
+              0.5237
+            ],
+            [
+              0.7523,
+              -2.2895,
+              -0.0068
+            ],
+            [
+              0.7516,
+              -3.5687,
+              -0.0068
+            ],
+            [
+              -0.0253,
+              -3.5684,
+              -0.0068
+            ],
+            [
+              -0.0247,
+              -2.2891,
+              -0.0068
+            ]
+          ],
+          "volume": 0.52729,
+          "role": "constraint"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/livingroom_2/trajectory_q5.ply",
+        "n_vertices": 928,
+        "length_m": 10.699,
+        "z": 0.75,
+        "start": [
+          -0.01,
+          0.003
+        ],
+        "end": [
+          2.681,
+          -6.261
+        ],
+        "polyline": [
+          [
+            -0.01,
+            0.003
+          ],
+          [
+            -0.235,
+            0.132
+          ],
+          [
+            -0.426,
+            0.297
+          ],
+          [
+            -0.612,
+            0.468
+          ],
+          [
+            -0.786,
+            0.652
+          ],
+          [
+            -0.955,
+            0.843
+          ],
+          [
+            -1.103,
+            1.055
+          ],
+          [
+            -1.028,
+            0.813
+          ],
+          [
+            -0.93,
+            0.572
+          ],
+          [
+            -0.834,
+            0.333
+          ],
+          [
+            -0.751,
+            0.096
+          ],
+          [
+            -0.694,
+            -0.153
+          ],
+          [
+            -0.645,
+            -0.404
+          ],
+          [
+            -0.594,
+            -0.657
+          ],
+          [
+            -0.523,
+            -0.907
+          ],
+          [
+            -0.454,
+            -1.151
+          ],
+          [
+            -0.415,
+            -1.399
+          ],
+          [
+            -0.391,
+            -1.649
+          ],
+          [
+            -0.399,
+            -1.908
+          ],
+          [
+            -0.41,
+            -2.16
+          ],
+          [
+            -0.421,
+            -2.415
+          ],
+          [
+            -0.433,
+            -2.672
+          ],
+          [
+            -0.443,
+            -2.923
+          ],
+          [
+            -0.432,
+            -3.175
+          ],
+          [
+            -0.391,
+            -3.429
+          ],
+          [
+            -0.314,
+            -3.674
+          ],
+          [
+            -0.142,
+            -3.869
+          ],
+          [
+            0.058,
+            -4.026
+          ],
+          [
+            0.253,
+            -4.188
+          ],
+          [
+            0.449,
+            -4.351
+          ],
+          [
+            0.646,
+            -4.518
+          ],
+          [
+            0.83,
+            -4.701
+          ],
+          [
+            1.008,
+            -4.879
+          ],
+          [
+            1.186,
+            -5.058
+          ],
+          [
+            1.364,
+            -5.236
+          ],
+          [
+            1.541,
+            -5.413
+          ],
+          [
+            1.722,
+            -5.588
+          ],
+          [
+            1.923,
+            -5.744
+          ],
+          [
+            2.13,
+            -5.89
+          ],
+          [
+            2.341,
+            -6.038
+          ],
+          [
+            2.553,
+            -6.183
+          ],
+          [
+            2.681,
+            -6.261
+          ]
+        ]
+      },
+      "evidence": "Demo path passes chair at 1.07 m (16% along), and ends 0.58 m from soccer ball; it never enters the zone for tv, coffee table.",
+      "solver_trace": [
+        "head='chair' color='' hops=[{'relation': 'near', 'phrases': ['window']}]",
+        "head candidates: [chair#28]",
+        "target hop (near): near: 1 match(es) -> [chair#28]",
+        "pick: near: chair#28 is the only match",
+        "head='soccer ball' color='' hops=[{'relation': 'near', 'phrases': ['couch']}]",
+        "head candidates: [soccer ball#63]",
+        "target hop (near): near: 1 match(es) -> [soccer ball#63]",
+        "pick: near: soccer ball#63 is the only match",
+        "head='tv' color='' hops=[]",
+        "head candidates: [tv#8, tv#9]",
+        "head='tea table' color='' hops=[]",
+        "head candidates: [coffee table#83]"
+      ],
+      "verified": true
+    }
+  ]
+}

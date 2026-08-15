@@ -1,0 +1,1792 @@
+{
+  "scene": "home_building_2",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "coffee table",
+    "curtain",
+    "dining table",
+    "dressing table",
+    "kettle",
+    "magazine",
+    "ottoman",
+    "potted plant",
+    "sofa",
+    "tv"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go near the magazine on the ottoman, then go to the potted plant on the dressing table.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "magazine",
+        "ottoman",
+        "potted plant",
+        "dressing table"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the magazine on the ottoman",
+            "label": "magazine",
+            "object_ids": [
+              "218"
+            ],
+            "anchor_ids": [
+              "136"
+            ],
+            "center": [
+              1.261,
+              4.4581
+            ],
+            "radius": 1.5,
+            "traj_index": 239,
+            "traj_frac": 0.261,
+            "min_dist_m": 0.963,
+            "why": "on: magazine#218 is the only match",
+            "anchor_why": "on 'ottoman': the boxes put ottoman#136 there"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the potted plant on the dressing table",
+          "label": "potted plant",
+          "object_ids": [
+            "221"
+          ],
+          "anchor_ids": [
+            "19"
+          ],
+          "center": [
+            -3.3363,
+            11.6981
+          ],
+          "radius": 1.5,
+          "traj_index": 915,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.738,
+          "why": "text was indecisive (resolves in more than one region: 4->potted plant#219, 5->potted plant#221); the demo picks potted plant#221 at 0.74 m",
+          "anchor_why": "on 'dressing table': the boxes put dressing table#19 there"
+        }
+      },
+      "objects": {
+        "218": {
+          "object_id": "218",
+          "region": "4",
+          "label": "magazine",
+          "raw_label": "magazine",
+          "nyu_label": "magazine",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            1.261,
+            4.4581,
+            0.5768
+          ],
+          "size": [
+            0.3418,
+            0.319,
+            0.0577
+          ],
+          "yaw": 2.9147,
+          "aabb": {
+            "min": [
+              1.0586,
+              4.2643,
+              0.548
+            ],
+            "max": [
+              1.4634,
+              4.652,
+              0.6057
+            ]
+          },
+          "size_aabb": [
+            0.4048,
+            0.3877,
+            0.0577
+          ],
+          "bbox_corners": [
+            [
+              1.3917,
+              4.2643,
+              0.6057
+            ],
+            [
+              1.0586,
+              4.3412,
+              0.6057
+            ],
+            [
+              1.1304,
+              4.652,
+              0.6057
+            ],
+            [
+              1.4634,
+              4.5751,
+              0.6057
+            ],
+            [
+              1.3917,
+              4.2643,
+              0.548
+            ],
+            [
+              1.0586,
+              4.3412,
+              0.548
+            ],
+            [
+              1.1304,
+              4.652,
+              0.548
+            ],
+            [
+              1.4634,
+              4.5751,
+              0.548
+            ]
+          ],
+          "volume": 0.00629,
+          "role": "constraint"
+        },
+        "136": {
+          "object_id": "136",
+          "region": "4",
+          "label": "ottoman",
+          "raw_label": "ottoman",
+          "nyu_label": "ottoman",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            1.108,
+            4.531,
+            0.273
+          ],
+          "size": [
+            1.053,
+            1.586,
+            0.546
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              0.315,
+              4.0045,
+              0.0
+            ],
+            "max": [
+              1.901,
+              5.0575,
+              0.546
+            ]
+          },
+          "size_aabb": [
+            1.586,
+            1.053,
+            0.546
+          ],
+          "bbox_corners": [
+            [
+              1.901,
+              5.0575,
+              0.546
+            ],
+            [
+              1.901,
+              4.0045,
+              0.546
+            ],
+            [
+              0.315,
+              4.0045,
+              0.546
+            ],
+            [
+              0.315,
+              5.0575,
+              0.546
+            ],
+            [
+              1.901,
+              5.0575,
+              0.0
+            ],
+            [
+              1.901,
+              4.0045,
+              0.0
+            ],
+            [
+              0.315,
+              4.0045,
+              0.0
+            ],
+            [
+              0.315,
+              5.0575,
+              0.0
+            ]
+          ],
+          "volume": 0.91185,
+          "role": "reference"
+        },
+        "221": {
+          "object_id": "221",
+          "region": "5",
+          "label": "potted plant",
+          "raw_label": "potted plant",
+          "nyu_label": "plant",
+          "colors": [
+            "gray",
+            "olive"
+          ],
+          "center": [
+            -3.3363,
+            11.6981,
+            1.17
+          ],
+          "size": [
+            0.1693,
+            0.1573,
+            0.2073
+          ],
+          "yaw": 2.0589,
+          "aabb": {
+            "min": [
+              -3.4454,
+              11.5864,
+              1.0663
+            ],
+            "max": [
+              -3.2271,
+              11.8097,
+              1.2736
+            ]
+          },
+          "size_aabb": [
+            0.2183,
+            0.2233,
+            0.2073
+          ],
+          "bbox_corners": [
+            [
+              -3.366,
+              11.5864,
+              1.2736
+            ],
+            [
+              -3.4454,
+              11.7359,
+              1.2736
+            ],
+            [
+              -3.3065,
+              11.8097,
+              1.2736
+            ],
+            [
+              -3.2271,
+              11.6602,
+              1.2736
+            ],
+            [
+              -3.366,
+              11.5864,
+              1.0663
+            ],
+            [
+              -3.4454,
+              11.7359,
+              1.0663
+            ],
+            [
+              -3.3065,
+              11.8097,
+              1.0663
+            ],
+            [
+              -3.2271,
+              11.6602,
+              1.0663
+            ]
+          ],
+          "volume": 0.00552,
+          "role": "constraint"
+        },
+        "19": {
+          "object_id": "19",
+          "region": "5",
+          "label": "dressing table",
+          "raw_label": "dressing table",
+          "nyu_label": "table",
+          "colors": [
+            "brown",
+            "gray",
+            "black"
+          ],
+          "center": [
+            -3.165,
+            11.195,
+            1.3193
+          ],
+          "size": [
+            1.6156,
+            0.6766,
+            2.6386
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -3.5033,
+              10.3872,
+              0.0
+            ],
+            "max": [
+              -2.8267,
+              12.0028,
+              2.6386
+            ]
+          },
+          "size_aabb": [
+            0.6766,
+            1.6156,
+            2.6386
+          ],
+          "bbox_corners": [
+            [
+              -3.5033,
+              10.3872,
+              2.6386
+            ],
+            [
+              -3.5033,
+              12.0028,
+              2.6386
+            ],
+            [
+              -2.8267,
+              12.0028,
+              2.6386
+            ],
+            [
+              -2.8267,
+              10.3872,
+              2.6386
+            ],
+            [
+              -3.5033,
+              10.3872,
+              0.0
+            ],
+            [
+              -3.5033,
+              12.0028,
+              0.0
+            ],
+            [
+              -2.8267,
+              12.0028,
+              0.0
+            ],
+            [
+              -2.8267,
+              10.3872,
+              0.0
+            ]
+          ],
+          "volume": 2.88443,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/home_building_2/trajectory_q4.ply",
+        "n_vertices": 916,
+        "length_m": 14.294,
+        "z": 0.75,
+        "start": [
+          -0.004,
+          0.011
+        ],
+        "end": [
+          -4.074,
+          11.664
+        ],
+        "polyline": [
+          [
+            -0.004,
+            0.011
+          ],
+          [
+            -0.034,
+            0.261
+          ],
+          [
+            -0.034,
+            0.517
+          ],
+          [
+            -0.021,
+            0.773
+          ],
+          [
+            -0.007,
+            1.04
+          ],
+          [
+            0.006,
+            1.292
+          ],
+          [
+            0.019,
+            1.553
+          ],
+          [
+            0.033,
+            1.806
+          ],
+          [
+            0.069,
+            2.066
+          ],
+          [
+            0.133,
+            2.314
+          ],
+          [
+            0.22,
+            2.56
+          ],
+          [
+            0.316,
+            2.798
+          ],
+          [
+            0.44,
+            3.027
+          ],
+          [
+            0.571,
+            3.248
+          ],
+          [
+            0.723,
+            3.459
+          ],
+          [
+            0.533,
+            3.623
+          ],
+          [
+            0.291,
+            3.719
+          ],
+          [
+            0.075,
+            3.852
+          ],
+          [
+            -0.136,
+            4.019
+          ],
+          [
+            -0.332,
+            4.184
+          ],
+          [
+            -0.526,
+            4.346
+          ],
+          [
+            -0.724,
+            4.514
+          ],
+          [
+            -0.906,
+            4.699
+          ],
+          [
+            -1.07,
+            4.899
+          ],
+          [
+            -1.231,
+            5.098
+          ],
+          [
+            -1.398,
+            5.303
+          ],
+          [
+            -1.568,
+            5.514
+          ],
+          [
+            -1.729,
+            5.712
+          ],
+          [
+            -1.899,
+            5.899
+          ],
+          [
+            -2.091,
+            6.061
+          ],
+          [
+            -2.28,
+            6.233
+          ],
+          [
+            -2.454,
+            6.417
+          ],
+          [
+            -2.63,
+            6.612
+          ],
+          [
+            -2.818,
+            6.819
+          ],
+          [
+            -2.985,
+            7.008
+          ],
+          [
+            -3.115,
+            7.223
+          ],
+          [
+            -3.231,
+            7.454
+          ],
+          [
+            -3.34,
+            7.688
+          ],
+          [
+            -3.421,
+            7.925
+          ],
+          [
+            -3.486,
+            8.172
+          ],
+          [
+            -3.553,
+            8.432
+          ],
+          [
+            -3.627,
+            8.675
+          ],
+          [
+            -3.731,
+            8.914
+          ],
+          [
+            -3.835,
+            9.151
+          ],
+          [
+            -3.926,
+            9.388
+          ],
+          [
+            -4.028,
+            9.621
+          ],
+          [
+            -4.143,
+            9.845
+          ],
+          [
+            -4.25,
+            10.079
+          ],
+          [
+            -4.341,
+            10.315
+          ],
+          [
+            -4.422,
+            10.561
+          ],
+          [
+            -4.448,
+            10.816
+          ],
+          [
+            -4.431,
+            11.069
+          ],
+          [
+            -4.364,
+            11.319
+          ],
+          [
+            -4.241,
+            11.548
+          ],
+          [
+            -4.035,
+            11.707
+          ],
+          [
+            -4.074,
+            11.664
+          ]
+        ]
+      },
+      "evidence": "Demo path passes magazine at 0.96 m (26% along), and ends 0.74 m from potted plant.",
+      "solver_trace": [
+        "head='magazine' color='' hops=[{'relation': 'on', 'phrases': ['ottoman']}]",
+        "head candidates: [magazine#218, magazine#222]",
+        "target hop (on): on: 1 match(es) -> [magazine#218]",
+        "pick: on: magazine#218 is the only match",
+        "head='potted plant' color='' hops=[{'relation': 'on', 'phrases': ['dressing table']}]",
+        "head candidates: [potted plant#77, potted plant#90, potted plant#155, potted plant#219, potted plant#220]",
+        "target hop (on): on: 1 match(es) -> [potted plant#219]",
+        "pick: on: potted plant#219 is the only match"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "Take the path between the sofa and the coffee table and go to the kettle on the dining table, then go to the potted plant between the curtain and the TV.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "sofa",
+        "coffee table",
+        "kettle",
+        "dining table",
+        "potted plant",
+        "curtain",
+        "tv"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_between",
+            "phrase": "the sofa and the coffee table",
+            "label": "sofa, coffee table",
+            "object_ids": [
+              "134",
+              "70"
+            ],
+            "anchor_ids": [],
+            "center": [
+              2.3285,
+              2.1066
+            ],
+            "radius": 1.5,
+            "traj_index": 206,
+            "traj_frac": 0.123,
+            "min_dist_m": 0.205,
+            "why": "unique by class; text was indecisive (resolves in more than one region: 4->coffee table#70, 5->dressing table#19); the demo picks coffee table#70 at 0.85 m"
+          },
+          {
+            "kind": "pass_near",
+            "phrase": "the kettle on the dining table",
+            "label": "kettle",
+            "object_ids": [
+              "142"
+            ],
+            "anchor_ids": [
+              "171"
+            ],
+            "center": [
+              3.464,
+              11.0271
+            ],
+            "radius": 1.75,
+            "traj_index": 742,
+            "traj_frac": 0.445,
+            "min_dist_m": 1.482,
+            "why": "on: kettle#142 is the only match",
+            "anchor_why": "on 'dining table': the boxes put dining table#171 there",
+            "radius_source": "widened from 1.5 m: the demo's own closest approach is 1.48 m, so a tighter radius would fail the reference run"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the potted plant between the curtain and the tv",
+          "label": "potted plant",
+          "object_ids": [
+            "58"
+          ],
+          "anchor_ids": [
+            "47",
+            "55"
+          ],
+          "center": [
+            -3.8039,
+            -0.7177
+          ],
+          "radius": 1.5,
+          "traj_index": 1669,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.85,
+          "why": "between: potted plant#58 is the only match",
+          "anchor_why": "between: curtain#47 and tv#55 bracket the target most squarely (lateral offset 0.13 m)"
+        }
+      },
+      "objects": {
+        "134": {
+          "object_id": "134",
+          "region": "4",
+          "label": "sofa",
+          "raw_label": "sofa",
+          "nyu_label": "sofa",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            3.422,
+            2.2236,
+            0.3913
+          ],
+          "size": [
+            4.836,
+            1.456,
+            0.7826
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              2.694,
+              -0.1944,
+              0.0
+            ],
+            "max": [
+              4.15,
+              4.6416,
+              0.7826
+            ]
+          },
+          "size_aabb": [
+            1.456,
+            4.836,
+            0.7826
+          ],
+          "bbox_corners": [
+            [
+              2.694,
+              -0.1944,
+              0.7826
+            ],
+            [
+              2.694,
+              4.6416,
+              0.7826
+            ],
+            [
+              4.15,
+              4.6416,
+              0.7826
+            ],
+            [
+              4.15,
+              -0.1944,
+              0.7826
+            ],
+            [
+              2.694,
+              -0.1944,
+              0.0
+            ],
+            [
+              2.694,
+              4.6416,
+              0.0
+            ],
+            [
+              4.15,
+              4.6416,
+              0.0
+            ],
+            [
+              4.15,
+              -0.1944,
+              0.0
+            ]
+          ],
+          "volume": 5.51025,
+          "role": "constraint"
+        },
+        "70": {
+          "object_id": "70",
+          "region": "4",
+          "label": "coffee table",
+          "raw_label": "coffee table",
+          "nyu_label": "coffee table",
+          "colors": [
+            "gray",
+            "maroon",
+            "black"
+          ],
+          "center": [
+            1.235,
+            1.9896,
+            0.275
+          ],
+          "size": [
+            2.4767,
+            0.9793,
+            0.55
+          ],
+          "yaw": -1.5319,
+          "aabb": {
+            "min": [
+              0.6976,
+              0.7332,
+              0.0
+            ],
+            "max": [
+              1.7724,
+              3.2461,
+              0.55
+            ]
+          },
+          "size_aabb": [
+            1.0748,
+            2.5129,
+            0.55
+          ],
+          "bbox_corners": [
+            [
+              1.6761,
+              3.2461,
+              0.55
+            ],
+            [
+              1.7724,
+              0.7713,
+              0.55
+            ],
+            [
+              0.7939,
+              0.7332,
+              0.55
+            ],
+            [
+              0.6976,
+              3.208,
+              0.55
+            ],
+            [
+              1.6761,
+              3.2461,
+              0.0
+            ],
+            [
+              1.7724,
+              0.7713,
+              0.0
+            ],
+            [
+              0.7939,
+              0.7332,
+              0.0
+            ],
+            [
+              0.6976,
+              3.208,
+              0.0
+            ]
+          ],
+          "volume": 1.33391,
+          "role": "constraint"
+        },
+        "142": {
+          "object_id": "142",
+          "region": "4",
+          "label": "kettle",
+          "raw_label": "kettle",
+          "nyu_label": "electrical kettle",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            3.464,
+            11.0271,
+            1.1048
+          ],
+          "size": [
+            0.2571,
+            0.1956,
+            0.3063
+          ],
+          "yaw": 1.888,
+          "aabb": {
+            "min": [
+              3.331,
+              10.8745,
+              0.9517
+            ],
+            "max": [
+              3.597,
+              11.1798,
+              1.258
+            ]
+          },
+          "size_aabb": [
+            0.266,
+            0.3053,
+            0.3063
+          ],
+          "bbox_corners": [
+            [
+              3.4112,
+              10.8745,
+              1.258
+            ],
+            [
+              3.331,
+              11.1188,
+              1.258
+            ],
+            [
+              3.5168,
+              11.1798,
+              1.258
+            ],
+            [
+              3.597,
+              10.9355,
+              1.258
+            ],
+            [
+              3.4112,
+              10.8745,
+              0.9517
+            ],
+            [
+              3.331,
+              11.1188,
+              0.9517
+            ],
+            [
+              3.5168,
+              11.1798,
+              0.9517
+            ],
+            [
+              3.597,
+              10.9355,
+              0.9517
+            ]
+          ],
+          "volume": 0.0154,
+          "role": "constraint"
+        },
+        "171": {
+          "object_id": "171",
+          "region": "4",
+          "label": "dining table",
+          "raw_label": "dining table",
+          "nyu_label": "table",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            3.425,
+            10.884,
+            0.476
+          ],
+          "size": [
+            2.224,
+            1.072,
+            0.952
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              2.889,
+              9.772,
+              0.0
+            ],
+            "max": [
+              3.961,
+              11.996,
+              0.952
+            ]
+          },
+          "size_aabb": [
+            1.072,
+            2.224,
+            0.952
+          ],
+          "bbox_corners": [
+            [
+              2.889,
+              9.772,
+              0.952
+            ],
+            [
+              2.889,
+              11.996,
+              0.952
+            ],
+            [
+              3.961,
+              11.996,
+              0.952
+            ],
+            [
+              3.961,
+              9.772,
+              0.952
+            ],
+            [
+              2.889,
+              9.772,
+              0.0
+            ],
+            [
+              2.889,
+              11.996,
+              0.0
+            ],
+            [
+              3.961,
+              11.996,
+              0.0
+            ],
+            [
+              3.961,
+              9.772,
+              0.0
+            ]
+          ],
+          "volume": 2.26969,
+          "role": "reference"
+        },
+        "58": {
+          "object_id": "58",
+          "region": "7",
+          "label": "potted plant",
+          "raw_label": "potted plant",
+          "nyu_label": "plant",
+          "colors": [
+            "olive",
+            "gray"
+          ],
+          "center": [
+            -3.8039,
+            -0.7177,
+            0.8009
+          ],
+          "size": [
+            0.8909,
+            0.823,
+            1.6018
+          ],
+          "yaw": -0.3256,
+          "aabb": {
+            "min": [
+              -4.3575,
+              -1.25,
+              0.0
+            ],
+            "max": [
+              -3.2502,
+              -0.1853,
+              1.6018
+            ]
+          },
+          "size_aabb": [
+            1.1073,
+            1.0647,
+            1.6018
+          ],
+          "bbox_corners": [
+            [
+              -4.0943,
+              -0.1853,
+              1.6018
+            ],
+            [
+              -3.2502,
+              -0.4703,
+              1.6018
+            ],
+            [
+              -3.5134,
+              -1.25,
+              1.6018
+            ],
+            [
+              -4.3575,
+              -0.9651,
+              1.6018
+            ],
+            [
+              -4.0943,
+              -0.1853,
+              0.0
+            ],
+            [
+              -3.2502,
+              -0.4703,
+              0.0
+            ],
+            [
+              -3.5134,
+              -1.25,
+              0.0
+            ],
+            [
+              -4.3575,
+              -0.9651,
+              0.0
+            ]
+          ],
+          "volume": 1.17444,
+          "role": "constraint"
+        },
+        "47": {
+          "object_id": "47",
+          "region": "7",
+          "label": "curtain",
+          "raw_label": "curtain",
+          "nyu_label": "curtain",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            -4.0376,
+            -1.3828,
+            2.1213
+          ],
+          "size": [
+            1.2935,
+            0.2534,
+            3.952
+          ],
+          "yaw": -3.0966,
+          "aabb": {
+            "min": [
+              -4.6894,
+              -1.5385,
+              0.1453
+            ],
+            "max": [
+              -3.3858,
+              -1.2271,
+              4.0973
+            ]
+          },
+          "size_aabb": [
+            1.3036,
+            0.3114,
+            3.952
+          ],
+          "bbox_corners": [
+            [
+              -3.3858,
+              -1.4803,
+              4.0973
+            ],
+            [
+              -4.678,
+              -1.5385,
+              4.0973
+            ],
+            [
+              -4.6894,
+              -1.2853,
+              4.0973
+            ],
+            [
+              -3.3972,
+              -1.2271,
+              4.0973
+            ],
+            [
+              -3.3858,
+              -1.4803,
+              0.1453
+            ],
+            [
+              -4.678,
+              -1.5385,
+              0.1453
+            ],
+            [
+              -4.6894,
+              -1.2853,
+              0.1453
+            ],
+            [
+              -3.3972,
+              -1.2271,
+              0.1453
+            ]
+          ],
+          "volume": 1.2955,
+          "role": "reference"
+        },
+        "55": {
+          "object_id": "55",
+          "region": "7",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -3.6399,
+            1.31,
+            0.9897
+          ],
+          "size": [
+            1.3698,
+            0.3124,
+            0.8013
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -3.7961,
+              0.6251,
+              0.589
+            ],
+            "max": [
+              -3.4837,
+              1.9949,
+              1.3903
+            ]
+          },
+          "size_aabb": [
+            0.3124,
+            1.3698,
+            0.8013
+          ],
+          "bbox_corners": [
+            [
+              -3.7961,
+              0.6251,
+              1.3903
+            ],
+            [
+              -3.7961,
+              1.9949,
+              1.3903
+            ],
+            [
+              -3.4837,
+              1.9949,
+              1.3903
+            ],
+            [
+              -3.4837,
+              0.6251,
+              1.3903
+            ],
+            [
+              -3.7961,
+              0.6251,
+              0.589
+            ],
+            [
+              -3.7961,
+              1.9949,
+              0.589
+            ],
+            [
+              -3.4837,
+              1.9949,
+              0.589
+            ],
+            [
+              -3.4837,
+              0.6251,
+              0.589
+            ]
+          ],
+          "volume": 0.34291,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/home_building_2/trajectory_q5.ply",
+        "n_vertices": 1670,
+        "length_m": 26.993,
+        "z": 0.75,
+        "start": [
+          0.015,
+          0.001
+        ],
+        "end": [
+          -4.576,
+          -0.362
+        ],
+        "polyline": [
+          [
+            0.015,
+            0.001
+          ],
+          [
+            0.279,
+            0.035
+          ],
+          [
+            0.541,
+            0.105
+          ],
+          [
+            0.779,
+            0.187
+          ],
+          [
+            1.02,
+            0.27
+          ],
+          [
+            1.256,
+            0.363
+          ],
+          [
+            1.461,
+            0.521
+          ],
+          [
+            1.625,
+            0.713
+          ],
+          [
+            1.763,
+            0.948
+          ],
+          [
+            1.882,
+            1.169
+          ],
+          [
+            1.978,
+            1.405
+          ],
+          [
+            2.04,
+            1.655
+          ],
+          [
+            2.085,
+            1.908
+          ],
+          [
+            2.131,
+            2.169
+          ],
+          [
+            2.146,
+            2.423
+          ],
+          [
+            2.14,
+            2.677
+          ],
+          [
+            2.146,
+            2.933
+          ],
+          [
+            2.168,
+            3.183
+          ],
+          [
+            2.192,
+            3.443
+          ],
+          [
+            2.216,
+            3.71
+          ],
+          [
+            2.238,
+            3.961
+          ],
+          [
+            2.262,
+            4.224
+          ],
+          [
+            2.287,
+            4.503
+          ],
+          [
+            2.311,
+            4.77
+          ],
+          [
+            2.334,
+            5.027
+          ],
+          [
+            2.358,
+            5.298
+          ],
+          [
+            2.381,
+            5.556
+          ],
+          [
+            2.404,
+            5.807
+          ],
+          [
+            2.418,
+            6.06
+          ],
+          [
+            2.412,
+            6.311
+          ],
+          [
+            2.406,
+            6.588
+          ],
+          [
+            2.4,
+            6.843
+          ],
+          [
+            2.395,
+            7.104
+          ],
+          [
+            2.389,
+            7.362
+          ],
+          [
+            2.382,
+            7.643
+          ],
+          [
+            2.376,
+            7.918
+          ],
+          [
+            2.357,
+            8.178
+          ],
+          [
+            2.302,
+            8.428
+          ],
+          [
+            2.245,
+            8.678
+          ],
+          [
+            2.183,
+            8.931
+          ],
+          [
+            2.111,
+            9.175
+          ],
+          [
+            2.05,
+            9.431
+          ],
+          [
+            2.009,
+            9.696
+          ],
+          [
+            1.974,
+            9.953
+          ],
+          [
+            1.94,
+            10.202
+          ],
+          [
+            1.915,
+            10.452
+          ],
+          [
+            1.92,
+            10.708
+          ],
+          [
+            1.953,
+            10.958
+          ],
+          [
+            1.955,
+            10.701
+          ],
+          [
+            1.927,
+            10.451
+          ],
+          [
+            1.909,
+            10.196
+          ],
+          [
+            1.908,
+            9.928
+          ],
+          [
+            1.891,
+            9.661
+          ],
+          [
+            1.835,
+            9.415
+          ],
+          [
+            1.762,
+            9.175
+          ],
+          [
+            1.686,
+            8.927
+          ],
+          [
+            1.61,
+            8.68
+          ],
+          [
+            1.502,
+            8.424
+          ],
+          [
+            1.376,
+            8.206
+          ],
+          [
+            1.226,
+            8.005
+          ],
+          [
+            1.057,
+            7.82
+          ],
+          [
+            0.884,
+            7.633
+          ],
+          [
+            0.7,
+            7.434
+          ],
+          [
+            0.527,
+            7.245
+          ],
+          [
+            0.349,
+            7.068
+          ],
+          [
+            0.138,
+            6.906
+          ],
+          [
+            -0.083,
+            6.771
+          ],
+          [
+            -0.301,
+            6.638
+          ],
+          [
+            -0.51,
+            6.492
+          ],
+          [
+            -0.717,
+            6.347
+          ],
+          [
+            -0.927,
+            6.201
+          ],
+          [
+            -1.144,
+            6.05
+          ],
+          [
+            -1.363,
+            5.898
+          ],
+          [
+            -1.577,
+            5.757
+          ],
+          [
+            -1.809,
+            5.642
+          ],
+          [
+            -2.064,
+            5.552
+          ],
+          [
+            -2.31,
+            5.483
+          ],
+          [
+            -2.568,
+            5.411
+          ],
+          [
+            -2.815,
+            5.341
+          ],
+          [
+            -3.063,
+            5.246
+          ],
+          [
+            -3.295,
+            5.123
+          ],
+          [
+            -3.506,
+            4.974
+          ],
+          [
+            -3.708,
+            4.814
+          ],
+          [
+            -3.857,
+            4.605
+          ],
+          [
+            -3.963,
+            4.37
+          ],
+          [
+            -4.041,
+            4.124
+          ],
+          [
+            -4.098,
+            3.879
+          ],
+          [
+            -4.175,
+            3.631
+          ],
+          [
+            -4.251,
+            3.383
+          ],
+          [
+            -4.325,
+            3.141
+          ],
+          [
+            -4.384,
+            2.896
+          ],
+          [
+            -4.434,
+            2.648
+          ],
+          [
+            -4.467,
+            2.388
+          ],
+          [
+            -4.515,
+            2.139
+          ],
+          [
+            -4.566,
+            1.887
+          ],
+          [
+            -4.615,
+            1.641
+          ],
+          [
+            -4.66,
+            1.395
+          ],
+          [
+            -4.688,
+            1.126
+          ],
+          [
+            -4.715,
+            0.87
+          ],
+          [
+            -4.731,
+            0.609
+          ],
+          [
+            -4.715,
+            0.356
+          ],
+          [
+            -4.669,
+            0.096
+          ],
+          [
+            -4.618,
+            -0.157
+          ],
+          [
+            -4.576,
+            -0.362
+          ]
+        ]
+      },
+      "evidence": "Demo path passes sofa, coffee table at 0.20 m (12% along), then kettle at 1.48 m (44% along), and ends 0.85 m from potted plant.",
+      "solver_trace": [
+        "head='sofa' color='' hops=[]",
+        "head candidates: [sofa#134]",
+        "head='coffee table' color='' hops=[]",
+        "head candidates: [coffee table#70]",
+        "head='kettle' color='' hops=[{'relation': 'on', 'phrases': ['dining table']}]",
+        "head candidates: [kettle#89, kettle#142]",
+        "target hop (on): on: 1 match(es) -> [kettle#142]",
+        "pick: on: kettle#142 is the only match",
+        "head='potted plant' color='' hops=[{'relation': 'between', 'phrases': ['curtain', 'tv']}]",
+        "head candidates: [potted plant#58]",
+        "target hop (between): between: 1 in the corridor -> [potted plant#58]",
+        "pick: between: potted plant#58 is the only match"
+      ],
+      "verified": true
+    }
+  ]
+}

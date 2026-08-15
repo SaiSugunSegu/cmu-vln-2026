@@ -1,0 +1,1313 @@
+{
+  "scene": "livingroom_4",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "bookcase",
+    "chair",
+    "fireplace",
+    "flowers",
+    "mirror",
+    "table",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go near the chair closest to the bookcase and stop at the table with the flowers on it.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "chair",
+        "bookcase",
+        "table",
+        "flowers"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the chair closest to the bookcase",
+            "label": "chair",
+            "object_ids": [
+              "48"
+            ],
+            "anchor_ids": [
+              "23"
+            ],
+            "center": [
+              -3.0977,
+              1.3705
+            ],
+            "radius": 1.5,
+            "traj_index": 301,
+            "traj_frac": 0.579,
+            "min_dist_m": 0.788,
+            "why": "closest: centre 1.47 m (next 1.94 m); box-gap 0.62 m (next 1.43 m)",
+            "anchor_why": "closest 'bookcase': bookcase#23 is the only one"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the table with the flowers on it",
+          "label": "table",
+          "object_ids": [
+            "67"
+          ],
+          "anchor_ids": [
+            "42"
+          ],
+          "center": [
+            -1.172,
+            -1.989
+          ],
+          "radius": 1.5,
+          "traj_index": 520,
+          "traj_frac": 1.0,
+          "min_dist_m": 1.193,
+          "why": "text was indecisive (no candidate satisfies the question); the demo picks table#67 at 1.19 m",
+          "anchor_why": "supports 'flowers': no box supports the relation"
+        }
+      },
+      "objects": {
+        "48": {
+          "object_id": "48",
+          "region": "0",
+          "label": "chair",
+          "raw_label": "chair",
+          "nyu_label": "chair",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -3.0977,
+            1.3705,
+            0.5172
+          ],
+          "size": [
+            0.5014,
+            0.5714,
+            1.0367
+          ],
+          "yaw": 1.5676,
+          "aabb": {
+            "min": [
+              -3.3843,
+              1.1189,
+              -0.0012
+            ],
+            "max": [
+              -2.8112,
+              1.6221,
+              1.0356
+            ]
+          },
+          "size_aabb": [
+            0.5731,
+            0.5032,
+            1.0367
+          ],
+          "bbox_corners": [
+            [
+              -3.3843,
+              1.1207,
+              1.0356
+            ],
+            [
+              -3.3826,
+              1.6221,
+              1.0356
+            ],
+            [
+              -2.8112,
+              1.6202,
+              1.0356
+            ],
+            [
+              -2.8128,
+              1.1189,
+              1.0356
+            ],
+            [
+              -3.3843,
+              1.1207,
+              -0.0012
+            ],
+            [
+              -3.3826,
+              1.6221,
+              -0.0012
+            ],
+            [
+              -2.8112,
+              1.6202,
+              -0.0012
+            ],
+            [
+              -2.8128,
+              1.1189,
+              -0.0012
+            ]
+          ],
+          "volume": 0.29702,
+          "role": "constraint"
+        },
+        "23": {
+          "object_id": "23",
+          "region": "0",
+          "label": "bookcase",
+          "raw_label": "bookcase",
+          "nyu_label": "bookshelf",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -4.177,
+            0.4961,
+            0.9918
+          ],
+          "size": [
+            1.0392,
+            0.369,
+            2.0086
+          ],
+          "yaw": 1.5683,
+          "aabb": {
+            "min": [
+              -4.3629,
+              -0.024,
+              -0.0125
+            ],
+            "max": [
+              -3.9912,
+              1.0161,
+              1.9961
+            ]
+          },
+          "size_aabb": [
+            0.3716,
+            1.0401,
+            2.0086
+          ],
+          "bbox_corners": [
+            [
+              -4.3629,
+              -0.023,
+              1.9961
+            ],
+            [
+              -4.3602,
+              1.0161,
+              1.9961
+            ],
+            [
+              -3.9912,
+              1.0152,
+              1.9961
+            ],
+            [
+              -3.9938,
+              -0.024,
+              1.9961
+            ],
+            [
+              -4.3629,
+              -0.023,
+              -0.0125
+            ],
+            [
+              -4.3602,
+              1.0161,
+              -0.0125
+            ],
+            [
+              -3.9912,
+              1.0152,
+              -0.0125
+            ],
+            [
+              -3.9938,
+              -0.024,
+              -0.0125
+            ]
+          ],
+          "volume": 0.77023,
+          "role": "reference"
+        },
+        "67": {
+          "object_id": "67",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.172,
+            -1.989,
+            0.2284
+          ],
+          "size": [
+            1.3765,
+            0.7328,
+            0.4942
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -1.5384,
+              -2.6772,
+              -0.0187
+            ],
+            "max": [
+              -0.8056,
+              -1.3007,
+              0.4755
+            ]
+          },
+          "size_aabb": [
+            0.7328,
+            1.3765,
+            0.4942
+          ],
+          "bbox_corners": [
+            [
+              -1.5384,
+              -2.6772,
+              0.4755
+            ],
+            [
+              -1.5384,
+              -1.3007,
+              0.4755
+            ],
+            [
+              -0.8056,
+              -1.3007,
+              0.4755
+            ],
+            [
+              -0.8056,
+              -2.6772,
+              0.4755
+            ],
+            [
+              -1.5384,
+              -2.6772,
+              -0.0187
+            ],
+            [
+              -1.5384,
+              -1.3007,
+              -0.0187
+            ],
+            [
+              -0.8056,
+              -1.3007,
+              -0.0187
+            ],
+            [
+              -0.8056,
+              -2.6772,
+              -0.0187
+            ]
+          ],
+          "volume": 0.49852,
+          "role": "constraint"
+        },
+        "42": {
+          "object_id": "42",
+          "region": "0",
+          "label": "flowers",
+          "raw_label": "flowers",
+          "nyu_label": "flower",
+          "colors": [
+            "red",
+            "olive",
+            "pink"
+          ],
+          "center": [
+            -1.1565,
+            -1.9711,
+            0.8569
+          ],
+          "size": [
+            0.2749,
+            0.1877,
+            0.4193
+          ],
+          "yaw": -2.6052,
+          "aabb": {
+            "min": [
+              -1.3226,
+              -2.122,
+              0.6473
+            ],
+            "max": [
+              -0.9904,
+              -1.8202,
+              1.0666
+            ]
+          },
+          "size_aabb": [
+            0.3322,
+            0.3018,
+            0.4193
+          ],
+          "bbox_corners": [
+            [
+              -0.9904,
+              -1.9815,
+              1.0666
+            ],
+            [
+              -1.2266,
+              -2.122,
+              1.0666
+            ],
+            [
+              -1.3226,
+              -1.9607,
+              1.0666
+            ],
+            [
+              -1.0863,
+              -1.8202,
+              1.0666
+            ],
+            [
+              -0.9904,
+              -1.9815,
+              0.6473
+            ],
+            [
+              -1.2266,
+              -2.122,
+              0.6473
+            ],
+            [
+              -1.3226,
+              -1.9607,
+              0.6473
+            ],
+            [
+              -1.0863,
+              -1.8202,
+              0.6473
+            ]
+          ],
+          "volume": 0.02163,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/livingroom_4/trajectory_q4.ply",
+        "n_vertices": 521,
+        "length_m": 5.907,
+        "z": 0.75,
+        "start": [
+          -0.01,
+          -0.0
+        ],
+        "end": [
+          -1.118,
+          -0.797
+        ],
+        "polyline": [
+          [
+            -0.01,
+            -0.0
+          ],
+          [
+            -0.262,
+            -0.019
+          ],
+          [
+            -0.517,
+            -0.04
+          ],
+          [
+            -0.778,
+            -0.056
+          ],
+          [
+            -1.037,
+            -0.056
+          ],
+          [
+            -1.286,
+            -0.082
+          ],
+          [
+            -1.54,
+            -0.109
+          ],
+          [
+            -1.79,
+            -0.127
+          ],
+          [
+            -2.046,
+            -0.118
+          ],
+          [
+            -2.293,
+            -0.072
+          ],
+          [
+            -2.525,
+            0.04
+          ],
+          [
+            -2.739,
+            0.174
+          ],
+          [
+            -2.939,
+            0.333
+          ],
+          [
+            -3.12,
+            0.513
+          ],
+          [
+            -2.936,
+            0.339
+          ],
+          [
+            -2.729,
+            0.182
+          ],
+          [
+            -2.507,
+            0.044
+          ],
+          [
+            -2.291,
+            -0.088
+          ],
+          [
+            -2.072,
+            -0.221
+          ],
+          [
+            -1.851,
+            -0.356
+          ],
+          [
+            -1.635,
+            -0.487
+          ],
+          [
+            -1.418,
+            -0.62
+          ],
+          [
+            -1.202,
+            -0.751
+          ],
+          [
+            -1.118,
+            -0.797
+          ]
+        ]
+      },
+      "evidence": "Demo path passes chair at 0.79 m (58% along), and ends 1.19 m from table.",
+      "solver_trace": [
+        "head='chair' color='' hops=[{'relation': 'closest', 'phrases': ['bookcase']}]",
+        "head candidates: [chair#48, chair#81, chair#97, chair#104, chair#106, chair#118]",
+        "target hop (closest): closest: ranked [chair#48, chair#118, chair#97]",
+        "pick: closest: centre 1.47 m (next 1.94 m); box-gap 0.62 m (next 1.43 m)",
+        "head='table' color='' hops=[{'relation': 'supports', 'phrases': ['flowers']}]",
+        "head candidates: [table#62, table#67]",
+        "target hop (supports): nothing is supports the anchor(s)",
+        "pick: no candidate satisfies the question"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go near the fireplace, then go to the window closest to the bookcase, and stop at the chair farthest from the mirror.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "fireplace",
+        "window",
+        "bookcase",
+        "chair",
+        "mirror"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the fireplace",
+            "label": "fireplace",
+            "object_ids": [
+              "112"
+            ],
+            "anchor_ids": [],
+            "center": [
+              -1.227,
+              -4.3955
+            ],
+            "radius": 1.5,
+            "traj_index": 382,
+            "traj_frac": 0.43,
+            "min_dist_m": 0.648,
+            "why": "unique by class"
+          },
+          {
+            "kind": "pass_near",
+            "phrase": "the window closest to the bookcase",
+            "label": "window",
+            "object_ids": [
+              "77",
+              "76"
+            ],
+            "anchor_ids": [
+              "23"
+            ],
+            "center": [
+              -4.4838,
+              -1.3349
+            ],
+            "radius": 1.5,
+            "traj_index": 705,
+            "traj_frac": 0.794,
+            "min_dist_m": 0.877,
+            "why": "2 co-located windows the demo visits together",
+            "anchor_why": "closest 'bookcase': bookcase#23 is the only one"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the chair farthest from the mirror",
+          "label": "chair",
+          "object_ids": [
+            "48"
+          ],
+          "anchor_ids": [
+            "7"
+          ],
+          "center": [
+            -3.0977,
+            1.3705
+          ],
+          "radius": 1.5,
+          "traj_index": 888,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.765,
+          "why": "farthest: centre 5.47 m (next 5.03 m); box-gap 4.96 m (next 4.44 m)",
+          "anchor_why": "farthest 'mirror': mirror#7 is the only one"
+        }
+      },
+      "objects": {
+        "112": {
+          "object_id": "112",
+          "region": "0",
+          "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.227,
+            -4.3955,
+            0.5792
+          ],
+          "size": [
+            1.547,
+            0.5402,
+            1.1984
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.0005,
+              -4.6656,
+              -0.02
+            ],
+            "max": [
+              -0.4535,
+              -4.1255,
+              1.1784
+            ]
+          },
+          "size_aabb": [
+            1.547,
+            0.5402,
+            1.1984
+          ],
+          "bbox_corners": [
+            [
+              -0.4535,
+              -4.6656,
+              1.1784
+            ],
+            [
+              -2.0005,
+              -4.6656,
+              1.1784
+            ],
+            [
+              -2.0005,
+              -4.1255,
+              1.1784
+            ],
+            [
+              -0.4535,
+              -4.1255,
+              1.1784
+            ],
+            [
+              -0.4535,
+              -4.6656,
+              -0.02
+            ],
+            [
+              -2.0005,
+              -4.6656,
+              -0.02
+            ],
+            [
+              -2.0005,
+              -4.1255,
+              -0.02
+            ],
+            [
+              -0.4535,
+              -4.1255,
+              -0.02
+            ]
+          ],
+          "volume": 1.00138,
+          "role": "constraint"
+        },
+        "77": {
+          "object_id": "77",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -4.457,
+            -1.3349,
+            0.9158
+          ],
+          "size": [
+            0.9979,
+            0.0601,
+            0.8208
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.487,
+              -1.8339,
+              0.5054
+            ],
+            "max": [
+              -4.4269,
+              -0.836,
+              1.3262
+            ]
+          },
+          "size_aabb": [
+            0.0601,
+            0.9979,
+            0.8208
+          ],
+          "bbox_corners": [
+            [
+              -4.4269,
+              -0.836,
+              1.3262
+            ],
+            [
+              -4.4269,
+              -1.8339,
+              1.3262
+            ],
+            [
+              -4.487,
+              -1.8339,
+              1.3262
+            ],
+            [
+              -4.487,
+              -0.836,
+              1.3262
+            ],
+            [
+              -4.4269,
+              -0.836,
+              0.5054
+            ],
+            [
+              -4.4269,
+              -1.8339,
+              0.5054
+            ],
+            [
+              -4.487,
+              -1.8339,
+              0.5054
+            ],
+            [
+              -4.487,
+              -0.836,
+              0.5054
+            ]
+          ],
+          "volume": 0.04921,
+          "role": "constraint"
+        },
+        "76": {
+          "object_id": "76",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -4.5106,
+            -1.3349,
+            1.6985
+          ],
+          "size": [
+            0.9979,
+            0.0405,
+            0.7937
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.5308,
+              -1.8339,
+              1.3017
+            ],
+            "max": [
+              -4.4903,
+              -0.836,
+              2.0953
+            ]
+          },
+          "size_aabb": [
+            0.0405,
+            0.9979,
+            0.7937
+          ],
+          "bbox_corners": [
+            [
+              -4.4903,
+              -0.836,
+              2.0953
+            ],
+            [
+              -4.4903,
+              -1.8339,
+              2.0953
+            ],
+            [
+              -4.5308,
+              -1.8339,
+              2.0953
+            ],
+            [
+              -4.5308,
+              -0.836,
+              2.0953
+            ],
+            [
+              -4.4903,
+              -0.836,
+              1.3017
+            ],
+            [
+              -4.4903,
+              -1.8339,
+              1.3017
+            ],
+            [
+              -4.5308,
+              -1.8339,
+              1.3017
+            ],
+            [
+              -4.5308,
+              -0.836,
+              1.3017
+            ]
+          ],
+          "volume": 0.03205,
+          "role": "constraint"
+        },
+        "23": {
+          "object_id": "23",
+          "region": "0",
+          "label": "bookcase",
+          "raw_label": "bookcase",
+          "nyu_label": "bookshelf",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -4.177,
+            0.4961,
+            0.9918
+          ],
+          "size": [
+            1.0392,
+            0.369,
+            2.0086
+          ],
+          "yaw": 1.5683,
+          "aabb": {
+            "min": [
+              -4.3629,
+              -0.024,
+              -0.0125
+            ],
+            "max": [
+              -3.9912,
+              1.0161,
+              1.9961
+            ]
+          },
+          "size_aabb": [
+            0.3716,
+            1.0401,
+            2.0086
+          ],
+          "bbox_corners": [
+            [
+              -4.3629,
+              -0.023,
+              1.9961
+            ],
+            [
+              -4.3602,
+              1.0161,
+              1.9961
+            ],
+            [
+              -3.9912,
+              1.0152,
+              1.9961
+            ],
+            [
+              -3.9938,
+              -0.024,
+              1.9961
+            ],
+            [
+              -4.3629,
+              -0.023,
+              -0.0125
+            ],
+            [
+              -4.3602,
+              1.0161,
+              -0.0125
+            ],
+            [
+              -3.9912,
+              1.0152,
+              -0.0125
+            ],
+            [
+              -3.9938,
+              -0.024,
+              -0.0125
+            ]
+          ],
+          "volume": 0.77023,
+          "role": "reference"
+        },
+        "48": {
+          "object_id": "48",
+          "region": "0",
+          "label": "chair",
+          "raw_label": "chair",
+          "nyu_label": "chair",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -3.0977,
+            1.3705,
+            0.5172
+          ],
+          "size": [
+            0.5014,
+            0.5714,
+            1.0367
+          ],
+          "yaw": 1.5676,
+          "aabb": {
+            "min": [
+              -3.3843,
+              1.1189,
+              -0.0012
+            ],
+            "max": [
+              -2.8112,
+              1.6221,
+              1.0356
+            ]
+          },
+          "size_aabb": [
+            0.5731,
+            0.5032,
+            1.0367
+          ],
+          "bbox_corners": [
+            [
+              -3.3843,
+              1.1207,
+              1.0356
+            ],
+            [
+              -3.3826,
+              1.6221,
+              1.0356
+            ],
+            [
+              -2.8112,
+              1.6202,
+              1.0356
+            ],
+            [
+              -2.8128,
+              1.1189,
+              1.0356
+            ],
+            [
+              -3.3843,
+              1.1207,
+              -0.0012
+            ],
+            [
+              -3.3826,
+              1.6221,
+              -0.0012
+            ],
+            [
+              -2.8112,
+              1.6202,
+              -0.0012
+            ],
+            [
+              -2.8128,
+              1.1189,
+              -0.0012
+            ]
+          ],
+          "volume": 0.29702,
+          "role": "constraint"
+        },
+        "7": {
+          "object_id": "7",
+          "region": "0",
+          "label": "mirror",
+          "raw_label": "mirror",
+          "nyu_label": "mirror",
+          "colors": [
+            "brown",
+            "yellow",
+            "black"
+          ],
+          "center": [
+            2.07,
+            -0.205,
+            1.3687
+          ],
+          "size": [
+            0.6497,
+            0.0306,
+            0.7394
+          ],
+          "yaw": 1.5337,
+          "aabb": {
+            "min": [
+              2.0427,
+              -0.5302,
+              0.999
+            ],
+            "max": [
+              2.0973,
+              0.1202,
+              1.7385
+            ]
+          },
+          "size_aabb": [
+            0.0546,
+            0.6503,
+            0.7394
+          ],
+          "bbox_corners": [
+            [
+              2.0427,
+              -0.529,
+              1.7385
+            ],
+            [
+              2.0668,
+              0.1202,
+              1.7385
+            ],
+            [
+              2.0973,
+              0.119,
+              1.7385
+            ],
+            [
+              2.0732,
+              -0.5302,
+              1.7385
+            ],
+            [
+              2.0427,
+              -0.529,
+              0.999
+            ],
+            [
+              2.0668,
+              0.1202,
+              0.999
+            ],
+            [
+              2.0973,
+              0.119,
+              0.999
+            ],
+            [
+              2.0732,
+              -0.5302,
+              0.999
+            ]
+          ],
+          "volume": 0.01469,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/livingroom_4/trajectory_q5.ply",
+        "n_vertices": 889,
+        "length_m": 10.094,
+        "z": 0.75,
+        "start": [
+          -0.009,
+          -0.005
+        ],
+        "end": [
+          -3.171,
+          0.609
+        ],
+        "polyline": [
+          [
+            -0.009,
+            -0.005
+          ],
+          [
+            -0.112,
+            -0.239
+          ],
+          [
+            -0.152,
+            -0.486
+          ],
+          [
+            -0.176,
+            -0.739
+          ],
+          [
+            -0.207,
+            -0.989
+          ],
+          [
+            -0.267,
+            -1.242
+          ],
+          [
+            -0.342,
+            -1.491
+          ],
+          [
+            -0.391,
+            -1.745
+          ],
+          [
+            -0.416,
+            -2.0
+          ],
+          [
+            -0.441,
+            -2.25
+          ],
+          [
+            -0.488,
+            -2.504
+          ],
+          [
+            -0.54,
+            -2.753
+          ],
+          [
+            -0.645,
+            -2.984
+          ],
+          [
+            -0.765,
+            -3.209
+          ],
+          [
+            -0.903,
+            -3.428
+          ],
+          [
+            -1.063,
+            -3.628
+          ],
+          [
+            -1.294,
+            -3.742
+          ],
+          [
+            -1.546,
+            -3.802
+          ],
+          [
+            -1.798,
+            -3.815
+          ],
+          [
+            -2.044,
+            -3.771
+          ],
+          [
+            -2.293,
+            -3.698
+          ],
+          [
+            -2.521,
+            -3.588
+          ],
+          [
+            -2.716,
+            -3.43
+          ],
+          [
+            -2.899,
+            -3.245
+          ],
+          [
+            -3.054,
+            -3.047
+          ],
+          [
+            -3.191,
+            -2.827
+          ],
+          [
+            -3.302,
+            -2.591
+          ],
+          [
+            -3.386,
+            -2.345
+          ],
+          [
+            -3.463,
+            -2.099
+          ],
+          [
+            -3.539,
+            -1.857
+          ],
+          [
+            -3.626,
+            -1.617
+          ],
+          [
+            -3.601,
+            -1.367
+          ],
+          [
+            -3.542,
+            -1.122
+          ],
+          [
+            -3.476,
+            -0.878
+          ],
+          [
+            -3.411,
+            -0.636
+          ],
+          [
+            -3.346,
+            -0.393
+          ],
+          [
+            -3.281,
+            -0.147
+          ],
+          [
+            -3.216,
+            0.101
+          ],
+          [
+            -3.18,
+            0.352
+          ],
+          [
+            -3.171,
+            0.609
+          ]
+        ]
+      },
+      "evidence": "Demo path passes fireplace at 0.65 m (43% along), then window at 0.88 m (79% along), and ends 0.77 m from chair.",
+      "solver_trace": [
+        "head='fireplace' color='' hops=[]",
+        "head candidates: [fireplace#112]",
+        "head='window' color='' hops=[{'relation': 'closest', 'phrases': ['bookcase']}]",
+        "head candidates: [window#35, window#36, window#76, window#77, window#101, window#102] ...",
+        "target hop (closest): closest: ranked [window#77, window#76, window#102]",
+        "pick: closest by centre is a tie: window#77 1.85 m vs window#76 1.99 m",
+        "head='chair' color='' hops=[{'relation': 'farthest', 'phrases': ['mirror']}]",
+        "head candidates: [chair#48, chair#81, chair#97, chair#104, chair#106, chair#118]",
+        "target hop (farthest): farthest: ranked [chair#48, chair#97, chair#118]",
+        "pick: farthest: centre 5.47 m (next 5.03 m); box-gap 4.96 m (next 4.44 m)"
+      ],
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,1236 @@
+{
+  "scene": "hotel_room_1",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "bed",
+    "bedside table",
+    "bench",
+    "chair",
+    "picture",
+    "tv",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go to the bedside table closest to the window and stop at the chair closest to the TV.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "bedside table",
+        "window",
+        "chair",
+        "tv"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the bedside table closest to the window",
+            "label": "bedside table",
+            "object_ids": [
+              "85"
+            ],
+            "anchor_ids": [
+              "58"
+            ],
+            "center": [
+              3.5303,
+              -3.7011
+            ],
+            "radius": 1.5,
+            "traj_index": 460,
+            "traj_frac": 0.641,
+            "min_dist_m": 1.061,
+            "why": "closest: centre 4.18 m (next 7.12 m); box-gap 1.91 m (next 5.77 m)",
+            "anchor_why": "closest 'window': window#58 is the only one"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the chair closest to the tv",
+          "label": "chair",
+          "object_ids": [
+            "15"
+          ],
+          "anchor_ids": [
+            "10"
+          ],
+          "center": [
+            -0.8552,
+            -2.0344
+          ],
+          "radius": 1.5,
+          "traj_index": 718,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.972,
+          "why": "closest: centre 1.43 m (next 4.98 m); box-gap 0.64 m (next 3.75 m)",
+          "anchor_why": "closest 'tv': tv#10 is the only one"
+        }
+      },
+      "objects": {
+        "85": {
+          "object_id": "85",
+          "region": "2",
+          "label": "bedside table",
+          "raw_label": "bedside table",
+          "nyu_label": "night stand",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            3.5303,
+            -3.7011,
+            0.3238
+          ],
+          "size": [
+            0.8722,
+            0.7946,
+            0.6507
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              3.0942,
+              -4.0985,
+              -0.0015
+            ],
+            "max": [
+              3.9664,
+              -3.3038,
+              0.6492
+            ]
+          },
+          "size_aabb": [
+            0.8722,
+            0.7947,
+            0.6507
+          ],
+          "bbox_corners": [
+            [
+              3.9664,
+              -4.0985,
+              0.6492
+            ],
+            [
+              3.0942,
+              -4.0985,
+              0.6492
+            ],
+            [
+              3.0942,
+              -3.3038,
+              0.6492
+            ],
+            [
+              3.9664,
+              -3.3038,
+              0.6492
+            ],
+            [
+              3.9664,
+              -4.0985,
+              -0.0015
+            ],
+            [
+              3.0942,
+              -4.0985,
+              -0.0015
+            ],
+            [
+              3.0942,
+              -3.3038,
+              -0.0015
+            ],
+            [
+              3.9664,
+              -3.3038,
+              -0.0015
+            ]
+          ],
+          "volume": 0.451,
+          "role": "constraint"
+        },
+        "58": {
+          "object_id": "58",
+          "region": "2",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            0.3286,
+            -6.047,
+            1.6189
+          ],
+          "size": [
+            4.9288,
+            0.1324,
+            2.8421
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.1358,
+              -6.1132,
+              0.1978
+            ],
+            "max": [
+              2.793,
+              -5.9808,
+              3.04
+            ]
+          },
+          "size_aabb": [
+            4.9288,
+            0.1324,
+            2.8421
+          ],
+          "bbox_corners": [
+            [
+              2.793,
+              -6.1132,
+              3.04
+            ],
+            [
+              -2.1358,
+              -6.1132,
+              3.04
+            ],
+            [
+              -2.1358,
+              -5.9808,
+              3.04
+            ],
+            [
+              2.793,
+              -5.9808,
+              3.04
+            ],
+            [
+              2.793,
+              -6.1132,
+              0.1978
+            ],
+            [
+              -2.1358,
+              -6.1132,
+              0.1978
+            ],
+            [
+              -2.1358,
+              -5.9808,
+              0.1978
+            ],
+            [
+              2.793,
+              -5.9808,
+              0.1978
+            ]
+          ],
+          "volume": 1.85444,
+          "role": "reference"
+        },
+        "15": {
+          "object_id": "15",
+          "region": "2",
+          "label": "chair",
+          "raw_label": "chair",
+          "nyu_label": "chair",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -0.8552,
+            -2.0344,
+            0.5795
+          ],
+          "size": [
+            0.5538,
+            0.7193,
+            1.162
+          ],
+          "yaw": 1.5772,
+          "aabb": {
+            "min": [
+              -1.2166,
+              -2.3136,
+              -0.0015
+            ],
+            "max": [
+              -0.4937,
+              -1.7552,
+              1.1605
+            ]
+          },
+          "size_aabb": [
+            0.7229,
+            0.5584,
+            1.162
+          ],
+          "bbox_corners": [
+            [
+              -1.2131,
+              -2.3136,
+              1.1605
+            ],
+            [
+              -1.2166,
+              -1.7598,
+              1.1605
+            ],
+            [
+              -0.4973,
+              -1.7552,
+              1.1605
+            ],
+            [
+              -0.4937,
+              -2.309,
+              1.1605
+            ],
+            [
+              -1.2131,
+              -2.3136,
+              -0.0015
+            ],
+            [
+              -1.2166,
+              -1.7598,
+              -0.0015
+            ],
+            [
+              -0.4973,
+              -1.7552,
+              -0.0015
+            ],
+            [
+              -0.4937,
+              -2.309,
+              -0.0015
+            ]
+          ],
+          "volume": 0.46289,
+          "role": "constraint"
+        },
+        "10": {
+          "object_id": "10",
+          "region": "2",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -1.8892,
+            -1.708,
+            1.508
+          ],
+          "size": [
+            0.8487,
+            0.0595,
+            0.6379
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.9189,
+              -2.1324,
+              1.1891
+            ],
+            "max": [
+              -1.8594,
+              -1.2837,
+              1.827
+            ]
+          },
+          "size_aabb": [
+            0.0595,
+            0.8487,
+            0.6379
+          ],
+          "bbox_corners": [
+            [
+              -1.8594,
+              -1.2837,
+              1.827
+            ],
+            [
+              -1.8594,
+              -2.1324,
+              1.827
+            ],
+            [
+              -1.9189,
+              -2.1324,
+              1.827
+            ],
+            [
+              -1.9189,
+              -1.2837,
+              1.827
+            ],
+            [
+              -1.8594,
+              -1.2837,
+              1.1891
+            ],
+            [
+              -1.8594,
+              -2.1324,
+              1.1891
+            ],
+            [
+              -1.9189,
+              -2.1324,
+              1.1891
+            ],
+            [
+              -1.9189,
+              -1.2837,
+              1.1891
+            ]
+          ],
+          "volume": 0.03223,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/hotel_room_1/trajectory_q4.ply",
+        "n_vertices": 719,
+        "length_m": 8.231,
+        "z": 0.75,
+        "start": [
+          0.005,
+          -0.01
+        ],
+        "end": [
+          -0.031,
+          -2.551
+        ],
+        "polyline": [
+          [
+            0.005,
+            -0.01
+          ],
+          [
+            0.073,
+            -0.259
+          ],
+          [
+            0.131,
+            -0.512
+          ],
+          [
+            0.17,
+            -0.769
+          ],
+          [
+            0.199,
+            -1.018
+          ],
+          [
+            0.212,
+            -1.278
+          ],
+          [
+            0.223,
+            -1.535
+          ],
+          [
+            0.244,
+            -1.784
+          ],
+          [
+            0.282,
+            -2.041
+          ],
+          [
+            0.32,
+            -2.294
+          ],
+          [
+            0.371,
+            -2.539
+          ],
+          [
+            0.472,
+            -2.774
+          ],
+          [
+            0.612,
+            -2.993
+          ],
+          [
+            0.787,
+            -3.182
+          ],
+          [
+            0.974,
+            -3.35
+          ],
+          [
+            1.178,
+            -3.497
+          ],
+          [
+            1.398,
+            -3.621
+          ],
+          [
+            1.629,
+            -3.718
+          ],
+          [
+            1.879,
+            -3.796
+          ],
+          [
+            2.124,
+            -3.87
+          ],
+          [
+            2.372,
+            -3.945
+          ],
+          [
+            2.133,
+            -3.857
+          ],
+          [
+            1.891,
+            -3.79
+          ],
+          [
+            1.647,
+            -3.722
+          ],
+          [
+            1.402,
+            -3.635
+          ],
+          [
+            1.172,
+            -3.522
+          ],
+          [
+            0.955,
+            -3.391
+          ],
+          [
+            0.743,
+            -3.256
+          ],
+          [
+            0.539,
+            -3.107
+          ],
+          [
+            0.336,
+            -2.943
+          ],
+          [
+            0.155,
+            -2.761
+          ],
+          [
+            -0.018,
+            -2.568
+          ],
+          [
+            -0.031,
+            -2.551
+          ]
+        ]
+      },
+      "evidence": "Demo path passes bedside table at 1.06 m (64% along), and ends 0.97 m from chair.",
+      "solver_trace": [
+        "head='bedside table' color='' hops=[{'relation': 'closest', 'phrases': ['window']}]",
+        "head candidates: [bedside table#72, bedside table#85]",
+        "target hop (closest): closest: ranked [bedside table#85, bedside table#72]",
+        "pick: closest: centre 4.18 m (next 7.12 m); box-gap 1.91 m (next 5.77 m)",
+        "head='chair' color='' hops=[{'relation': 'closest', 'phrases': ['tv']}]",
+        "head candidates: [chair#15, chair#36]",
+        "target hop (closest): closest: ranked [chair#15, chair#36]",
+        "pick: closest: centre 1.43 m (next 4.98 m); box-gap 0.64 m (next 3.75 m)"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go near the bedside table closest to the bench, then take the path between the TV and the bed to the picture closest to the TV.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "bedside table",
+        "bench",
+        "tv",
+        "bed",
+        "picture"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the bedside table closest to the bench",
+            "label": "bedside table",
+            "object_ids": [
+              "72"
+            ],
+            "anchor_ids": [
+              "81"
+            ],
+            "center": [
+              3.5303,
+              0.181
+            ],
+            "radius": 1.5,
+            "traj_index": 246,
+            "traj_frac": 0.383,
+            "min_dist_m": 0.795,
+            "why": "closest: centre 1.98 m (next 5.38 m); box-gap 0.54 m (next 4.40 m)",
+            "anchor_why": "closest 'bench': bench#81 is the only one"
+          },
+          {
+            "kind": "pass_between",
+            "phrase": "the tv and the bed",
+            "label": "tv, bed",
+            "object_ids": [
+              "10",
+              "11"
+            ],
+            "anchor_ids": [],
+            "center": [
+              0.2827,
+              -1.735
+            ],
+            "radius": 1.5,
+            "traj_index": 507,
+            "traj_frac": 0.788,
+            "min_dist_m": 0.065,
+            "why": "unique by class; unique by class"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the picture closest to the tv",
+          "label": "picture",
+          "object_ids": [
+            "6"
+          ],
+          "anchor_ids": [
+            "10"
+          ],
+          "center": [
+            -1.9112,
+            -3.0735
+          ],
+          "radius": 1.55,
+          "traj_index": 643,
+          "traj_frac": 1.0,
+          "min_dist_m": 1.293,
+          "why": "closest: centre 1.38 m (next 1.85 m); box-gap 0.75 m (next 1.09 m)",
+          "anchor_why": "closest 'tv': tv#10 is the only one",
+          "radius_source": "widened from 1.5 m: the demo's own closest approach is 1.29 m, so a tighter radius would fail the reference run"
+        }
+      },
+      "objects": {
+        "72": {
+          "object_id": "72",
+          "region": "2",
+          "label": "bedside table",
+          "raw_label": "bedside table",
+          "nyu_label": "night stand",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            3.5303,
+            0.181,
+            0.3238
+          ],
+          "size": [
+            0.8723,
+            0.7947,
+            0.6507
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              3.0942,
+              -0.2163,
+              -0.0015
+            ],
+            "max": [
+              3.9664,
+              0.5783,
+              0.6492
+            ]
+          },
+          "size_aabb": [
+            0.8723,
+            0.7947,
+            0.6507
+          ],
+          "bbox_corners": [
+            [
+              3.9664,
+              -0.2163,
+              0.6492
+            ],
+            [
+              3.0942,
+              -0.2163,
+              0.6492
+            ],
+            [
+              3.0942,
+              0.5783,
+              0.6492
+            ],
+            [
+              3.9664,
+              0.5783,
+              0.6492
+            ],
+            [
+              3.9664,
+              -0.2163,
+              -0.0015
+            ],
+            [
+              3.0942,
+              -0.2163,
+              -0.0015
+            ],
+            [
+              3.0942,
+              0.5783,
+              -0.0015
+            ],
+            [
+              3.9664,
+              0.5783,
+              -0.0015
+            ]
+          ],
+          "volume": 0.45102,
+          "role": "constraint"
+        },
+        "81": {
+          "object_id": "81",
+          "region": "2",
+          "label": "bench",
+          "raw_label": "bench",
+          "nyu_label": "bench",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.029,
+            1.4696,
+            0.2627
+          ],
+          "size": [
+            1.7898,
+            0.7488,
+            0.5284
+          ],
+          "yaw": -0.0007,
+          "aabb": {
+            "min": [
+              1.1338,
+              1.0946,
+              -0.0015
+            ],
+            "max": [
+              2.9241,
+              1.8446,
+              0.5269
+            ]
+          },
+          "size_aabb": [
+            1.7903,
+            0.75,
+            0.5284
+          ],
+          "bbox_corners": [
+            [
+              1.1343,
+              1.8446,
+              0.5269
+            ],
+            [
+              2.9241,
+              1.8433,
+              0.5269
+            ],
+            [
+              2.9236,
+              1.0946,
+              0.5269
+            ],
+            [
+              1.1338,
+              1.0958,
+              0.5269
+            ],
+            [
+              1.1343,
+              1.8446,
+              -0.0015
+            ],
+            [
+              2.9241,
+              1.8433,
+              -0.0015
+            ],
+            [
+              2.9236,
+              1.0946,
+              -0.0015
+            ],
+            [
+              1.1338,
+              1.0958,
+              -0.0015
+            ]
+          ],
+          "volume": 0.70816,
+          "role": "reference"
+        },
+        "10": {
+          "object_id": "10",
+          "region": "2",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -1.8892,
+            -1.708,
+            1.508
+          ],
+          "size": [
+            0.8487,
+            0.0595,
+            0.6379
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.9189,
+              -2.1324,
+              1.1891
+            ],
+            "max": [
+              -1.8594,
+              -1.2837,
+              1.827
+            ]
+          },
+          "size_aabb": [
+            0.0595,
+            0.8487,
+            0.6379
+          ],
+          "bbox_corners": [
+            [
+              -1.8594,
+              -1.2837,
+              1.827
+            ],
+            [
+              -1.8594,
+              -2.1324,
+              1.827
+            ],
+            [
+              -1.9189,
+              -2.1324,
+              1.827
+            ],
+            [
+              -1.9189,
+              -1.2837,
+              1.827
+            ],
+            [
+              -1.8594,
+              -1.2837,
+              1.1891
+            ],
+            [
+              -1.8594,
+              -2.1324,
+              1.1891
+            ],
+            [
+              -1.9189,
+              -2.1324,
+              1.1891
+            ],
+            [
+              -1.9189,
+              -1.2837,
+              1.1891
+            ]
+          ],
+          "volume": 0.03223,
+          "role": "constraint"
+        },
+        "11": {
+          "object_id": "11",
+          "region": "2",
+          "label": "bed",
+          "raw_label": "bed",
+          "nyu_label": "bed",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            2.4545,
+            -1.762,
+            0.8696
+          ],
+          "size": [
+            2.544,
+            2.582,
+            1.7332
+          ],
+          "yaw": -1.5684,
+          "aabb": {
+            "min": [
+              1.1605,
+              -3.037,
+              0.003
+            ],
+            "max": [
+              3.7485,
+              -0.4869,
+              1.7362
+            ]
+          },
+          "size_aabb": [
+            2.588,
+            2.5501,
+            1.7332
+          ],
+          "bbox_corners": [
+            [
+              3.7425,
+              -0.4869,
+              1.7362
+            ],
+            [
+              3.7485,
+              -3.0309,
+              1.7362
+            ],
+            [
+              1.1666,
+              -3.037,
+              1.7362
+            ],
+            [
+              1.1605,
+              -0.4931,
+              1.7362
+            ],
+            [
+              3.7425,
+              -0.4869,
+              0.003
+            ],
+            [
+              3.7485,
+              -3.0309,
+              0.003
+            ],
+            [
+              1.1666,
+              -3.037,
+              0.003
+            ],
+            [
+              1.1605,
+              -0.4931,
+              0.003
+            ]
+          ],
+          "volume": 11.38478,
+          "role": "constraint"
+        },
+        "6": {
+          "object_id": "6",
+          "region": "2",
+          "label": "picture",
+          "raw_label": "picture",
+          "nyu_label": "picture",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            -1.9112,
+            -3.0735,
+            1.6922
+          ],
+          "size": [
+            0.3897,
+            0.0155,
+            0.4547
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -1.919,
+              -3.2684,
+              1.4648
+            ],
+            "max": [
+              -1.9035,
+              -2.8787,
+              1.9195
+            ]
+          },
+          "size_aabb": [
+            0.0155,
+            0.3897,
+            0.4547
+          ],
+          "bbox_corners": [
+            [
+              -1.9189,
+              -3.2684,
+              1.9195
+            ],
+            [
+              -1.919,
+              -2.8787,
+              1.9195
+            ],
+            [
+              -1.9035,
+              -2.8787,
+              1.9195
+            ],
+            [
+              -1.9035,
+              -3.2684,
+              1.9195
+            ],
+            [
+              -1.9189,
+              -3.2684,
+              1.4648
+            ],
+            [
+              -1.919,
+              -2.8787,
+              1.4648
+            ],
+            [
+              -1.9035,
+              -2.8787,
+              1.4648
+            ],
+            [
+              -1.9035,
+              -3.2684,
+              1.4648
+            ]
+          ],
+          "volume": 0.00274,
+          "role": "constraint"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/hotel_room_1/trajectory_q5.ply",
+        "n_vertices": 644,
+        "length_m": 8.505,
+        "z": 0.75,
+        "start": [
+          0.01,
+          0.0
+        ],
+        "end": [
+          -0.701,
+          -3.53
+        ],
+        "polyline": [
+          [
+            0.01,
+            0.0
+          ],
+          [
+            0.268,
+            0.032
+          ],
+          [
+            0.524,
+            0.074
+          ],
+          [
+            0.779,
+            0.116
+          ],
+          [
+            1.03,
+            0.157
+          ],
+          [
+            1.28,
+            0.197
+          ],
+          [
+            1.532,
+            0.238
+          ],
+          [
+            1.787,
+            0.28
+          ],
+          [
+            2.041,
+            0.321
+          ],
+          [
+            2.294,
+            0.363
+          ],
+          [
+            2.55,
+            0.404
+          ],
+          [
+            2.309,
+            0.31
+          ],
+          [
+            2.066,
+            0.242
+          ],
+          [
+            1.815,
+            0.194
+          ],
+          [
+            1.573,
+            0.127
+          ],
+          [
+            1.335,
+            0.021
+          ],
+          [
+            1.136,
+            -0.135
+          ],
+          [
+            0.952,
+            -0.322
+          ],
+          [
+            0.809,
+            -0.529
+          ],
+          [
+            0.689,
+            -0.768
+          ],
+          [
+            0.59,
+            -1.003
+          ],
+          [
+            0.492,
+            -1.238
+          ],
+          [
+            0.418,
+            -1.5
+          ],
+          [
+            0.346,
+            -1.749
+          ],
+          [
+            0.242,
+            -1.987
+          ],
+          [
+            0.123,
+            -2.215
+          ],
+          [
+            0.002,
+            -2.447
+          ],
+          [
+            -0.12,
+            -2.681
+          ],
+          [
+            -0.263,
+            -2.906
+          ],
+          [
+            -0.407,
+            -3.124
+          ],
+          [
+            -0.544,
+            -3.333
+          ],
+          [
+            -0.701,
+            -3.53
+          ]
+        ]
+      },
+      "evidence": "Demo path passes bedside table at 0.80 m (38% along), then tv, bed at 0.07 m (79% along), and ends 1.29 m from picture.",
+      "solver_trace": [
+        "head='bedside table' color='' hops=[{'relation': 'closest', 'phrases': ['bench']}]",
+        "head candidates: [bedside table#72, bedside table#85]",
+        "target hop (closest): closest: ranked [bedside table#72, bedside table#85]",
+        "pick: closest: centre 1.98 m (next 5.38 m); box-gap 0.54 m (next 4.40 m)",
+        "head='tv' color='' hops=[]",
+        "head candidates: [tv#10]",
+        "head='bed' color='' hops=[]",
+        "head candidates: [bed#11]",
+        "head='picture' color='' hops=[{'relation': 'closest', 'phrases': ['tv']}]",
+        "head candidates: [picture#6, picture#19]",
+        "target hop (closest): closest: ranked [picture#6, picture#19]",
+        "pick: closest: centre 1.38 m (next 1.85 m); box-gap 0.75 m (next 1.09 m)"
+      ],
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,1250 @@
+{
+  "scene": "hotel_room_2",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "bed",
+    "bench",
+    "curtain",
+    "door frame",
+    "fireplace",
+    "lamp",
+    "picture",
+    "tv",
+    "tv cabinet"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go between the bench and the bed and stop at the lamp closest to the fireplace.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "bench",
+        "bed",
+        "lamp",
+        "fireplace"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_between",
+            "phrase": "the bench and the bed",
+            "label": "bench, bed",
+            "object_ids": [
+              "61",
+              "57"
+            ],
+            "anchor_ids": [],
+            "center": [
+              -0.7281,
+              1.4503
+            ],
+            "radius": 1.5,
+            "traj_index": 146,
+            "traj_frac": 0.948,
+            "min_dist_m": 0.049,
+            "why": "unique by class; unique by class"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the lamp closest to the fireplace",
+          "label": "lamp",
+          "object_ids": [
+            "92"
+          ],
+          "anchor_ids": [
+            "40"
+          ],
+          "center": [
+            -0.7025,
+            2.2457
+          ],
+          "radius": 1.5,
+          "traj_index": 154,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.706,
+          "why": "closest: centre 1.58 m (next 3.70 m); box-gap 1.10 m (next 3.36 m)",
+          "anchor_why": "closest 'fireplace': fireplace#40 is the only one"
+        }
+      },
+      "objects": {
+        "61": {
+          "object_id": "61",
+          "region": "1",
+          "label": "bench",
+          "raw_label": "bench",
+          "nyu_label": "bench",
+          "colors": [
+            "brown",
+            "gray",
+            "black"
+          ],
+          "center": [
+            0.4024,
+            1.4037,
+            0.1735
+          ],
+          "size": [
+            1.1778,
+            0.4096,
+            0.3572
+          ],
+          "yaw": 1.5733,
+          "aabb": {
+            "min": [
+              0.1961,
+              0.8143,
+              -0.0051
+            ],
+            "max": [
+              0.6087,
+              1.9931,
+              0.3522
+            ]
+          },
+          "size_aabb": [
+            0.4126,
+            1.1788,
+            0.3572
+          ],
+          "bbox_corners": [
+            [
+              0.1991,
+              0.8143,
+              0.3522
+            ],
+            [
+              0.1961,
+              1.9921,
+              0.3522
+            ],
+            [
+              0.6057,
+              1.9931,
+              0.3522
+            ],
+            [
+              0.6087,
+              0.8153,
+              0.3522
+            ],
+            [
+              0.1991,
+              0.8143,
+              -0.0051
+            ],
+            [
+              0.1961,
+              1.9921,
+              -0.0051
+            ],
+            [
+              0.6057,
+              1.9931,
+              -0.0051
+            ],
+            [
+              0.6087,
+              0.8153,
+              -0.0051
+            ]
+          ],
+          "volume": 0.17235,
+          "role": "constraint"
+        },
+        "57": {
+          "object_id": "57",
+          "region": "1",
+          "label": "bed",
+          "raw_label": "bed",
+          "nyu_label": "bed",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.8587,
+            1.4968,
+            0.3278
+          ],
+          "size": [
+            1.5941,
+            1.7932,
+            0.2754
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.6557,
+              0.6002,
+              0.1901
+            ],
+            "max": [
+              -1.0616,
+              2.3935,
+              0.4655
+            ]
+          },
+          "size_aabb": [
+            1.5941,
+            1.7932,
+            0.2754
+          ],
+          "bbox_corners": [
+            [
+              -1.0616,
+              0.6002,
+              0.4655
+            ],
+            [
+              -2.6557,
+              0.6002,
+              0.4655
+            ],
+            [
+              -2.6557,
+              2.3935,
+              0.4655
+            ],
+            [
+              -1.0616,
+              2.3935,
+              0.4655
+            ],
+            [
+              -1.0616,
+              0.6002,
+              0.1901
+            ],
+            [
+              -2.6557,
+              0.6002,
+              0.1901
+            ],
+            [
+              -2.6557,
+              2.3935,
+              0.1901
+            ],
+            [
+              -1.0616,
+              2.3935,
+              0.1901
+            ]
+          ],
+          "volume": 0.78728,
+          "role": "constraint"
+        },
+        "92": {
+          "object_id": "92",
+          "region": "1",
+          "label": "lamp",
+          "raw_label": "lamp",
+          "nyu_label": "lamp",
+          "colors": [
+            "gray",
+            "aqua"
+          ],
+          "center": [
+            -0.7025,
+            2.2457,
+            0.6205
+          ],
+          "size": [
+            0.2814,
+            0.2814,
+            0.5008
+          ],
+          "yaw": 1.8192,
+          "aabb": {
+            "min": [
+              -0.8735,
+              2.0747,
+              0.3702
+            ],
+            "max": [
+              -0.5315,
+              2.4167,
+              0.8709
+            ]
+          },
+          "size_aabb": [
+            0.342,
+            0.342,
+            0.5008
+          ],
+          "bbox_corners": [
+            [
+              -0.8043,
+              2.0747,
+              0.8709
+            ],
+            [
+              -0.8735,
+              2.3475,
+              0.8709
+            ],
+            [
+              -0.6007,
+              2.4167,
+              0.8709
+            ],
+            [
+              -0.5315,
+              2.1439,
+              0.8709
+            ],
+            [
+              -0.8043,
+              2.0747,
+              0.3702
+            ],
+            [
+              -0.8735,
+              2.3475,
+              0.3702
+            ],
+            [
+              -0.6007,
+              2.4167,
+              0.3702
+            ],
+            [
+              -0.5315,
+              2.1439,
+              0.3702
+            ]
+          ],
+          "volume": 0.03966,
+          "role": "constraint"
+        },
+        "40": {
+          "object_id": "40",
+          "region": "1",
+          "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            0.5935,
+            1.4137,
+            0.9555
+          ],
+          "size": [
+            1.087,
+            0.0678,
+            0.4648
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              0.5596,
+              0.8702,
+              0.7231
+            ],
+            "max": [
+              0.6274,
+              1.9572,
+              1.188
+            ]
+          },
+          "size_aabb": [
+            0.0678,
+            1.087,
+            0.4648
+          ],
+          "bbox_corners": [
+            [
+              0.5596,
+              0.8702,
+              1.188
+            ],
+            [
+              0.5596,
+              1.9572,
+              1.188
+            ],
+            [
+              0.6274,
+              1.9572,
+              1.188
+            ],
+            [
+              0.6274,
+              0.8702,
+              1.188
+            ],
+            [
+              0.5596,
+              0.8702,
+              0.7231
+            ],
+            [
+              0.5596,
+              1.9572,
+              0.7231
+            ],
+            [
+              0.6274,
+              1.9572,
+              0.7231
+            ],
+            [
+              0.6274,
+              0.8702,
+              0.7231
+            ]
+          ],
+          "volume": 0.03426,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/hotel_room_2/trajectory_q4.ply",
+        "n_vertices": 155,
+        "length_m": 1.727,
+        "z": 0.75,
+        "start": [
+          -0.008,
+          0.007
+        ],
+        "end": [
+          -0.699,
+          1.54
+        ],
+        "polyline": [
+          [
+            -0.008,
+            0.007
+          ],
+          [
+            -0.198,
+            0.182
+          ],
+          [
+            -0.358,
+            0.38
+          ],
+          [
+            -0.465,
+            0.615
+          ],
+          [
+            -0.545,
+            0.863
+          ],
+          [
+            -0.601,
+            1.109
+          ],
+          [
+            -0.658,
+            1.361
+          ],
+          [
+            -0.699,
+            1.54
+          ]
+        ]
+      },
+      "evidence": "Demo path passes bench, bed at 0.05 m (95% along), and ends 0.71 m from lamp.",
+      "solver_trace": [
+        "head='bench' color='' hops=[]",
+        "head candidates: [bench#61]",
+        "head='bed' color='' hops=[]",
+        "head candidates: [bed#57]",
+        "head='lamp' color='' hops=[{'relation': 'closest', 'phrases': ['fireplace']}]",
+        "head candidates: [lamp#10, lamp#92]",
+        "target hop (closest): closest: ranked [lamp#92, lamp#10]",
+        "pick: closest: centre 1.58 m (next 3.70 m); box-gap 1.10 m (next 3.36 m)"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go to the picture closest to the door, then take the path between the TV cabinet and the bed, and stop by the curtain closest to the TV.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "picture",
+        "door frame",
+        "tv cabinet",
+        "bed",
+        "curtain",
+        "tv"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the picture closest to the door",
+            "label": "picture",
+            "object_ids": [
+              "31"
+            ],
+            "anchor_ids": [
+              "19"
+            ],
+            "center": [
+              -1.2265,
+              2.4677
+            ],
+            "radius": 2.9,
+            "traj_index": 625,
+            "traj_frac": 0.741,
+            "min_dist_m": 2.641,
+            "why": "closest: centre 4.19 m (next 4.73 m); box-gap 3.54 m (next 4.06 m)",
+            "anchor_why": "closest 'door': door frame#19 is the only one",
+            "radius_source": "widened from 1.5 m: the demo's own closest approach is 2.64 m, so a tighter radius would fail the reference run"
+          },
+          {
+            "kind": "pass_between",
+            "phrase": "the tv cabinet and the bed",
+            "label": "tv cabinet, bed",
+            "object_ids": [
+              "72",
+              "57"
+            ],
+            "anchor_ids": [],
+            "center": [
+              -1.686,
+              0.2333
+            ],
+            "radius": 1.5,
+            "traj_index": 649,
+            "traj_frac": 0.769,
+            "min_dist_m": 0.392,
+            "why": "text was indecisive (resolves in more than one region: 0->sink cabinet#43, 1->tv cabinet#72); the demo picks tv cabinet#72 at 0.87 m; unique by class"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the curtain closest to the tv",
+          "label": "curtain",
+          "object_ids": [
+            "45"
+          ],
+          "anchor_ids": [
+            "62"
+          ],
+          "center": [
+            -4.4163,
+            -0.8613
+          ],
+          "radius": 1.5,
+          "traj_index": 844,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.623,
+          "why": "closest: centre 2.46 m (next 4.14 m); box-gap 1.86 m (next 3.47 m)",
+          "anchor_why": "closest 'tv': tv#62 is the only one"
+        }
+      },
+      "objects": {
+        "31": {
+          "object_id": "31",
+          "region": "1",
+          "label": "picture",
+          "raw_label": "picture",
+          "nyu_label": "picture",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            -1.2265,
+            2.4677,
+            1.3075
+          ],
+          "size": [
+            0.4043,
+            0.0081,
+            0.6026
+          ],
+          "yaw": -0.0,
+          "aabb": {
+            "min": [
+              -1.4286,
+              2.4637,
+              1.0062
+            ],
+            "max": [
+              -1.0244,
+              2.4717,
+              1.6088
+            ]
+          },
+          "size_aabb": [
+            0.4043,
+            0.0081,
+            0.6026
+          ],
+          "bbox_corners": [
+            [
+              -1.4286,
+              2.4717,
+              1.6088
+            ],
+            [
+              -1.0244,
+              2.4717,
+              1.6088
+            ],
+            [
+              -1.0244,
+              2.4637,
+              1.6088
+            ],
+            [
+              -1.4286,
+              2.4637,
+              1.6088
+            ],
+            [
+              -1.4286,
+              2.4717,
+              1.0062
+            ],
+            [
+              -1.0244,
+              2.4717,
+              1.0062
+            ],
+            [
+              -1.0244,
+              2.4637,
+              1.0062
+            ],
+            [
+              -1.4286,
+              2.4637,
+              1.0062
+            ]
+          ],
+          "volume": 0.00196,
+          "role": "constraint"
+        },
+        "19": {
+          "object_id": "19",
+          "region": "0",
+          "label": "door frame",
+          "raw_label": "door frame",
+          "nyu_label": "door frame",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            2.4645,
+            0.4952,
+            1.0691
+          ],
+          "size": [
+            1.0043,
+            0.1296,
+            2.1511
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              1.9624,
+              0.4304,
+              -0.0065
+            ],
+            "max": [
+              2.9666,
+              0.56,
+              2.1447
+            ]
+          },
+          "size_aabb": [
+            1.0043,
+            0.1296,
+            2.1511
+          ],
+          "bbox_corners": [
+            [
+              2.9666,
+              0.4304,
+              2.1447
+            ],
+            [
+              1.9624,
+              0.4304,
+              2.1447
+            ],
+            [
+              1.9624,
+              0.56,
+              2.1447
+            ],
+            [
+              2.9666,
+              0.56,
+              2.1447
+            ],
+            [
+              2.9666,
+              0.4304,
+              -0.0065
+            ],
+            [
+              1.9624,
+              0.4304,
+              -0.0065
+            ],
+            [
+              1.9624,
+              0.56,
+              -0.0065
+            ],
+            [
+              2.9666,
+              0.56,
+              -0.0065
+            ]
+          ],
+          "volume": 0.27995,
+          "role": "reference"
+        },
+        "72": {
+          "object_id": "72",
+          "region": "1",
+          "label": "tv cabinet",
+          "raw_label": "tv cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -1.5133,
+            -1.0303,
+            0.3702
+          ],
+          "size": [
+            2.8009,
+            0.5179,
+            0.7534
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              -2.9138,
+              -1.2892,
+              -0.0065
+            ],
+            "max": [
+              -0.1129,
+              -0.7714,
+              0.7469
+            ]
+          },
+          "size_aabb": [
+            2.8009,
+            0.5179,
+            0.7534
+          ],
+          "bbox_corners": [
+            [
+              -2.9138,
+              -0.7714,
+              0.7469
+            ],
+            [
+              -0.1129,
+              -0.7714,
+              0.7469
+            ],
+            [
+              -0.1129,
+              -1.2892,
+              0.7469
+            ],
+            [
+              -2.9138,
+              -1.2892,
+              0.7469
+            ],
+            [
+              -2.9138,
+              -0.7714,
+              -0.0065
+            ],
+            [
+              -0.1129,
+              -0.7714,
+              -0.0065
+            ],
+            [
+              -0.1129,
+              -1.2892,
+              -0.0065
+            ],
+            [
+              -2.9138,
+              -1.2892,
+              -0.0065
+            ]
+          ],
+          "volume": 1.09275,
+          "role": "constraint"
+        },
+        "57": {
+          "object_id": "57",
+          "region": "1",
+          "label": "bed",
+          "raw_label": "bed",
+          "nyu_label": "bed",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.8587,
+            1.4968,
+            0.3278
+          ],
+          "size": [
+            1.5941,
+            1.7932,
+            0.2754
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.6557,
+              0.6002,
+              0.1901
+            ],
+            "max": [
+              -1.0616,
+              2.3935,
+              0.4655
+            ]
+          },
+          "size_aabb": [
+            1.5941,
+            1.7932,
+            0.2754
+          ],
+          "bbox_corners": [
+            [
+              -1.0616,
+              0.6002,
+              0.4655
+            ],
+            [
+              -2.6557,
+              0.6002,
+              0.4655
+            ],
+            [
+              -2.6557,
+              2.3935,
+              0.4655
+            ],
+            [
+              -1.0616,
+              2.3935,
+              0.4655
+            ],
+            [
+              -1.0616,
+              0.6002,
+              0.1901
+            ],
+            [
+              -2.6557,
+              0.6002,
+              0.1901
+            ],
+            [
+              -2.6557,
+              2.3935,
+              0.1901
+            ],
+            [
+              -1.0616,
+              2.3935,
+              0.1901
+            ]
+          ],
+          "volume": 0.78728,
+          "role": "constraint"
+        },
+        "45": {
+          "object_id": "45",
+          "region": "1",
+          "label": "curtain",
+          "raw_label": "curtain",
+          "nyu_label": "curtain",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -4.4163,
+            -0.8613,
+            1.2718
+          ],
+          "size": [
+            0.8069,
+            0.1407,
+            2.5344
+          ],
+          "yaw": -1.5651,
+          "aabb": {
+            "min": [
+              -4.4889,
+              -1.2651,
+              0.0046
+            ],
+            "max": [
+              -4.3436,
+              -0.4575,
+              2.539
+            ]
+          },
+          "size_aabb": [
+            0.1453,
+            0.8077,
+            2.5344
+          ],
+          "bbox_corners": [
+            [
+              -4.3482,
+              -0.4575,
+              2.539
+            ],
+            [
+              -4.3436,
+              -1.2643,
+              2.539
+            ],
+            [
+              -4.4843,
+              -1.2651,
+              2.539
+            ],
+            [
+              -4.4889,
+              -0.4583,
+              2.539
+            ],
+            [
+              -4.3482,
+              -0.4575,
+              0.0046
+            ],
+            [
+              -4.3436,
+              -1.2643,
+              0.0046
+            ],
+            [
+              -4.4843,
+              -1.2651,
+              0.0046
+            ],
+            [
+              -4.4889,
+              -0.4583,
+              0.0046
+            ]
+          ],
+          "volume": 0.28773,
+          "role": "constraint"
+        },
+        "62": {
+          "object_id": "62",
+          "region": "1",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -1.9908,
+            -1.2883,
+            1.2616
+          ],
+          "size": [
+            0.9936,
+            0.0399,
+            0.6231
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              -2.4876,
+              -1.3082,
+              0.9501
+            ],
+            "max": [
+              -1.4939,
+              -1.2683,
+              1.5732
+            ]
+          },
+          "size_aabb": [
+            0.9936,
+            0.0399,
+            0.6231
+          ],
+          "bbox_corners": [
+            [
+              -1.4939,
+              -1.3082,
+              1.5732
+            ],
+            [
+              -2.4876,
+              -1.3082,
+              1.5732
+            ],
+            [
+              -2.4876,
+              -1.2683,
+              1.5732
+            ],
+            [
+              -1.4939,
+              -1.2683,
+              1.5732
+            ],
+            [
+              -1.4939,
+              -1.3082,
+              0.9501
+            ],
+            [
+              -2.4876,
+              -1.3082,
+              0.9501
+            ],
+            [
+              -2.4876,
+              -1.2683,
+              0.9501
+            ],
+            [
+              -1.4939,
+              -1.2683,
+              0.9501
+            ]
+          ],
+          "volume": 0.02471,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/hotel_room_2/trajectory_q5.ply",
+        "n_vertices": 845,
+        "length_m": 9.644,
+        "z": 0.75,
+        "start": [
+          0.01,
+          -0.0
+        ],
+        "end": [
+          -3.831,
+          -0.649
+        ],
+        "polyline": [
+          [
+            0.01,
+            -0.0
+          ],
+          [
+            0.268,
+            -0.028
+          ],
+          [
+            0.514,
+            -0.083
+          ],
+          [
+            0.753,
+            -0.156
+          ],
+          [
+            0.996,
+            -0.226
+          ],
+          [
+            1.246,
+            -0.276
+          ],
+          [
+            1.5,
+            -0.33
+          ],
+          [
+            1.745,
+            -0.404
+          ],
+          [
+            1.988,
+            -0.48
+          ],
+          [
+            2.227,
+            -0.558
+          ],
+          [
+            2.458,
+            -0.66
+          ],
+          [
+            2.677,
+            -0.78
+          ],
+          [
+            2.426,
+            -0.734
+          ],
+          [
+            2.18,
+            -0.681
+          ],
+          [
+            1.929,
+            -0.628
+          ],
+          [
+            1.681,
+            -0.584
+          ],
+          [
+            1.432,
+            -0.555
+          ],
+          [
+            1.173,
+            -0.524
+          ],
+          [
+            0.924,
+            -0.478
+          ],
+          [
+            0.677,
+            -0.432
+          ],
+          [
+            0.425,
+            -0.37
+          ],
+          [
+            0.171,
+            -0.325
+          ],
+          [
+            -0.076,
+            -0.287
+          ],
+          [
+            -0.336,
+            -0.263
+          ],
+          [
+            -0.596,
+            -0.224
+          ],
+          [
+            -0.846,
+            -0.205
+          ],
+          [
+            -1.097,
+            -0.188
+          ],
+          [
+            -1.347,
+            -0.171
+          ],
+          [
+            -1.597,
+            -0.158
+          ],
+          [
+            -1.848,
+            -0.164
+          ],
+          [
+            -2.102,
+            -0.171
+          ],
+          [
+            -2.353,
+            -0.181
+          ],
+          [
+            -2.602,
+            -0.216
+          ],
+          [
+            -2.854,
+            -0.281
+          ],
+          [
+            -3.09,
+            -0.368
+          ],
+          [
+            -3.329,
+            -0.458
+          ],
+          [
+            -3.568,
+            -0.549
+          ],
+          [
+            -3.802,
+            -0.638
+          ],
+          [
+            -3.831,
+            -0.649
+          ]
+        ]
+      },
+      "evidence": "Demo path passes picture at 2.64 m (74% along), then tv cabinet, bed at 0.39 m (77% along), and ends 0.62 m from curtain.",
+      "solver_trace": [
+        "head='picture' color='' hops=[{'relation': 'closest', 'phrases': ['door']}]",
+        "head candidates: [picture#31, picture#34, picture#76]",
+        "target hop (closest): closest: ranked [picture#31, picture#34, picture#76]",
+        "pick: closest: centre 4.19 m (next 4.73 m); box-gap 3.54 m (next 4.06 m)",
+        "resolved scene-wide (no single region resolved it)",
+        "head='tv cabinet' color='' hops=[]",
+        "head candidates: [sink cabinet#43]",
+        "head='bed' color='' hops=[]",
+        "head candidates: [bed#57]",
+        "head='curtain' color='' hops=[{'relation': 'closest', 'phrases': ['tv']}]",
+        "head candidates: [curtain#17, curtain#45]",
+        "target hop (closest): closest: ranked [curtain#45, curtain#17]",
+        "pick: closest: centre 2.46 m (next 4.14 m); box-gap 1.86 m (next 3.47 m)"
+      ],
+      "verified": true
+    }
+  ]
+}

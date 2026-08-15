@@ -1,0 +1,1770 @@
+{
+  "scene": "home_building_1",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "clock",
+    "coffee table",
+    "dining table",
+    "kettle",
+    "night stand",
+    "photo",
+    "refridgerator",
+    "trash can"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go to the coffee table with the kettle on it and stop at the dining table near the big picture.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "coffee table",
+        "kettle",
+        "dining table",
+        "photo"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the coffee table with the kettle on it",
+            "label": "coffee table",
+            "object_ids": [
+              "176"
+            ],
+            "anchor_ids": [
+              "370"
+            ],
+            "center": [
+              6.4345,
+              0.54
+            ],
+            "radius": 1.55,
+            "traj_index": 424,
+            "traj_frac": 0.579,
+            "min_dist_m": 1.287,
+            "why": "supports: coffee table#176 is the only match",
+            "anchor_why": "supports 'kettle': the boxes put kettle#370 there",
+            "radius_source": "widened from 1.5 m: the demo's own closest approach is 1.29 m, so a tighter radius would fail the reference run"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the dining table near the big picture",
+          "label": "dining table",
+          "object_ids": [
+            "266"
+          ],
+          "anchor_ids": [
+            "162"
+          ],
+          "center": [
+            -0.0695,
+            -3.602
+          ],
+          "radius": 1.9,
+          "traj_index": 732,
+          "traj_frac": 1.0,
+          "min_dist_m": 1.647,
+          "why": "text was indecisive (no candidate satisfies the question); the demo picks dining table#266 at 1.65 m",
+          "anchor_why": "near 'picture': no box supports the relation; nearest of 4 is photo#162 at 5.70 m",
+          "radius_source": "widened from 1.5 m: the demo's own closest approach is 1.65 m, so a tighter radius would fail the reference run"
+        }
+      },
+      "objects": {
+        "176": {
+          "object_id": "176",
+          "region": "4",
+          "label": "coffee table",
+          "raw_label": "coffee table",
+          "nyu_label": "coffee table",
+          "colors": [
+            "brown",
+            "gray",
+            "black"
+          ],
+          "center": [
+            6.4345,
+            0.54,
+            0.2814
+          ],
+          "size": [
+            2.2358,
+            1.5081,
+            0.5519
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              5.3166,
+              -0.214,
+              0.0055
+            ],
+            "max": [
+              7.5524,
+              1.294,
+              0.5574
+            ]
+          },
+          "size_aabb": [
+            2.2358,
+            1.5081,
+            0.5519
+          ],
+          "bbox_corners": [
+            [
+              7.5524,
+              -0.214,
+              0.5574
+            ],
+            [
+              5.3166,
+              -0.214,
+              0.5574
+            ],
+            [
+              5.3166,
+              1.294,
+              0.5574
+            ],
+            [
+              7.5524,
+              1.294,
+              0.5574
+            ],
+            [
+              7.5524,
+              -0.214,
+              0.0055
+            ],
+            [
+              5.3166,
+              -0.214,
+              0.0055
+            ],
+            [
+              5.3166,
+              1.294,
+              0.0055
+            ],
+            [
+              7.5524,
+              1.294,
+              0.0055
+            ]
+          ],
+          "volume": 1.86079,
+          "role": "constraint"
+        },
+        "370": {
+          "object_id": "370",
+          "region": "4",
+          "label": "kettle",
+          "raw_label": "kettle",
+          "nyu_label": "electrical kettle",
+          "colors": [
+            "brown",
+            "gray"
+          ],
+          "center": [
+            6.3331,
+            0.6215,
+            0.7585
+          ],
+          "size": [
+            0.2317,
+            0.213,
+            0.3852
+          ],
+          "yaw": 0.904,
+          "aabb": {
+            "min": [
+              6.1777,
+              0.4646,
+              0.5658
+            ],
+            "max": [
+              6.4884,
+              0.7784,
+              0.9511
+            ]
+          },
+          "size_aabb": [
+            0.3107,
+            0.3138,
+            0.3852
+          ],
+          "bbox_corners": [
+            [
+              6.1777,
+              0.5963,
+              0.9511
+            ],
+            [
+              6.321,
+              0.7784,
+              0.9511
+            ],
+            [
+              6.4884,
+              0.6467,
+              0.9511
+            ],
+            [
+              6.3451,
+              0.4646,
+              0.9511
+            ],
+            [
+              6.1777,
+              0.5963,
+              0.5658
+            ],
+            [
+              6.321,
+              0.7784,
+              0.5658
+            ],
+            [
+              6.4884,
+              0.6467,
+              0.5658
+            ],
+            [
+              6.3451,
+              0.4646,
+              0.5658
+            ]
+          ],
+          "volume": 0.01901,
+          "role": "reference"
+        },
+        "266": {
+          "object_id": "266",
+          "region": "4",
+          "label": "dining table",
+          "raw_label": "dining table",
+          "nyu_label": "table",
+          "colors": [
+            "yellow",
+            "brown",
+            "gray"
+          ],
+          "center": [
+            -0.0695,
+            -3.602,
+            0.5281
+          ],
+          "size": [
+            2.5545,
+            1.287,
+            1.0569
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -0.713,
+              -4.8793,
+              -0.0004
+            ],
+            "max": [
+              0.574,
+              -2.3247,
+              1.0565
+            ]
+          },
+          "size_aabb": [
+            1.287,
+            2.5545,
+            1.0569
+          ],
+          "bbox_corners": [
+            [
+              -0.713,
+              -4.8793,
+              1.0565
+            ],
+            [
+              -0.713,
+              -2.3247,
+              1.0565
+            ],
+            [
+              0.574,
+              -2.3247,
+              1.0565
+            ],
+            [
+              0.574,
+              -4.8793,
+              1.0565
+            ],
+            [
+              -0.713,
+              -4.8793,
+              -0.0004
+            ],
+            [
+              -0.713,
+              -2.3247,
+              -0.0004
+            ],
+            [
+              0.574,
+              -2.3247,
+              -0.0004
+            ],
+            [
+              0.574,
+              -4.8793,
+              -0.0004
+            ]
+          ],
+          "volume": 3.47471,
+          "role": "constraint"
+        },
+        "162": {
+          "object_id": "162",
+          "region": "4",
+          "label": "photo",
+          "raw_label": "photo",
+          "nyu_label": "picture",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            6.3478,
+            -3.0647,
+            0.2581
+          ],
+          "size": [
+            0.1335,
+            0.0802,
+            0.1919
+          ],
+          "yaw": -2.475,
+          "aabb": {
+            "min": [
+              6.2705,
+              -3.1375,
+              0.1622
+            ],
+            "max": [
+              6.425,
+              -2.9919,
+              0.3541
+            ]
+          },
+          "size_aabb": [
+            0.1545,
+            0.1456,
+            0.1919
+          ],
+          "bbox_corners": [
+            [
+              6.425,
+              -3.055,
+              0.3541
+            ],
+            [
+              6.3201,
+              -3.1375,
+              0.3541
+            ],
+            [
+              6.2705,
+              -3.0744,
+              0.3541
+            ],
+            [
+              6.3754,
+              -2.9919,
+              0.3541
+            ],
+            [
+              6.425,
+              -3.055,
+              0.1622
+            ],
+            [
+              6.3201,
+              -3.1375,
+              0.1622
+            ],
+            [
+              6.2705,
+              -3.0744,
+              0.1622
+            ],
+            [
+              6.3754,
+              -2.9919,
+              0.1622
+            ]
+          ],
+          "volume": 0.00205,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/home_building_1/trajectory_q4.ply",
+        "n_vertices": 733,
+        "length_m": 12.625,
+        "z": 0.75,
+        "start": [
+          0.012,
+          -0.0
+        ],
+        "end": [
+          1.402,
+          -2.862
+        ],
+        "polyline": [
+          [
+            0.012,
+            -0.0
+          ],
+          [
+            0.269,
+            -0.033
+          ],
+          [
+            0.525,
+            -0.097
+          ],
+          [
+            0.771,
+            -0.163
+          ],
+          [
+            1.037,
+            -0.234
+          ],
+          [
+            1.285,
+            -0.347
+          ],
+          [
+            1.504,
+            -0.472
+          ],
+          [
+            1.722,
+            -0.596
+          ],
+          [
+            1.971,
+            -0.74
+          ],
+          [
+            2.186,
+            -0.884
+          ],
+          [
+            2.411,
+            -1.025
+          ],
+          [
+            2.643,
+            -1.133
+          ],
+          [
+            2.881,
+            -1.225
+          ],
+          [
+            3.142,
+            -1.3
+          ],
+          [
+            3.398,
+            -1.339
+          ],
+          [
+            3.657,
+            -1.347
+          ],
+          [
+            3.918,
+            -1.323
+          ],
+          [
+            4.167,
+            -1.282
+          ],
+          [
+            4.417,
+            -1.24
+          ],
+          [
+            4.671,
+            -1.181
+          ],
+          [
+            4.916,
+            -1.132
+          ],
+          [
+            5.173,
+            -1.088
+          ],
+          [
+            5.445,
+            -1.042
+          ],
+          [
+            5.697,
+            -0.999
+          ],
+          [
+            5.951,
+            -0.955
+          ],
+          [
+            6.197,
+            -0.884
+          ],
+          [
+            6.44,
+            -0.803
+          ],
+          [
+            6.206,
+            -0.903
+          ],
+          [
+            5.971,
+            -0.999
+          ],
+          [
+            5.738,
+            -1.094
+          ],
+          [
+            5.504,
+            -1.19
+          ],
+          [
+            5.268,
+            -1.286
+          ],
+          [
+            5.018,
+            -1.389
+          ],
+          [
+            4.774,
+            -1.486
+          ],
+          [
+            4.525,
+            -1.567
+          ],
+          [
+            4.281,
+            -1.645
+          ],
+          [
+            4.032,
+            -1.725
+          ],
+          [
+            3.791,
+            -1.802
+          ],
+          [
+            3.538,
+            -1.883
+          ],
+          [
+            3.298,
+            -1.96
+          ],
+          [
+            3.055,
+            -2.039
+          ],
+          [
+            2.808,
+            -2.147
+          ],
+          [
+            2.576,
+            -2.263
+          ],
+          [
+            2.348,
+            -2.377
+          ],
+          [
+            2.121,
+            -2.49
+          ],
+          [
+            1.892,
+            -2.605
+          ],
+          [
+            1.663,
+            -2.719
+          ],
+          [
+            1.441,
+            -2.839
+          ],
+          [
+            1.402,
+            -2.862
+          ]
+        ]
+      },
+      "evidence": "Demo path passes coffee table at 1.29 m (58% along), and ends 1.65 m from dining table.",
+      "solver_trace": [
+        "head='coffee table' color='' hops=[{'relation': 'supports', 'phrases': ['kettle']}]",
+        "head candidates: [coffee table#176]",
+        "target hop (supports): supports: 1 match(es) -> [coffee table#176]",
+        "pick: supports: coffee table#176 is the only match",
+        "head='dining table' color='' hops=[{'relation': 'near', 'phrases': ['picture']}]",
+        "head candidates: [dining table#266]",
+        "target hop (near): nothing is near the anchor(s)",
+        "pick: no candidate satisfies the question"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go to the nightstand with a clock on it, then take the path between the dining table and the picture, and stop at the trash can closest to the refridgerator.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "night stand",
+        "clock",
+        "dining table",
+        "photo",
+        "trash can",
+        "refridgerator"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the nightstand with a clock on it",
+            "label": "night stand",
+            "object_ids": [
+              "427"
+            ],
+            "anchor_ids": [
+              "314"
+            ],
+            "center": [
+              -2.1008,
+              -13.6636
+            ],
+            "radius": 1.5,
+            "traj_index": 859,
+            "traj_frac": 0.427,
+            "min_dist_m": 0.761,
+            "why": "supports: night stand#427 is the only match",
+            "anchor_why": "supports 'clock': the boxes put clock#314 there"
+          },
+          {
+            "kind": "pass_between",
+            "phrase": "the dining table and the picture",
+            "label": "dining table, photo",
+            "object_ids": [
+              "266",
+              "76"
+            ],
+            "anchor_ids": [],
+            "center": [
+              0.7872,
+              -0.0177
+            ],
+            "radius": 1.5,
+            "traj_index": 1762,
+            "traj_frac": 0.875,
+            "min_dist_m": 3.127,
+            "why": "'the picture' is photo #76: it is the only picture whose between-band with dining table #266 the demo actually traverses (150 vertices inside, gap centre 0.66 m off the path). The runner-up, photo #162, puts the gap centre 1.69 m away. The text solver picked a different photo, one the run never goes between."
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the trash can closest to the refridgerator",
+          "label": "trash can",
+          "object_ids": [
+            "103"
+          ],
+          "anchor_ids": [
+            "152"
+          ],
+          "center": [
+            -6.7537,
+            -1.7066
+          ],
+          "radius": 1.5,
+          "traj_index": 2014,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.77,
+          "why": "closest: trash can#103 is the only match",
+          "anchor_why": "closest 'refridgerator': refridgerator#152 is the only one"
+        }
+      },
+      "objects": {
+        "427": {
+          "object_id": "427",
+          "region": "6",
+          "label": "night stand",
+          "raw_label": "night stand",
+          "nyu_label": "night stand",
+          "colors": [
+            "maroon",
+            "brown"
+          ],
+          "center": [
+            -2.1008,
+            -13.6636,
+            0.3138
+          ],
+          "size": [
+            0.7829,
+            0.6027,
+            0.6276
+          ],
+          "yaw": -0.0,
+          "aabb": {
+            "min": [
+              -2.4923,
+              -13.965,
+              0.0
+            ],
+            "max": [
+              -1.7094,
+              -13.3622,
+              0.6276
+            ]
+          },
+          "size_aabb": [
+            0.7829,
+            0.6027,
+            0.6276
+          ],
+          "bbox_corners": [
+            [
+              -2.4923,
+              -13.3622,
+              0.6276
+            ],
+            [
+              -1.7094,
+              -13.3622,
+              0.6276
+            ],
+            [
+              -1.7094,
+              -13.965,
+              0.6276
+            ],
+            [
+              -2.4923,
+              -13.965,
+              0.6276
+            ],
+            [
+              -2.4923,
+              -13.3622,
+              0.0
+            ],
+            [
+              -1.7094,
+              -13.3622,
+              0.0
+            ],
+            [
+              -1.7094,
+              -13.965,
+              0.0
+            ],
+            [
+              -2.4923,
+              -13.965,
+              0.0
+            ]
+          ],
+          "volume": 0.29615,
+          "role": "constraint"
+        },
+        "314": {
+          "object_id": "314",
+          "region": "6",
+          "label": "clock",
+          "raw_label": "clock",
+          "nyu_label": "clock",
+          "colors": [
+            "maroon",
+            "gray"
+          ],
+          "center": [
+            -2.2498,
+            -13.5123,
+            0.6866
+          ],
+          "size": [
+            0.1859,
+            0.0771,
+            0.2007
+          ],
+          "yaw": 0.2433,
+          "aabb": {
+            "min": [
+              -2.3493,
+              -13.5721,
+              0.5863
+            ],
+            "max": [
+              -2.1503,
+              -13.4525,
+              0.787
+            ]
+          },
+          "size_aabb": [
+            0.199,
+            0.1196,
+            0.2007
+          ],
+          "bbox_corners": [
+            [
+              -2.3493,
+              -13.4973,
+              0.787
+            ],
+            [
+              -2.1688,
+              -13.4525,
+              0.787
+            ],
+            [
+              -2.1503,
+              -13.5273,
+              0.787
+            ],
+            [
+              -2.3307,
+              -13.5721,
+              0.787
+            ],
+            [
+              -2.3493,
+              -13.4973,
+              0.5863
+            ],
+            [
+              -2.1688,
+              -13.4525,
+              0.5863
+            ],
+            [
+              -2.1503,
+              -13.5273,
+              0.5863
+            ],
+            [
+              -2.3307,
+              -13.5721,
+              0.5863
+            ]
+          ],
+          "volume": 0.00288,
+          "role": "reference"
+        },
+        "266": {
+          "object_id": "266",
+          "region": "4",
+          "label": "dining table",
+          "raw_label": "dining table",
+          "nyu_label": "table",
+          "colors": [
+            "yellow",
+            "brown",
+            "gray"
+          ],
+          "center": [
+            -0.0695,
+            -3.602,
+            0.5281
+          ],
+          "size": [
+            2.5545,
+            1.287,
+            1.0569
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -0.713,
+              -4.8793,
+              -0.0004
+            ],
+            "max": [
+              0.574,
+              -2.3247,
+              1.0565
+            ]
+          },
+          "size_aabb": [
+            1.287,
+            2.5545,
+            1.0569
+          ],
+          "bbox_corners": [
+            [
+              -0.713,
+              -4.8793,
+              1.0565
+            ],
+            [
+              -0.713,
+              -2.3247,
+              1.0565
+            ],
+            [
+              0.574,
+              -2.3247,
+              1.0565
+            ],
+            [
+              0.574,
+              -4.8793,
+              1.0565
+            ],
+            [
+              -0.713,
+              -4.8793,
+              -0.0004
+            ],
+            [
+              -0.713,
+              -2.3247,
+              -0.0004
+            ],
+            [
+              0.574,
+              -2.3247,
+              -0.0004
+            ],
+            [
+              0.574,
+              -4.8793,
+              -0.0004
+            ]
+          ],
+          "volume": 3.47471,
+          "role": "constraint"
+        },
+        "76": {
+          "object_id": "76",
+          "region": "4",
+          "label": "photo",
+          "raw_label": "photo",
+          "nyu_label": "picture",
+          "colors": [
+            "brown",
+            "gray",
+            "blue"
+          ],
+          "center": [
+            1.6439,
+            3.5666,
+            1.2969
+          ],
+          "size": [
+            0.1607,
+            0.1995,
+            0.2886
+          ],
+          "yaw": 1.7876,
+          "aabb": {
+            "min": [
+              1.5292,
+              3.4667,
+              1.1526
+            ],
+            "max": [
+              1.7586,
+              3.6665,
+              1.4412
+            ]
+          },
+          "size_aabb": [
+            0.2294,
+            0.1998,
+            0.2886
+          ],
+          "bbox_corners": [
+            [
+              1.5638,
+              3.4667,
+              1.4412
+            ],
+            [
+              1.5292,
+              3.6236,
+              1.4412
+            ],
+            [
+              1.7241,
+              3.6665,
+              1.4412
+            ],
+            [
+              1.7586,
+              3.5096,
+              1.4412
+            ],
+            [
+              1.5638,
+              3.4667,
+              1.1526
+            ],
+            [
+              1.5292,
+              3.6236,
+              1.1526
+            ],
+            [
+              1.7241,
+              3.6665,
+              1.1526
+            ],
+            [
+              1.7586,
+              3.5096,
+              1.1526
+            ]
+          ],
+          "volume": 0.00925,
+          "role": "constraint"
+        },
+        "103": {
+          "object_id": "103",
+          "region": "5",
+          "label": "trash can",
+          "raw_label": "trash can",
+          "nyu_label": "garbage bin",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -6.7537,
+            -1.7066,
+            0.1967
+          ],
+          "size": [
+            0.3261,
+            0.3257,
+            0.3973
+          ],
+          "yaw": 0.7797,
+          "aabb": {
+            "min": [
+              -6.9841,
+              -1.9371,
+              -0.002
+            ],
+            "max": [
+              -6.5233,
+              -1.4762,
+              0.3953
+            ]
+          },
+          "size_aabb": [
+            0.4608,
+            0.4608,
+            0.3973
+          ],
+          "bbox_corners": [
+            [
+              -6.9841,
+              -1.7055,
+              0.3953
+            ],
+            [
+              -6.7522,
+              -1.4762,
+              0.3953
+            ],
+            [
+              -6.5233,
+              -1.7078,
+              0.3953
+            ],
+            [
+              -6.7552,
+              -1.9371,
+              0.3953
+            ],
+            [
+              -6.9841,
+              -1.7055,
+              -0.002
+            ],
+            [
+              -6.7522,
+              -1.4762,
+              -0.002
+            ],
+            [
+              -6.5233,
+              -1.7078,
+              -0.002
+            ],
+            [
+              -6.7552,
+              -1.9371,
+              -0.002
+            ]
+          ],
+          "volume": 0.04219,
+          "role": "constraint"
+        },
+        "152": {
+          "object_id": "152",
+          "region": "5",
+          "label": "refridgerator",
+          "raw_label": "refridgerator",
+          "nyu_label": "refridgerator",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -6.8257,
+            0.4605,
+            1.267
+          ],
+          "size": [
+            1.505,
+            0.7515,
+            2.548
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -7.2015,
+              -0.292,
+              -0.007
+            ],
+            "max": [
+              -6.45,
+              1.213,
+              2.541
+            ]
+          },
+          "size_aabb": [
+            0.7515,
+            1.505,
+            2.548
+          ],
+          "bbox_corners": [
+            [
+              -7.2015,
+              -0.292,
+              2.541
+            ],
+            [
+              -7.2015,
+              1.213,
+              2.541
+            ],
+            [
+              -6.45,
+              1.213,
+              2.541
+            ],
+            [
+              -6.45,
+              -0.292,
+              2.541
+            ],
+            [
+              -7.2015,
+              -0.292,
+              -0.007
+            ],
+            [
+              -7.2015,
+              1.213,
+              -0.007
+            ],
+            [
+              -6.45,
+              1.213,
+              -0.007
+            ],
+            [
+              -6.45,
+              -0.292,
+              -0.007
+            ]
+          ],
+          "volume": 2.88189,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/home_building_1/trajectory_q5.ply",
+        "n_vertices": 2015,
+        "length_m": 33.247,
+        "z": 0.75,
+        "start": [
+          0.007,
+          -0.009
+        ],
+        "end": [
+          -5.996,
+          -1.569
+        ],
+        "polyline": [
+          [
+            0.007,
+            -0.009
+          ],
+          [
+            0.147,
+            -0.226
+          ],
+          [
+            0.271,
+            -0.449
+          ],
+          [
+            0.396,
+            -0.675
+          ],
+          [
+            0.512,
+            -0.904
+          ],
+          [
+            0.633,
+            -1.126
+          ],
+          [
+            0.768,
+            -1.358
+          ],
+          [
+            0.897,
+            -1.583
+          ],
+          [
+            1.014,
+            -1.819
+          ],
+          [
+            1.123,
+            -2.051
+          ],
+          [
+            1.205,
+            -2.288
+          ],
+          [
+            1.276,
+            -2.541
+          ],
+          [
+            1.339,
+            -2.814
+          ],
+          [
+            1.39,
+            -3.069
+          ],
+          [
+            1.434,
+            -3.363
+          ],
+          [
+            1.472,
+            -3.612
+          ],
+          [
+            1.511,
+            -3.873
+          ],
+          [
+            1.534,
+            -4.134
+          ],
+          [
+            1.549,
+            -4.386
+          ],
+          [
+            1.564,
+            -4.646
+          ],
+          [
+            1.584,
+            -4.985
+          ],
+          [
+            1.613,
+            -5.243
+          ],
+          [
+            1.649,
+            -5.496
+          ],
+          [
+            1.689,
+            -5.777
+          ],
+          [
+            1.724,
+            -6.034
+          ],
+          [
+            1.741,
+            -6.296
+          ],
+          [
+            1.747,
+            -6.546
+          ],
+          [
+            1.62,
+            -6.769
+          ],
+          [
+            1.465,
+            -7.01
+          ],
+          [
+            1.302,
+            -7.211
+          ],
+          [
+            1.107,
+            -7.381
+          ],
+          [
+            0.903,
+            -7.535
+          ],
+          [
+            0.674,
+            -7.663
+          ],
+          [
+            0.446,
+            -7.777
+          ],
+          [
+            0.199,
+            -7.901
+          ],
+          [
+            -0.033,
+            -8.033
+          ],
+          [
+            -0.238,
+            -8.195
+          ],
+          [
+            -0.414,
+            -8.375
+          ],
+          [
+            -0.591,
+            -8.573
+          ],
+          [
+            -0.749,
+            -8.778
+          ],
+          [
+            -0.904,
+            -8.988
+          ],
+          [
+            -1.037,
+            -9.22
+          ],
+          [
+            -1.161,
+            -9.441
+          ],
+          [
+            -1.27,
+            -9.673
+          ],
+          [
+            -1.35,
+            -9.919
+          ],
+          [
+            -1.421,
+            -10.171
+          ],
+          [
+            -1.483,
+            -10.423
+          ],
+          [
+            -1.532,
+            -10.69
+          ],
+          [
+            -1.579,
+            -10.941
+          ],
+          [
+            -1.624,
+            -11.188
+          ],
+          [
+            -1.658,
+            -11.444
+          ],
+          [
+            -1.686,
+            -11.701
+          ],
+          [
+            -1.714,
+            -11.96
+          ],
+          [
+            -1.757,
+            -12.212
+          ],
+          [
+            -1.804,
+            -12.461
+          ],
+          [
+            -1.853,
+            -12.719
+          ],
+          [
+            -1.823,
+            -12.47
+          ],
+          [
+            -1.801,
+            -12.219
+          ],
+          [
+            -1.775,
+            -11.962
+          ],
+          [
+            -1.75,
+            -11.696
+          ],
+          [
+            -1.701,
+            -11.433
+          ],
+          [
+            -1.645,
+            -11.189
+          ],
+          [
+            -1.601,
+            -10.931
+          ],
+          [
+            -1.563,
+            -10.681
+          ],
+          [
+            -1.494,
+            -10.436
+          ],
+          [
+            -1.401,
+            -10.191
+          ],
+          [
+            -1.308,
+            -9.947
+          ],
+          [
+            -1.215,
+            -9.71
+          ],
+          [
+            -1.103,
+            -9.475
+          ],
+          [
+            -0.982,
+            -9.233
+          ],
+          [
+            -0.818,
+            -8.949
+          ],
+          [
+            -0.677,
+            -8.728
+          ],
+          [
+            -0.469,
+            -8.542
+          ],
+          [
+            -0.271,
+            -8.369
+          ],
+          [
+            -0.066,
+            -8.205
+          ],
+          [
+            0.158,
+            -8.073
+          ],
+          [
+            0.406,
+            -7.966
+          ],
+          [
+            0.644,
+            -7.863
+          ],
+          [
+            0.868,
+            -7.731
+          ],
+          [
+            1.064,
+            -7.561
+          ],
+          [
+            1.225,
+            -7.353
+          ],
+          [
+            1.337,
+            -7.12
+          ],
+          [
+            1.379,
+            -6.873
+          ],
+          [
+            1.297,
+            -6.631
+          ],
+          [
+            1.122,
+            -6.437
+          ],
+          [
+            0.902,
+            -6.302
+          ],
+          [
+            0.673,
+            -6.189
+          ],
+          [
+            0.447,
+            -6.077
+          ],
+          [
+            0.214,
+            -5.978
+          ],
+          [
+            -0.021,
+            -5.885
+          ],
+          [
+            -0.254,
+            -5.777
+          ],
+          [
+            -0.476,
+            -5.641
+          ],
+          [
+            -0.69,
+            -5.495
+          ],
+          [
+            -0.901,
+            -5.329
+          ],
+          [
+            -1.08,
+            -5.151
+          ],
+          [
+            -1.251,
+            -4.954
+          ],
+          [
+            -1.396,
+            -4.744
+          ],
+          [
+            -1.524,
+            -4.521
+          ],
+          [
+            -1.612,
+            -4.282
+          ],
+          [
+            -1.681,
+            -4.025
+          ],
+          [
+            -1.714,
+            -3.771
+          ],
+          [
+            -1.732,
+            -3.515
+          ],
+          [
+            -1.739,
+            -3.263
+          ],
+          [
+            -1.747,
+            -3.013
+          ],
+          [
+            -1.76,
+            -2.761
+          ],
+          [
+            -1.765,
+            -2.503
+          ],
+          [
+            -1.774,
+            -2.234
+          ],
+          [
+            -1.807,
+            -1.976
+          ],
+          [
+            -1.873,
+            -1.727
+          ],
+          [
+            -1.973,
+            -1.487
+          ],
+          [
+            -2.113,
+            -1.277
+          ],
+          [
+            -2.281,
+            -1.077
+          ],
+          [
+            -2.528,
+            -1.016
+          ],
+          [
+            -2.782,
+            -1.0
+          ],
+          [
+            -3.033,
+            -0.996
+          ],
+          [
+            -3.282,
+            -1.02
+          ],
+          [
+            -3.554,
+            -1.058
+          ],
+          [
+            -3.807,
+            -1.094
+          ],
+          [
+            -4.056,
+            -1.129
+          ],
+          [
+            -4.303,
+            -1.173
+          ],
+          [
+            -4.574,
+            -1.234
+          ],
+          [
+            -4.837,
+            -1.292
+          ],
+          [
+            -5.092,
+            -1.349
+          ],
+          [
+            -5.338,
+            -1.403
+          ],
+          [
+            -5.59,
+            -1.459
+          ],
+          [
+            -5.848,
+            -1.525
+          ],
+          [
+            -5.996,
+            -1.569
+          ]
+        ]
+      },
+      "evidence": "Demo path passes night stand at 0.76 m (43% along), then dining table, photo at 3.13 m (88% along), and ends 0.77 m from trash can.",
+      "solver_trace": [
+        "head='nightstand' color='' hops=[{'relation': 'supports', 'phrases': ['clock']}]",
+        "head candidates: [night stand#274, night stand#427]",
+        "target hop (supports): supports: 1 match(es) -> [night stand#427]",
+        "pick: supports: night stand#427 is the only match",
+        "head='trash can' color='' hops=[{'relation': 'closest', 'phrases': ['refridgerator']}]",
+        "head candidates: [trash can#103]",
+        "target hop (closest): closest: ranked [trash can#103]",
+        "pick: closest: trash can#103 is the only match"
+      ],
+      "verified": false,
+      "review_note": "The recording and the sentence disagree about ORDER on this one, and the recording is what it is. The instruction says nightstand, then between the dining table and the picture, then the trash can; the 33 m run through this multi-room building passes between dining table #266 and photo #76 at 1% of the way (150 vertices inside the band), reaches nightstand #427 at 43%, and ends at trash can #103. After the nightstand it never goes between any table and any picture again -- the nearest such gap centre in the remaining two thirds of the run is 3.13 m off the path. So this demo does not score 6/6 in strict order against its own instruction; score.py gives the middle constraint half credit as out-of-order. Kept as ground truth with the constraint grounded to what the run demonstrably does, rather than inventing a leg the recording does not contain."
+    }
+  ]
+}
