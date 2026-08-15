@@ -33,12 +33,13 @@ EXTRACT_SYSTEM = (
 # "answer the question": the only free choice offered is which line.
 ANSWER_SYSTEM = (
     "You choose which object a question points at. You are given photographs of one room "
-    "taken by a robot, with numbered tags drawn on the objects it detected, and a list of "
-    "candidate objects carrying those same numbers. The list already states every distance "
-    "and spatial relation, measured in 3D: trust those numbers over your impression of the "
-    "photographs, and use the photographs to judge what the numbers cannot say — what an "
-    "object is, what it looks like, and whether a tag is on the thing you expect. Answer "
-    "with the id of exactly one candidate, copied from the list."
+    "taken by a robot. Each object the robot detected is outlined and tagged with its name "
+    "and its number, and the candidates you must choose between are additionally drawn with "
+    "a thick box. You also get a list of those candidates carrying the same numbers. The "
+    "list already states every distance and spatial relation, measured in 3D: trust those "
+    "numbers over your impression of the photographs, and use the photographs to judge what "
+    "the numbers cannot say — what an object is, what it looks like, and whether a tag is on "
+    "the thing you expect. Answer with the id of exactly one candidate, copied from the list."
 )
 
 # How many candidates the model is shown. A table long enough to hold a whole scene buries
@@ -104,6 +105,26 @@ def solver_status() -> str:
 # ---------------------------------------------------------------- views
 
 
+# sam_node renders the silhouettes once, on the same /pipeline/explore_done that starts this
+# reasoner, so we can arrive a few hundred ms early. Worth waiting out: the bare crop has
+# neither the outlines nor the ids.
+SILHOUETTE_WAIT_S = 5.0
+SILHOUETTE_POLL_S = 0.25
+
+
+def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Path], bool]:
+    """(path to draw on, whether it is a finalized silhouette)."""
+    import time
+
+    silhouette, plain = run_dir / "silhouette" / name, run_dir / name
+    while True:
+        if silhouette.is_file():
+            return silhouette, True
+        if time.monotonic() >= deadline:
+            return (plain, False) if plain.is_file() else (None, False)
+        time.sleep(SILHOUETTE_POLL_S)
+
+
 def marked_views(
     run_dir: Path,
     manifest: dict,
@@ -111,34 +132,49 @@ def marked_views(
     max_views: int,
     labels: Optional[dict[str, str]] = None,
 ) -> list[Path]:
-    """Best views with the candidates' track ids drawn on, best-ranked first.
+    """Best views with the candidate objects marked, best-ranked first.
 
     Written next to the crops as `marked/`, so a run directory keeps the exact images an
     answer was given — a selection that cannot be looked at afterwards cannot be debugged.
 
     Marks come from `manifest.selected[].instances[]`, whose `bbox` is already in the crop's
-    own pixel coordinates and whose `track_id` is the key of the 3D map. That correspondence
-    is the one thing that lets a model reason about pixels and answer with a map id; it is
-    recorded for free by the best-view collector, so nothing has to be re-detected here.
+    own pixel coordinates — recorded for free by the best-view collector. Each `track_id` is
+    resolved through `obj_map.json` rather than compared to a candidate id directly: map_node
+    keys an entry by `id[0]` and folds later track ids into `id` on a world merge, so an
+    object whose crop shows a secondary id would never match and would lose its evidence.
 
     Only the ids passed in are marked. Tagging every instance puts thirty tabs on a crop and
     buries the handful of objects the question is about.
+
+    A finalized silhouette already prints `label [map id]`, so marking it adds a box and no
+    text — two tabs for one object is worse than one. The `[id] label` tab is drawn only on
+    the bare-crop fallback, which carries no ids at all.
     """
+    import json
+    import time
+
     import cv2  # local: the bench imports this module for prompts alone on hosts without cv2
 
     from sam_mapper.annotate import mark_frame
+    from sam_mapper.challenge_marker import track_to_map_id
+
+    try:
+        with open(run_dir / "obj_map.json", "r", encoding="utf-8") as handle:
+            track_to_map = track_to_map_id(json.load(handle) or {})
+    except (OSError, json.JSONDecodeError):
+        # Nothing to resolve against: read a track id as a map key, which is right for every
+        # unmerged object and is what this did before.
+        track_to_map = {}
 
     wanted = {str(i) for i in ids}
+    deadline = time.monotonic() + SILHOUETTE_WAIT_S
     out_dir = run_dir / "marked"
     marked: list[Path] = []
     for entry in (manifest.get("selected") or [])[: max(1, max_views)]:
         name = entry.get("file")
         if not name:
             continue
-        # A silhouette copy outlines each mask in the same colour the tab will use, so a
-        # marked silhouette reads as one object per colour. Plain crop when there is none.
-        source = next((run_dir / sub / name for sub in ("silhouette", "")
-                       if (run_dir / sub / name).is_file()), None)
+        source, finalized = _view_source(run_dir, name, deadline)
         if source is None:
             continue
         image = cv2.imread(str(source))
@@ -147,13 +183,22 @@ def marked_views(
 
         marks = []
         for inst in entry.get("instances") or []:
-            track = str(inst.get("track_id"))
             bbox = inst.get("bbox")
-            if track not in wanted or not bbox or len(bbox) != 4:
+            if not bbox or len(bbox) != 4:
                 continue
-            label = (labels or {}).get(track) or str(inst.get("label") or "")
-            marks.append((bbox, int(float(track)) if track.lstrip("-").isdigit() else 0,
-                          f"[{track}] {label}".strip()))
+            try:
+                track = int(float(inst.get("track_id")))
+            except (TypeError, ValueError):
+                continue
+            map_id = track_to_map.get(track, track)
+            if str(map_id) not in wanted:
+                continue
+            label = (labels or {}).get(str(map_id)) or str(inst.get("label") or "")
+            # The MAP id, not the track id: `_color_for` is a pure function of what it is
+            # given, and the silhouette outlines this object by its map id too, so anything
+            # else would box it in a colour that is not its own.
+            marks.append((bbox, map_id,
+                          "" if finalized else f"[{map_id}] {label}".strip()))
         if not marks:
             # No candidate is visible in this view. Showing it anyway invites the model to
             # pick from pixels that carry no id at all.
@@ -161,7 +206,7 @@ def marked_views(
 
         out_dir.mkdir(parents=True, exist_ok=True)
         target = out_dir / name
-        cv2.imwrite(str(target), mark_frame(image, marks))
+        cv2.imwrite(str(target), mark_frame(image, marks, thickness=3 if finalized else 1))
         marked.append(target)
     return marked
 

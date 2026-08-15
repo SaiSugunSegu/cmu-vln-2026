@@ -68,6 +68,8 @@ save_best_target_view_images:
   output_dir: /data/crops   # host-visible, same convention as sam-frames
   save_annotated_copy: false            # also write a masks/boxes/labels overlay per image
   save_silhouette_copy: true           # also write a mask-outline + class-name copy per image
+  finalize_obj_map_wait_s: 5.0  # wait for map_node's obj_map.json this long, then label
+                                # with raw SAM track ids instead
   # Score = (mask px / frame px) x confidence, so real values sit near 1e-3, not near 1.
   min_instance_score: 0.0005
   crop_to_roi: true          # crop to the objects rather than saving the whole panorama
