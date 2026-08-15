@@ -15,7 +15,7 @@ byte-identical across models, which is the only way an A/B says anything about t
         -p report_file:=/data/runs/views_cache.json
 
     # then, per model, as often as you like
-    ros2 run smart_vlm views_bench --cache /data/runs/views_cache.json \\
+    ros2 run smart_vlm cat1_bench --cache /data/runs/views_cache.json \\
         --report /data/runs/bench_gemini.json
 
 The model is whatever the environment selects (VLM_PROVIDER / VLM_MODEL, see
@@ -51,7 +51,7 @@ from smart_vlm.report_utils import summarise, write_report
 
 
 def log(message: str, *, err: bool = False) -> None:
-    print(f"[views_bench] {message}", file=sys.stderr if err else sys.stdout, flush=True)
+    print(f"[cat1_bench] {message}", file=sys.stderr if err else sys.stdout, flush=True)
 
 
 def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
@@ -62,7 +62,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         help="report from any earlier sweep; its rows supply best_view_dir "
              "(default: %(default)s)")
     parser.add_argument(
-        "--report", default="/data/runs/views_bench_report.json",
+        "--report", default="/data/runs/cat1_bench_report.json",
         help="where to write this run's report (default: %(default)s)")
     parser.add_argument(
         "--views", type=int, default=3,
@@ -153,7 +153,7 @@ def main(argv: Optional[list[str]] = None) -> None:
     args = parse_args(argv)
     cache_path = Path(args.cache)
     if not cache_path.is_file():
-        log(f"no cache at {cache_path} — build one with `just cache-views`", err=True)
+        log(f"no cache at {cache_path} — build one with `just cache-cat1`", err=True)
         sys.exit(1)
 
     rows = load_cache(cache_path, args.scene, args.limit)

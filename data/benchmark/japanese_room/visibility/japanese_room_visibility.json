@@ -1,0 +1,1886 @@
+{
+  "scene": "japanese_room",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 224,
+  "objects": {
+    "0": {
+      "label": "wardrobe door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 220,
+      "min_range_m": 2.64,
+      "best_view": {
+        "n_points": 2038,
+        "px_bbox": [
+          1247,
+          158,
+          1356,
+          437
+        ],
+        "px_bbox_unwrapped": [
+          1247,
+          158,
+          1356,
+          437
+        ],
+        "px_area": 30411,
+        "px_area_frac": 0.02475,
+        "distance_m": 2.36,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529722.224095,
+        "frame": 57,
+        "elevation_deg": 4.2
+      },
+      "view_image": "data/crops/visibility/japanese_room/0_wardrobe_door.png"
+    },
+    "1": {
+      "label": "wardrobe door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 3.86,
+      "best_view": {
+        "n_points": 1486,
+        "px_bbox": [
+          997,
+          227,
+          1091,
+          385
+        ],
+        "px_bbox_unwrapped": [
+          997,
+          227,
+          1091,
+          385
+        ],
+        "px_area": 14852,
+        "px_area_frac": 0.01209,
+        "distance_m": 4.23,
+        "occlusion": 0.004,
+        "clipped": false,
+        "stamp": 1785529716.618994,
+        "frame": 15,
+        "elevation_deg": 2.9
+      },
+      "view_image": "data/crops/visibility/japanese_room/1_wardrobe_door.png"
+    },
+    "2": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.33,
+      "best_view": {
+        "n_points": 2525,
+        "px_bbox": [
+          1110,
+          183,
+          1232,
+          433
+        ],
+        "px_bbox_unwrapped": [
+          1110,
+          183,
+          1232,
+          433
+        ],
+        "px_area": 30500,
+        "px_area_frac": 0.02482,
+        "distance_m": 2.2,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": 2.0
+      },
+      "view_image": "data/crops/visibility/japanese_room/2_door.png"
+    },
+    "3": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 200,
+      "min_range_m": 2.87,
+      "best_view": {
+        "n_points": 1397,
+        "px_bbox": [
+          1032,
+          203,
+          1117,
+          418
+        ],
+        "px_bbox_unwrapped": [
+          1032,
+          203,
+          1117,
+          418
+        ],
+        "px_area": 18275,
+        "px_area_frac": 0.01487,
+        "distance_m": 2.64,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": 1.6
+      },
+      "view_image": "data/crops/visibility/japanese_room/3_door.png"
+    },
+    "4": {
+      "label": "flowers",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 114,
+      "min_range_m": 0.82,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          1450,
+          400,
+          1541,
+          545
+        ],
+        "px_bbox_unwrapped": [
+          1450,
+          400,
+          1541,
+          545
+        ],
+        "px_area": 13195,
+        "px_area_frac": 0.01074,
+        "distance_m": 0.7,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529721.108948,
+        "frame": 49,
+        "elevation_deg": -28.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/4_flowers.png"
+    },
+    "5": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.62,
+      "best_view": {
+        "n_points": 9666,
+        "px_bbox": [
+          951,
+          126,
+          1448,
+          421
+        ],
+        "px_bbox_unwrapped": [
+          951,
+          126,
+          1448,
+          421
+        ],
+        "px_area": 146615,
+        "px_area_frac": 0.11932,
+        "distance_m": 2.18,
+        "occlusion": 0.016,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": 10.3
+      },
+      "view_image": "data/crops/visibility/japanese_room/5_wall.png"
+    },
+    "6": {
+      "label": "flowers",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 195,
+      "min_range_m": 1.46,
+      "best_view": {
+        "n_points": 915,
+        "px_bbox": [
+          1031,
+          235,
+          1205,
+          505
+        ],
+        "px_bbox_unwrapped": [
+          1031,
+          235,
+          1205,
+          505
+        ],
+        "px_area": 46980,
+        "px_area_frac": 0.03823,
+        "distance_m": 1.14,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": -8.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/6_flowers.png"
+    },
+    "7": {
+      "label": "painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 1.77,
+      "best_view": {
+        "n_points": 1478,
+        "px_bbox": [
+          414,
+          199,
+          492,
+          360
+        ],
+        "px_bbox_unwrapped": [
+          414,
+          199,
+          492,
+          360
+        ],
+        "px_area": 12558,
+        "px_area_frac": 0.01022,
+        "distance_m": 1.8,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529718.713992,
+        "frame": 31,
+        "elevation_deg": 8.1
+      },
+      "view_image": "data/crops/visibility/japanese_room/7_framed_record.png"
+    },
+    "8": {
+      "label": "calligraphy painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.41,
+      "best_view": {
+        "n_points": 1002,
+        "px_bbox": [
+          1209,
+          210,
+          1272,
+          300
+        ],
+        "px_bbox_unwrapped": [
+          1209,
+          210,
+          1272,
+          300
+        ],
+        "px_area": 5670,
+        "px_area_frac": 0.00461,
+        "distance_m": 2.32,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529723.443988,
+        "frame": 66,
+        "elevation_deg": 12.0
+      },
+      "view_image": "data/crops/visibility/japanese_room/8_calligraphy_painting.png"
+    },
+    "9": {
+      "label": "calligraphy painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.15,
+      "best_view": {
+        "n_points": 1028,
+        "px_bbox": [
+          1144,
+          195,
+          1217,
+          298
+        ],
+        "px_bbox_unwrapped": [
+          1144,
+          195,
+          1217,
+          298
+        ],
+        "px_area": 7519,
+        "px_area_frac": 0.00612,
+        "distance_m": 1.99,
+        "occlusion": 0.036,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": 13.7
+      },
+      "view_image": "data/crops/visibility/japanese_room/9_calligraphy_painting.png"
+    },
+    "10": {
+      "label": "calligraphy painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 220,
+      "min_range_m": 2.03,
+      "best_view": {
+        "n_points": 885,
+        "px_bbox": [
+          1049,
+          192,
+          1130,
+          296
+        ],
+        "px_bbox_unwrapped": [
+          1049,
+          192,
+          1130,
+          296
+        ],
+        "px_area": 8424,
+        "px_area_frac": 0.00686,
+        "distance_m": 1.93,
+        "occlusion": 0.019,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": 14.5
+      },
+      "view_image": "data/crops/visibility/japanese_room/10_calligraphy_painting.png"
+    },
+    "11": {
+      "label": "ceiling",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.36,
+      "best_view": {
+        "n_points": 9562,
+        "px_bbox": [
+          977,
+          85,
+          162,
+          243
+        ],
+        "px_bbox_unwrapped": [
+          977,
+          85,
+          2082,
+          243
+        ],
+        "px_area": 174590,
+        "px_area_frac": 0.14208,
+        "distance_m": 1.64,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": 36.6
+      },
+      "view_image": "data/crops/visibility/japanese_room/11_ceiling.png"
+    },
+    "13": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 213,
+      "min_range_m": 0.88,
+      "best_view": {
+        "n_points": 16891,
+        "px_bbox": [
+          1195,
+          114,
+          227,
+          431
+        ],
+        "px_bbox_unwrapped": [
+          1195,
+          114,
+          2147,
+          431
+        ],
+        "px_area": 301784,
+        "px_area_frac": 0.24559,
+        "distance_m": 0.99,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529715.394012,
+        "frame": 6,
+        "elevation_deg": 35.5
+      },
+      "view_image": "data/crops/visibility/japanese_room/13_wall.png"
+    },
+    "14": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 1.59,
+      "best_view": {
+        "n_points": 2325,
+        "px_bbox": [
+          1002,
+          362,
+          153,
+          450
+        ],
+        "px_bbox_unwrapped": [
+          1002,
+          362,
+          2073,
+          450
+        ],
+        "px_area": 94248,
+        "px_area_frac": 0.0767,
+        "distance_m": 4.27,
+        "occlusion": 0.508,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": -20.0
+      },
+      "view_image": "data/crops/visibility/japanese_room/14_floor.png"
+    },
+    "15": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.62,
+      "best_view": {
+        "n_points": 12133,
+        "px_bbox": [
+          922,
+          7,
+          1501,
+          530
+        ],
+        "px_bbox_unwrapped": [
+          922,
+          7,
+          1501,
+          530
+        ],
+        "px_area": 302817,
+        "px_area_frac": 0.24643,
+        "distance_m": 1.43,
+        "occlusion": 0.098,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": 9.3
+      },
+      "view_image": "data/crops/visibility/japanese_room/15_wall.png"
+    },
+    "16": {
+      "label": "display ledge",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 139,
+      "min_range_m": 1.8,
+      "best_view": {
+        "n_points": 1658,
+        "px_bbox": [
+          959,
+          401,
+          1398,
+          525
+        ],
+        "px_bbox_unwrapped": [
+          959,
+          401,
+          1398,
+          525
+        ],
+        "px_area": 54436,
+        "px_area_frac": 0.0443,
+        "distance_m": 1.08,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": -26.3
+      },
+      "view_image": "data/crops/visibility/japanese_room/16_display_ledge.png"
+    },
+    "17": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 1.24,
+      "best_view": {
+        "n_points": 2928,
+        "px_bbox": [
+          938,
+          40,
+          1066,
+          572
+        ],
+        "px_bbox_unwrapped": [
+          938,
+          40,
+          1066,
+          572
+        ],
+        "px_area": 68096,
+        "px_area_frac": 0.05542,
+        "distance_m": 0.8,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529743.554,
+        "frame": 211,
+        "elevation_deg": 4.6
+      },
+      "view_image": "data/crops/visibility/japanese_room/17_door.png"
+    },
+    "18": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 0.52,
+      "best_view": {
+        "n_points": 11895,
+        "px_bbox": [
+          507,
+          0,
+          1005,
+          616
+        ],
+        "px_bbox_unwrapped": [
+          507,
+          0,
+          1005,
+          616
+        ],
+        "px_area": 306768,
+        "px_area_frac": 0.24965,
+        "distance_m": 0.48,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529739.594039,
+        "frame": 182,
+        "elevation_deg": 11.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/18_door.png"
+    },
+    "19": {
+      "label": "door",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.46,
+      "best_view": null
+    },
+    "20": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 152,
+      "min_range_m": 0.61,
+      "best_view": {
+        "n_points": 1927,
+        "px_bbox": [
+          456,
+          0,
+          894,
+          622
+        ],
+        "px_bbox_unwrapped": [
+          456,
+          0,
+          894,
+          622
+        ],
+        "px_area": 272436,
+        "px_area_frac": 0.22171,
+        "distance_m": 0.66,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": 9.6
+      },
+      "view_image": "data/crops/visibility/japanese_room/20_door.png"
+    },
+    "21": {
+      "label": "entrance door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 0.78,
+      "best_view": {
+        "n_points": 15713,
+        "px_bbox": [
+          350,
+          0,
+          1121,
+          564
+        ],
+        "px_bbox_unwrapped": [
+          350,
+          0,
+          1121,
+          564
+        ],
+        "px_area": 434844,
+        "px_area_frac": 0.35388,
+        "distance_m": 0.48,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529739.594039,
+        "frame": 182,
+        "elevation_deg": 18.7
+      },
+      "view_image": "data/crops/visibility/japanese_room/21_entrance_door.png"
+    },
+    "22": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 1.13,
+      "best_view": {
+        "n_points": 1938,
+        "px_bbox": [
+          862,
+          0,
+          969,
+          574
+        ],
+        "px_bbox_unwrapped": [
+          862,
+          0,
+          969,
+          574
+        ],
+        "px_area": 61418,
+        "px_area_frac": 0.04998,
+        "distance_m": 0.83,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": 24.3
+      },
+      "view_image": "data/crops/visibility/japanese_room/22_column.png"
+    },
+    "23": {
+      "label": "zen stone decoration",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 36,
+      "min_range_m": 1.78,
+      "best_view": {
+        "n_points": 80,
+        "px_bbox": [
+          1140,
+          418,
+          1187,
+          452
+        ],
+        "px_bbox_unwrapped": [
+          1140,
+          418,
+          1187,
+          452
+        ],
+        "px_area": 1598,
+        "px_area_frac": 0.0013,
+        "distance_m": 1.59,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529739.134105,
+        "frame": 179,
+        "elevation_deg": -21.5
+      },
+      "view_image": "data/crops/visibility/japanese_room/23_zen_stone_decoration.png"
+    },
+    "24": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 113,
+      "min_range_m": 1.92,
+      "best_view": {
+        "n_points": 228,
+        "px_bbox": [
+          1362,
+          295,
+          1512,
+          483
+        ],
+        "px_bbox_unwrapped": [
+          1362,
+          295,
+          1512,
+          483
+        ],
+        "px_area": 28200,
+        "px_area_frac": 0.02295,
+        "distance_m": 1.74,
+        "occlusion": 0.003,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": -11.3
+      },
+      "view_image": "data/crops/visibility/japanese_room/24_plant.png"
+    },
+    "25": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 1.9,
+      "best_view": {
+        "n_points": 1158,
+        "px_bbox": [
+          422,
+          131,
+          598,
+          492
+        ],
+        "px_bbox_unwrapped": [
+          422,
+          131,
+          598,
+          492
+        ],
+        "px_area": 63536,
+        "px_area_frac": 0.05171,
+        "distance_m": 1.97,
+        "occlusion": 0.001,
+        "clipped": false,
+        "stamp": 1785529719.503993,
+        "frame": 37,
+        "elevation_deg": 2.1
+      },
+      "view_image": "data/crops/visibility/japanese_room/25_plant.png"
+    },
+    "26": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 114,
+      "min_range_m": 1.21,
+      "best_view": {
+        "n_points": 166,
+        "px_bbox": [
+          1216,
+          419,
+          1571,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1216,
+          419,
+          1571,
+          639
+        ],
+        "px_area": 78100,
+        "px_area_frac": 0.06356,
+        "distance_m": 0.82,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529719.898995,
+        "frame": 40,
+        "elevation_deg": -34.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/26_table.png"
+    },
+    "27": {
+      "label": "tatami",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 173,
+      "min_range_m": 1.22,
+      "best_view": {
+        "n_points": 1173,
+        "px_bbox": [
+          32,
+          378,
+          941,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          32,
+          378,
+          941,
+          639
+        ],
+        "px_area": 237249,
+        "px_area_frac": 0.19307,
+        "distance_m": 1.42,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529741.238982,
+        "frame": 194,
+        "elevation_deg": -22.5
+      },
+      "view_image": "data/crops/visibility/japanese_room/27_tatami.png"
+    },
+    "28": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 140,
+      "min_range_m": 2.35,
+      "best_view": {
+        "n_points": 325,
+        "px_bbox": [
+          1278,
+          333,
+          1340,
+          420
+        ],
+        "px_bbox_unwrapped": [
+          1278,
+          333,
+          1340,
+          420
+        ],
+        "px_area": 5394,
+        "px_area_frac": 0.00439,
+        "distance_m": 2.19,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529738.999095,
+        "frame": 178,
+        "elevation_deg": -10.1
+      },
+      "view_image": "data/crops/visibility/japanese_room/28_vase.png"
+    },
+    "32": {
+      "label": "teapot",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 10,
+      "min_range_m": 1.16,
+      "best_view": {
+        "n_points": 34,
+        "px_bbox": [
+          1351,
+          429,
+          1392,
+          465
+        ],
+        "px_bbox_unwrapped": [
+          1351,
+          429,
+          1392,
+          465
+        ],
+        "px_area": 1476,
+        "px_area_frac": 0.0012,
+        "distance_m": 1.16,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529719.139046,
+        "frame": 34,
+        "elevation_deg": -23.8
+      },
+      "view_image": "data/crops/visibility/japanese_room/32_teapot.png"
+    },
+    "33": {
+      "label": "dish",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.27,
+      "best_view": {
+        "n_points": 20,
+        "px_bbox": [
+          1389,
+          446,
+          1427,
+          464
+        ],
+        "px_bbox_unwrapped": [
+          1389,
+          446,
+          1427,
+          464
+        ],
+        "px_area": 684,
+        "px_area_frac": 0.00056,
+        "distance_m": 1.11,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529718.578989,
+        "frame": 30,
+        "elevation_deg": -25.4
+      }
+    },
+    "34": {
+      "label": "glass",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.54,
+      "best_view": {
+        "n_points": 27,
+        "px_bbox": [
+          1349,
+          411,
+          1365,
+          423
+        ],
+        "px_bbox_unwrapped": [
+          1349,
+          411,
+          1365,
+          423
+        ],
+        "px_area": 192,
+        "px_area_frac": 0.00016,
+        "distance_m": 1.61,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529718.293996,
+        "frame": 28,
+        "elevation_deg": -18.3
+      }
+    },
+    "35": {
+      "label": "glass",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.47,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1391,
+          421,
+          1407,
+          434
+        ],
+        "px_bbox_unwrapped": [
+          1391,
+          421,
+          1407,
+          434
+        ],
+        "px_area": 208,
+        "px_area_frac": 0.00017,
+        "distance_m": 1.48,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529718.863992,
+        "frame": 32,
+        "elevation_deg": -20.2
+      }
+    },
+    "36": {
+      "label": "ceiling lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 94,
+      "min_range_m": 1.92,
+      "best_view": {
+        "n_points": 840,
+        "px_bbox": [
+          1700,
+          0,
+          1884,
+          111
+        ],
+        "px_bbox_unwrapped": [
+          1700,
+          0,
+          1884,
+          111
+        ],
+        "px_area": 20424,
+        "px_area_frac": 0.01662,
+        "distance_m": 1.42,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529738.324003,
+        "frame": 173,
+        "elevation_deg": 48.7
+      },
+      "view_image": "data/crops/visibility/japanese_room/36_ceiling_lamp.png"
+    },
+    "37": {
+      "label": "placemat",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 35,
+      "min_range_m": 1.44,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          1371,
+          422,
+          1470,
+          454
+        ],
+        "px_bbox_unwrapped": [
+          1371,
+          422,
+          1470,
+          454
+        ],
+        "px_area": 3168,
+        "px_area_frac": 0.00258,
+        "distance_m": 1.2,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529719.239001,
+        "frame": 35,
+        "elevation_deg": -22.0
+      },
+      "view_image": "data/crops/visibility/japanese_room/37_placemat.png"
+    },
+    "38": {
+      "label": "sake bottle",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.35,
+      "best_view": {
+        "n_points": 24,
+        "px_bbox": [
+          1372,
+          401,
+          1388,
+          434
+        ],
+        "px_bbox_unwrapped": [
+          1372,
+          401,
+          1388,
+          434
+        ],
+        "px_area": 528,
+        "px_area_frac": 0.00043,
+        "distance_m": 1.45,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529718.713992,
+        "frame": 31,
+        "elevation_deg": -18.3
+      }
+    },
+    "39": {
+      "label": "glass",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 6,
+      "min_range_m": 0.79,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1281,
+          477,
+          1321,
+          515
+        ],
+        "px_bbox_unwrapped": [
+          1281,
+          477,
+          1321,
+          515
+        ],
+        "px_area": 1520,
+        "px_area_frac": 0.00124,
+        "distance_m": 0.82,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529720.428972,
+        "frame": 44,
+        "elevation_deg": -33.0
+      },
+      "view_image": "data/crops/visibility/japanese_room/39_glass.png"
+    },
+    "40": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 22,
+      "min_range_m": 1.67,
+      "best_view": {
+        "n_points": 117,
+        "px_bbox": [
+          1232,
+          418,
+          1314,
+          455
+        ],
+        "px_bbox_unwrapped": [
+          1232,
+          418,
+          1314,
+          455
+        ],
+        "px_area": 3034,
+        "px_area_frac": 0.00247,
+        "distance_m": 1.85,
+        "occlusion": 0.014,
+        "clipped": false,
+        "stamp": 1785529736.373973,
+        "frame": 159,
+        "elevation_deg": -21.5
+      },
+      "view_image": "data/crops/visibility/japanese_room/40_pillow.png"
+    },
+    "41": {
+      "label": "chopsticks",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.63,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1326,
+          411,
+          1358,
+          426
+        ],
+        "px_bbox_unwrapped": [
+          1326,
+          411,
+          1358,
+          426
+        ],
+        "px_area": 480,
+        "px_area_frac": 0.00039,
+        "distance_m": 1.56,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529718.058979,
+        "frame": 26,
+        "elevation_deg": -18.4
+      }
+    },
+    "42": {
+      "label": "sauce bowl",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.08,
+      "best_view": {
+        "n_points": 18,
+        "px_bbox": [
+          1364,
+          459,
+          1395,
+          479
+        ],
+        "px_bbox_unwrapped": [
+          1364,
+          459,
+          1395,
+          479
+        ],
+        "px_area": 620,
+        "px_area_frac": 0.0005,
+        "distance_m": 1.1,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529719.139046,
+        "frame": 34,
+        "elevation_deg": -28.0
+      }
+    },
+    "43": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 1.11,
+      "best_view": {
+        "n_points": 21,
+        "px_bbox": [
+          1253,
+          456,
+          1380,
+          524
+        ],
+        "px_bbox_unwrapped": [
+          1253,
+          456,
+          1380,
+          524
+        ],
+        "px_area": 8636,
+        "px_area_frac": 0.00703,
+        "distance_m": 1.3,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529736.788921,
+        "frame": 162,
+        "elevation_deg": -31.1
+      },
+      "view_image": "data/crops/visibility/japanese_room/43_pillow.png"
+    },
+    "44": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 79,
+      "min_range_m": 0.84,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1098,
+          523,
+          1328,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1098,
+          523,
+          1328,
+          639
+        ],
+        "px_area": 26680,
+        "px_area_frac": 0.02171,
+        "distance_m": 1.08,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529718.713992,
+        "frame": 31,
+        "elevation_deg": -48.5
+      },
+      "view_image": "data/crops/visibility/japanese_room/44_pillow.png"
+    },
+    "45": {
+      "label": "placemat",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 48,
+      "min_range_m": 1.27,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1390,
+          440,
+          1512,
+          487
+        ],
+        "px_bbox_unwrapped": [
+          1390,
+          440,
+          1512,
+          487
+        ],
+        "px_area": 5734,
+        "px_area_frac": 0.00467,
+        "distance_m": 1.16,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529719.139046,
+        "frame": 34,
+        "elevation_deg": -26.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/45_placemat.png"
+    },
+    "46": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 42,
+      "min_range_m": 1.09,
+      "best_view": {
+        "n_points": 19,
+        "px_bbox": [
+          1166,
+          493,
+          1334,
+          585
+        ],
+        "px_bbox_unwrapped": [
+          1166,
+          493,
+          1334,
+          585
+        ],
+        "px_area": 15456,
+        "px_area_frac": 0.01258,
+        "distance_m": 1.0,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529717.924013,
+        "frame": 25,
+        "elevation_deg": -40.1
+      },
+      "view_image": "data/crops/visibility/japanese_room/46_pillow.png"
+    },
+    "47": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.08,
+      "best_view": {
+        "n_points": 1387,
+        "px_bbox": [
+          490,
+          90,
+          543,
+          457
+        ],
+        "px_bbox_unwrapped": [
+          490,
+          90,
+          543,
+          457
+        ],
+        "px_area": 19451,
+        "px_area_frac": 0.01583,
+        "distance_m": 1.91,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529719.898995,
+        "frame": 40,
+        "elevation_deg": 12.2
+      },
+      "view_image": "data/crops/visibility/japanese_room/47_column.png"
+    },
+    "48": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 1.23,
+      "best_view": {
+        "n_points": 2119,
+        "px_bbox": [
+          1659,
+          0,
+          1752,
+          551
+        ],
+        "px_bbox_unwrapped": [
+          1659,
+          0,
+          1752,
+          551
+        ],
+        "px_area": 51243,
+        "px_area_frac": 0.0417,
+        "distance_m": 0.93,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529715.104043,
+        "frame": 4,
+        "elevation_deg": 23.8
+      },
+      "view_image": "data/crops/visibility/japanese_room/48_column.png"
+    },
+    "49": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 2.62,
+      "best_view": {
+        "n_points": 676,
+        "px_bbox": [
+          1433,
+          120,
+          1475,
+          426
+        ],
+        "px_bbox_unwrapped": [
+          1433,
+          120,
+          1475,
+          426
+        ],
+        "px_area": 12852,
+        "px_area_frac": 0.01046,
+        "distance_m": 2.39,
+        "occlusion": 0.07,
+        "clipped": false,
+        "stamp": 1785529716.058995,
+        "frame": 11,
+        "elevation_deg": 10.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/49_column.png"
+    },
+    "50": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 224,
+      "min_range_m": 4.62,
+      "best_view": {
+        "n_points": 209,
+        "px_bbox": [
+          1032,
+          202,
+          1057,
+          379
+        ],
+        "px_bbox_unwrapped": [
+          1032,
+          202,
+          1057,
+          379
+        ],
+        "px_area": 4425,
+        "px_area_frac": 0.0036,
+        "distance_m": 4.47,
+        "occlusion": 0.208,
+        "clipped": false,
+        "stamp": 1785529716.483993,
+        "frame": 14,
+        "elevation_deg": 5.8
+      },
+      "view_image": "data/crops/visibility/japanese_room/50_column.png"
+    },
+    "51": {
+      "label": "chopsticks",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 2,
+      "min_range_m": 1.2,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          1374,
+          446,
+          1416,
+          473
+        ],
+        "px_bbox_unwrapped": [
+          1374,
+          446,
+          1416,
+          473
+        ],
+        "px_area": 1134,
+        "px_area_frac": 0.00092,
+        "distance_m": 1.17,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529718.713992,
+        "frame": 31,
+        "elevation_deg": -26.0
+      },
+      "view_image": "data/crops/visibility/japanese_room/51_chopsticks.png"
+    },
+    "52": {
+      "label": "ceiling lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 192,
+      "min_range_m": 2.56,
+      "best_view": {
+        "n_points": 53,
+        "px_bbox": [
+          1407,
+          21,
+          1570,
+          121
+        ],
+        "px_bbox_unwrapped": [
+          1407,
+          21,
+          1570,
+          121
+        ],
+        "px_area": 16300,
+        "px_area_frac": 0.01326,
+        "distance_m": 1.84,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529717.924013,
+        "frame": 25,
+        "elevation_deg": 45.6
+      },
+      "view_image": "data/crops/visibility/japanese_room/52_ceiling_lamp.png"
+    },
+    "53": {
+      "label": "flowers",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 146,
+      "min_range_m": 3.18,
+      "best_view": {
+        "n_points": 142,
+        "px_bbox": [
+          926,
+          303,
+          1008,
+          412
+        ],
+        "px_bbox_unwrapped": [
+          926,
+          303,
+          1008,
+          412
+        ],
+        "px_area": 8938,
+        "px_area_frac": 0.00727,
+        "distance_m": 2.94,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": -6.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/53_flowers.png"
+    },
+    "54": {
+      "label": "glass",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 3,
+      "min_range_m": 0.92,
+      "best_view": {
+        "n_points": 20,
+        "px_bbox": [
+          1334,
+          463,
+          1368,
+          497
+        ],
+        "px_bbox_unwrapped": [
+          1334,
+          463,
+          1368,
+          497
+        ],
+        "px_area": 1156,
+        "px_area_frac": 0.00094,
+        "distance_m": 0.91,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529719.239001,
+        "frame": 35,
+        "elevation_deg": -30.1
+      },
+      "view_image": "data/crops/visibility/japanese_room/54_glass.png"
+    },
+    "55": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 21,
+      "min_range_m": 1.8,
+      "best_view": {
+        "n_points": 129,
+        "px_bbox": [
+          1308,
+          315,
+          1342,
+          431
+        ],
+        "px_bbox_unwrapped": [
+          1308,
+          315,
+          1342,
+          431
+        ],
+        "px_area": 3944,
+        "px_area_frac": 0.00321,
+        "distance_m": 1.74,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": -10.1
+      },
+      "view_image": "data/crops/visibility/japanese_room/55_vase.png"
+    },
+    "56": {
+      "label": "lantern",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 59,
+      "min_range_m": 2.09,
+      "best_view": {
+        "n_points": 103,
+        "px_bbox": [
+          1301,
+          368,
+          1335,
+          428
+        ],
+        "px_bbox_unwrapped": [
+          1301,
+          368,
+          1335,
+          428
+        ],
+        "px_area": 2040,
+        "px_area_frac": 0.00166,
+        "distance_m": 1.98,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529739.268947,
+        "frame": 180,
+        "elevation_deg": -14.6
+      },
+      "view_image": "data/crops/visibility/japanese_room/56_lantern.png"
+    },
+    "57": {
+      "label": "lantern",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 62,
+      "min_range_m": 1.86,
+      "best_view": {
+        "n_points": 128,
+        "px_bbox": [
+          1218,
+          374,
+          1254,
+          441
+        ],
+        "px_bbox_unwrapped": [
+          1218,
+          374,
+          1254,
+          441
+        ],
+        "px_area": 2412,
+        "px_area_frac": 0.00196,
+        "distance_m": 1.75,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529739.134105,
+        "frame": 179,
+        "elevation_deg": -16.4
+      },
+      "view_image": "data/crops/visibility/japanese_room/57_lantern.png"
+    },
+    "58": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 17,
+      "min_range_m": 1.9,
+      "best_view": {
+        "n_points": 174,
+        "px_bbox": [
+          1291,
+          410,
+          1369,
+          471
+        ],
+        "px_bbox_unwrapped": [
+          1291,
+          410,
+          1369,
+          471
+        ],
+        "px_area": 4758,
+        "px_area_frac": 0.00387,
+        "distance_m": 1.58,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": -22.5
+      },
+      "view_image": "data/crops/visibility/japanese_room/58_table.png"
+    },
+    "59": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 30,
+      "min_range_m": 3.96,
+      "best_view": {
+        "n_points": 51,
+        "px_bbox": [
+          925,
+          365,
+          967,
+          391
+        ],
+        "px_bbox_unwrapped": [
+          925,
+          365,
+          967,
+          391
+        ],
+        "px_area": 1092,
+        "px_area_frac": 0.00089,
+        "distance_m": 3.66,
+        "occlusion": 0.171,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": -10.8
+      },
+      "view_image": "data/crops/visibility/japanese_room/59_table.png"
+    },
+    "60": {
+      "label": "jar",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 47,
+      "min_range_m": 3.92,
+      "best_view": {
+        "n_points": 58,
+        "px_bbox": [
+          930,
+          337,
+          960,
+          374
+        ],
+        "px_bbox_unwrapped": [
+          930,
+          337,
+          960,
+          374
+        ],
+        "px_area": 1110,
+        "px_area_frac": 0.0009,
+        "distance_m": 3.76,
+        "occlusion": 0.117,
+        "clipped": false,
+        "stamp": 1785529716.193995,
+        "frame": 12,
+        "elevation_deg": -6.6
+      },
+      "view_image": "data/crops/visibility/japanese_room/60_jar.png"
+    },
+    "61": {
+      "label": "lantern",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 1.56,
+      "best_view": {
+        "n_points": 124,
+        "px_bbox": [
+          1386,
+          386,
+          1443,
+          493
+        ],
+        "px_bbox_unwrapped": [
+          1386,
+          386,
+          1443,
+          493
+        ],
+        "px_area": 6099,
+        "px_area_frac": 0.00496,
+        "distance_m": 1.38,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529715.788997,
+        "frame": 9,
+        "elevation_deg": -22.2
+      },
+      "view_image": "data/crops/visibility/japanese_room/61_lantern.png"
+    },
+    "62": {
+      "label": "fan decoration",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 169,
+      "min_range_m": 1.44,
+      "best_view": {
+        "n_points": 541,
+        "px_bbox": [
+          1390,
+          148,
+          1497,
+          331
+        ],
+        "px_bbox_unwrapped": [
+          1390,
+          148,
+          1497,
+          331
+        ],
+        "px_area": 19581,
+        "px_area_frac": 0.01594,
+        "distance_m": 1.21,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529715.394012,
+        "frame": 6,
+        "elevation_deg": 14.3
+      },
+      "view_image": "data/crops/visibility/japanese_room/62_fan_decoration.png"
+    }
+  },
+  "summary": {
+    "objects": 59,
+    "visible": 52,
+    "hidden": 7,
+    "seconds": 19.7
+  }
+}

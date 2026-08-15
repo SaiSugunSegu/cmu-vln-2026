@@ -1,0 +1,2253 @@
+{
+  "scene": "office_1",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/office_1/visibility/office_1_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: data/bags/office_1/iref_vla_metadata/office_1_referential_statements.json",
+    "source_objects: data/bags/office_1/iref_vla_metadata/office_1_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 6,
+    "hard": 2,
+    "easy": 2
+  },
+  "relation_counts": {
+    "on": 2,
+    "between": 1,
+    "in": 1,
+    "supports": 1,
+    "above": 1,
+    "near": 1,
+    "closest": 2,
+    "farthest": 1
+  },
+  "target_object_coverage": [
+    "bottle",
+    "chair",
+    "clock",
+    "coffee machine",
+    "file cabinet",
+    "laptop",
+    "map wall decal",
+    "paper cup",
+    "potted cactus",
+    "potted plant",
+    "projector screen",
+    "table",
+    "trash bin",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the potted plant on the file cabinet.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "on",
+      "target_objects": [
+        "potted plant",
+        "file cabinet"
+      ],
+      "answer": {
+        "object_id": "55",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "aqua"
+        ],
+        "center": [
+          1.1335,
+          1.2769,
+          1.326
+        ],
+        "size": [
+          0.2953,
+          0.2858,
+          0.2992
+        ],
+        "yaw": 0.8113,
+        "aabb": {
+          "min": [
+            0.9282,
+            1.0714,
+            1.1764
+          ],
+          "max": [
+            1.3388,
+            1.4823,
+            1.4756
+          ]
+        },
+        "size_aabb": [
+          0.4106,
+          0.4109,
+          0.2992
+        ],
+        "bbox_corners": [
+          [
+            0.9282,
+            1.2682,
+            1.4756
+          ],
+          [
+            1.1315,
+            1.4823,
+            1.4756
+          ],
+          [
+            1.3388,
+            1.2855,
+            1.4756
+          ],
+          [
+            1.1354,
+            1.0714,
+            1.4756
+          ],
+          [
+            0.9282,
+            1.2682,
+            1.1764
+          ],
+          [
+            1.1315,
+            1.4823,
+            1.1764
+          ],
+          [
+            1.3388,
+            1.2855,
+            1.1764
+          ],
+          [
+            1.1354,
+            1.0714,
+            1.1764
+          ]
+        ],
+        "volume": 0.02525
+      },
+      "anchors": [
+        {
+          "object_id": "69",
+          "region": "0",
+          "label": "file cabinet",
+          "raw_label": "file cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            1.9843,
+            1.2608,
+            0.589
+          ],
+          "size": [
+            2.312,
+            0.586,
+            1.1748
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              0.8283,
+              0.9678,
+              0.0016
+            ],
+            "max": [
+              3.1403,
+              1.5538,
+              1.1764
+            ]
+          },
+          "size_aabb": [
+            2.312,
+            0.586,
+            1.1748
+          ],
+          "bbox_corners": [
+            [
+              0.8283,
+              1.5538,
+              1.1764
+            ],
+            [
+              3.1403,
+              1.5538,
+              1.1764
+            ],
+            [
+              3.1403,
+              0.9678,
+              1.1764
+            ],
+            [
+              0.8283,
+              0.9678,
+              1.1764
+            ],
+            [
+              0.8283,
+              1.5538,
+              0.0016
+            ],
+            [
+              3.1403,
+              1.5538,
+              0.0016
+            ],
+            [
+              3.1403,
+              0.9678,
+              0.0016
+            ],
+            [
+              0.8283,
+              0.9678,
+              0.0016
+            ]
+          ],
+          "volume": 1.59168
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "67",
+        "71"
+      ],
+      "evidence": "solved from geometry: on: potted plant#55 is the only match",
+      "statement": "the plant that is on the cabinet",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/office_1/p1_img2.png"
+      ],
+      "views": [
+        {
+          "object_id": "55",
+          "role": "target",
+          "frames_visible": 78,
+          "distance_m": 1.12,
+          "px_area": 10098,
+          "occlusion": 0.0,
+          "elevation_deg": 21.2,
+          "stamp": 1785528923.722945,
+          "image": "data/crops/visibility/office_1/55_plant.png"
+        },
+        {
+          "object_id": "69",
+          "role": "anchor",
+          "frames_visible": 164,
+          "distance_m": 0.75,
+          "px_area": 180048,
+          "occlusion": 0.0,
+          "elevation_deg": -11.0,
+          "stamp": 1785528925.71796,
+          "image": "data/crops/visibility/office_1/69_file_cabinet.png"
+        }
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='potted plant' color='' hops=[{'relation': 'on', 'phrases': ['file cabinet']}]",
+        "head candidates: [potted plant#11, potted plant#55, potted plant#67, potted plant#71]",
+        "target hop (on): on: 1 match(es) -> [potted plant#55]",
+        "pick: on: potted plant#55 is the only match",
+        "result: on: potted plant#55 is the only match"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the paper cup on the table closest to the projector screen.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "paper cup",
+        "table",
+        "projector screen"
+      ],
+      "answer": {
+        "object_id": "84",
+        "region": "0",
+        "label": "paper cup",
+        "raw_label": "paper cup",
+        "nyu_label": "cup",
+        "colors": [
+          "gray",
+          "brown"
+        ],
+        "center": [
+          -1.6287,
+          -1.9811,
+          0.8099
+        ],
+        "size": [
+          0.0883,
+          0.0881,
+          0.106
+        ],
+        "yaw": 1.7517,
+        "aabb": {
+          "min": [
+            -1.68,
+            -2.0324,
+            0.7569
+          ],
+          "max": [
+            -1.5775,
+            -1.9297,
+            0.8629
+          ]
+        },
+        "size_aabb": [
+          0.1025,
+          0.1027,
+          0.106
+        ],
+        "bbox_corners": [
+          [
+            -1.6641,
+            -2.0324,
+            0.8629
+          ],
+          [
+            -1.68,
+            -1.9456,
+            0.8629
+          ],
+          [
+            -1.5934,
+            -1.9297,
+            0.8629
+          ],
+          [
+            -1.5775,
+            -2.0166,
+            0.8629
+          ],
+          [
+            -1.6641,
+            -2.0324,
+            0.7569
+          ],
+          [
+            -1.68,
+            -1.9456,
+            0.7569
+          ],
+          [
+            -1.5934,
+            -1.9297,
+            0.7569
+          ],
+          [
+            -1.5775,
+            -2.0166,
+            0.7569
+          ]
+        ],
+        "volume": 0.00082
+      },
+      "anchors": [
+        {
+          "object_id": "50",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -1.838,
+            -1.8824,
+            0.3659
+          ],
+          "size": [
+            2.7107,
+            1.0505,
+            0.7703
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -2.3633,
+              -3.2378,
+              -0.0193
+            ],
+            "max": [
+              -1.3127,
+              -0.527,
+              0.7511
+            ]
+          },
+          "size_aabb": [
+            1.0505,
+            2.7107,
+            0.7703
+          ],
+          "bbox_corners": [
+            [
+              -1.3127,
+              -0.527,
+              0.7511
+            ],
+            [
+              -1.3127,
+              -3.2377,
+              0.7511
+            ],
+            [
+              -2.3633,
+              -3.2378,
+              0.7511
+            ],
+            [
+              -2.3633,
+              -0.527,
+              0.7511
+            ],
+            [
+              -1.3127,
+              -0.527,
+              -0.0193
+            ],
+            [
+              -1.3127,
+              -3.2377,
+              -0.0193
+            ],
+            [
+              -2.3633,
+              -3.2378,
+              -0.0193
+            ],
+            [
+              -2.3633,
+              -0.527,
+              -0.0193
+            ]
+          ],
+          "volume": 2.19372
+        }
+      ],
+      "distractor_ids": [
+        "79",
+        "97"
+      ],
+      "evidence": "solved from geometry: on: paper cup#84 is the only match",
+      "statement": "the cup that is on the black table",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/office_1/p2_img1.png"
+      ],
+      "views": [
+        {
+          "object_id": "50",
+          "role": "anchor",
+          "frames_visible": 117,
+          "distance_m": 0.81,
+          "px_area": 106305,
+          "occlusion": 0.0,
+          "elevation_deg": -13.9,
+          "stamp": 1785528947.522968,
+          "image": "data/crops/visibility/office_1/50_table.png"
+        }
+      ],
+      "visibility_warning": [
+        "target 84 was never resolved by the robot's camera: too_small"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='paper cup' color='' hops=[{'relation': 'on', 'phrases': ['table']}, {'relation': 'closest', 'phrases': ['projector screen']}]",
+        "head candidates: [paper cup#79, paper cup#84, paper cup#97]",
+        "anchor hop 1 (closest): closest: ranked [table#50, table#53]; closest: centre 2.74 m (next 7.18 m); box-gap 1.76 m (next 5.53 m)",
+        "target hop (on): on: 1 match(es) -> [paper cup#84]",
+        "pick: on: paper cup#84 is the only match",
+        "result: on: paper cup#84 is the only match"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the chair that is between the window and the laptop.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "chair",
+        "window",
+        "laptop"
+      ],
+      "answer": {
+        "object_id": "49",
+        "region": "0",
+        "label": "chair",
+        "raw_label": "chair",
+        "nyu_label": "chair",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          -1.94,
+          -3.5584,
+          0.5217
+        ],
+        "size": [
+          0.5831,
+          0.6519,
+          1.047
+        ],
+        "yaw": -0.0118,
+        "aabb": {
+          "min": [
+            -2.2353,
+            -3.8877,
+            -0.0018
+          ],
+          "max": [
+            -1.6446,
+            -3.229,
+            1.0453
+          ]
+        },
+        "size_aabb": [
+          0.5908,
+          0.6588,
+          1.047
+        ],
+        "bbox_corners": [
+          [
+            -2.2277,
+            -3.229,
+            1.0453
+          ],
+          [
+            -1.6446,
+            -3.2358,
+            1.0453
+          ],
+          [
+            -1.6522,
+            -3.8877,
+            1.0453
+          ],
+          [
+            -2.2353,
+            -3.8809,
+            1.0453
+          ],
+          [
+            -2.2277,
+            -3.229,
+            -0.0018
+          ],
+          [
+            -1.6446,
+            -3.2358,
+            -0.0018
+          ],
+          [
+            -1.6522,
+            -3.8877,
+            -0.0018
+          ],
+          [
+            -2.2353,
+            -3.8809,
+            -0.0018
+          ]
+        ],
+        "volume": 0.39804
+      },
+      "anchors": [
+        {
+          "object_id": "6",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -0.3073,
+            -5.0778,
+            1.5198
+          ],
+          "size": [
+            7.8078,
+            0.4815,
+            2.1022
+          ],
+          "yaw": -0.0034,
+          "aabb": {
+            "min": [
+              -4.212,
+              -5.3319,
+              0.4687
+            ],
+            "max": [
+              3.5974,
+              -4.8237,
+              2.5709
+            ]
+          },
+          "size_aabb": [
+            7.8094,
+            0.5082,
+            2.1022
+          ],
+          "bbox_corners": [
+            [
+              -4.2104,
+              -4.8237,
+              2.5709
+            ],
+            [
+              3.5974,
+              -4.8503,
+              2.5709
+            ],
+            [
+              3.5958,
+              -5.3319,
+              2.5709
+            ],
+            [
+              -4.212,
+              -5.3052,
+              2.5709
+            ],
+            [
+              -4.2104,
+              -4.8237,
+              0.4687
+            ],
+            [
+              3.5974,
+              -4.8503,
+              0.4687
+            ],
+            [
+              3.5958,
+              -5.3319,
+              0.4687
+            ],
+            [
+              -4.212,
+              -5.3052,
+              0.4687
+            ]
+          ],
+          "volume": 7.90402,
+          "phrase": "the window"
+        },
+        {
+          "object_id": "70",
+          "region": "0",
+          "label": "laptop",
+          "raw_label": "laptop",
+          "nyu_label": "laptop",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            -1.5966,
+            -2.3638,
+            0.8943
+          ],
+          "size": [
+            0.3514,
+            0.4529,
+            0.275
+          ],
+          "yaw": 3.0498,
+          "aabb": {
+            "min": [
+              -1.7923,
+              -2.6054,
+              0.7568
+            ],
+            "max": [
+              -1.4009,
+              -2.1223,
+              1.0318
+            ]
+          },
+          "size_aabb": [
+            0.3914,
+            0.4832,
+            0.275
+          ],
+          "bbox_corners": [
+            [
+              -1.4424,
+              -2.6054,
+              1.0318
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              1.0318
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              1.0318
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              1.0318
+            ],
+            [
+              -1.4424,
+              -2.6054,
+              0.7568
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              0.7568
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              0.7568
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              0.7568
+            ]
+          ],
+          "volume": 0.04376,
+          "phrase": "the laptop"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 11,
+      "evidence": "between: between window#6 and laptop#70 (lateral offset 0.82 m)",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "49",
+          "role": "target",
+          "frames_visible": 122,
+          "distance_m": 0.43,
+          "px_area": 156492,
+          "occlusion": 0.0,
+          "elevation_deg": -23.3,
+          "stamp": 1785528946.387986,
+          "image": "data/crops/visibility/office_1/49_chair.png"
+        },
+        {
+          "object_id": "6",
+          "role": "anchor",
+          "frames_visible": 208,
+          "distance_m": 1.52,
+          "px_area": 197120,
+          "occlusion": 0.0,
+          "elevation_deg": 11.4,
+          "stamp": 1785528938.847962,
+          "image": "data/crops/visibility/office_1/6_window.png"
+        },
+        {
+          "object_id": "70",
+          "role": "anchor",
+          "frames_visible": 64,
+          "distance_m": 1.32,
+          "px_area": 9702,
+          "occlusion": 0.003,
+          "elevation_deg": 1.9,
+          "stamp": 1785528947.872986,
+          "image": "data/crops/visibility/office_1/70_laptop.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the paper cup inside the coffee machine.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "in",
+      "target_objects": [
+        "paper cup",
+        "coffee machine"
+      ],
+      "answer": {
+        "object_id": "79",
+        "region": "0",
+        "label": "paper cup",
+        "raw_label": "paper cup",
+        "nyu_label": "cup",
+        "colors": [
+          "gray",
+          "brown"
+        ],
+        "center": [
+          2.0754,
+          1.1512,
+          1.2435
+        ],
+        "size": [
+          0.0883,
+          0.0868,
+          0.1059
+        ],
+        "yaw": 0.1989,
+        "aabb": {
+          "min": [
+            2.0236,
+            1.1,
+            1.1905
+          ],
+          "max": [
+            2.1272,
+            1.2025,
+            1.2965
+          ]
+        },
+        "size_aabb": [
+          0.1037,
+          0.1026,
+          0.1059
+        ],
+        "bbox_corners": [
+          [
+            2.0236,
+            1.1851,
+            1.2965
+          ],
+          [
+            2.1101,
+            1.2025,
+            1.2965
+          ],
+          [
+            2.1272,
+            1.1174,
+            1.2965
+          ],
+          [
+            2.0407,
+            1.1,
+            1.2965
+          ],
+          [
+            2.0236,
+            1.1851,
+            1.1905
+          ],
+          [
+            2.1101,
+            1.2025,
+            1.1905
+          ],
+          [
+            2.1272,
+            1.1174,
+            1.1905
+          ],
+          [
+            2.0407,
+            1.1,
+            1.1905
+          ]
+        ],
+        "volume": 0.00081
+      },
+      "anchors": [
+        {
+          "object_id": "78",
+          "region": "0",
+          "label": "coffee machine",
+          "raw_label": "coffee machine",
+          "nyu_label": "coffee machine",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.068,
+            1.3161,
+            1.3861
+          ],
+          "size": [
+            0.5009,
+            0.338,
+            0.4194
+          ],
+          "yaw": -1.577,
+          "aabb": {
+            "min": [
+              1.8975,
+              1.0646,
+              1.1764
+            ],
+            "max": [
+              2.2385,
+              1.5676,
+              1.5959
+            ]
+          },
+          "size_aabb": [
+            0.3411,
+            0.503,
+            0.4194
+          ],
+          "bbox_corners": [
+            [
+              2.2385,
+              1.5656,
+              1.5959
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.5959
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.5959
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.5959
+            ],
+            [
+              2.2385,
+              1.5656,
+              1.1764
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.1764
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.1764
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.1764
+            ]
+          ],
+          "volume": 0.07102,
+          "phrase": "the coffee machine"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "in: inside coffee machine#78: base 1.19 m sits 0.41 m below its rim",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "79",
+          "role": "target",
+          "frames_visible": 14,
+          "distance_m": 0.99,
+          "px_area": 1326,
+          "occlusion": 0.0,
+          "elevation_deg": 21.0,
+          "stamp": 1785528924.592996,
+          "image": "data/crops/visibility/office_1/79_paper_cup.png"
+        },
+        {
+          "object_id": "78",
+          "role": "anchor",
+          "frames_visible": 119,
+          "distance_m": 1.09,
+          "px_area": 18330,
+          "occlusion": 0.0,
+          "elevation_deg": 23.4,
+          "stamp": 1785528925.472963,
+          "image": "data/crops/visibility/office_1/78_coffee_machine.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the table with the laptop on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "laptop"
+      ],
+      "answer": {
+        "object_id": "50",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          -1.838,
+          -1.8824,
+          0.3659
+        ],
+        "size": [
+          2.7107,
+          1.0505,
+          0.7703
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -2.3633,
+            -3.2378,
+            -0.0193
+          ],
+          "max": [
+            -1.3127,
+            -0.527,
+            0.7511
+          ]
+        },
+        "size_aabb": [
+          1.0505,
+          2.7107,
+          0.7703
+        ],
+        "bbox_corners": [
+          [
+            -1.3127,
+            -0.527,
+            0.7511
+          ],
+          [
+            -1.3127,
+            -3.2377,
+            0.7511
+          ],
+          [
+            -2.3633,
+            -3.2378,
+            0.7511
+          ],
+          [
+            -2.3633,
+            -0.527,
+            0.7511
+          ],
+          [
+            -1.3127,
+            -0.527,
+            -0.0193
+          ],
+          [
+            -1.3127,
+            -3.2377,
+            -0.0193
+          ],
+          [
+            -2.3633,
+            -3.2378,
+            -0.0193
+          ],
+          [
+            -2.3633,
+            -0.527,
+            -0.0193
+          ]
+        ],
+        "volume": 2.19372
+      },
+      "anchors": [
+        {
+          "object_id": "70",
+          "region": "0",
+          "label": "laptop",
+          "raw_label": "laptop",
+          "nyu_label": "laptop",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            -1.5966,
+            -2.3638,
+            0.8943
+          ],
+          "size": [
+            0.3514,
+            0.4529,
+            0.275
+          ],
+          "yaw": 3.0498,
+          "aabb": {
+            "min": [
+              -1.7923,
+              -2.6054,
+              0.7568
+            ],
+            "max": [
+              -1.4009,
+              -2.1223,
+              1.0318
+            ]
+          },
+          "size_aabb": [
+            0.3914,
+            0.4832,
+            0.275
+          ],
+          "bbox_corners": [
+            [
+              -1.4424,
+              -2.6054,
+              1.0318
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              1.0318
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              1.0318
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              1.0318
+            ],
+            [
+              -1.4424,
+              -2.6054,
+              0.7568
+            ],
+            [
+              -1.7923,
+              -2.5732,
+              0.7568
+            ],
+            [
+              -1.7508,
+              -2.1223,
+              0.7568
+            ],
+            [
+              -1.4009,
+              -2.1545,
+              0.7568
+            ]
+          ],
+          "volume": 0.04376,
+          "phrase": "the laptop"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds laptop#70 (top 0.75 m, its underside 0.76 m)",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "50",
+          "role": "target",
+          "frames_visible": 117,
+          "distance_m": 0.81,
+          "px_area": 106305,
+          "occlusion": 0.0,
+          "elevation_deg": -13.9,
+          "stamp": 1785528947.522968,
+          "image": "data/crops/visibility/office_1/50_table.png"
+        },
+        {
+          "object_id": "70",
+          "role": "anchor",
+          "frames_visible": 64,
+          "distance_m": 1.32,
+          "px_area": 9702,
+          "occlusion": 0.003,
+          "elevation_deg": 1.9,
+          "stamp": 1785528947.872986,
+          "image": "data/crops/visibility/office_1/70_laptop.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the potted cactus that are above the trash bin.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "above",
+      "target_objects": [
+        "potted cactus",
+        "trash bin"
+      ],
+      "answer": {
+        "object_id": "90",
+        "region": "0",
+        "label": "potted cactus",
+        "raw_label": "potted cactus",
+        "nyu_label": "cactus",
+        "colors": [
+          "aqua",
+          "olive"
+        ],
+        "center": [
+          4.0951,
+          -1.7534,
+          0.9127
+        ],
+        "size": [
+          0.0983,
+          0.0982,
+          0.1884
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            4.0461,
+            -1.8026,
+            0.8185
+          ],
+          "max": [
+            4.1442,
+            -1.7043,
+            1.0069
+          ]
+        },
+        "size_aabb": [
+          0.0982,
+          0.0983,
+          0.1884
+        ],
+        "bbox_corners": [
+          [
+            4.1442,
+            -1.7043,
+            1.0069
+          ],
+          [
+            4.1442,
+            -1.8026,
+            1.0069
+          ],
+          [
+            4.0461,
+            -1.8026,
+            1.0069
+          ],
+          [
+            4.0461,
+            -1.7043,
+            1.0069
+          ],
+          [
+            4.1442,
+            -1.7043,
+            0.8185
+          ],
+          [
+            4.1442,
+            -1.8026,
+            0.8185
+          ],
+          [
+            4.0461,
+            -1.8026,
+            0.8185
+          ],
+          [
+            4.0461,
+            -1.7043,
+            0.8185
+          ]
+        ],
+        "volume": 0.00182
+      },
+      "anchors": [
+        {
+          "object_id": "31",
+          "region": "0",
+          "label": "trash bin",
+          "raw_label": "trash bin",
+          "nyu_label": "garbage bin",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            4.5636,
+            -1.903,
+            0.2038
+          ],
+          "size": [
+            0.3912,
+            0.3889,
+            0.4126
+          ],
+          "yaw": -0.7029,
+          "aabb": {
+            "min": [
+              4.2887,
+              -2.1778,
+              -0.0025
+            ],
+            "max": [
+              4.8386,
+              -1.6282,
+              0.4101
+            ]
+          },
+          "size_aabb": [
+            0.5499,
+            0.5496,
+            0.4126
+          ],
+          "bbox_corners": [
+            [
+              4.5401,
+              -1.6282,
+              0.4101
+            ],
+            [
+              4.8386,
+              -1.881,
+              0.4101
+            ],
+            [
+              4.5872,
+              -2.1778,
+              0.4101
+            ],
+            [
+              4.2887,
+              -1.9249,
+              0.4101
+            ],
+            [
+              4.5401,
+              -1.6282,
+              -0.0025
+            ],
+            [
+              4.8386,
+              -1.881,
+              -0.0025
+            ],
+            [
+              4.5872,
+              -2.1778,
+              -0.0025
+            ],
+            [
+              4.2887,
+              -1.9249,
+              -0.0025
+            ]
+          ],
+          "volume": 0.06277,
+          "phrase": "the trash bin"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "above: underside 0.82 m clears trash bin#31 top 0.41 m by 0.41 m",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "90",
+          "role": "target",
+          "frames_visible": 49,
+          "distance_m": 0.88,
+          "px_area": 2752,
+          "occlusion": 0.0,
+          "elevation_deg": 3.8,
+          "stamp": 1785528930.512977,
+          "image": "data/crops/visibility/office_1/90_potted_cactus.png"
+        },
+        {
+          "object_id": "31",
+          "role": "anchor",
+          "frames_visible": 38,
+          "distance_m": 0.61,
+          "px_area": 44896,
+          "occlusion": 0.0,
+          "elevation_deg": -45.0,
+          "stamp": 1785528931.142932,
+          "image": "data/crops/visibility/office_1/31_garbage_can.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the table that is near the trash bin.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "near",
+      "target_objects": [
+        "table",
+        "trash bin"
+      ],
+      "answer": {
+        "object_id": "53",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          2.86,
+          -1.813,
+          0.4061
+        ],
+        "size": [
+          2.888,
+          1.158,
+          0.8173
+        ],
+        "yaw": 3.1416,
+        "aabb": {
+          "min": [
+            1.416,
+            -2.392,
+            -0.0025
+          ],
+          "max": [
+            4.304,
+            -1.234,
+            0.8148
+          ]
+        },
+        "size_aabb": [
+          2.888,
+          1.158,
+          0.8173
+        ],
+        "bbox_corners": [
+          [
+            4.304,
+            -2.392,
+            0.8148
+          ],
+          [
+            1.416,
+            -2.392,
+            0.8148
+          ],
+          [
+            1.416,
+            -1.234,
+            0.8148
+          ],
+          [
+            4.304,
+            -1.234,
+            0.8148
+          ],
+          [
+            4.304,
+            -2.392,
+            -0.0025
+          ],
+          [
+            1.416,
+            -2.392,
+            -0.0025
+          ],
+          [
+            1.416,
+            -1.234,
+            -0.0025
+          ],
+          [
+            4.304,
+            -1.234,
+            -0.0025
+          ]
+        ],
+        "volume": 2.73309
+      },
+      "anchors": [
+        {
+          "object_id": "31",
+          "region": "0",
+          "label": "trash bin",
+          "raw_label": "trash bin",
+          "nyu_label": "garbage bin",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            4.5636,
+            -1.903,
+            0.2038
+          ],
+          "size": [
+            0.3912,
+            0.3889,
+            0.4126
+          ],
+          "yaw": -0.7029,
+          "aabb": {
+            "min": [
+              4.2887,
+              -2.1778,
+              -0.0025
+            ],
+            "max": [
+              4.8386,
+              -1.6282,
+              0.4101
+            ]
+          },
+          "size_aabb": [
+            0.5499,
+            0.5496,
+            0.4126
+          ],
+          "bbox_corners": [
+            [
+              4.5401,
+              -1.6282,
+              0.4101
+            ],
+            [
+              4.8386,
+              -1.881,
+              0.4101
+            ],
+            [
+              4.5872,
+              -2.1778,
+              0.4101
+            ],
+            [
+              4.2887,
+              -1.9249,
+              0.4101
+            ],
+            [
+              4.5401,
+              -1.6282,
+              -0.0025
+            ],
+            [
+              4.8386,
+              -1.881,
+              -0.0025
+            ],
+            [
+              4.5872,
+              -2.1778,
+              -0.0025
+            ],
+            [
+              4.2887,
+              -1.9249,
+              -0.0025
+            ]
+          ],
+          "volume": 0.06277,
+          "phrase": "the trash bin"
+        }
+      ],
+      "distractor_ids": [
+        "50"
+      ],
+      "competitors": 1,
+      "margin": 5.601,
+      "evidence": "near: box-gap 0.00 m; next table is 5.60 m away",
+      "statement": "the table that is near the garbage bin",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "53",
+          "role": "target",
+          "frames_visible": 169,
+          "distance_m": 0.66,
+          "px_area": 112112,
+          "occlusion": 0.0,
+          "elevation_deg": -12.0,
+          "stamp": 1785528930.007983,
+          "image": "data/crops/visibility/office_1/53_table.png"
+        },
+        {
+          "object_id": "31",
+          "role": "anchor",
+          "frames_visible": 38,
+          "distance_m": 0.61,
+          "px_area": 44896,
+          "occlusion": 0.0,
+          "elevation_deg": -45.0,
+          "stamp": 1785528931.142932,
+          "image": "data/crops/visibility/office_1/31_garbage_can.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the bottle that is closest to the clock.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "bottle",
+        "clock"
+      ],
+      "answer": {
+        "object_id": "100",
+        "region": "0",
+        "label": "bottle",
+        "raw_label": "bottle",
+        "nyu_label": "bottle",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          1.6081,
+          1.1962,
+          1.2942
+        ],
+        "size": [
+          0.0673,
+          0.0663,
+          0.2283
+        ],
+        "yaw": 1.474,
+        "aabb": {
+          "min": [
+            1.5719,
+            1.1594,
+            1.18
+          ],
+          "max": [
+            1.6444,
+            1.2329,
+            1.4083
+          ]
+        },
+        "size_aabb": [
+          0.0725,
+          0.0734,
+          0.2283
+        ],
+        "bbox_corners": [
+          [
+            1.5719,
+            1.1658,
+            1.4083
+          ],
+          [
+            1.5784,
+            1.2329,
+            1.4083
+          ],
+          [
+            1.6444,
+            1.2265,
+            1.4083
+          ],
+          [
+            1.6379,
+            1.1594,
+            1.4083
+          ],
+          [
+            1.5719,
+            1.1658,
+            1.18
+          ],
+          [
+            1.5784,
+            1.2329,
+            1.18
+          ],
+          [
+            1.6444,
+            1.2265,
+            1.18
+          ],
+          [
+            1.6379,
+            1.1594,
+            1.18
+          ]
+        ],
+        "volume": 0.00102
+      },
+      "anchors": [
+        {
+          "object_id": "80",
+          "region": "0",
+          "label": "clock",
+          "raw_label": "clock",
+          "nyu_label": "clock",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            1.8025,
+            1.5558,
+            2.2714
+          ],
+          "size": [
+            0.3996,
+            0.0505,
+            0.4003
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              1.6027,
+              1.5305,
+              2.0712
+            ],
+            "max": [
+              2.0023,
+              1.581,
+              2.4715
+            ]
+          },
+          "size_aabb": [
+            0.3996,
+            0.0505,
+            0.4003
+          ],
+          "bbox_corners": [
+            [
+              2.0023,
+              1.5305,
+              2.4715
+            ],
+            [
+              1.6027,
+              1.5305,
+              2.4715
+            ],
+            [
+              1.6027,
+              1.581,
+              2.4715
+            ],
+            [
+              2.0023,
+              1.581,
+              2.4715
+            ],
+            [
+              2.0023,
+              1.5305,
+              2.0712
+            ],
+            [
+              1.6027,
+              1.5305,
+              2.0712
+            ],
+            [
+              1.6027,
+              1.581,
+              2.0712
+            ],
+            [
+              2.0023,
+              1.581,
+              2.0712
+            ]
+          ],
+          "volume": 0.00807,
+          "phrase": "the clock"
+        }
+      ],
+      "distractor_ids": [
+        "93"
+      ],
+      "competitors": 1,
+      "margin": 2.996,
+      "evidence": "closest: centre 1.06 m vs runner-up bottle#93 4.06 m; box-gap 0.73 m vs runner-up bottle#93 3.82 m",
+      "statement": "the bottle that is closest to the clock",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "100",
+          "role": "target",
+          "frames_visible": 18,
+          "distance_m": 1.1,
+          "px_area": 1550,
+          "occlusion": 0.0,
+          "elevation_deg": 21.6,
+          "stamp": 1785528924.722914,
+          "image": "data/crops/visibility/office_1/100_bottle.png"
+        },
+        {
+          "object_id": "80",
+          "role": "anchor",
+          "frames_visible": 39,
+          "distance_m": 1.47,
+          "px_area": 5022,
+          "occlusion": 0.0,
+          "elevation_deg": 43.9,
+          "stamp": 1785528925.108007,
+          "image": "data/crops/visibility/office_1/80_clock.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the potted plant that is closest to the map wall decal.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "potted plant",
+        "map wall decal"
+      ],
+      "answer": {
+        "object_id": "67",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "gray"
+        ],
+        "center": [
+          5.6664,
+          1.2307,
+          1.0457
+        ],
+        "size": [
+          0.785,
+          0.6685,
+          2.0964
+        ],
+        "yaw": -0.2174,
+        "aabb": {
+          "min": [
+            5.2111,
+            0.8197,
+            -0.0025
+          ],
+          "max": [
+            6.1218,
+            1.6418,
+            2.0939
+          ]
+        },
+        "size_aabb": [
+          0.9107,
+          0.8221,
+          2.0964
+        ],
+        "bbox_corners": [
+          [
+            5.3553,
+            1.6418,
+            2.0939
+          ],
+          [
+            6.1218,
+            1.4725,
+            2.0939
+          ],
+          [
+            5.9776,
+            0.8197,
+            2.0939
+          ],
+          [
+            5.2111,
+            0.989,
+            2.0939
+          ],
+          [
+            5.3553,
+            1.6418,
+            -0.0025
+          ],
+          [
+            6.1218,
+            1.4725,
+            -0.0025
+          ],
+          [
+            5.9776,
+            0.8197,
+            -0.0025
+          ],
+          [
+            5.2111,
+            0.989,
+            -0.0025
+          ]
+        ],
+        "volume": 1.10014
+      },
+      "anchors": [
+        {
+          "object_id": "108",
+          "region": "0",
+          "label": "map wall decal",
+          "raw_label": "map wall decal",
+          "nyu_label": "wall decoration",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            6.0355,
+            -3.2075,
+            1.6731
+          ],
+          "size": [
+            1.793,
+            0.0466,
+            1.1552
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              6.0122,
+              -4.104,
+              1.0955
+            ],
+            "max": [
+              6.0588,
+              -2.3109,
+              2.2507
+            ]
+          },
+          "size_aabb": [
+            0.0466,
+            1.793,
+            1.1552
+          ],
+          "bbox_corners": [
+            [
+              6.0588,
+              -2.3109,
+              2.2507
+            ],
+            [
+              6.0588,
+              -4.104,
+              2.2507
+            ],
+            [
+              6.0122,
+              -4.104,
+              2.2507
+            ],
+            [
+              6.0122,
+              -2.3109,
+              2.2507
+            ],
+            [
+              6.0588,
+              -2.3109,
+              1.0955
+            ],
+            [
+              6.0588,
+              -4.104,
+              1.0955
+            ],
+            [
+              6.0122,
+              -4.104,
+              1.0955
+            ],
+            [
+              6.0122,
+              -2.3109,
+              1.0955
+            ]
+          ],
+          "volume": 0.09642,
+          "phrase": "the map wall decal"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "55",
+        "71"
+      ],
+      "competitors": 3,
+      "margin": 2.155,
+      "evidence": "closest: centre 4.50 m vs runner-up potted plant#55 6.65 m; box-gap 3.13 m vs runner-up potted plant#55 5.77 m",
+      "statement": "the plant that is closest to the wall decoration",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "67",
+          "role": "target",
+          "frames_visible": 156,
+          "distance_m": 2.01,
+          "px_area": 50808,
+          "occlusion": 0.001,
+          "elevation_deg": 5.4,
+          "stamp": 1785528927.857964,
+          "image": "data/crops/visibility/office_1/67_plant.png"
+        },
+        {
+          "object_id": "108",
+          "role": "anchor",
+          "frames_visible": 214,
+          "distance_m": 0.86,
+          "px_area": 97440,
+          "occlusion": 0.0,
+          "elevation_deg": 33.7,
+          "stamp": 1785528932.00295,
+          "image": "data/crops/visibility/office_1/108_map_wall_decal.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the potted plant that is farthest from the coffee machine.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "coffee machine"
+      ],
+      "answer": {
+        "object_id": "71",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "brown"
+        ],
+        "center": [
+          -3.8139,
+          1.163,
+          0.459
+        ],
+        "size": [
+          0.5264,
+          0.5438,
+          0.923
+        ],
+        "yaw": -2.231,
+        "aabb": {
+          "min": [
+            -4.1901,
+            0.7884,
+            -0.0025
+          ],
+          "max": [
+            -3.4377,
+            1.5377,
+            0.9205
+          ]
+        },
+        "size_aabb": [
+          0.7524,
+          0.7493,
+          0.923
+        ],
+        "bbox_corners": [
+          [
+            -3.4377,
+            1.2042,
+            0.9205
+          ],
+          [
+            -3.7605,
+            0.7884,
+            0.9205
+          ],
+          [
+            -4.1901,
+            1.1219,
+            0.9205
+          ],
+          [
+            -3.8672,
+            1.5377,
+            0.9205
+          ],
+          [
+            -3.4377,
+            1.2042,
+            -0.0025
+          ],
+          [
+            -3.7605,
+            0.7884,
+            -0.0025
+          ],
+          [
+            -4.1901,
+            1.1219,
+            -0.0025
+          ],
+          [
+            -3.8672,
+            1.5377,
+            -0.0025
+          ]
+        ],
+        "volume": 0.26422
+      },
+      "anchors": [
+        {
+          "object_id": "78",
+          "region": "0",
+          "label": "coffee machine",
+          "raw_label": "coffee machine",
+          "nyu_label": "coffee machine",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.068,
+            1.3161,
+            1.3861
+          ],
+          "size": [
+            0.5009,
+            0.338,
+            0.4194
+          ],
+          "yaw": -1.577,
+          "aabb": {
+            "min": [
+              1.8975,
+              1.0646,
+              1.1764
+            ],
+            "max": [
+              2.2385,
+              1.5676,
+              1.5959
+            ]
+          },
+          "size_aabb": [
+            0.3411,
+            0.503,
+            0.4194
+          ],
+          "bbox_corners": [
+            [
+              2.2385,
+              1.5656,
+              1.5959
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.5959
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.5959
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.5959
+            ],
+            [
+              2.2385,
+              1.5656,
+              1.1764
+            ],
+            [
+              2.2355,
+              1.0646,
+              1.1764
+            ],
+            [
+              1.8975,
+              1.0667,
+              1.1764
+            ],
+            [
+              1.9005,
+              1.5676,
+              1.1764
+            ]
+          ],
+          "volume": 0.07102,
+          "phrase": "the coffee machine"
+        }
+      ],
+      "distractor_ids": [
+        "11",
+        "55",
+        "67"
+      ],
+      "competitors": 3,
+      "margin": 2.341,
+      "evidence": "farthest: centre 5.96 m vs runner-up potted plant#67 3.62 m; box-gap 5.34 m vs runner-up potted plant#67 2.97 m",
+      "statement": "the plant that is farthest from the coffee machine",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "71",
+          "role": "target",
+          "frames_visible": 29,
+          "distance_m": 3.99,
+          "px_area": 3650,
+          "occlusion": 0.244,
+          "elevation_deg": -5.4,
+          "stamp": 1785528952.606998,
+          "image": "data/crops/visibility/office_1/71_plant.png"
+        },
+        {
+          "object_id": "78",
+          "role": "anchor",
+          "frames_visible": 119,
+          "distance_m": 1.09,
+          "px_area": 18330,
+          "occlusion": 0.0,
+          "elevation_deg": 23.4,
+          "stamp": 1785528925.472963,
+          "image": "data/crops/visibility/office_1/78_coffee_machine.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

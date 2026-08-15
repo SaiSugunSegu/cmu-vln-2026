@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end category-1 evaluation: every scene, every question, clean slate each time.
+"""End-to-end evaluation: every scene, every question, clean slate each time.
 
 The challenge relaunches the whole system for each language command so nothing carries
 over between questions (README "Evaluation"). This harness does the same: per question it
@@ -14,8 +14,15 @@ Per question:
   3. wait   /pipeline/ready                 models loaded
   4. publish /challenge_question @ 1 Hz     (the eval node's own cadence)
   5. wait   /pipeline/armed                 SAM holds this question's prompts; the bag is released
-  6. wait   /numerical_response             the answer
+  6. wait   the answer topic for the category (see ANSWER_TOPIC)
   7. record, tear the group down, wait for the ROS graph to drain, next
+
+`category:=2` drives the object-reference questions instead: same pipeline, same gates, but
+the answer arrives as a Marker on /selected_object_marker and is graded on overlap rather
+than equality — twice the axis-aligned 3D IoU against the answer object's box, which is the
+challenge's own formula (`scripts/eval/score.py`). The row keeps the marker's own id as
+`predicted_object_id`, so a wrong answer can be read as the wrong object rather than merely
+a low score, and `correct` means the pick landed on the answer object at all.
 
 Waiting on /pipeline/armed rather than /sam3/status is what makes the non-GT path work:
 SAM's status is `awaiting_prompts` from boot, so it says nothing about whether this
@@ -29,9 +36,9 @@ way, so a local sweep and a cloud sweep are directly comparable.
 
 Crops are saved under `<crops root>/<run_id>/<scene>/<question id>-<question>` and every
 row records the `best_view_dir` they went to, which turns the report into a cache index:
-`views_bench` replays the answering step over those saved crops in minutes instead of
-hours. Build one with `crops_only:=true`, which runs target extraction and the whole
-perception half but skips the counting call.
+`cat1_bench` (category 1) and `cat2_bench` (category 2) replay the answering step over
+those saved crops in minutes instead of hours. Build one with `crops_only:=true`, which runs
+target extraction and the whole perception half but skips the answering call.
 """
 from __future__ import annotations
 
@@ -49,9 +56,10 @@ import yaml
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Int32, String
+from visualization_msgs.msg import Marker
 
 from captioner.vlm_backends.constants import VLM_BACKEND
-from smart_vlm.report_utils import summarise, write_report
+from smart_vlm.report_utils import iou3d, summarise, write_report
 
 LATCHED = QoSProfile(
     depth=1,
@@ -59,6 +67,14 @@ LATCHED = QoSProfile(
     durability=DurabilityPolicy.TRANSIENT_LOCAL,
     history=HistoryPolicy.KEEP_LAST,
 )
+
+# What "answered" means, per category.
+ANSWER_TOPIC = {1: "/numerical_response", 2: "/selected_object_marker"}
+
+# An overlap this small is not a hit, whatever it scores: two same-class objects standing
+# side by side clip each other's boxes. Used only to split "picked the right object" from
+# "scored a little" in the report — the score itself is the raw overlap, ungated.
+HIT_IOU = 0.25
 
 
 def log(message: str, *, err: bool = False) -> None:
@@ -72,6 +88,12 @@ class EvalOrchestratorNode(Node):
         super().__init__("eval_orchestrator")
 
         self.scene = str(self._param("scene", "all"))
+        # 1 = counting (an Int32), 2 = object reference (a Marker). One sweep runs one
+        # category: they are graded differently, and a report mixing the two would have to
+        # explain what its accuracy meant.
+        self.category = int(self._param("category", 1))
+        if self.category not in ANSWER_TOPIC:
+            raise ValueError(f"category must be 1 or 2, got {self.category}")
         self.report_file = str(self._param("report_file", "/data/runs/challenge_report.json"))
         # Top level of the crop layout, so one sweep's crops sit together and the next
         # sweep cannot overwrite them question by question. Defaults to the report's own
@@ -95,6 +117,8 @@ class EvalOrchestratorNode(Node):
         # counting call. Accuracy in the resulting report is meaningless by design —
         # it exists to record where each question's crops went.
         self.crops_only = bool(self._param("crops_only", False))
+        # How the object-reference reasoner chooses (category 2 only); see cat2_utils.
+        self.cat2_mode = str(self._param("cat2_mode", "hybrid"))
         # Skip questions the report beside these crops already covers. A sweep of every
         # scene runs for hours, so an interruption in hour five must not mean starting
         # over. Off by default: a scored run has to answer every question itself.
@@ -112,6 +136,7 @@ class EvalOrchestratorNode(Node):
         self.pipeline_armed = False
         self.armed_prompts: Optional[list] = None
         self.predicted: Optional[int] = None
+        self.marker: Optional[dict] = None
         self.sam_status: Optional[str] = None
         self.best_view_dir: Optional[str] = None
 
@@ -121,9 +146,10 @@ class EvalOrchestratorNode(Node):
         self.create_subscription(String, "/pipeline/armed", self._on_armed, LATCHED)
         self.create_subscription(String, "/sam3/status", self._on_sam_status, LATCHED)
         self.create_subscription(Int32, "/numerical_response", self._on_answer, 10)
+        self.create_subscription(Marker, "/selected_object_marker", self._on_marker, 10)
         # Recorded per question so the crops this run wrote stay addressable afterwards:
         # the directory name carries a random run id, so nothing else can reconstruct
-        # which one belongs to which question. views_bench replays from exactly this.
+        # which one belongs to which question. cat1_bench replays from exactly this.
         self.create_subscription(String, "/sam3/best_view_dir", self._on_best_view_dir,
                                  LATCHED)
 
@@ -149,14 +175,35 @@ class EvalOrchestratorNode(Node):
     def _on_answer(self, msg: Int32) -> None:
         self.predicted = int(msg.data)
 
+    def _on_marker(self, msg: Marker) -> None:
+        """A category-2 answer, flattened to what grading needs.
+
+        Read exactly as the challenge scorer reads it — pose position and scale, orientation
+        ignored — so a marker that scores here scores there. `id` is the reasoner's own map
+        track id, kept so a miss can be attributed to the wrong object rather than to a bad
+        box, and `ns` distinguishes a real answer from the `crops_only` placeholder.
+        """
+        self.marker = {
+            "ns": msg.ns,
+            "id": int(msg.id),
+            "center": [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z],
+            "size": [msg.scale.x, msg.scale.y, msg.scale.z],
+            "text": msg.text,
+            "placeholder": msg.ns == "placeholder" or msg.id < 0,
+        }
+
     def _on_best_view_dir(self, msg: String) -> None:
         self.best_view_dir = (msg.data or "").strip() or None
+
+    def answered(self) -> bool:
+        return self.marker is not None if self.category == 2 else self.predicted is not None
 
     def reset_for_question(self) -> None:
         self.pipeline_ready = False
         self.pipeline_armed = False
         self.armed_prompts = None
         self.predicted = None
+        self.marker = None
         self.sam_status = None
         self.best_view_dir = None
 
@@ -201,6 +248,7 @@ def spawn_pipeline(node: EvalOrchestratorNode, scene: str, run_id: str) -> subpr
         f"vlm_backend:={node.vlm_backend}",
         f"run_id:={run_id}",
         f"crops_only:={'true' if node.crops_only else 'false'}",
+        f"cat2_mode:={node.cat2_mode}",
         # Only the local backend publishes to /qwen_vqa; for cloud and none, making the
         # supervisor wait for a server nobody started costs ready_timeout_s per question.
         f"require_vqa_ready:={'true' if node.resolved_backend == 'local' else 'false'}",
@@ -268,15 +316,17 @@ def discover_questions(node: EvalOrchestratorNode) -> Iterator[tuple[str, dict]]
     if not node.benchmark_dir.is_dir():
         raise FileNotFoundError(f"benchmark directory {node.benchmark_dir} not found")
 
+    folder = f"category_{node.category}"
     if node.scene and node.scene != "all":
         scenes = [node.scene]
     else:
         scenes = sorted(p.name for p in node.benchmark_dir.iterdir()
-                        if (p / "category_1").is_dir())
+                        if (p / folder).is_dir())
 
     playable = available_scenes(node)
     for scene in scenes:
-        qa_file = node.benchmark_dir / scene / "category_1" / f"{scene}_category1_qa.json"
+        qa_file = (node.benchmark_dir / scene / folder
+                   / f"{scene}_category{node.category}_qa.json")
         if not qa_file.is_file():
             log(f"skipping {scene}: no QA file at {qa_file}", err=True)
             continue
@@ -293,10 +343,52 @@ def discover_questions(node: EvalOrchestratorNode) -> Iterator[tuple[str, dict]]
 
 # -- one question -----------------------------------------------------------
 
+def grade(node: EvalOrchestratorNode, entry: dict) -> dict:
+    """The answer-shaped half of a result row: what came back, and what it was worth.
+
+    Category 1 is equality against an integer. Category 2 is twice the axis-aligned 3D IoU
+    between the Marker and the answer object's box, exactly as `scripts/eval/score.py`
+    computes it, and is reported alongside the ids of both objects: an overlap of zero means
+    something quite different when the right object was chosen and the box was wrong.
+    """
+    if node.category == 1:
+        gt = int(entry["answer"])
+        return {"gt": gt, "predicted": node.predicted, "correct": node.predicted == gt}
+
+    answer = entry["answer"]
+    marker = node.marker
+    row: dict = {
+        "gt": answer["object_id"],
+        "gt_label": answer.get("label"),
+        "predicted": None,
+        "predicted_object_id": None,
+        "iou": 0.0,
+        "score": 0.0,
+        "correct": False,
+        "marker": marker,
+    }
+    if marker is None or marker["placeholder"]:
+        return row
+
+    overlap = iou3d(marker["center"], marker["size"], answer["center"], answer["size"])
+    row.update({
+        "predicted": marker["text"] or marker["id"],
+        # The marker id is the reasoner's map track id, which is NOT comparable with the
+        # benchmark's object id — they index different maps. It identifies which candidate
+        # was chosen, for reading a manifest back; only the overlap grades it.
+        "predicted_object_id": marker["id"],
+        "iou": round(overlap, 4),
+        "score": round(2.0 * overlap, 4),
+        "correct": overlap >= HIT_IOU,
+    })
+    return row
+
+
 def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
     qid = entry["id"]
     question = entry["question"]
-    gt_answer = int(entry["answer"])
+    gt_answer = (int(entry["answer"]) if node.category == 1
+                 else f"{entry['answer'].get('label')}#{entry['answer']['object_id']}")
 
     log(f"=== {scene} {qid} ===")
     log(f"Q: {question}   (GT: {gt_answer})")
@@ -346,9 +438,10 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         log(f"SAM armed with {node.armed_prompts} — the scene is now playing")
 
         # 4. The answer. Keep republishing: the reasoner may still be starting up.
-        if not node.spin_until(ask_and_check(lambda: node.predicted is not None),
+        if not node.spin_until(ask_and_check(node.answered),
                                node.answer_timeout_s, proc):
-            raise TimeoutError(f"no answer within {node.answer_timeout_s:.0f}s")
+            raise TimeoutError(f"no answer on {ANSWER_TOPIC[node.category]} within "
+                               f"{node.answer_timeout_s:.0f}s")
 
     except Exception as exc:  # noqa: BLE001 — one bad question must not end the sweep
         error = f"{type(exc).__name__}: {exc}"
@@ -357,18 +450,18 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         teardown(node, proc)
 
     elapsed = time.monotonic() - t_start
-    predicted = node.predicted
-    correct = predicted is not None and predicted == gt_answer
-    log(f"result: predicted={predicted} gt={gt_answer} correct={correct} "
-        f"time={elapsed:.1f}s")
+    outcome = grade(node, entry)
+    log(f"result: predicted={outcome['predicted']} gt={gt_answer} "
+        f"correct={outcome['correct']}"
+        + (f" score={outcome['score']:.2f}/2" if node.category == 2 else "")
+        + f" time={elapsed:.1f}s")
 
     return {
         "scene": scene,
         "id": qid,
         "question": question,
-        "gt": gt_answer,
-        "predicted": predicted,
-        "correct": correct,
+        "category": node.category,
+        **outcome,
         "time_taken_s": round(elapsed, 2),
         "target_source": node.target_source,
         "vlm_backend": node.resolved_backend,
@@ -379,12 +472,16 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
     }
 
 
-def cached_rows(report_path: Path) -> dict[tuple[str, str], dict]:
+def cached_rows(report_path: Path, category: int = 1) -> dict[tuple[str, str], dict]:
     """Rows of an earlier report we can adopt instead of replaying the scene.
 
     A row only counts if its crops are still on disk and its question text still matches
     the benchmark, so an edited QA file or a half-written directory re-runs rather than
     quietly answering from the wrong images.
+
+    Category 2 additionally needs the 3D map: the crops alone cannot answer a reference
+    question, so a row whose `obj_map.json` never landed is a hole in the cache and has to be
+    replayed rather than counted as done.
     """
     if not report_path.is_file():
         return {}
@@ -400,8 +497,11 @@ def cached_rows(report_path: Path) -> dict[tuple[str, str], dict]:
         crop_dir = row.get("best_view_dir")
         if not crop_dir or row.get("error") or not row.get("question"):
             continue
-        if any(Path(crop_dir).glob("best_rank*.png")):
-            keep[(row.get("scene"), row.get("id"))] = row
+        if not any(Path(crop_dir).glob("best_rank*.png")):
+            continue
+        if category == 2 and not (Path(crop_dir) / "obj_map.json").is_file():
+            continue
+        keep[(row.get("scene"), row.get("id"))] = row
     return keep
 
 
@@ -416,13 +516,16 @@ def run_orchestration(node: EvalOrchestratorNode) -> int:
         log("no questions to run — check scene/benchmark_dir", err=True)
         return 1
     scenes = sorted({s for s, _ in questions})
-    log(f"{len(questions)} question(s) across {len(scenes)} scene(s): {scenes}")
+    log(f"category {node.category}: {len(questions)} question(s) across "
+        f"{len(scenes)} scene(s): {scenes}")
 
     # So a cache report cannot be mistaken for a scored one: with crops_only every
     # prediction is a placeholder, and the accuracy beside it means nothing.
-    extra = {"crops_only": node.crops_only}
+    extra = {"crops_only": node.crops_only, "category": node.category}
+    if node.category == 2:
+        extra["cat2_mode"] = node.cat2_mode
 
-    cached = cached_rows(report_path) if node.resume else {}
+    cached = cached_rows(report_path, node.category) if node.resume else {}
     if cached:
         log(f"resume: {len(cached)} question(s) already have crops — keeping their rows")
 
@@ -445,7 +548,10 @@ def run_orchestration(node: EvalOrchestratorNode) -> int:
         write_report(report_path, results, extra)
     summary = summarise(results)
     log(f"done: {summary['correct']}/{summary['total_run']} correct "
-        f"(accuracy {summary['accuracy']}, errors {summary['errors']}) -> {report_path}")
+        f"(accuracy {summary['accuracy']}, errors {summary['errors']}"
+        + (f", score {summary['total_score']}/{summary['max_score']}"
+           if "total_score" in summary else "")
+        + f") -> {report_path}")
     return 130 if interrupted else 0
 
 

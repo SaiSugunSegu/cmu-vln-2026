@@ -51,7 +51,7 @@ from typing import Any
 import numpy as np
 
 BENCH_ROOT = Path("data/benchmark_2")
-BAGS_ROOT = Path("bags")
+BAGS_ROOT = Path("data/bags")
 
 # Wall-mounted objects sit a few centimetres behind the furniture in front of
 # them, so footprints are dilated before testing "below" / "above" / "inside".

@@ -1,0 +1,3365 @@
+{
+  "scene": "office_1",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 259,
+  "objects": {
+    "0": {
+      "label": "shelf",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 166,
+      "min_range_m": 2.77,
+      "best_view": {
+        "n_points": 1078,
+        "px_bbox": [
+          99,
+          119,
+          231,
+          445
+        ],
+        "px_bbox_unwrapped": [
+          99,
+          119,
+          231,
+          445
+        ],
+        "px_area": 43032,
+        "px_area_frac": 0.03502,
+        "distance_m": 1.96,
+        "occlusion": 0.006,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 7.1
+      },
+      "view_image": "data/crops/visibility/office_1/0_shelf.png"
+    },
+    "1": {
+      "label": "paper",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.69,
+      "best_view": {
+        "n_points": 23,
+        "px_bbox": [
+          431,
+          334,
+          508,
+          338
+        ],
+        "px_bbox_unwrapped": [
+          431,
+          334,
+          508,
+          338
+        ],
+        "px_area": 308,
+        "px_area_frac": 0.00025,
+        "distance_m": 1.53,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528949.152983,
+        "frame": 216,
+        "elevation_deg": -3.0
+      }
+    },
+    "2": {
+      "label": "computer monitor",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 139,
+      "min_range_m": 1.77,
+      "best_view": {
+        "n_points": 187,
+        "px_bbox": [
+          1347,
+          235,
+          1438,
+          325
+        ],
+        "px_bbox_unwrapped": [
+          1347,
+          235,
+          1438,
+          325
+        ],
+        "px_area": 8190,
+        "px_area_frac": 0.00667,
+        "distance_m": 1.65,
+        "occlusion": 0.754,
+        "clipped": false,
+        "stamp": 1785528923.977977,
+        "frame": 19,
+        "elevation_deg": 6.9
+      }
+    },
+    "3": {
+      "label": "keyboard",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.52,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1300,
+          321,
+          1383,
+          326
+        ],
+        "px_bbox_unwrapped": [
+          1300,
+          321,
+          1383,
+          326
+        ],
+        "px_area": 415,
+        "px_area_frac": 0.00034,
+        "distance_m": 1.4,
+        "occlusion": 0.976,
+        "clipped": false,
+        "stamp": 1785528923.848034,
+        "frame": 18,
+        "elevation_deg": -0.7
+      }
+    },
+    "4": {
+      "label": "computer mouse",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.41,
+      "best_view": {
+        "n_points": 20,
+        "px_bbox": [
+          1469,
+          318,
+          1496,
+          325
+        ],
+        "px_bbox_unwrapped": [
+          1469,
+          318,
+          1496,
+          325
+        ],
+        "px_area": 189,
+        "px_area_frac": 0.00015,
+        "distance_m": 1.37,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528929.742935,
+        "frame": 65,
+        "elevation_deg": -0.6
+      }
+    },
+    "5": {
+      "label": "file",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.93,
+      "best_view": {
+        "n_points": 89,
+        "px_bbox": [
+          792,
+          347,
+          850,
+          358
+        ],
+        "px_bbox_unwrapped": [
+          792,
+          347,
+          850,
+          358
+        ],
+        "px_area": 638,
+        "px_area_frac": 0.00052,
+        "distance_m": 1.96,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528952.606998,
+        "frame": 244,
+        "elevation_deg": -5.7
+      }
+    },
+    "6": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 208,
+      "min_range_m": 1.5,
+      "best_view": {
+        "n_points": 10335,
+        "px_bbox": [
+          298,
+          71,
+          914,
+          391
+        ],
+        "px_bbox_unwrapped": [
+          298,
+          71,
+          914,
+          391
+        ],
+        "px_area": 197120,
+        "px_area_frac": 0.16042,
+        "distance_m": 1.52,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528938.847962,
+        "frame": 136,
+        "elevation_deg": 11.4
+      },
+      "view_image": "data/crops/visibility/office_1/6_window.png"
+    },
+    "7": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 90,
+      "min_range_m": 0.73,
+      "best_view": {
+        "n_points": 8774,
+        "px_bbox": [
+          1186,
+          120,
+          1674,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1186,
+          120,
+          1674,
+          639
+        ],
+        "px_area": 253272,
+        "px_area_frac": 0.20611,
+        "distance_m": 0.42,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528937.137983,
+        "frame": 123,
+        "elevation_deg": -20.4
+      },
+      "view_image": "data/crops/visibility/office_1/7_chair.png"
+    },
+    "8": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 183,
+      "min_range_m": 1.9,
+      "best_view": {
+        "n_points": 5639,
+        "px_bbox": [
+          421,
+          90,
+          588,
+          463
+        ],
+        "px_bbox_unwrapped": [
+          421,
+          90,
+          588,
+          463
+        ],
+        "px_area": 62291,
+        "px_area_frac": 0.05069,
+        "distance_m": 1.66,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528936.658128,
+        "frame": 119,
+        "elevation_deg": 10.9
+      },
+      "view_image": "data/crops/visibility/office_1/8_door.png"
+    },
+    "9": {
+      "label": "door frame",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 0,
+      "min_range_m": 1.94,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1244,
+          238,
+          1296,
+          363
+        ],
+        "px_bbox_unwrapped": [
+          1244,
+          238,
+          1296,
+          363
+        ],
+        "px_area": 6500,
+        "px_area_frac": 0.00529,
+        "distance_m": 6.1,
+        "occlusion": 0.968,
+        "clipped": false,
+        "stamp": 1785528923.722945,
+        "frame": 17,
+        "elevation_deg": 3.6
+      }
+    },
+    "10": {
+      "label": "paper",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.58,
+      "best_view": {
+        "n_points": 25,
+        "px_bbox": [
+          1374,
+          326,
+          1447,
+          328
+        ],
+        "px_bbox_unwrapped": [
+          1374,
+          326,
+          1447,
+          328
+        ],
+        "px_area": 146,
+        "px_area_frac": 0.00012,
+        "distance_m": 1.44,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528937.65302,
+        "frame": 127,
+        "elevation_deg": -1.0
+      }
+    },
+    "11": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 67,
+      "min_range_m": 1.42,
+      "best_view": {
+        "n_points": 449,
+        "px_bbox": [
+          331,
+          203,
+          425,
+          285
+        ],
+        "px_bbox_unwrapped": [
+          331,
+          203,
+          425,
+          285
+        ],
+        "px_area": 7708,
+        "px_area_frac": 0.00627,
+        "distance_m": 1.17,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 13.5
+      },
+      "view_image": "data/crops/visibility/office_1/11_plant.png"
+    },
+    "12": {
+      "label": "computer monitor",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 97,
+      "min_range_m": 1.56,
+      "best_view": {
+        "n_points": 37,
+        "px_bbox": [
+          1347,
+          226,
+          1449,
+          328
+        ],
+        "px_bbox_unwrapped": [
+          1347,
+          226,
+          1449,
+          328
+        ],
+        "px_area": 10404,
+        "px_area_frac": 0.00847,
+        "distance_m": 1.47,
+        "occlusion": 0.911,
+        "clipped": false,
+        "stamp": 1785528938.317999,
+        "frame": 132,
+        "elevation_deg": 7.9
+      }
+    },
+    "13": {
+      "label": "keyboard",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.26,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1327,
+          322,
+          1424,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          1327,
+          322,
+          1424,
+          329
+        ],
+        "px_area": 679,
+        "px_area_frac": 0.00055,
+        "distance_m": 1.14,
+        "occlusion": 1.0,
+        "clipped": false,
+        "stamp": 1785528938.182921,
+        "frame": 131,
+        "elevation_deg": -0.8
+      }
+    },
+    "14": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 36,
+      "min_range_m": 1.57,
+      "best_view": {
+        "n_points": 432,
+        "px_bbox": [
+          894,
+          408,
+          980,
+          470
+        ],
+        "px_bbox_unwrapped": [
+          894,
+          408,
+          980,
+          470
+        ],
+        "px_area": 5332,
+        "px_area_frac": 0.00434,
+        "distance_m": 1.38,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528953.592047,
+        "frame": 252,
+        "elevation_deg": -21.1
+      },
+      "view_image": "data/crops/visibility/office_1/14_box.png"
+    },
+    "15": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.3,
+      "best_view": null
+    },
+    "16": {
+      "label": "computer mouse",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.63,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          1479,
+          319,
+          1498,
+          325
+        ],
+        "px_bbox_unwrapped": [
+          1479,
+          319,
+          1498,
+          325
+        ],
+        "px_area": 114,
+        "px_area_frac": 9e-05,
+        "distance_m": 1.58,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528925.332981,
+        "frame": 30,
+        "elevation_deg": -0.5
+      }
+    },
+    "17": {
+      "label": "paper box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 44,
+      "min_range_m": 1.44,
+      "best_view": {
+        "n_points": 294,
+        "px_bbox": [
+          327,
+          326,
+          415,
+          389
+        ],
+        "px_bbox_unwrapped": [
+          327,
+          326,
+          415,
+          389
+        ],
+        "px_area": 5544,
+        "px_area_frac": 0.00451,
+        "distance_m": 1.2,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": -6.0
+      },
+      "view_image": "data/crops/visibility/office_1/17_paper_box.png"
+    },
+    "18": {
+      "label": "computer monitor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 95,
+      "min_range_m": 1.88,
+      "best_view": {
+        "n_points": 370,
+        "px_bbox": [
+          1342,
+          240,
+          1427,
+          325
+        ],
+        "px_bbox_unwrapped": [
+          1342,
+          240,
+          1427,
+          325
+        ],
+        "px_area": 7225,
+        "px_area_frac": 0.00588,
+        "distance_m": 1.78,
+        "occlusion": 0.249,
+        "clipped": false,
+        "stamp": 1785528924.967965,
+        "frame": 27,
+        "elevation_deg": 6.6
+      },
+      "view_image": "data/crops/visibility/office_1/18_computer_monitor.png"
+    },
+    "19": {
+      "label": "keyboard",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.59,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          1387,
+          320,
+          1465,
+          326
+        ],
+        "px_bbox_unwrapped": [
+          1387,
+          320,
+          1465,
+          326
+        ],
+        "px_area": 468,
+        "px_area_frac": 0.00038,
+        "distance_m": 1.46,
+        "occlusion": 0.98,
+        "clipped": false,
+        "stamp": 1785528925.332981,
+        "frame": 30,
+        "elevation_deg": -0.6
+      }
+    },
+    "20": {
+      "label": "phone",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.19,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1866,
+          268,
+          1912,
+          287
+        ],
+        "px_bbox_unwrapped": [
+          1866,
+          268,
+          1912,
+          287
+        ],
+        "px_area": 874,
+        "px_area_frac": 0.00071,
+        "distance_m": 2.76,
+        "occlusion": 0.279,
+        "clipped": false,
+        "stamp": 1785528929.877995,
+        "frame": 66,
+        "elevation_deg": 7.9
+      }
+    },
+    "21": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 53,
+      "min_range_m": 2.92,
+      "best_view": {
+        "n_points": 120,
+        "px_bbox": [
+          414,
+          296,
+          502,
+          417
+        ],
+        "px_bbox_unwrapped": [
+          414,
+          296,
+          502,
+          417
+        ],
+        "px_area": 10648,
+        "px_area_frac": 0.00867,
+        "distance_m": 2.91,
+        "occlusion": 0.535,
+        "clipped": false,
+        "stamp": 1785528954.252059,
+        "frame": 257,
+        "elevation_deg": -6.2
+      },
+      "view_image": "data/crops/visibility/office_1/21_chair.png"
+    },
+    "23": {
+      "label": "water cooler",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 73,
+      "min_range_m": 2.6,
+      "best_view": {
+        "n_points": 557,
+        "px_bbox": [
+          845,
+          295,
+          908,
+          426
+        ],
+        "px_bbox_unwrapped": [
+          845,
+          295,
+          908,
+          426
+        ],
+        "px_area": 8253,
+        "px_area_frac": 0.00672,
+        "distance_m": 2.42,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528944.933,
+        "frame": 184,
+        "elevation_deg": -7.3
+      },
+      "view_image": "data/crops/visibility/office_1/23_water_cooler.png"
+    },
+    "24": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 146,
+      "min_range_m": 1.65,
+      "best_view": {
+        "n_points": 5822,
+        "px_bbox": [
+          132,
+          136,
+          967,
+          402
+        ],
+        "px_bbox_unwrapped": [
+          132,
+          136,
+          967,
+          402
+        ],
+        "px_area": 222110,
+        "px_area_frac": 0.18075,
+        "distance_m": 0.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528944.552968,
+        "frame": 181,
+        "elevation_deg": 13.5
+      },
+      "view_image": "data/crops/visibility/office_1/24_wall.png"
+    },
+    "25": {
+      "label": "paper box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 33,
+      "min_range_m": 2.0,
+      "best_view": {
+        "n_points": 263,
+        "px_bbox": [
+          783,
+          385,
+          847,
+          437
+        ],
+        "px_bbox_unwrapped": [
+          783,
+          385,
+          847,
+          437
+        ],
+        "px_area": 3328,
+        "px_area_frac": 0.00271,
+        "distance_m": 1.91,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528953.097119,
+        "frame": 248,
+        "elevation_deg": -16.2
+      },
+      "view_image": "data/crops/visibility/office_1/25_paper_box.png"
+    },
+    "26": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 83,
+      "min_range_m": 0.75,
+      "best_view": {
+        "n_points": 9908,
+        "px_bbox": [
+          1234,
+          89,
+          1671,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1234,
+          89,
+          1671,
+          639
+        ],
+        "px_area": 240350,
+        "px_area_frac": 0.1956,
+        "distance_m": 0.42,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528927.857964,
+        "frame": 50,
+        "elevation_deg": -19.9
+      },
+      "view_image": "data/crops/visibility/office_1/26_chair.png"
+    },
+    "27": {
+      "label": "computer monitor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 88,
+      "min_range_m": 1.22,
+      "best_view": {
+        "n_points": 888,
+        "px_bbox": [
+          1306,
+          189,
+          1427,
+          328
+        ],
+        "px_bbox_unwrapped": [
+          1306,
+          189,
+          1427,
+          328
+        ],
+        "px_area": 16819,
+        "px_area_frac": 0.01369,
+        "distance_m": 1.07,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528928.837985,
+        "frame": 58,
+        "elevation_deg": 9.8
+      },
+      "view_image": "data/crops/visibility/office_1/27_computer_monitor.png"
+    },
+    "28": {
+      "label": "keyboard",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 9,
+      "min_range_m": 1.1,
+      "best_view": {
+        "n_points": 104,
+        "px_bbox": [
+          1366,
+          320,
+          1476,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          1366,
+          320,
+          1476,
+          329
+        ],
+        "px_area": 990,
+        "px_area_frac": 0.00081,
+        "distance_m": 0.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528928.742929,
+        "frame": 57,
+        "elevation_deg": -0.9
+      },
+      "view_image": "data/crops/visibility/office_1/28_keyboard.png"
+    },
+    "29": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 77,
+      "min_range_m": 1.05,
+      "best_view": {
+        "n_points": 5896,
+        "px_bbox": [
+          1253,
+          184,
+          1553,
+          595
+        ],
+        "px_bbox_unwrapped": [
+          1253,
+          184,
+          1553,
+          595
+        ],
+        "px_area": 123300,
+        "px_area_frac": 0.10034,
+        "distance_m": 0.7,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528925.472963,
+        "frame": 31,
+        "elevation_deg": -14.4
+      },
+      "view_image": "data/crops/visibility/office_1/29_chair.png"
+    },
+    "30": {
+      "label": "phone",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.24,
+      "best_view": null
+    },
+    "31": {
+      "label": "trash bin",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 38,
+      "min_range_m": 0.84,
+      "best_view": {
+        "n_points": 34,
+        "px_bbox": [
+          1394,
+          455,
+          1638,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1394,
+          455,
+          1638,
+          639
+        ],
+        "px_area": 44896,
+        "px_area_frac": 0.03654,
+        "distance_m": 0.61,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528931.142932,
+        "frame": 76,
+        "elevation_deg": -45.0
+      },
+      "view_image": "data/crops/visibility/office_1/31_garbage_can.png"
+    },
+    "32": {
+      "label": "paper",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 23,
+      "min_range_m": 0.97,
+      "best_view": {
+        "n_points": 23,
+        "px_bbox": [
+          1175,
+          519,
+          1251,
+          573
+        ],
+        "px_bbox_unwrapped": [
+          1175,
+          519,
+          1251,
+          573
+        ],
+        "px_area": 4104,
+        "px_area_frac": 0.00334,
+        "distance_m": 0.82,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528930.167986,
+        "frame": 68,
+        "elevation_deg": -42.3
+      },
+      "view_image": "data/crops/visibility/office_1/32_paper.png"
+    },
+    "33": {
+      "label": "paper",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 19,
+      "min_range_m": 0.81,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          1075,
+          519,
+          1155,
+          575
+        ],
+        "px_bbox_unwrapped": [
+          1075,
+          519,
+          1155,
+          575
+        ],
+        "px_area": 4480,
+        "px_area_frac": 0.00365,
+        "distance_m": 0.85,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528930.268,
+        "frame": 69,
+        "elevation_deg": -42.4
+      },
+      "view_image": "data/crops/visibility/office_1/33_paper.png"
+    },
+    "34": {
+      "label": "paper",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 22,
+      "min_range_m": 0.85,
+      "best_view": {
+        "n_points": 23,
+        "px_bbox": [
+          1159,
+          518,
+          1252,
+          581
+        ],
+        "px_bbox_unwrapped": [
+          1159,
+          518,
+          1252,
+          581
+        ],
+        "px_area": 5859,
+        "px_area_frac": 0.00477,
+        "distance_m": 0.71,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528930.268,
+        "frame": 69,
+        "elevation_deg": -42.9
+      },
+      "view_image": "data/crops/visibility/office_1/34_paper.png"
+    },
+    "35": {
+      "label": "wall",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.76,
+      "best_view": null
+    },
+    "36": {
+      "label": "computer monitor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 74,
+      "min_range_m": 1.36,
+      "best_view": {
+        "n_points": 500,
+        "px_bbox": [
+          1419,
+          199,
+          1533,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          1419,
+          199,
+          1533,
+          329
+        ],
+        "px_area": 14820,
+        "px_area_frac": 0.01206,
+        "distance_m": 1.15,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528933.783015,
+        "frame": 97,
+        "elevation_deg": 9.2
+      },
+      "view_image": "data/crops/visibility/office_1/36_computer_monitor.png"
+    },
+    "37": {
+      "label": "keyboard",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 4,
+      "min_range_m": 1.1,
+      "best_view": {
+        "n_points": 208,
+        "px_bbox": [
+          1402,
+          321,
+          1515,
+          331
+        ],
+        "px_bbox_unwrapped": [
+          1402,
+          321,
+          1515,
+          331
+        ],
+        "px_area": 1130,
+        "px_area_frac": 0.00092,
+        "distance_m": 0.88,
+        "occlusion": 0.438,
+        "clipped": false,
+        "stamp": 1785528933.913018,
+        "frame": 98,
+        "elevation_deg": -0.9
+      },
+      "view_image": "data/crops/visibility/office_1/37_keyboard.png"
+    },
+    "38": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 178,
+      "min_range_m": 1.52,
+      "best_view": {
+        "n_points": 5621,
+        "px_bbox": [
+          396,
+          47,
+          596,
+          510
+        ],
+        "px_bbox_unwrapped": [
+          396,
+          47,
+          596,
+          510
+        ],
+        "px_area": 92600,
+        "px_area_frac": 0.07536,
+        "distance_m": 1.23,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528930.167986,
+        "frame": 68,
+        "elevation_deg": 13.0
+      },
+      "view_image": "data/crops/visibility/office_1/38_door.png"
+    },
+    "39": {
+      "label": "door frame",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 10,
+      "min_range_m": 1.55,
+      "best_view": {
+        "n_points": 33,
+        "px_bbox": [
+          1692,
+          196,
+          1759,
+          392
+        ],
+        "px_bbox_unwrapped": [
+          1692,
+          196,
+          1759,
+          392
+        ],
+        "px_area": 13132,
+        "px_area_frac": 0.01069,
+        "distance_m": 3.63,
+        "occlusion": 0.965,
+        "clipped": false,
+        "stamp": 1785528937.917982,
+        "frame": 129,
+        "elevation_deg": 5.2
+      }
+    },
+    "40": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 134,
+      "min_range_m": 1.15,
+      "best_view": {
+        "n_points": 2588,
+        "px_bbox": [
+          431,
+          242,
+          636,
+          575
+        ],
+        "px_bbox_unwrapped": [
+          431,
+          242,
+          636,
+          575
+        ],
+        "px_area": 68265,
+        "px_area_frac": 0.05555,
+        "distance_m": 0.83,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528950.162917,
+        "frame": 224,
+        "elevation_deg": -15.7
+      },
+      "view_image": "data/crops/visibility/office_1/40_chair.png"
+    },
+    "41": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 37,
+      "min_range_m": 1.68,
+      "best_view": {
+        "n_points": 305,
+        "px_bbox": [
+          830,
+          396,
+          903,
+          455
+        ],
+        "px_bbox_unwrapped": [
+          830,
+          396,
+          903,
+          455
+        ],
+        "px_area": 4307,
+        "px_area_frac": 0.00351,
+        "distance_m": 1.63,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528953.352068,
+        "frame": 250,
+        "elevation_deg": -18.9
+      },
+      "view_image": "data/crops/visibility/office_1/41_box.png"
+    },
+    "42": {
+      "label": "computer monitor",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 128,
+      "min_range_m": 1.54,
+      "best_view": {
+        "n_points": 28,
+        "px_bbox": [
+          1381,
+          225,
+          1487,
+          328
+        ],
+        "px_bbox_unwrapped": [
+          1381,
+          225,
+          1487,
+          328
+        ],
+        "px_area": 10918,
+        "px_area_frac": 0.00889,
+        "distance_m": 1.48,
+        "occlusion": 0.911,
+        "clipped": false,
+        "stamp": 1785528939.907983,
+        "frame": 144,
+        "elevation_deg": 8.2
+      }
+    },
+    "43": {
+      "label": "keyboard",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.25,
+      "best_view": {
+        "n_points": 47,
+        "px_bbox": [
+          1340,
+          322,
+          1439,
+          330
+        ],
+        "px_bbox_unwrapped": [
+          1340,
+          322,
+          1439,
+          330
+        ],
+        "px_area": 792,
+        "px_area_frac": 0.00064,
+        "distance_m": 1.12,
+        "occlusion": 0.989,
+        "clipped": false,
+        "stamp": 1785528939.662934,
+        "frame": 142,
+        "elevation_deg": -0.8
+      }
+    },
+    "44": {
+      "label": "eye glasses",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.62,
+      "best_view": {
+        "n_points": 18,
+        "px_bbox": [
+          449,
+          329,
+          483,
+          337
+        ],
+        "px_bbox_unwrapped": [
+          449,
+          329,
+          483,
+          337
+        ],
+        "px_area": 272,
+        "px_area_frac": 0.00022,
+        "distance_m": 1.53,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528949.297964,
+        "frame": 217,
+        "elevation_deg": -2.5
+      }
+    },
+    "45": {
+      "label": "chair",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 84,
+      "min_range_m": 1.91,
+      "best_view": {
+        "n_points": 81,
+        "px_bbox": [
+          405,
+          280,
+          541,
+          478
+        ],
+        "px_bbox_unwrapped": [
+          405,
+          280,
+          541,
+          478
+        ],
+        "px_area": 26928,
+        "px_area_frac": 0.02191,
+        "distance_m": 1.6,
+        "occlusion": 0.778,
+        "clipped": false,
+        "stamp": 1785528946.68292,
+        "frame": 197,
+        "elevation_deg": -9.7
+      }
+    },
+    "46": {
+      "label": "paper",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 0.95,
+      "best_view": {
+        "n_points": 425,
+        "px_bbox": [
+          1355,
+          327,
+          1473,
+          332
+        ],
+        "px_bbox_unwrapped": [
+          1355,
+          327,
+          1473,
+          332
+        ],
+        "px_area": 590,
+        "px_area_frac": 0.00048,
+        "distance_m": 0.74,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528933.017975,
+        "frame": 91,
+        "elevation_deg": -1.7
+      }
+    },
+    "47": {
+      "label": "computer mouse",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.34,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          1436,
+          321,
+          1460,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          1436,
+          321,
+          1460,
+          329
+        ],
+        "px_area": 192,
+        "px_area_frac": 0.00016,
+        "distance_m": 1.23,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528937.917982,
+        "frame": 129,
+        "elevation_deg": -0.6
+      }
+    },
+    "48": {
+      "label": "phone",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.59,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          412,
+          335,
+          433,
+          339
+        ],
+        "px_bbox_unwrapped": [
+          412,
+          335,
+          433,
+          339
+        ],
+        "px_area": 84,
+        "px_area_frac": 7e-05,
+        "distance_m": 1.54,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528949.822914,
+        "frame": 221,
+        "elevation_deg": -3.3
+      }
+    },
+    "49": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 122,
+      "min_range_m": 0.79,
+      "best_view": {
+        "n_points": 4843,
+        "px_bbox": [
+          404,
+          153,
+          726,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          404,
+          153,
+          726,
+          639
+        ],
+        "px_area": 156492,
+        "px_area_frac": 0.12735,
+        "distance_m": 0.43,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528946.387986,
+        "frame": 195,
+        "elevation_deg": -23.3
+      },
+      "view_image": "data/crops/visibility/office_1/49_chair.png"
+    },
+    "50": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 117,
+      "min_range_m": 1.88,
+      "best_view": {
+        "n_points": 2290,
+        "px_bbox": [
+          294,
+          330,
+          667,
+          615
+        ],
+        "px_bbox_unwrapped": [
+          294,
+          330,
+          667,
+          615
+        ],
+        "px_area": 106305,
+        "px_area_frac": 0.08651,
+        "distance_m": 0.81,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528947.522968,
+        "frame": 203,
+        "elevation_deg": -13.9
+      },
+      "view_image": "data/crops/visibility/office_1/50_table.png"
+    },
+    "51": {
+      "label": "shelf",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 178,
+      "min_range_m": 1.69,
+      "best_view": {
+        "n_points": 5637,
+        "px_bbox": [
+          171,
+          27,
+          434,
+          525
+        ],
+        "px_bbox_unwrapped": [
+          171,
+          27,
+          434,
+          525
+        ],
+        "px_area": 130974,
+        "px_area_frac": 0.10659,
+        "distance_m": 1.21,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 11.9
+      },
+      "view_image": "data/crops/visibility/office_1/51_shelf.png"
+    },
+    "52": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 158,
+      "min_range_m": 0.81,
+      "best_view": {
+        "n_points": 3822,
+        "px_bbox": [
+          390,
+          168,
+          696,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          390,
+          168,
+          696,
+          639
+        ],
+        "px_area": 144126,
+        "px_area_frac": 0.11729,
+        "distance_m": 0.46,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528948.267975,
+        "frame": 209,
+        "elevation_deg": -22.4
+      },
+      "view_image": "data/crops/visibility/office_1/52_chair.png"
+    },
+    "53": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 169,
+      "min_range_m": 1.75,
+      "best_view": {
+        "n_points": 3069,
+        "px_bbox": [
+          1214,
+          321,
+          1578,
+          629
+        ],
+        "px_bbox_unwrapped": [
+          1214,
+          321,
+          1578,
+          629
+        ],
+        "px_area": 112112,
+        "px_area_frac": 0.09124,
+        "distance_m": 0.66,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528930.007983,
+        "frame": 67,
+        "elevation_deg": -12.0
+      },
+      "view_image": "data/crops/visibility/office_1/53_table.png"
+    },
+    "54": {
+      "label": "file",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.93,
+      "best_view": {
+        "n_points": 116,
+        "px_bbox": [
+          792,
+          352,
+          849,
+          364
+        ],
+        "px_bbox_unwrapped": [
+          792,
+          352,
+          849,
+          364
+        ],
+        "px_area": 684,
+        "px_area_frac": 0.00056,
+        "distance_m": 1.96,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528952.972069,
+        "frame": 247,
+        "elevation_deg": -6.7
+      }
+    },
+    "55": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 78,
+      "min_range_m": 1.36,
+      "best_view": {
+        "n_points": 201,
+        "px_bbox": [
+          430,
+          154,
+          532,
+          253
+        ],
+        "px_bbox_unwrapped": [
+          430,
+          154,
+          532,
+          253
+        ],
+        "px_area": 10098,
+        "px_area_frac": 0.00822,
+        "distance_m": 1.12,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528923.722945,
+        "frame": 17,
+        "elevation_deg": 21.2
+      },
+      "view_image": "data/crops/visibility/office_1/55_plant.png"
+    },
+    "56": {
+      "label": "computer mouse",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.44,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          1377,
+          322,
+          1403,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          1377,
+          322,
+          1403,
+          329
+        ],
+        "px_area": 182,
+        "px_area_frac": 0.00015,
+        "distance_m": 1.4,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528950.65205,
+        "frame": 228,
+        "elevation_deg": -0.6
+      }
+    },
+    "57": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 30,
+      "min_range_m": 3.17,
+      "best_view": {
+        "n_points": 130,
+        "px_bbox": [
+          692,
+          371,
+          749,
+          396
+        ],
+        "px_bbox_unwrapped": [
+          692,
+          371,
+          749,
+          396
+        ],
+        "px_area": 1425,
+        "px_area_frac": 0.00116,
+        "distance_m": 3.03,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528953.352068,
+        "frame": 250,
+        "elevation_deg": -11.4
+      },
+      "view_image": "data/crops/visibility/office_1/57_box.png"
+    },
+    "58": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 136,
+      "min_range_m": 0.93,
+      "best_view": {
+        "n_points": 7396,
+        "px_bbox": [
+          1322,
+          169,
+          1674,
+          616
+        ],
+        "px_bbox_unwrapped": [
+          1322,
+          169,
+          1674,
+          616
+        ],
+        "px_area": 157344,
+        "px_area_frac": 0.12805,
+        "distance_m": 0.6,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528924.592996,
+        "frame": 24,
+        "elevation_deg": -16.1
+      },
+      "view_image": "data/crops/visibility/office_1/58_chair.png"
+    },
+    "59": {
+      "label": "computer mouse",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.34,
+      "best_view": {
+        "n_points": 21,
+        "px_bbox": [
+          1439,
+          321,
+          1463,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          1439,
+          321,
+          1463,
+          329
+        ],
+        "px_area": 192,
+        "px_area_frac": 0.00016,
+        "distance_m": 1.22,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528939.517977,
+        "frame": 141,
+        "elevation_deg": -0.6
+      }
+    },
+    "60": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 212,
+      "min_range_m": 1.71,
+      "best_view": {
+        "n_points": 5444,
+        "px_bbox": [
+          490,
+          69,
+          668,
+          489
+        ],
+        "px_bbox_unwrapped": [
+          490,
+          69,
+          668,
+          489
+        ],
+        "px_area": 74760,
+        "px_area_frac": 0.06084,
+        "distance_m": 1.42,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528926.45799,
+        "frame": 39,
+        "elevation_deg": 11.4
+      },
+      "view_image": "data/crops/visibility/office_1/60_door.png"
+    },
+    "61": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 199,
+      "min_range_m": 1.76,
+      "best_view": {
+        "n_points": 1532,
+        "px_bbox": [
+          473,
+          64,
+          675,
+          486
+        ],
+        "px_bbox_unwrapped": [
+          473,
+          64,
+          675,
+          486
+        ],
+        "px_area": 85244,
+        "px_area_frac": 0.06937,
+        "distance_m": 1.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528926.45799,
+        "frame": 39,
+        "elevation_deg": 12.6
+      },
+      "view_image": "data/crops/visibility/office_1/61_door_frame.png"
+    },
+    "62": {
+      "label": "paper",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.26,
+      "best_view": {
+        "n_points": 98,
+        "px_bbox": [
+          469,
+          338,
+          564,
+          345
+        ],
+        "px_bbox_unwrapped": [
+          469,
+          338,
+          564,
+          345
+        ],
+        "px_area": 665,
+        "px_area_frac": 0.00054,
+        "distance_m": 1.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528946.952986,
+        "frame": 199,
+        "elevation_deg": -3.9
+      }
+    },
+    "63": {
+      "label": "lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 93,
+      "min_range_m": 1.15,
+      "best_view": {
+        "n_points": 322,
+        "px_bbox": [
+          338,
+          183,
+          514,
+          350
+        ],
+        "px_bbox_unwrapped": [
+          338,
+          183,
+          514,
+          350
+        ],
+        "px_area": 29392,
+        "px_area_frac": 0.02392,
+        "distance_m": 0.94,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528947.622936,
+        "frame": 204,
+        "elevation_deg": 8.7
+      },
+      "view_image": "data/crops/visibility/office_1/63_lamp.png"
+    },
+    "64": {
+      "label": "computer mouse",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 0.9,
+      "best_view": {
+        "n_points": 53,
+        "px_bbox": [
+          1354,
+          319,
+          1395,
+          331
+        ],
+        "px_bbox_unwrapped": [
+          1354,
+          319,
+          1395,
+          331
+        ],
+        "px_area": 492,
+        "px_area_frac": 0.0004,
+        "distance_m": 0.8,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528933.152977,
+        "frame": 92,
+        "elevation_deg": -0.9
+      }
+    },
+    "65": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 250,
+      "min_range_m": 1.12,
+      "best_view": {
+        "n_points": 20199,
+        "px_bbox": [
+          62,
+          135,
+          871,
+          406
+        ],
+        "px_bbox_unwrapped": [
+          62,
+          135,
+          871,
+          406
+        ],
+        "px_area": 219239,
+        "px_area_frac": 0.17842,
+        "distance_m": 0.84,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528931.897979,
+        "frame": 82,
+        "elevation_deg": 30.1
+      },
+      "view_image": "data/crops/visibility/office_1/65_wall.png"
+    },
+    "66": {
+      "label": "paper box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 42,
+      "min_range_m": 1.61,
+      "best_view": {
+        "n_points": 154,
+        "px_bbox": [
+          259,
+          326,
+          348,
+          381
+        ],
+        "px_bbox_unwrapped": [
+          259,
+          326,
+          348,
+          381
+        ],
+        "px_area": 4895,
+        "px_area_frac": 0.00398,
+        "distance_m": 1.37,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": -5.4
+      },
+      "view_image": "data/crops/visibility/office_1/66_paper_box.png"
+    },
+    "67": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 156,
+      "min_range_m": 2.11,
+      "best_view": {
+        "n_points": 4054,
+        "px_bbox": [
+          484,
+          122,
+          630,
+          470
+        ],
+        "px_bbox_unwrapped": [
+          484,
+          122,
+          630,
+          470
+        ],
+        "px_area": 50808,
+        "px_area_frac": 0.04135,
+        "distance_m": 2.01,
+        "occlusion": 0.001,
+        "clipped": false,
+        "stamp": 1785528927.857964,
+        "frame": 50,
+        "elevation_deg": 5.4
+      },
+      "view_image": "data/crops/visibility/office_1/67_plant.png"
+    },
+    "68": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 55,
+      "min_range_m": 1.85,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          1834,
+          283,
+          41,
+          472
+        ],
+        "px_bbox_unwrapped": [
+          1834,
+          283,
+          1961,
+          472
+        ],
+        "px_area": 24003,
+        "px_area_frac": 0.01953,
+        "distance_m": 1.63,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": -10.1
+      },
+      "view_image": "data/crops/visibility/office_1/68_chair.png"
+    },
+    "69": {
+      "label": "file cabinet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 164,
+      "min_range_m": 1.12,
+      "best_view": {
+        "n_points": 10675,
+        "px_bbox": [
+          138,
+          205,
+          634,
+          568
+        ],
+        "px_bbox_unwrapped": [
+          138,
+          205,
+          634,
+          568
+        ],
+        "px_area": 180048,
+        "px_area_frac": 0.14652,
+        "distance_m": 0.75,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528925.71796,
+        "frame": 33,
+        "elevation_deg": -11.0
+      },
+      "view_image": "data/crops/visibility/office_1/69_file_cabinet.png"
+    },
+    "70": {
+      "label": "laptop",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 64,
+      "min_range_m": 1.37,
+      "best_view": {
+        "n_points": 247,
+        "px_bbox": [
+          426,
+          269,
+          552,
+          346
+        ],
+        "px_bbox_unwrapped": [
+          426,
+          269,
+          552,
+          346
+        ],
+        "px_area": 9702,
+        "px_area_frac": 0.0079,
+        "distance_m": 1.32,
+        "occlusion": 0.003,
+        "clipped": false,
+        "stamp": 1785528947.872986,
+        "frame": 206,
+        "elevation_deg": 1.9
+      },
+      "view_image": "data/crops/visibility/office_1/70_laptop.png"
+    },
+    "71": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 29,
+      "min_range_m": 4.03,
+      "best_view": {
+        "n_points": 102,
+        "px_bbox": [
+          643,
+          315,
+          693,
+          388
+        ],
+        "px_bbox_unwrapped": [
+          643,
+          315,
+          693,
+          388
+        ],
+        "px_area": 3650,
+        "px_area_frac": 0.00297,
+        "distance_m": 3.99,
+        "occlusion": 0.244,
+        "clipped": false,
+        "stamp": 1785528952.606998,
+        "frame": 244,
+        "elevation_deg": -5.4
+      },
+      "view_image": "data/crops/visibility/office_1/71_plant.png"
+    },
+    "72": {
+      "label": "book",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 132,
+      "min_range_m": 3.08,
+      "best_view": {
+        "n_points": 143,
+        "px_bbox": [
+          116,
+          143,
+          206,
+          227
+        ],
+        "px_bbox_unwrapped": [
+          116,
+          143,
+          206,
+          227
+        ],
+        "px_area": 7560,
+        "px_area_frac": 0.00615,
+        "distance_m": 2.51,
+        "occlusion": 0.439,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 24.2
+      },
+      "view_image": "data/crops/visibility/office_1/72_book.png"
+    },
+    "73": {
+      "label": "pen",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.64,
+      "best_view": null
+    },
+    "74": {
+      "label": "marker",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.07,
+      "best_view": {
+        "n_points": 70,
+        "px_bbox": [
+          452,
+          341,
+          482,
+          347
+        ],
+        "px_bbox_unwrapped": [
+          452,
+          341,
+          482,
+          347
+        ],
+        "px_area": 180,
+        "px_area_frac": 0.00015,
+        "distance_m": 1.01,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528947.622936,
+        "frame": 204,
+        "elevation_deg": -4.6
+      }
+    },
+    "75": {
+      "label": "marker",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.05,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          540,
+          342,
+          563,
+          348
+        ],
+        "px_bbox_unwrapped": [
+          540,
+          342,
+          563,
+          348
+        ],
+        "px_area": 138,
+        "px_area_frac": 0.00011,
+        "distance_m": 0.96,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528947.257969,
+        "frame": 201,
+        "elevation_deg": -4.5
+      }
+    },
+    "76": {
+      "label": "marker",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.05,
+      "best_view": null
+    },
+    "77": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 10,
+      "min_range_m": 2.13,
+      "best_view": {
+        "n_points": 40,
+        "px_bbox": [
+          69,
+          4,
+          141,
+          38
+        ],
+        "px_bbox_unwrapped": [
+          69,
+          4,
+          141,
+          38
+        ],
+        "px_area": 2448,
+        "px_area_frac": 0.00199,
+        "distance_m": 1.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528923.977977,
+        "frame": 19,
+        "elevation_deg": 55.9
+      },
+      "view_image": "data/crops/visibility/office_1/77_focus_light.png"
+    },
+    "78": {
+      "label": "coffee machine",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 119,
+      "min_range_m": 1.32,
+      "best_view": {
+        "n_points": 447,
+        "px_bbox": [
+          297,
+          116,
+          427,
+          257
+        ],
+        "px_bbox_unwrapped": [
+          297,
+          116,
+          427,
+          257
+        ],
+        "px_area": 18330,
+        "px_area_frac": 0.01492,
+        "distance_m": 1.09,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528925.472963,
+        "frame": 31,
+        "elevation_deg": 23.4
+      },
+      "view_image": "data/crops/visibility/office_1/78_coffee_machine.png"
+    },
+    "79": {
+      "label": "paper cup",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 1.11,
+      "best_view": {
+        "n_points": 37,
+        "px_bbox": [
+          541,
+          190,
+          575,
+          229
+        ],
+        "px_bbox_unwrapped": [
+          541,
+          190,
+          575,
+          229
+        ],
+        "px_area": 1326,
+        "px_area_frac": 0.00108,
+        "distance_m": 0.99,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528924.592996,
+        "frame": 24,
+        "elevation_deg": 21.0
+      },
+      "view_image": "data/crops/visibility/office_1/79_paper_cup.png"
+    },
+    "80": {
+      "label": "clock",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 39,
+      "min_range_m": 2.09,
+      "best_view": {
+        "n_points": 37,
+        "px_bbox": [
+          361,
+          58,
+          442,
+          120
+        ],
+        "px_bbox_unwrapped": [
+          361,
+          58,
+          442,
+          120
+        ],
+        "px_area": 5022,
+        "px_area_frac": 0.00409,
+        "distance_m": 1.47,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528925.108007,
+        "frame": 28,
+        "elevation_deg": 43.9
+      },
+      "view_image": "data/crops/visibility/office_1/80_clock.png"
+    },
+    "81": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 25,
+      "min_range_m": 2.1,
+      "best_view": {
+        "n_points": 73,
+        "px_bbox": [
+          1884,
+          2,
+          45,
+          42
+        ],
+        "px_bbox_unwrapped": [
+          1884,
+          2,
+          1965,
+          42
+        ],
+        "px_area": 3240,
+        "px_area_frac": 0.00264,
+        "distance_m": 1.41,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528943.927998,
+        "frame": 176,
+        "elevation_deg": 56.2
+      },
+      "view_image": "data/crops/visibility/office_1/81_focus_light.png"
+    },
+    "82": {
+      "label": "marker",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.32,
+      "best_view": null
+    },
+    "83": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 139,
+      "min_range_m": 0.85,
+      "best_view": {
+        "n_points": 5974,
+        "px_bbox": [
+          1214,
+          149,
+          1610,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1214,
+          149,
+          1610,
+          639
+        ],
+        "px_area": 194040,
+        "px_area_frac": 0.15791,
+        "distance_m": 0.53,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528939.907983,
+        "frame": 144,
+        "elevation_deg": -17.6
+      },
+      "view_image": "data/crops/visibility/office_1/83_chair.png"
+    },
+    "84": {
+      "label": "paper cup",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.62,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          514,
+          318,
+          536,
+          338
+        ],
+        "px_bbox_unwrapped": [
+          514,
+          318,
+          536,
+          338
+        ],
+        "px_area": 440,
+        "px_area_frac": 0.00036,
+        "distance_m": 1.59,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528947.997991,
+        "frame": 207,
+        "elevation_deg": -1.3
+      }
+    },
+    "85": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 102,
+      "min_range_m": 0.88,
+      "best_view": {
+        "n_points": 7989,
+        "px_bbox": [
+          1296,
+          162,
+          1685,
+          624
+        ],
+        "px_bbox_unwrapped": [
+          1296,
+          162,
+          1685,
+          624
+        ],
+        "px_area": 179718,
+        "px_area_frac": 0.14625,
+        "distance_m": 0.56,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528938.748045,
+        "frame": 135,
+        "elevation_deg": -17.1
+      },
+      "view_image": "data/crops/visibility/office_1/85_chair.png"
+    },
+    "86": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 2.1,
+      "best_view": {
+        "n_points": 155,
+        "px_bbox": [
+          1880,
+          5,
+          47,
+          48
+        ],
+        "px_bbox_unwrapped": [
+          1880,
+          5,
+          1967,
+          48
+        ],
+        "px_area": 3741,
+        "px_area_frac": 0.00304,
+        "distance_m": 1.36,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528939.662934,
+        "frame": 142,
+        "elevation_deg": 55.3
+      },
+      "view_image": "data/crops/visibility/office_1/86_focus_light.png"
+    },
+    "87": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 16,
+      "min_range_m": 2.11,
+      "best_view": {
+        "n_points": 48,
+        "px_bbox": [
+          5,
+          0,
+          88,
+          41
+        ],
+        "px_bbox_unwrapped": [
+          5,
+          0,
+          88,
+          41
+        ],
+        "px_area": 3403,
+        "px_area_frac": 0.00277,
+        "distance_m": 1.41,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528925.962913,
+        "frame": 35,
+        "elevation_deg": 55.9
+      },
+      "view_image": "data/crops/visibility/office_1/87_focus_light.png"
+    },
+    "88": {
+      "label": "folder",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 127,
+      "min_range_m": 1.8,
+      "best_view": {
+        "n_points": 964,
+        "px_bbox": [
+          193,
+          209,
+          353,
+          296
+        ],
+        "px_bbox_unwrapped": [
+          193,
+          209,
+          353,
+          296
+        ],
+        "px_area": 13920,
+        "px_area_frac": 0.01133,
+        "distance_m": 1.39,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 11.3
+      },
+      "view_image": "data/crops/visibility/office_1/88_folder.png"
+    },
+    "89": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 40,
+      "min_range_m": 2.1,
+      "best_view": {
+        "n_points": 57,
+        "px_bbox": [
+          1903,
+          0,
+          74,
+          42
+        ],
+        "px_bbox_unwrapped": [
+          1903,
+          0,
+          1994,
+          42
+        ],
+        "px_area": 3822,
+        "px_area_frac": 0.00311,
+        "distance_m": 1.4,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528941.907966,
+        "frame": 160,
+        "elevation_deg": 56.6
+      },
+      "view_image": "data/crops/visibility/office_1/89_focus_light.png"
+    },
+    "90": {
+      "label": "potted cactus",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 49,
+      "min_range_m": 0.98,
+      "best_view": {
+        "n_points": 80,
+        "px_bbox": [
+          1426,
+          265,
+          1469,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          1426,
+          265,
+          1469,
+          329
+        ],
+        "px_area": 2752,
+        "px_area_frac": 0.00224,
+        "distance_m": 0.88,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528930.512977,
+        "frame": 71,
+        "elevation_deg": 3.8
+      },
+      "view_image": "data/crops/visibility/office_1/90_potted_cactus.png"
+    },
+    "91": {
+      "label": "potted cactus",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 47,
+      "min_range_m": 1.1,
+      "best_view": {
+        "n_points": 20,
+        "px_bbox": [
+          1444,
+          272,
+          1483,
+          328
+        ],
+        "px_bbox_unwrapped": [
+          1444,
+          272,
+          1483,
+          328
+        ],
+        "px_area": 2184,
+        "px_area_frac": 0.00178,
+        "distance_m": 0.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528930.637981,
+        "frame": 72,
+        "elevation_deg": 3.3
+      },
+      "view_image": "data/crops/visibility/office_1/91_potted_cactus.png"
+    },
+    "92": {
+      "label": "potted cactus",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 1,
+      "min_range_m": 1.67,
+      "best_view": {
+        "n_points": 42,
+        "px_bbox": [
+          1423,
+          292,
+          1449,
+          327
+        ],
+        "px_bbox_unwrapped": [
+          1423,
+          292,
+          1449,
+          327
+        ],
+        "px_area": 910,
+        "px_area_frac": 0.00074,
+        "distance_m": 1.61,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528939.517977,
+        "frame": 141,
+        "elevation_deg": 2.2
+      },
+      "view_image": "data/crops/visibility/office_1/92_potted_cactus.png"
+    },
+    "93": {
+      "label": "bottle",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.54,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          1420,
+          281,
+          1439,
+          326
+        ],
+        "px_bbox_unwrapped": [
+          1420,
+          281,
+          1439,
+          326
+        ],
+        "px_area": 855,
+        "px_area_frac": 0.0007,
+        "distance_m": 1.46,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528933.783015,
+        "frame": 97,
+        "elevation_deg": 3.0
+      }
+    },
+    "94": {
+      "label": "ceiling",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 254,
+      "min_range_m": 2.27,
+      "best_view": {
+        "n_points": 9811,
+        "px_bbox": [
+          1350,
+          116,
+          688,
+          259
+        ],
+        "px_bbox_unwrapped": [
+          1350,
+          116,
+          2608,
+          259
+        ],
+        "px_area": 179894,
+        "px_area_frac": 0.1464,
+        "distance_m": 1.61,
+        "occlusion": 0.151,
+        "clipped": false,
+        "stamp": 1785528934.947979,
+        "frame": 106,
+        "elevation_deg": 28.5
+      },
+      "view_image": "data/crops/visibility/office_1/94_ceiling.png"
+    },
+    "95": {
+      "label": "marker",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.32,
+      "best_view": null
+    },
+    "96": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 254,
+      "min_range_m": 1.06,
+      "best_view": {
+        "n_points": 5469,
+        "px_bbox": [
+          1298,
+          346,
+          639,
+          428
+        ],
+        "px_bbox_unwrapped": [
+          1298,
+          346,
+          2559,
+          428
+        ],
+        "px_area": 103402,
+        "px_area_frac": 0.08415,
+        "distance_m": 1.39,
+        "occlusion": 0.403,
+        "clipped": false,
+        "stamp": 1785528934.822931,
+        "frame": 105,
+        "elevation_deg": -13.2
+      },
+      "view_image": "data/crops/visibility/office_1/96_floor.png"
+    },
+    "97": {
+      "label": "paper cup",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.18,
+      "best_view": null
+    },
+    "98": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 2.13,
+      "best_view": {
+        "n_points": 44,
+        "px_bbox": [
+          65,
+          2,
+          147,
+          43
+        ],
+        "px_bbox_unwrapped": [
+          65,
+          2,
+          147,
+          43
+        ],
+        "px_area": 3362,
+        "px_area_frac": 0.00274,
+        "distance_m": 1.44,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528948.662933,
+        "frame": 212,
+        "elevation_deg": 55.4
+      },
+      "view_image": "data/crops/visibility/office_1/98_focus_light.png"
+    },
+    "99": {
+      "label": "bench",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 126,
+      "min_range_m": 1.21,
+      "best_view": {
+        "n_points": 1593,
+        "px_bbox": [
+          363,
+          379,
+          790,
+          571
+        ],
+        "px_bbox_unwrapped": [
+          363,
+          379,
+          790,
+          571
+        ],
+        "px_area": 81984,
+        "px_area_frac": 0.06672,
+        "distance_m": 0.79,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528939.517977,
+        "frame": 141,
+        "elevation_deg": -27.3
+      },
+      "view_image": "data/crops/visibility/office_1/99_bench.png"
+    },
+    "100": {
+      "label": "bottle",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 1.2,
+      "best_view": {
+        "n_points": 32,
+        "px_bbox": [
+          384,
+          175,
+          409,
+          237
+        ],
+        "px_bbox_unwrapped": [
+          384,
+          175,
+          409,
+          237
+        ],
+        "px_area": 1550,
+        "px_area_frac": 0.00126,
+        "distance_m": 1.1,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528924.722914,
+        "frame": 25,
+        "elevation_deg": 21.6
+      },
+      "view_image": "data/crops/visibility/office_1/100_bottle.png"
+    },
+    "101": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 16,
+      "min_range_m": 2.57,
+      "best_view": {
+        "n_points": 236,
+        "px_bbox": [
+          36,
+          13,
+          118,
+          56
+        ],
+        "px_bbox_unwrapped": [
+          36,
+          13,
+          118,
+          56
+        ],
+        "px_area": 3526,
+        "px_area_frac": 0.00287,
+        "distance_m": 1.45,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 53.5
+      },
+      "view_image": "data/crops/visibility/office_1/101_focus_light.png"
+    },
+    "102": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 190,
+      "min_range_m": 3.83,
+      "best_view": {
+        "n_points": 3463,
+        "px_bbox": [
+          955,
+          137,
+          1399,
+          403
+        ],
+        "px_bbox_unwrapped": [
+          955,
+          137,
+          1399,
+          403
+        ],
+        "px_area": 118104,
+        "px_area_frac": 0.09611,
+        "distance_m": 2.83,
+        "occlusion": 0.386,
+        "clipped": false,
+        "stamp": 1785528944.552968,
+        "frame": 181,
+        "elevation_deg": 8.8
+      },
+      "view_image": "data/crops/visibility/office_1/102_wall.png"
+    },
+    "103": {
+      "label": "folder",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 96,
+      "min_range_m": 2.78,
+      "best_view": {
+        "n_points": 190,
+        "px_bbox": [
+          114,
+          247,
+          212,
+          304
+        ],
+        "px_bbox_unwrapped": [
+          114,
+          247,
+          212,
+          304
+        ],
+        "px_area": 5586,
+        "px_area_frac": 0.00455,
+        "distance_m": 2.06,
+        "occlusion": 0.003,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 7.3
+      },
+      "view_image": "data/crops/visibility/office_1/103_folder.png"
+    },
+    "104": {
+      "label": "folder",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 144,
+      "min_range_m": 1.8,
+      "best_view": {
+        "n_points": 1193,
+        "px_bbox": [
+          226,
+          119,
+          413,
+          227
+        ],
+        "px_bbox_unwrapped": [
+          226,
+          119,
+          413,
+          227
+        ],
+        "px_area": 20196,
+        "px_area_frac": 0.01644,
+        "distance_m": 1.26,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 26.9
+      },
+      "view_image": "data/crops/visibility/office_1/104_folder.png"
+    },
+    "105": {
+      "label": "projector screen",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 177,
+      "min_range_m": 3.84,
+      "best_view": {
+        "n_points": 173,
+        "px_bbox": [
+          400,
+          161,
+          578,
+          311
+        ],
+        "px_bbox_unwrapped": [
+          400,
+          161,
+          578,
+          311
+        ],
+        "px_area": 26700,
+        "px_area_frac": 0.02173,
+        "distance_m": 3.08,
+        "occlusion": 0.605,
+        "clipped": false,
+        "stamp": 1785528946.547991,
+        "frame": 196,
+        "elevation_deg": 13.8
+      }
+    },
+    "106": {
+      "label": "book",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 112,
+      "min_range_m": 2.98,
+      "best_view": {
+        "n_points": 96,
+        "px_bbox": [
+          116,
+          210,
+          187,
+          265
+        ],
+        "px_bbox_unwrapped": [
+          116,
+          210,
+          187,
+          265
+        ],
+        "px_area": 3905,
+        "px_area_frac": 0.00318,
+        "distance_m": 2.44,
+        "occlusion": 0.282,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 14.8
+      },
+      "view_image": "data/crops/visibility/office_1/106_book.png"
+    },
+    "107": {
+      "label": "bench",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 127,
+      "min_range_m": 1.05,
+      "best_view": {
+        "n_points": 1155,
+        "px_bbox": [
+          178,
+          387,
+          706,
+          632
+        ],
+        "px_bbox_unwrapped": [
+          178,
+          387,
+          706,
+          632
+        ],
+        "px_area": 129360,
+        "px_area_frac": 0.10527,
+        "distance_m": 0.47,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528943.037979,
+        "frame": 169,
+        "elevation_deg": -32.7
+      },
+      "view_image": "data/crops/visibility/office_1/107_bench.png"
+    },
+    "108": {
+      "label": "map wall decal",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 214,
+      "min_range_m": 1.54,
+      "best_view": {
+        "n_points": 2680,
+        "px_bbox": [
+          435,
+          3,
+          783,
+          283
+        ],
+        "px_bbox_unwrapped": [
+          435,
+          3,
+          783,
+          283
+        ],
+        "px_area": 97440,
+        "px_area_frac": 0.0793,
+        "distance_m": 0.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528932.00295,
+        "frame": 83,
+        "elevation_deg": 33.7
+      },
+      "view_image": "data/crops/visibility/office_1/108_map_wall_decal.png"
+    },
+    "109": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 19,
+      "min_range_m": 2.11,
+      "best_view": {
+        "n_points": 36,
+        "px_bbox": [
+          1882,
+          0,
+          38,
+          32
+        ],
+        "px_bbox_unwrapped": [
+          1882,
+          0,
+          1958,
+          32
+        ],
+        "px_area": 2432,
+        "px_area_frac": 0.00198,
+        "distance_m": 1.41,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528928.23298,
+        "frame": 53,
+        "elevation_deg": 57.3
+      },
+      "view_image": "data/crops/visibility/office_1/109_focus_light.png"
+    },
+    "110": {
+      "label": "folder",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 44,
+      "min_range_m": 2.83,
+      "best_view": {
+        "n_points": 312,
+        "px_bbox": [
+          695,
+          313,
+          776,
+          355
+        ],
+        "px_bbox_unwrapped": [
+          695,
+          313,
+          776,
+          355
+        ],
+        "px_area": 3402,
+        "px_area_frac": 0.00277,
+        "distance_m": 2.56,
+        "occlusion": 0.256,
+        "clipped": false,
+        "stamp": 1785528952.972069,
+        "frame": 247,
+        "elevation_deg": -1.9
+      },
+      "view_image": "data/crops/visibility/office_1/110_folder.png"
+    },
+    "111": {
+      "label": "folder",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 161,
+      "min_range_m": 2.08,
+      "best_view": {
+        "n_points": 744,
+        "px_bbox": [
+          205,
+          59,
+          424,
+          176
+        ],
+        "px_bbox_unwrapped": [
+          205,
+          59,
+          424,
+          176
+        ],
+        "px_area": 25623,
+        "px_area_frac": 0.02085,
+        "distance_m": 1.32,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528922.198012,
+        "frame": 5,
+        "elevation_deg": 37.9
+      },
+      "view_image": "data/crops/visibility/office_1/111_folder.png"
+    }
+  },
+  "summary": {
+    "objects": 111,
+    "visible": 73,
+    "hidden": 38,
+    "seconds": 27.3
+  }
+}

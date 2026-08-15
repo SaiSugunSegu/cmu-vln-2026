@@ -1,0 +1,2298 @@
+{
+  "scene": "hotel_room_1",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 381,
+  "objects": {
+    "0": {
+      "label": "pillow",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 262,
+      "min_range_m": 2.73,
+      "best_view": {
+        "n_points": 130,
+        "px_bbox": [
+          480,
+          298,
+          578,
+          346
+        ],
+        "px_bbox_unwrapped": [
+          480,
+          298,
+          578,
+          346
+        ],
+        "px_area": 4704,
+        "px_area_frac": 0.00383,
+        "distance_m": 2.57,
+        "occlusion": 0.01,
+        "clipped": false,
+        "stamp": 1785527221.78032,
+        "frame": 37,
+        "elevation_deg": -0.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/0_pillow.png"
+    },
+    "1": {
+      "label": "book",
+      "region": "2",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.59,
+      "best_view": {
+        "n_points": 29,
+        "px_bbox": [
+          482,
+          341,
+          506,
+          346
+        ],
+        "px_bbox_unwrapped": [
+          482,
+          341,
+          506,
+          346
+        ],
+        "px_area": 120,
+        "px_area_frac": 0.0001,
+        "distance_m": 2.44,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527221.160408,
+        "frame": 32,
+        "elevation_deg": -4.9
+      }
+    },
+    "2": {
+      "label": "blanket",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 280,
+      "min_range_m": 1.72,
+      "best_view": {
+        "n_points": 3244,
+        "px_bbox": [
+          131,
+          330,
+          856,
+          638
+        ],
+        "px_bbox_unwrapped": [
+          131,
+          330,
+          856,
+          638
+        ],
+        "px_area": 223300,
+        "px_area_frac": 0.18172,
+        "distance_m": 0.57,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527222.040328,
+        "frame": 39,
+        "elevation_deg": -14.7
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/2_blanket.png"
+    },
+    "5": {
+      "label": "paper holder",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 43,
+      "min_range_m": 1.35,
+      "best_view": {
+        "n_points": 240,
+        "px_bbox": [
+          713,
+          330,
+          752,
+          383
+        ],
+        "px_bbox_unwrapped": [
+          713,
+          330,
+          752,
+          383
+        ],
+        "px_area": 2067,
+        "px_area_frac": 0.00168,
+        "distance_m": 1.29,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527260.175371,
+        "frame": 340,
+        "elevation_deg": -6.9
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/5_paper_holder.png"
+    },
+    "6": {
+      "label": "picture",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 193,
+      "min_range_m": 1.81,
+      "best_view": {
+        "n_points": 1003,
+        "px_bbox": [
+          1360,
+          129,
+          1426,
+          215
+        ],
+        "px_bbox_unwrapped": [
+          1360,
+          129,
+          1426,
+          215
+        ],
+        "px_area": 5676,
+        "px_area_frac": 0.00462,
+        "distance_m": 1.47,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527226.845344,
+        "frame": 78,
+        "elevation_deg": 28.1
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/6_framed_record.png"
+    },
+    "7": {
+      "label": "ceiling lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 2.48,
+      "best_view": {
+        "n_points": 158,
+        "px_bbox": [
+          17,
+          3,
+          119,
+          58
+        ],
+        "px_bbox_unwrapped": [
+          17,
+          3,
+          119,
+          58
+        ],
+        "px_area": 5610,
+        "px_area_frac": 0.00457,
+        "distance_m": 1.64,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527262.415348,
+        "frame": 357,
+        "elevation_deg": 54.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/7_ceiling_lamp.png"
+    },
+    "8": {
+      "label": "curtains",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 337,
+      "min_range_m": 1.92,
+      "best_view": {
+        "n_points": 2792,
+        "px_bbox": [
+          1119,
+          10,
+          1291,
+          481
+        ],
+        "px_bbox_unwrapped": [
+          1119,
+          10,
+          1291,
+          481
+        ],
+        "px_area": 81012,
+        "px_area_frac": 0.06593,
+        "distance_m": 1.48,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527234.605351,
+        "frame": 139,
+        "elevation_deg": 23.9
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/8_curtain.png"
+    },
+    "9": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 326,
+      "min_range_m": 1.2,
+      "best_view": {
+        "n_points": 4899,
+        "px_bbox": [
+          1352,
+          65,
+          406,
+          435
+        ],
+        "px_bbox_unwrapped": [
+          1352,
+          65,
+          2326,
+          435
+        ],
+        "px_area": 360380,
+        "px_area_frac": 0.29328,
+        "distance_m": 0.42,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527256.6203,
+        "frame": 313,
+        "elevation_deg": 39.3
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/9_wall.png"
+    },
+    "10": {
+      "label": "tv",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 1.99,
+      "best_view": {
+        "n_points": 1691,
+        "px_bbox": [
+          375,
+          165,
+          511,
+          269
+        ],
+        "px_bbox_unwrapped": [
+          375,
+          165,
+          511,
+          269
+        ],
+        "px_area": 14144,
+        "px_area_frac": 0.01151,
+        "distance_m": 1.76,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527252.350349,
+        "frame": 279,
+        "elevation_deg": 19.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/10_television.png"
+    },
+    "11": {
+      "label": "bed",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 326,
+      "min_range_m": 2.13,
+      "best_view": {
+        "n_points": 3914,
+        "px_bbox": [
+          261,
+          62,
+          796,
+          571
+        ],
+        "px_bbox_unwrapped": [
+          261,
+          62,
+          796,
+          571
+        ],
+        "px_area": 272315,
+        "px_area_frac": 0.22161,
+        "distance_m": 0.68,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527222.535344,
+        "frame": 43,
+        "elevation_deg": -0.3
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/11_bed.png"
+    },
+    "12": {
+      "label": "shower tap",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.09,
+      "best_view": null
+    },
+    "13": {
+      "label": "light switch",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 0.87,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1413,
+          200,
+          1429,
+          241
+        ],
+        "px_bbox_unwrapped": [
+          1413,
+          200,
+          1429,
+          241
+        ],
+        "px_area": 656,
+        "px_area_frac": 0.00053,
+        "distance_m": 0.81,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527256.795386,
+        "frame": 314,
+        "elevation_deg": 18.4
+      }
+    },
+    "14": {
+      "label": "light switch",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 0.95,
+      "best_view": {
+        "n_points": 176,
+        "px_bbox": [
+          265,
+          234,
+          282,
+          262
+        ],
+        "px_bbox_unwrapped": [
+          265,
+          234,
+          282,
+          262
+        ],
+        "px_area": 476,
+        "px_area_frac": 0.00039,
+        "distance_m": 1.1,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527263.4803,
+        "frame": 365,
+        "elevation_deg": 13.3
+      }
+    },
+    "15": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 301,
+      "min_range_m": 0.87,
+      "best_view": {
+        "n_points": 6794,
+        "px_bbox": [
+          300,
+          148,
+          596,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          300,
+          148,
+          596,
+          639
+        ],
+        "px_area": 145336,
+        "px_area_frac": 0.11827,
+        "distance_m": 0.51,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527251.470355,
+        "frame": 272,
+        "elevation_deg": -17.4
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/15_chair.png"
+    },
+    "16": {
+      "label": "shower",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 51,
+      "min_range_m": 2.59,
+      "best_view": {
+        "n_points": 5778,
+        "px_bbox": [
+          907,
+          76,
+          1206,
+          452
+        ],
+        "px_bbox_unwrapped": [
+          907,
+          76,
+          1206,
+          452
+        ],
+        "px_area": 112424,
+        "px_area_frac": 0.09149,
+        "distance_m": 1.94,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527258.750364,
+        "frame": 329,
+        "elevation_deg": 11.5
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/16_shower.png"
+    },
+    "17": {
+      "label": "towel",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 88,
+      "min_range_m": 1.51,
+      "best_view": {
+        "n_points": 251,
+        "px_bbox": [
+          686,
+          358,
+          802,
+          401
+        ],
+        "px_bbox_unwrapped": [
+          686,
+          358,
+          802,
+          401
+        ],
+        "px_area": 4988,
+        "px_area_frac": 0.00406,
+        "distance_m": 1.22,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527219.670401,
+        "frame": 20,
+        "elevation_deg": -11.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/17_towel.png"
+    },
+    "18": {
+      "label": "towel rack",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 57,
+      "min_range_m": 2.23,
+      "best_view": {
+        "n_points": 2125,
+        "px_bbox": [
+          456,
+          116,
+          600,
+          312
+        ],
+        "px_bbox_unwrapped": [
+          456,
+          116,
+          600,
+          312
+        ],
+        "px_area": 28224,
+        "px_area_frac": 0.02297,
+        "distance_m": 2.06,
+        "occlusion": 0.001,
+        "clipped": false,
+        "stamp": 1785527256.795386,
+        "frame": 314,
+        "elevation_deg": 19.1
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/18_towel_rack.png"
+    },
+    "19": {
+      "label": "picture",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 142,
+      "min_range_m": 2.01,
+      "best_view": {
+        "n_points": 543,
+        "px_bbox": [
+          115,
+          35,
+          188,
+          113
+        ],
+        "px_bbox_unwrapped": [
+          115,
+          35,
+          188,
+          113
+        ],
+        "px_area": 5694,
+        "px_area_frac": 0.00463,
+        "distance_m": 1.2,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527229.795348,
+        "frame": 101,
+        "elevation_deg": 46.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/19_framed_record.png"
+    },
+    "20": {
+      "label": "vase",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 131,
+      "min_range_m": 2.62,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          339,
+          23,
+          395,
+          79
+        ],
+        "px_bbox_unwrapped": [
+          339,
+          23,
+          395,
+          79
+        ],
+        "px_area": 3136,
+        "px_area_frac": 0.00255,
+        "distance_m": 1.69,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527252.220296,
+        "frame": 278,
+        "elevation_deg": 50.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/20_vase.png"
+    },
+    "21": {
+      "label": "vase",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 17,
+      "min_range_m": 2.53,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          318,
+          34,
+          348,
+          73
+        ],
+        "px_bbox_unwrapped": [
+          318,
+          34,
+          348,
+          73
+        ],
+        "px_area": 1170,
+        "px_area_frac": 0.00095,
+        "distance_m": 1.64,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527252.220296,
+        "frame": 278,
+        "elevation_deg": 50.1
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/21_vase.png"
+    },
+    "22": {
+      "label": "mirror",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 306,
+      "min_range_m": 2.19,
+      "best_view": {
+        "n_points": 2447,
+        "px_bbox": [
+          244,
+          120,
+          468,
+          261
+        ],
+        "px_bbox_unwrapped": [
+          244,
+          120,
+          468,
+          261
+        ],
+        "px_area": 31584,
+        "px_area_frac": 0.0257,
+        "distance_m": 1.7,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527259.135342,
+        "frame": 332,
+        "elevation_deg": 24.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/22_mirror.png"
+    },
+    "23": {
+      "label": "magazine",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 20,
+      "min_range_m": 1.57,
+      "best_view": {
+        "n_points": 117,
+        "px_bbox": [
+          353,
+          290,
+          434,
+          307
+        ],
+        "px_bbox_unwrapped": [
+          353,
+          290,
+          434,
+          307
+        ],
+        "px_area": 1377,
+        "px_area_frac": 0.00112,
+        "distance_m": 1.42,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527252.350349,
+        "frame": 279,
+        "elevation_deg": 3.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/23_magazine.png"
+    },
+    "24": {
+      "label": "towel",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 57,
+      "min_range_m": 1.69,
+      "best_view": {
+        "n_points": 903,
+        "px_bbox": [
+          705,
+          297,
+          767,
+          387
+        ],
+        "px_bbox_unwrapped": [
+          705,
+          297,
+          767,
+          387
+        ],
+        "px_area": 5580,
+        "px_area_frac": 0.00454,
+        "distance_m": 1.62,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527258.750364,
+        "frame": 329,
+        "elevation_deg": -3.9
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/24_towel.png"
+    },
+    "25": {
+      "label": "towel rack",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 44,
+      "min_range_m": 1.74,
+      "best_view": {
+        "n_points": 717,
+        "px_bbox": [
+          705,
+          262,
+          770,
+          304
+        ],
+        "px_bbox_unwrapped": [
+          705,
+          262,
+          770,
+          304
+        ],
+        "px_area": 2730,
+        "px_area_frac": 0.00222,
+        "distance_m": 1.69,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527258.750364,
+        "frame": 329,
+        "elevation_deg": 7.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/25_towel_rack.png"
+    },
+    "26": {
+      "label": "focus light",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 24,
+      "min_range_m": 2.34,
+      "best_view": {
+        "n_points": 27,
+        "px_bbox": [
+          1676,
+          18,
+          1742,
+          52
+        ],
+        "px_bbox_unwrapped": [
+          1676,
+          18,
+          1742,
+          52
+        ],
+        "px_area": 2244,
+        "px_area_frac": 0.00183,
+        "distance_m": 1.69,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527223.035343,
+        "frame": 47,
+        "elevation_deg": 52.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/26_focus_light.png"
+    },
+    "27": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 361,
+      "min_range_m": 0.53,
+      "best_view": {
+        "n_points": 5707,
+        "px_bbox": [
+          286,
+          0,
+          1324,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          286,
+          0,
+          1324,
+          639
+        ],
+        "px_area": 663282,
+        "px_area_frac": 0.53978,
+        "distance_m": 0.36,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527262.575336,
+        "frame": 358,
+        "elevation_deg": 71.3
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/27_door_frame.png"
+    },
+    "28": {
+      "label": "bathroom walls",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 88,
+      "min_range_m": 1.02,
+      "best_view": {
+        "n_points": 23857,
+        "px_bbox": [
+          347,
+          70,
+          1332,
+          431
+        ],
+        "px_bbox_unwrapped": [
+          347,
+          70,
+          1332,
+          431
+        ],
+        "px_area": 355585,
+        "px_area_frac": 0.28938,
+        "distance_m": 1.11,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527256.90029,
+        "frame": 315,
+        "elevation_deg": 27.2
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/28_bathroom_walls.png"
+    },
+    "29": {
+      "label": "pillow",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 267,
+      "min_range_m": 2.31,
+      "best_view": {
+        "n_points": 197,
+        "px_bbox": [
+          1455,
+          290,
+          1554,
+          350
+        ],
+        "px_bbox_unwrapped": [
+          1455,
+          290,
+          1554,
+          350
+        ],
+        "px_area": 5940,
+        "px_area_frac": 0.00483,
+        "distance_m": 2.1,
+        "occlusion": 0.03,
+        "clipped": false,
+        "stamp": 1785527237.565354,
+        "frame": 162,
+        "elevation_deg": 0.1
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/29_pillow.png"
+    },
+    "30": {
+      "label": "light switch",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 33,
+      "min_range_m": 0.84,
+      "best_view": {
+        "n_points": 876,
+        "px_bbox": [
+          1497,
+          188,
+          1535,
+          230
+        ],
+        "px_bbox_unwrapped": [
+          1497,
+          188,
+          1535,
+          230
+        ],
+        "px_area": 1596,
+        "px_area_frac": 0.0013,
+        "distance_m": 0.71,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527257.93533,
+        "frame": 323,
+        "elevation_deg": 20.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/30_light_switch.png"
+    },
+    "31": {
+      "label": "light switch",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 34,
+      "min_range_m": 0.77,
+      "best_view": {
+        "n_points": 734,
+        "px_bbox": [
+          1488,
+          174,
+          1527,
+          221
+        ],
+        "px_bbox_unwrapped": [
+          1488,
+          174,
+          1527,
+          221
+        ],
+        "px_area": 1833,
+        "px_area_frac": 0.00149,
+        "distance_m": 0.62,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527257.705332,
+        "frame": 321,
+        "elevation_deg": 22.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/31_light_switch.png"
+    },
+    "32": {
+      "label": "trash bin",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 125,
+      "min_range_m": 1.0,
+      "best_view": {
+        "n_points": 536,
+        "px_bbox": [
+          1250,
+          438,
+          1445,
+          624
+        ],
+        "px_bbox_unwrapped": [
+          1250,
+          438,
+          1445,
+          624
+        ],
+        "px_area": 36270,
+        "px_area_frac": 0.02952,
+        "distance_m": 0.69,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527227.6003,
+        "frame": 84,
+        "elevation_deg": -37.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/32_garbage_can.png"
+    },
+    "33": {
+      "label": "paper",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 23,
+      "min_range_m": 1.13,
+      "best_view": {
+        "n_points": 36,
+        "px_bbox": [
+          1206,
+          496,
+          1272,
+          542
+        ],
+        "px_bbox_unwrapped": [
+          1206,
+          496,
+          1272,
+          542
+        ],
+        "px_area": 3036,
+        "px_area_frac": 0.00247,
+        "distance_m": 1.05,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527226.845344,
+        "frame": 78,
+        "elevation_deg": -36.7
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/33_paper.png"
+    },
+    "34": {
+      "label": "paper",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 25,
+      "min_range_m": 0.89,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          1148,
+          522,
+          1231,
+          578
+        ],
+        "px_bbox_unwrapped": [
+          1148,
+          522,
+          1231,
+          578
+        ],
+        "px_area": 4648,
+        "px_area_frac": 0.00378,
+        "distance_m": 1.01,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527226.610347,
+        "frame": 76,
+        "elevation_deg": -42.4
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/34_paper.png"
+    },
+    "35": {
+      "label": "paper",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 24,
+      "min_range_m": 1.02,
+      "best_view": {
+        "n_points": 24,
+        "px_bbox": [
+          1211,
+          493,
+          1283,
+          543
+        ],
+        "px_bbox_unwrapped": [
+          1211,
+          493,
+          1283,
+          543
+        ],
+        "px_area": 3600,
+        "px_area_frac": 0.00293,
+        "distance_m": 0.88,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527226.845344,
+        "frame": 78,
+        "elevation_deg": -36.5
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/35_paper.png"
+    },
+    "36": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 265,
+      "min_range_m": 0.74,
+      "best_view": {
+        "n_points": 6322,
+        "px_bbox": [
+          1186,
+          245,
+          1785,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1186,
+          245,
+          1785,
+          639
+        ],
+        "px_area": 236006,
+        "px_area_frac": 0.19206,
+        "distance_m": 0.34,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527233.845358,
+        "frame": 133,
+        "elevation_deg": -30.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/36_chair.png"
+    },
+    "38": {
+      "label": "desk cabinet",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 361,
+      "min_range_m": 1.63,
+      "best_view": {
+        "n_points": 11326,
+        "px_bbox": [
+          131,
+          33,
+          686,
+          497
+        ],
+        "px_bbox_unwrapped": [
+          131,
+          33,
+          686,
+          497
+        ],
+        "px_area": 257520,
+        "px_area_frac": 0.20957,
+        "distance_m": 1.14,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527253.470394,
+        "frame": 288,
+        "elevation_deg": 14.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/38_desk_cabinet.png"
+    },
+    "39": {
+      "label": "toilet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 46,
+      "min_range_m": 0.75,
+      "best_view": {
+        "n_points": 3445,
+        "px_bbox": [
+          1187,
+          99,
+          1536,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1187,
+          99,
+          1536,
+          639
+        ],
+        "px_area": 188460,
+        "px_area_frac": 0.15337,
+        "distance_m": 0.39,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527258.750364,
+        "frame": 329,
+        "elevation_deg": -22.5
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/39_toilet.png"
+    },
+    "40": {
+      "label": "focus light",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 65,
+      "min_range_m": 2.33,
+      "best_view": {
+        "n_points": 41,
+        "px_bbox": [
+          1892,
+          2,
+          45,
+          39
+        ],
+        "px_bbox_unwrapped": [
+          1892,
+          2,
+          1965,
+          39
+        ],
+        "px_area": 2701,
+        "px_area_frac": 0.0022,
+        "distance_m": 1.53,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527232.545363,
+        "frame": 123,
+        "elevation_deg": 56.2
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/40_focus_light.png"
+    },
+    "41": {
+      "label": "focus light",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 27,
+      "min_range_m": 2.35,
+      "best_view": {
+        "n_points": 34,
+        "px_bbox": [
+          76,
+          4,
+          150,
+          42
+        ],
+        "px_bbox_unwrapped": [
+          76,
+          4,
+          150,
+          42
+        ],
+        "px_area": 2812,
+        "px_area_frac": 0.00229,
+        "distance_m": 1.58,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527240.015355,
+        "frame": 181,
+        "elevation_deg": 55.7
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/41_focus_light.png"
+    },
+    "43": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 124,
+      "min_range_m": 0.91,
+      "best_view": {
+        "n_points": 3225,
+        "px_bbox": [
+          421,
+          370,
+          1359,
+          450
+        ],
+        "px_bbox_unwrapped": [
+          421,
+          370,
+          1359,
+          450
+        ],
+        "px_area": 75040,
+        "px_area_frac": 0.06107,
+        "distance_m": 1.23,
+        "occlusion": 0.196,
+        "clipped": false,
+        "stamp": 1785527256.475362,
+        "frame": 312,
+        "elevation_deg": -26.5
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/43_floor.png"
+    },
+    "44": {
+      "label": "focus light",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 2.68,
+      "best_view": {
+        "n_points": 31,
+        "px_bbox": [
+          229,
+          29,
+          289,
+          61
+        ],
+        "px_bbox_unwrapped": [
+          229,
+          29,
+          289,
+          61
+        ],
+        "px_area": 1920,
+        "px_area_frac": 0.00156,
+        "distance_m": 1.82,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527222.265396,
+        "frame": 41,
+        "elevation_deg": 50.4
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/44_focus_light.png"
+    },
+    "45": {
+      "label": "curtains",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 354,
+      "min_range_m": 1.14,
+      "best_view": {
+        "n_points": 6236,
+        "px_bbox": [
+          1177,
+          0,
+          1583,
+          564
+        ],
+        "px_bbox_unwrapped": [
+          1177,
+          0,
+          1583,
+          564
+        ],
+        "px_area": 228984,
+        "px_area_frac": 0.18635,
+        "distance_m": 0.7,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527246.135386,
+        "frame": 230,
+        "elevation_deg": 45.7
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/45_curtain.png"
+    },
+    "47": {
+      "label": "ceiling",
+      "region": "2",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 350,
+      "min_range_m": 2.55,
+      "best_view": {
+        "n_points": 1968,
+        "px_bbox": [
+          1823,
+          0,
+          1150,
+          231
+        ],
+        "px_bbox_unwrapped": [
+          1823,
+          0,
+          3070,
+          231
+        ],
+        "px_area": 288057,
+        "px_area_frac": 0.23442,
+        "distance_m": 3.63,
+        "occlusion": 0.686,
+        "clipped": true,
+        "stamp": 1785527247.185346,
+        "frame": 238,
+        "elevation_deg": 35.8
+      }
+    },
+    "48": {
+      "label": "sink",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 181,
+      "min_range_m": 1.45,
+      "best_view": {
+        "n_points": 3086,
+        "px_bbox": [
+          430,
+          227,
+          650,
+          449
+        ],
+        "px_bbox_unwrapped": [
+          430,
+          227,
+          650,
+          449
+        ],
+        "px_area": 48840,
+        "px_area_frac": 0.03975,
+        "distance_m": 1.11,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527258.750364,
+        "frame": 329,
+        "elevation_deg": -2.7
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/48_sink.png"
+    },
+    "49": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 334,
+      "min_range_m": 1.14,
+      "best_view": {
+        "n_points": 9556,
+        "px_bbox": [
+          1362,
+          0,
+          1720,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1362,
+          0,
+          1720,
+          639
+        ],
+        "px_area": 228762,
+        "px_area_frac": 0.18617,
+        "distance_m": 0.42,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527243.810351,
+        "frame": 211,
+        "elevation_deg": 49.7
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/49_wall.png"
+    },
+    "50": {
+      "label": "pillow",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 264,
+      "min_range_m": 3.06,
+      "best_view": {
+        "n_points": 301,
+        "px_bbox": [
+          493,
+          275,
+          576,
+          345
+        ],
+        "px_bbox_unwrapped": [
+          493,
+          275,
+          576,
+          345
+        ],
+        "px_area": 5810,
+        "px_area_frac": 0.00473,
+        "distance_m": 2.91,
+        "occlusion": 0.134,
+        "clipped": false,
+        "stamp": 1785527221.660306,
+        "frame": 36,
+        "elevation_deg": 1.4
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/50_pillow.png"
+    },
+    "51": {
+      "label": "ceiling",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 89,
+      "min_range_m": 2.56,
+      "best_view": {
+        "n_points": 5389,
+        "px_bbox": [
+          1326,
+          64,
+          343,
+          185
+        ],
+        "px_bbox_unwrapped": [
+          1326,
+          64,
+          2263,
+          185
+        ],
+        "px_area": 113377,
+        "px_area_frac": 0.09227,
+        "distance_m": 1.98,
+        "occlusion": 0.027,
+        "clipped": false,
+        "stamp": 1785527262.685358,
+        "frame": 359,
+        "elevation_deg": 53.9
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/51_ceiling.png"
+    },
+    "54": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 47,
+      "min_range_m": 2.13,
+      "best_view": {
+        "n_points": 2900,
+        "px_bbox": [
+          1150,
+          0,
+          1513,
+          573
+        ],
+        "px_bbox_unwrapped": [
+          1150,
+          0,
+          1513,
+          573
+        ],
+        "px_area": 207999,
+        "px_area_frac": 0.16927,
+        "distance_m": 1.12,
+        "occlusion": 0.405,
+        "clipped": true,
+        "stamp": 1785527242.440326,
+        "frame": 200,
+        "elevation_deg": 12.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/54_wall.png"
+    },
+    "55": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 25,
+      "min_range_m": 1.3,
+      "best_view": {
+        "n_points": 401,
+        "px_bbox": [
+          1276,
+          0,
+          1393,
+          562
+        ],
+        "px_bbox_unwrapped": [
+          1276,
+          0,
+          1393,
+          562
+        ],
+        "px_area": 65754,
+        "px_area_frac": 0.05351,
+        "distance_m": 0.89,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527245.760288,
+        "frame": 227,
+        "elevation_deg": 41.1
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/55_wall.png"
+    },
+    "56": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 276,
+      "min_range_m": 2.91,
+      "best_view": {
+        "n_points": 274,
+        "px_bbox": [
+          197,
+          0,
+          756,
+          172
+        ],
+        "px_bbox_unwrapped": [
+          197,
+          0,
+          756,
+          172
+        ],
+        "px_area": 96148,
+        "px_area_frac": 0.07825,
+        "distance_m": 2.12,
+        "occlusion": 0.401,
+        "clipped": true,
+        "stamp": 1785527242.185347,
+        "frame": 198,
+        "elevation_deg": 48.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/56_wall.png"
+    },
+    "57": {
+      "label": "wall",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 8,
+      "min_range_m": 4.34,
+      "best_view": {
+        "n_points": 62,
+        "px_bbox": [
+          554,
+          67,
+          714,
+          431
+        ],
+        "px_bbox_unwrapped": [
+          554,
+          67,
+          714,
+          431
+        ],
+        "px_area": 58240,
+        "px_area_frac": 0.0474,
+        "distance_m": 2.17,
+        "occlusion": 0.577,
+        "clipped": false,
+        "stamp": 1785527254.43538,
+        "frame": 296,
+        "elevation_deg": 10.2
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/57_wall.png"
+    },
+    "58": {
+      "label": "window",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 349,
+      "min_range_m": 1.78,
+      "best_view": {
+        "n_points": 4768,
+        "px_bbox": [
+          1005,
+          0,
+          1658,
+          475
+        ],
+        "px_bbox_unwrapped": [
+          1005,
+          0,
+          1658,
+          475
+        ],
+        "px_area": 310175,
+        "px_area_frac": 0.25242,
+        "distance_m": 1.06,
+        "occlusion": 0.397,
+        "clipped": true,
+        "stamp": 1785527246.390391,
+        "frame": 232,
+        "elevation_deg": 22.3
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/58_window.png"
+    },
+    "59": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 135,
+      "min_range_m": 2.13,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          1121,
+          72,
+          1217,
+          427
+        ],
+        "px_bbox_unwrapped": [
+          1121,
+          72,
+          1217,
+          427
+        ],
+        "px_area": 34080,
+        "px_area_frac": 0.02773,
+        "distance_m": 2.29,
+        "occlusion": 0.501,
+        "clipped": false,
+        "stamp": 1785527232.805348,
+        "frame": 125,
+        "elevation_deg": 16.4
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/59_wall.png"
+    },
+    "62": {
+      "label": "floor",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 351,
+      "min_range_m": 1.68,
+      "best_view": {
+        "n_points": 1619,
+        "px_bbox": [
+          1796,
+          343,
+          1138,
+          436
+        ],
+        "px_bbox_unwrapped": [
+          1796,
+          343,
+          3058,
+          436
+        ],
+        "px_area": 117366,
+        "px_area_frac": 0.09551,
+        "distance_m": 1.24,
+        "occlusion": 0.06,
+        "clipped": false,
+        "stamp": 1785527234.730349,
+        "frame": 140,
+        "elevation_deg": -11.3
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/62_floor.png"
+    },
+    "63": {
+      "label": "soap",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.9,
+      "best_view": null
+    },
+    "64": {
+      "label": "towel",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 56,
+      "min_range_m": 2.27,
+      "best_view": {
+        "n_points": 680,
+        "px_bbox": [
+          513,
+          196,
+          568,
+          320
+        ],
+        "px_bbox_unwrapped": [
+          513,
+          196,
+          568,
+          320
+        ],
+        "px_area": 6820,
+        "px_area_frac": 0.00555,
+        "distance_m": 2.12,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527256.795386,
+        "frame": 314,
+        "elevation_deg": 11.7
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/64_towel.png"
+    },
+    "65": {
+      "label": "phone",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 86,
+      "min_range_m": 1.4,
+      "best_view": {
+        "n_points": 166,
+        "px_bbox": [
+          340,
+          273,
+          422,
+          307
+        ],
+        "px_bbox_unwrapped": [
+          340,
+          273,
+          422,
+          307
+        ],
+        "px_area": 2788,
+        "px_area_frac": 0.00227,
+        "distance_m": 1.23,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527253.21036,
+        "frame": 286,
+        "elevation_deg": 5.3
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/65_phone.png"
+    },
+    "66": {
+      "label": "eye glasses",
+      "region": "2",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.56,
+      "best_view": {
+        "n_points": 53,
+        "px_bbox": [
+          479,
+          289,
+          520,
+          301
+        ],
+        "px_bbox_unwrapped": [
+          479,
+          289,
+          520,
+          301
+        ],
+        "px_area": 492,
+        "px_area_frac": 0.0004,
+        "distance_m": 1.45,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527250.370333,
+        "frame": 263,
+        "elevation_deg": 4.7
+      }
+    },
+    "67": {
+      "label": "sink",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 217,
+      "min_range_m": 1.93,
+      "best_view": {
+        "n_points": 1036,
+        "px_bbox": [
+          1359,
+          251,
+          1529,
+          419
+        ],
+        "px_bbox_unwrapped": [
+          1359,
+          251,
+          1529,
+          419
+        ],
+        "px_area": 28560,
+        "px_area_frac": 0.02324,
+        "distance_m": 1.47,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527261.365389,
+        "frame": 349,
+        "elevation_deg": -2.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/67_sink.png"
+    },
+    "68": {
+      "label": "wall lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 101,
+      "min_range_m": 2.56,
+      "best_view": {
+        "n_points": 679,
+        "px_bbox": [
+          1506,
+          61,
+          1705,
+          138
+        ],
+        "px_bbox_unwrapped": [
+          1506,
+          61,
+          1705,
+          138
+        ],
+        "px_area": 15323,
+        "px_area_frac": 0.01247,
+        "distance_m": 1.72,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527260.740333,
+        "frame": 344,
+        "elevation_deg": 41.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/68_wall_lamp.png"
+    },
+    "69": {
+      "label": "trash can",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 37,
+      "min_range_m": 1.76,
+      "best_view": {
+        "n_points": 364,
+        "px_bbox": [
+          676,
+          389,
+          745,
+          478
+        ],
+        "px_bbox_unwrapped": [
+          676,
+          389,
+          745,
+          478
+        ],
+        "px_area": 6141,
+        "px_area_frac": 0.005,
+        "distance_m": 1.54,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527259.005359,
+        "frame": 331,
+        "elevation_deg": -20.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/69_garbage_can.png"
+    },
+    "70": {
+      "label": "wall",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 5.79,
+      "best_view": null
+    },
+    "71": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 198,
+      "min_range_m": 1.86,
+      "best_view": {
+        "n_points": 681,
+        "px_bbox": [
+          1014,
+          368,
+          1599,
+          551
+        ],
+        "px_bbox_unwrapped": [
+          1014,
+          368,
+          1599,
+          551
+        ],
+        "px_area": 107055,
+        "px_area_frac": 0.08712,
+        "distance_m": 1.02,
+        "occlusion": 0.255,
+        "clipped": false,
+        "stamp": 1785527246.545346,
+        "frame": 233,
+        "elevation_deg": -21.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/71_wall.png"
+    },
+    "72": {
+      "label": "bedside table",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 94,
+      "min_range_m": 2.84,
+      "best_view": {
+        "n_points": 859,
+        "px_bbox": [
+          963,
+          337,
+          1065,
+          425
+        ],
+        "px_bbox_unwrapped": [
+          963,
+          337,
+          1065,
+          425
+        ],
+        "px_area": 8976,
+        "px_area_frac": 0.0073,
+        "distance_m": 2.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527219.79034,
+        "frame": 21,
+        "elevation_deg": -11.2
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/72_bedside_table.png"
+    },
+    "74": {
+      "label": "lamp",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 217,
+      "min_range_m": 1.38,
+      "best_view": {
+        "n_points": 895,
+        "px_bbox": [
+          674,
+          253,
+          794,
+          375
+        ],
+        "px_bbox_unwrapped": [
+          674,
+          253,
+          794,
+          375
+        ],
+        "px_area": 14640,
+        "px_area_frac": 0.01191,
+        "distance_m": 1.12,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527234.730349,
+        "frame": 140,
+        "elevation_deg": 1.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/74_lamp.png"
+    },
+    "76": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 340,
+      "min_range_m": 2.96,
+      "best_view": {
+        "n_points": 6408,
+        "px_bbox": [
+          483,
+          70,
+          1153,
+          427
+        ],
+        "px_bbox_unwrapped": [
+          483,
+          70,
+          1153,
+          427
+        ],
+        "px_area": 239190,
+        "px_area_frac": 0.19465,
+        "distance_m": 1.51,
+        "occlusion": 0.08,
+        "clipped": false,
+        "stamp": 1785527234.730349,
+        "frame": 140,
+        "elevation_deg": 16.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/76_wall.png"
+    },
+    "77": {
+      "label": "ceiling",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 377,
+      "min_range_m": 2.89,
+      "best_view": {
+        "n_points": 1516,
+        "px_bbox": [
+          1780,
+          79,
+          1116,
+          257
+        ],
+        "px_bbox_unwrapped": [
+          1780,
+          79,
+          3036,
+          257
+        ],
+        "px_area": 223568,
+        "px_area_frac": 0.18194,
+        "distance_m": 2.53,
+        "occlusion": 0.12,
+        "clipped": false,
+        "stamp": 1785527234.605351,
+        "frame": 139,
+        "elevation_deg": 28.9
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/77_ceiling.png"
+    },
+    "79": {
+      "label": "soap",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.6,
+      "best_view": null
+    },
+    "80": {
+      "label": "lamp",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 165,
+      "min_range_m": 2.82,
+      "best_view": {
+        "n_points": 220,
+        "px_bbox": [
+          936,
+          291,
+          984,
+          344
+        ],
+        "px_bbox_unwrapped": [
+          936,
+          291,
+          984,
+          344
+        ],
+        "px_area": 2544,
+        "px_area_frac": 0.00207,
+        "distance_m": 2.63,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527219.915384,
+        "frame": 22,
+        "elevation_deg": -0.2
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/80_lamp.png"
+    },
+    "81": {
+      "label": "bench",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 132,
+      "min_range_m": 1.89,
+      "best_view": {
+        "n_points": 1820,
+        "px_bbox": [
+          622,
+          353,
+          909,
+          537
+        ],
+        "px_bbox_unwrapped": [
+          622,
+          353,
+          909,
+          537
+        ],
+        "px_area": 52808,
+        "px_area_frac": 0.04298,
+        "distance_m": 1.08,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527219.670401,
+        "frame": 20,
+        "elevation_deg": -18.8
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/81_bench.png"
+    },
+    "82": {
+      "label": "lamp",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 218,
+      "min_range_m": 1.4,
+      "best_view": {
+        "n_points": 557,
+        "px_bbox": [
+          392,
+          126,
+          471,
+          505
+        ],
+        "px_bbox_unwrapped": [
+          392,
+          126,
+          471,
+          505
+        ],
+        "px_area": 29941,
+        "px_area_frac": 0.02437,
+        "distance_m": 1.29,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527255.960291,
+        "frame": 308,
+        "elevation_deg": 1.6
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/82_lamp.png"
+    },
+    "83": {
+      "label": "pillow",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 297,
+      "min_range_m": 2.44,
+      "best_view": {
+        "n_points": 389,
+        "px_bbox": [
+          1445,
+          258,
+          1532,
+          352
+        ],
+        "px_bbox_unwrapped": [
+          1445,
+          258,
+          1532,
+          352
+        ],
+        "px_area": 8178,
+        "px_area_frac": 0.00666,
+        "distance_m": 2.16,
+        "occlusion": 0.01,
+        "clipped": false,
+        "stamp": 1785527237.185341,
+        "frame": 159,
+        "elevation_deg": 2.5
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/83_pillow.png"
+    },
+    "84": {
+      "label": "suitcase",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 193,
+      "min_range_m": 1.2,
+      "best_view": {
+        "n_points": 1598,
+        "px_bbox": [
+          1356,
+          336,
+          1591,
+          444
+        ],
+        "px_bbox_unwrapped": [
+          1356,
+          336,
+          1591,
+          444
+        ],
+        "px_area": 25380,
+        "px_area_frac": 0.02065,
+        "distance_m": 0.89,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527226.845344,
+        "frame": 78,
+        "elevation_deg": -10.2
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/84_suitcase.png"
+    },
+    "85": {
+      "label": "bedside table",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 131,
+      "min_range_m": 1.43,
+      "best_view": {
+        "n_points": 2333,
+        "px_bbox": [
+          597,
+          352,
+          838,
+          569
+        ],
+        "px_bbox_unwrapped": [
+          597,
+          352,
+          838,
+          569
+        ],
+        "px_area": 52297,
+        "px_area_frac": 0.04256,
+        "distance_m": 0.87,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527234.730349,
+        "frame": 140,
+        "elevation_deg": -21.0
+      },
+      "view_image": "data/crops/visibility/hotel_room_1/85_bedside_table.png"
+    }
+  },
+  "summary": {
+    "objects": 74,
+    "visible": 65,
+    "hidden": 9,
+    "seconds": 39.8
+  }
+}

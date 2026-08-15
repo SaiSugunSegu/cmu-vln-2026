@@ -1,0 +1,2254 @@
+{
+  "scene": "livingroom_3",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/livingroom_3/visibility/livingroom_3_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: data/bags/livingroom_3/iref_vla_metadata/livingroom_3_referential_statements.json",
+    "source_objects: data/bags/livingroom_3/iref_vla_metadata/livingroom_3_objects.json"
+  ],
+  "difficulty_counts": {
+    "hard": 3,
+    "medium": 3,
+    "easy": 4
+  },
+  "relation_counts": {
+    "near": 1,
+    "between": 1,
+    "in": 1,
+    "supports": 1,
+    "above": 1,
+    "on": 2,
+    "closest": 2,
+    "farthest": 1
+  },
+  "target_object_coverage": [
+    "book",
+    "bowl",
+    "box",
+    "cabinet",
+    "lamp",
+    "mirror",
+    "potted plant",
+    "shelf",
+    "stool",
+    "table",
+    "tablecloth",
+    "vase",
+    "wall decal",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the potted plant near the books on the cabinet.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "near",
+      "target_objects": [
+        "potted plant",
+        "book",
+        "cabinet"
+      ],
+      "answer": {
+        "object_id": "58",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "gray",
+          "olive",
+          "aqua"
+        ],
+        "center": [
+          5.6592,
+          0.5867,
+          1.1701
+        ],
+        "size": [
+          0.2224,
+          0.2187,
+          0.3183
+        ],
+        "yaw": 0.7326,
+        "aabb": {
+          "min": [
+            5.5034,
+            0.431,
+            1.011
+          ],
+          "max": [
+            5.815,
+            0.7424,
+            1.3293
+          ]
+        },
+        "size_aabb": [
+          0.3116,
+          0.3113,
+          0.3183
+        ],
+        "bbox_corners": [
+          [
+            5.5034,
+            0.5936,
+            1.3293
+          ],
+          [
+            5.6688,
+            0.7424,
+            1.3293
+          ],
+          [
+            5.815,
+            0.5798,
+            1.3293
+          ],
+          [
+            5.6497,
+            0.431,
+            1.3293
+          ],
+          [
+            5.5034,
+            0.5936,
+            1.011
+          ],
+          [
+            5.6688,
+            0.7424,
+            1.011
+          ],
+          [
+            5.815,
+            0.5798,
+            1.011
+          ],
+          [
+            5.6497,
+            0.431,
+            1.011
+          ]
+        ],
+        "volume": 0.01548
+      },
+      "anchors": [
+        {
+          "object_id": "10",
+          "region": "0",
+          "label": "book",
+          "raw_label": "book",
+          "nyu_label": "book",
+          "colors": [
+            "gray",
+            "aqua",
+            "black"
+          ],
+          "center": [
+            5.382,
+            0.574,
+            1.1621
+          ],
+          "size": [
+            0.2535,
+            0.2846,
+            0.3021
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              5.2397,
+              0.4472,
+              1.011
+            ],
+            "max": [
+              5.5243,
+              0.7007,
+              1.3131
+            ]
+          },
+          "size_aabb": [
+            0.2846,
+            0.2535,
+            0.3021
+          ],
+          "bbox_corners": [
+            [
+              5.2397,
+              0.4472,
+              1.3131
+            ],
+            [
+              5.2397,
+              0.7007,
+              1.3131
+            ],
+            [
+              5.5243,
+              0.7007,
+              1.3131
+            ],
+            [
+              5.5243,
+              0.4472,
+              1.3131
+            ],
+            [
+              5.2397,
+              0.4472,
+              1.011
+            ],
+            [
+              5.2397,
+              0.7007,
+              1.011
+            ],
+            [
+              5.5243,
+              0.7007,
+              1.011
+            ],
+            [
+              5.5243,
+              0.4472,
+              1.011
+            ]
+          ],
+          "volume": 0.0218
+        }
+      ],
+      "distractor_ids": [
+        "31",
+        "5",
+        "6",
+        "83",
+        "99"
+      ],
+      "evidence": "solved from geometry: near: potted plant#58 is the only match",
+      "statement": "the small plant that is near the small cabinet",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_3/p1_img2.png"
+      ],
+      "visibility_warning": [
+        "target 58 was never resolved by the robot's camera: occluded",
+        "anchor 10 was never resolved by the robot's camera: occluded"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='potted plant' color='' hops=[{'relation': 'near', 'phrases': ['books']}, {'relation': 'on', 'phrases': ['cabinet']}]",
+        "head candidates: [potted plant#5, potted plant#6, potted plant#31, potted plant#58, potted plant#83, potted plant#99]",
+        "anchor hop 1 (on): on: 1 match(es) -> [book#10]; on: book#10 is the only match",
+        "target hop (near): near: 1 match(es) -> [potted plant#58]",
+        "pick: near: potted plant#58 is the only match",
+        "result: near: potted plant#58 is the only match"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the vase between the cabinet and the stool.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "between",
+      "target_objects": [
+        "vase",
+        "cabinet",
+        "stool"
+      ],
+      "answer": {
+        "object_id": "37",
+        "region": "0",
+        "label": "vase",
+        "raw_label": "vase",
+        "nyu_label": "vase",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          3.882,
+          0.496,
+          0.3319
+        ],
+        "size": [
+          0.4509,
+          0.4509,
+          0.6638
+        ],
+        "yaw": -2.1597,
+        "aabb": {
+          "min": [
+            3.5692,
+            0.1833,
+            -0.0
+          ],
+          "max": [
+            4.1947,
+            0.8088,
+            0.6638
+          ]
+        },
+        "size_aabb": [
+          0.6255,
+          0.6255,
+          0.6638
+        ],
+        "bbox_corners": [
+          [
+            4.1947,
+            0.5583,
+            0.6638
+          ],
+          [
+            3.9442,
+            0.1833,
+            0.6638
+          ],
+          [
+            3.5692,
+            0.4338,
+            0.6638
+          ],
+          [
+            3.8197,
+            0.8088,
+            0.6638
+          ],
+          [
+            4.1947,
+            0.5583,
+            -0.0
+          ],
+          [
+            3.9442,
+            0.1833,
+            -0.0
+          ],
+          [
+            3.5692,
+            0.4338,
+            -0.0
+          ],
+          [
+            3.8197,
+            0.8088,
+            -0.0
+          ]
+        ],
+        "volume": 0.13499
+      },
+      "anchors": [
+        {
+          "object_id": "88",
+          "region": "0",
+          "label": "cabinet",
+          "raw_label": "cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            4.9347,
+            0.3542,
+            0.5115
+          ],
+          "size": [
+            1.6529,
+            0.7427,
+            1.0233
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              4.1083,
+              -0.0171,
+              -0.0001
+            ],
+            "max": [
+              5.7612,
+              0.7256,
+              1.0232
+            ]
+          },
+          "size_aabb": [
+            1.6529,
+            0.7427,
+            1.0233
+          ],
+          "bbox_corners": [
+            [
+              4.1083,
+              0.7256,
+              1.0232
+            ],
+            [
+              5.7612,
+              0.7256,
+              1.0232
+            ],
+            [
+              5.7612,
+              -0.0171,
+              1.0232
+            ],
+            [
+              4.1083,
+              -0.0171,
+              1.0232
+            ],
+            [
+              4.1083,
+              0.7256,
+              -0.0001
+            ],
+            [
+              5.7612,
+              0.7256,
+              -0.0001
+            ],
+            [
+              5.7612,
+              -0.0171,
+              -0.0001
+            ],
+            [
+              4.1083,
+              -0.0171,
+              -0.0001
+            ]
+          ],
+          "volume": 1.25622
+        },
+        {
+          "object_id": "67",
+          "region": "0",
+          "label": "stool",
+          "raw_label": "stool",
+          "nyu_label": "stool",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.5682,
+            0.3637,
+            0.2898
+          ],
+          "size": [
+            0.562,
+            0.5527,
+            0.5789
+          ],
+          "yaw": 3.1403,
+          "aabb": {
+            "min": [
+              1.2869,
+              0.0869,
+              0.0003
+            ],
+            "max": [
+              1.8495,
+              0.6404,
+              0.5792
+            ]
+          },
+          "size_aabb": [
+            0.5627,
+            0.5535,
+            0.5789
+          ],
+          "bbox_corners": [
+            [
+              1.8488,
+              0.0869,
+              0.5792
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.5792
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.5792
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.5792
+            ],
+            [
+              1.8488,
+              0.0869,
+              0.0003
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.0003
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.0003
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.0003
+            ]
+          ],
+          "volume": 0.17981
+        }
+      ],
+      "distractor_ids": [
+        "105",
+        "40",
+        "43"
+      ],
+      "evidence": "solved from geometry: between: vase#37 is the only match",
+      "statement": "the big vase that is near the stool",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_3/p2_img1.png"
+      ],
+      "views": [
+        {
+          "object_id": "37",
+          "role": "target",
+          "frames_visible": 49,
+          "distance_m": 1.03,
+          "px_area": 31840,
+          "occlusion": 0.0,
+          "elevation_deg": -23.7,
+          "stamp": 1785528650.587191,
+          "image": "data/crops/visibility/livingroom_3/37_vase.png"
+        },
+        {
+          "object_id": "88",
+          "role": "anchor",
+          "frames_visible": 165,
+          "distance_m": 0.78,
+          "px_area": 144293,
+          "occlusion": 0.0,
+          "elevation_deg": -15.7,
+          "stamp": 1785528651.222173,
+          "image": "data/crops/visibility/livingroom_3/88_cabinet.png"
+        },
+        {
+          "object_id": "67",
+          "role": "anchor",
+          "frames_visible": 76,
+          "distance_m": 0.44,
+          "px_area": 84960,
+          "occlusion": 0.0,
+          "elevation_deg": -38.7,
+          "stamp": 1785528647.532178,
+          "image": "data/crops/visibility/livingroom_3/67_stool.png"
+        }
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='vase' color='' hops=[{'relation': 'between', 'phrases': ['cabinet', 'stool']}]",
+        "head candidates: [vase#37, vase#40, vase#43, vase#105]",
+        "target hop (between): between: 1 in the corridor -> [vase#37]",
+        "pick: between: vase#37 is the only match",
+        "result: between: vase#37 is the only match"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the book inside the shelf.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "in",
+      "target_objects": [
+        "book",
+        "shelf"
+      ],
+      "answer": {
+        "object_id": "77",
+        "region": "0",
+        "label": "book",
+        "raw_label": "book",
+        "nyu_label": "book",
+        "colors": [
+          "gray",
+          "aqua",
+          "brown"
+        ],
+        "center": [
+          2.9537,
+          -5.8048,
+          2.0257
+        ],
+        "size": [
+          0.4448,
+          0.2179,
+          0.3385
+        ],
+        "yaw": -3.0979,
+        "aabb": {
+          "min": [
+            2.7267,
+            -5.9234,
+            1.8564
+          ],
+          "max": [
+            3.1806,
+            -5.6862,
+            2.195
+          ]
+        },
+        "size_aabb": [
+          0.4539,
+          0.2372,
+          0.3385
+        ],
+        "bbox_corners": [
+          [
+            3.1806,
+            -5.904,
+            2.195
+          ],
+          [
+            2.7363,
+            -5.9234,
+            2.195
+          ],
+          [
+            2.7267,
+            -5.7057,
+            2.195
+          ],
+          [
+            3.1711,
+            -5.6862,
+            2.195
+          ],
+          [
+            3.1806,
+            -5.904,
+            1.8564
+          ],
+          [
+            2.7363,
+            -5.9234,
+            1.8564
+          ],
+          [
+            2.7267,
+            -5.7057,
+            1.8564
+          ],
+          [
+            3.1711,
+            -5.6862,
+            1.8564
+          ]
+        ],
+        "volume": 0.03282
+      },
+      "anchors": [
+        {
+          "object_id": "91",
+          "region": "0",
+          "label": "shelf",
+          "raw_label": "shelf",
+          "nyu_label": "shelves",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            3.656,
+            -5.8668,
+            2.068
+          ],
+          "size": [
+            2.7427,
+            0.5783,
+            0.477
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              2.2846,
+              -6.156,
+              1.8295
+            ],
+            "max": [
+              5.0274,
+              -5.5777,
+              2.3065
+            ]
+          },
+          "size_aabb": [
+            2.7427,
+            0.5783,
+            0.477
+          ],
+          "bbox_corners": [
+            [
+              2.2846,
+              -5.5777,
+              2.3065
+            ],
+            [
+              5.0274,
+              -5.5777,
+              2.3065
+            ],
+            [
+              5.0274,
+              -6.156,
+              2.3065
+            ],
+            [
+              2.2846,
+              -6.156,
+              2.3065
+            ],
+            [
+              2.2846,
+              -5.5777,
+              1.8295
+            ],
+            [
+              5.0274,
+              -5.5777,
+              1.8295
+            ],
+            [
+              5.0274,
+              -6.156,
+              1.8295
+            ],
+            [
+              2.2846,
+              -6.156,
+              1.8295
+            ]
+          ],
+          "volume": 0.7566,
+          "phrase": "the shelf"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 6,
+      "evidence": "in: inside shelf#91: base 1.86 m sits 0.45 m below its rim",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "77",
+          "role": "target",
+          "frames_visible": 48,
+          "distance_m": 2.35,
+          "px_area": 3186,
+          "occlusion": 0.0,
+          "elevation_deg": 25.0,
+          "stamp": 1785528668.532179,
+          "image": "data/crops/visibility/livingroom_3/77_book.png"
+        },
+        {
+          "object_id": "91",
+          "role": "anchor",
+          "frames_visible": 184,
+          "distance_m": 2.19,
+          "px_area": 42294,
+          "occlusion": 0.0,
+          "elevation_deg": 29.2,
+          "stamp": 1785528666.897147,
+          "image": "data/crops/visibility/livingroom_3/91_shelf.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the table with the tablecloth on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "tablecloth"
+      ],
+      "answer": {
+        "object_id": "72",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          6.943,
+          -3.974,
+          0.4138
+        ],
+        "size": [
+          1.1193,
+          1.807,
+          0.8313
+        ],
+        "yaw": 3.1416,
+        "aabb": {
+          "min": [
+            6.3834,
+            -4.8775,
+            -0.0019
+          ],
+          "max": [
+            7.5026,
+            -3.0705,
+            0.8294
+          ]
+        },
+        "size_aabb": [
+          1.1193,
+          1.807,
+          0.8313
+        ],
+        "bbox_corners": [
+          [
+            7.5026,
+            -4.8775,
+            0.8294
+          ],
+          [
+            6.3834,
+            -4.8775,
+            0.8294
+          ],
+          [
+            6.3834,
+            -3.0705,
+            0.8294
+          ],
+          [
+            7.5026,
+            -3.0705,
+            0.8294
+          ],
+          [
+            7.5026,
+            -4.8775,
+            -0.0019
+          ],
+          [
+            6.3834,
+            -4.8775,
+            -0.0019
+          ],
+          [
+            6.3834,
+            -3.0705,
+            -0.0019
+          ],
+          [
+            7.5026,
+            -3.0705,
+            -0.0019
+          ]
+        ],
+        "volume": 1.6814
+      },
+      "anchors": [
+        {
+          "object_id": "23",
+          "region": "0",
+          "label": "tablecloth",
+          "raw_label": "tablecloth",
+          "nyu_label": "tablecloth",
+          "colors": [
+            "maroon"
+          ],
+          "center": [
+            6.9087,
+            -3.9771,
+            0.7566
+          ],
+          "size": [
+            1.8622,
+            0.436,
+            0.1689
+          ],
+          "yaw": 1.5706,
+          "aabb": {
+            "min": [
+              6.6906,
+              -4.9082,
+              0.6722
+            ],
+            "max": [
+              7.1269,
+              -3.0459,
+              0.8411
+            ]
+          },
+          "size_aabb": [
+            0.4363,
+            1.8623,
+            0.1689
+          ],
+          "bbox_corners": [
+            [
+              6.6906,
+              -4.9082,
+              0.8411
+            ],
+            [
+              6.6909,
+              -3.0459,
+              0.8411
+            ],
+            [
+              7.1269,
+              -3.046,
+              0.8411
+            ],
+            [
+              7.1266,
+              -4.9082,
+              0.8411
+            ],
+            [
+              6.6906,
+              -4.9082,
+              0.6722
+            ],
+            [
+              6.6909,
+              -3.0459,
+              0.6722
+            ],
+            [
+              7.1269,
+              -3.046,
+              0.6722
+            ],
+            [
+              7.1266,
+              -4.9082,
+              0.6722
+            ]
+          ],
+          "volume": 0.13712,
+          "phrase": "the tablecloth"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "supports: holds tablecloth#23 (top 0.83 m, its underside 0.67 m)",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "72",
+          "role": "target",
+          "frames_visible": 129,
+          "distance_m": 0.69,
+          "px_area": 90720,
+          "occlusion": 0.0,
+          "elevation_deg": -14.3,
+          "stamp": 1785528656.767195,
+          "image": "data/crops/visibility/livingroom_3/72_table.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 135,
+          "distance_m": 0.94,
+          "px_area": 15480,
+          "occlusion": 0.0,
+          "elevation_deg": -3.1,
+          "stamp": 1785528656.887164,
+          "image": "data/crops/visibility/livingroom_3/23_tablecloth.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the lamp that is above the tablecloth.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "above",
+      "target_objects": [
+        "lamp",
+        "tablecloth"
+      ],
+      "answer": {
+        "object_id": "73",
+        "region": "0",
+        "label": "lamp",
+        "raw_label": "lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          6.9293,
+          -3.9197,
+          2.6851
+        ],
+        "size": [
+          0.5743,
+          0.5725,
+          0.943
+        ],
+        "yaw": -0.7243,
+        "aabb": {
+          "min": [
+            6.5245,
+            -4.3243,
+            2.2136
+          ],
+          "max": [
+            7.334,
+            -3.515,
+            3.1566
+          ]
+        },
+        "size_aabb": [
+          0.8095,
+          0.8093,
+          0.943
+        ],
+        "bbox_corners": [
+          [
+            6.9039,
+            -3.515,
+            3.1566
+          ],
+          [
+            7.334,
+            -3.8956,
+            3.1566
+          ],
+          [
+            6.9547,
+            -4.3243,
+            3.1566
+          ],
+          [
+            6.5245,
+            -3.9438,
+            3.1566
+          ],
+          [
+            6.9039,
+            -3.515,
+            2.2136
+          ],
+          [
+            7.334,
+            -3.8956,
+            2.2136
+          ],
+          [
+            6.9547,
+            -4.3243,
+            2.2136
+          ],
+          [
+            6.5245,
+            -3.9438,
+            2.2136
+          ]
+        ],
+        "volume": 0.31006
+      },
+      "anchors": [
+        {
+          "object_id": "23",
+          "region": "0",
+          "label": "tablecloth",
+          "raw_label": "tablecloth",
+          "nyu_label": "tablecloth",
+          "colors": [
+            "maroon"
+          ],
+          "center": [
+            6.9087,
+            -3.9771,
+            0.7566
+          ],
+          "size": [
+            1.8622,
+            0.436,
+            0.1689
+          ],
+          "yaw": 1.5706,
+          "aabb": {
+            "min": [
+              6.6906,
+              -4.9082,
+              0.6722
+            ],
+            "max": [
+              7.1269,
+              -3.0459,
+              0.8411
+            ]
+          },
+          "size_aabb": [
+            0.4363,
+            1.8623,
+            0.1689
+          ],
+          "bbox_corners": [
+            [
+              6.6906,
+              -4.9082,
+              0.8411
+            ],
+            [
+              6.6909,
+              -3.0459,
+              0.8411
+            ],
+            [
+              7.1269,
+              -3.046,
+              0.8411
+            ],
+            [
+              7.1266,
+              -4.9082,
+              0.8411
+            ],
+            [
+              6.6906,
+              -4.9082,
+              0.6722
+            ],
+            [
+              6.6909,
+              -3.0459,
+              0.6722
+            ],
+            [
+              7.1269,
+              -3.046,
+              0.6722
+            ],
+            [
+              7.1266,
+              -4.9082,
+              0.6722
+            ]
+          ],
+          "volume": 0.13712,
+          "phrase": "the tablecloth"
+        }
+      ],
+      "distractor_ids": [
+        "14",
+        "84",
+        "93"
+      ],
+      "competitors": 3,
+      "evidence": "above: underside 2.21 m clears tablecloth#23 top 0.84 m by 1.37 m",
+      "statement": "the lamp that is over the tablecloth",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "73",
+          "role": "target",
+          "frames_visible": 195,
+          "distance_m": 1.52,
+          "px_area": 16605,
+          "occlusion": 0.0,
+          "elevation_deg": 47.6,
+          "stamp": 1785528657.902179,
+          "image": "data/crops/visibility/livingroom_3/73_lamp.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 135,
+          "distance_m": 0.94,
+          "px_area": 15480,
+          "occlusion": 0.0,
+          "elevation_deg": -3.1,
+          "stamp": 1785528656.887164,
+          "image": "data/crops/visibility/livingroom_3/23_tablecloth.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the bowl on top of the stool.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "on",
+      "target_objects": [
+        "bowl",
+        "stool"
+      ],
+      "answer": {
+        "object_id": "55",
+        "region": "0",
+        "label": "bowl",
+        "raw_label": "bowl",
+        "nyu_label": "bowl",
+        "colors": [
+          "aqua",
+          "gray"
+        ],
+        "center": [
+          1.529,
+          0.254,
+          0.6437
+        ],
+        "size": [
+          0.2543,
+          0.2543,
+          0.1289
+        ],
+        "yaw": 0.1965,
+        "aabb": {
+          "min": [
+            1.3795,
+            0.1045,
+            0.5792
+          ],
+          "max": [
+            1.6785,
+            0.4035,
+            0.7082
+          ]
+        },
+        "size_aabb": [
+          0.2991,
+          0.2991,
+          0.1289
+        ],
+        "bbox_corners": [
+          [
+            1.3795,
+            0.3539,
+            0.7082
+          ],
+          [
+            1.6289,
+            0.4035,
+            0.7082
+          ],
+          [
+            1.6785,
+            0.1541,
+            0.7082
+          ],
+          [
+            1.4291,
+            0.1045,
+            0.7082
+          ],
+          [
+            1.3795,
+            0.3539,
+            0.5792
+          ],
+          [
+            1.6289,
+            0.4035,
+            0.5792
+          ],
+          [
+            1.6785,
+            0.1541,
+            0.5792
+          ],
+          [
+            1.4291,
+            0.1045,
+            0.5792
+          ]
+        ],
+        "volume": 0.00834
+      },
+      "anchors": [
+        {
+          "object_id": "67",
+          "region": "0",
+          "label": "stool",
+          "raw_label": "stool",
+          "nyu_label": "stool",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.5682,
+            0.3637,
+            0.2898
+          ],
+          "size": [
+            0.562,
+            0.5527,
+            0.5789
+          ],
+          "yaw": 3.1403,
+          "aabb": {
+            "min": [
+              1.2869,
+              0.0869,
+              0.0003
+            ],
+            "max": [
+              1.8495,
+              0.6404,
+              0.5792
+            ]
+          },
+          "size_aabb": [
+            0.5627,
+            0.5535,
+            0.5789
+          ],
+          "bbox_corners": [
+            [
+              1.8488,
+              0.0869,
+              0.5792
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.5792
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.5792
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.5792
+            ],
+            [
+              1.8488,
+              0.0869,
+              0.0003
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.0003
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.0003
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.0003
+            ]
+          ],
+          "volume": 0.17981,
+          "phrase": "the stool"
+        }
+      ],
+      "distractor_ids": [
+        "36"
+      ],
+      "competitors": 1,
+      "evidence": "on: rests on stool#67 (underside 0.58 m, top 0.58 m)",
+      "statement": "the bowl that is on the stool",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "55",
+          "role": "target",
+          "frames_visible": 33,
+          "distance_m": 0.46,
+          "px_area": 20532,
+          "occlusion": 0.0,
+          "elevation_deg": -18.9,
+          "stamp": 1785528647.277168,
+          "image": "data/crops/visibility/livingroom_3/55_bowl.png"
+        },
+        {
+          "object_id": "67",
+          "role": "anchor",
+          "frames_visible": 76,
+          "distance_m": 0.44,
+          "px_area": 84960,
+          "occlusion": 0.0,
+          "elevation_deg": -38.7,
+          "stamp": 1785528647.532178,
+          "image": "data/crops/visibility/livingroom_3/67_stool.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the potted plant on top of the stool.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "on",
+      "target_objects": [
+        "potted plant",
+        "stool"
+      ],
+      "answer": {
+        "object_id": "83",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "gray",
+          "olive"
+        ],
+        "center": [
+          1.5867,
+          0.5337,
+          0.7289
+        ],
+        "size": [
+          0.2938,
+          0.25,
+          0.3307
+        ],
+        "yaw": 2.3288,
+        "aabb": {
+          "min": [
+            1.395,
+            0.3411,
+            0.5636
+          ],
+          "max": [
+            1.7785,
+            0.7263,
+            0.8942
+          ]
+        },
+        "size_aabb": [
+          0.3835,
+          0.3852,
+          0.3307
+        ],
+        "bbox_corners": [
+          [
+            1.597,
+            0.3411,
+            0.8942
+          ],
+          [
+            1.395,
+            0.5545,
+            0.8942
+          ],
+          [
+            1.5765,
+            0.7263,
+            0.8942
+          ],
+          [
+            1.7785,
+            0.513,
+            0.8942
+          ],
+          [
+            1.597,
+            0.3411,
+            0.5636
+          ],
+          [
+            1.395,
+            0.5545,
+            0.5636
+          ],
+          [
+            1.5765,
+            0.7263,
+            0.5636
+          ],
+          [
+            1.7785,
+            0.513,
+            0.5636
+          ]
+        ],
+        "volume": 0.02428
+      },
+      "anchors": [
+        {
+          "object_id": "67",
+          "region": "0",
+          "label": "stool",
+          "raw_label": "stool",
+          "nyu_label": "stool",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.5682,
+            0.3637,
+            0.2898
+          ],
+          "size": [
+            0.562,
+            0.5527,
+            0.5789
+          ],
+          "yaw": 3.1403,
+          "aabb": {
+            "min": [
+              1.2869,
+              0.0869,
+              0.0003
+            ],
+            "max": [
+              1.8495,
+              0.6404,
+              0.5792
+            ]
+          },
+          "size_aabb": [
+            0.5627,
+            0.5535,
+            0.5789
+          ],
+          "bbox_corners": [
+            [
+              1.8488,
+              0.0869,
+              0.5792
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.5792
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.5792
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.5792
+            ],
+            [
+              1.8488,
+              0.0869,
+              0.0003
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.0003
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.0003
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.0003
+            ]
+          ],
+          "volume": 0.17981,
+          "phrase": "the stool"
+        }
+      ],
+      "distractor_ids": [
+        "31",
+        "5",
+        "58",
+        "6",
+        "99"
+      ],
+      "competitors": 5,
+      "evidence": "on: rests on stool#67 (underside 0.56 m, top 0.58 m)",
+      "statement": "the plant that is on the stool",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "83",
+          "role": "target",
+          "frames_visible": 39,
+          "distance_m": 0.87,
+          "px_area": 18753,
+          "occlusion": 0.343,
+          "elevation_deg": -7.9,
+          "stamp": 1785528647.532178,
+          "image": "data/crops/visibility/livingroom_3/83_plant.png"
+        },
+        {
+          "object_id": "67",
+          "role": "anchor",
+          "frames_visible": 76,
+          "distance_m": 0.44,
+          "px_area": 84960,
+          "occlusion": 0.0,
+          "elevation_deg": -38.7,
+          "stamp": 1785528647.532178,
+          "image": "data/crops/visibility/livingroom_3/67_stool.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the box that is closest to the mirror.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "box",
+        "mirror"
+      ],
+      "answer": {
+        "object_id": "76",
+        "region": "0",
+        "label": "box",
+        "raw_label": "box",
+        "nyu_label": "box",
+        "colors": [
+          "gray",
+          "aqua"
+        ],
+        "center": [
+          4.5196,
+          0.2975,
+          0.7627
+        ],
+        "size": [
+          0.3698,
+          0.3029,
+          0.1602
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            4.3682,
+            0.1126,
+            0.6826
+          ],
+          "max": [
+            4.6711,
+            0.4824,
+            0.8428
+          ]
+        },
+        "size_aabb": [
+          0.3029,
+          0.3698,
+          0.1602
+        ],
+        "bbox_corners": [
+          [
+            4.6711,
+            0.4824,
+            0.8428
+          ],
+          [
+            4.6711,
+            0.1126,
+            0.8428
+          ],
+          [
+            4.3682,
+            0.1126,
+            0.8428
+          ],
+          [
+            4.3682,
+            0.4824,
+            0.8428
+          ],
+          [
+            4.6711,
+            0.4824,
+            0.6826
+          ],
+          [
+            4.6711,
+            0.1126,
+            0.6826
+          ],
+          [
+            4.3682,
+            0.1126,
+            0.6826
+          ],
+          [
+            4.3682,
+            0.4824,
+            0.6826
+          ]
+        ],
+        "volume": 0.01795
+      },
+      "anchors": [
+        {
+          "object_id": "95",
+          "region": "0",
+          "label": "mirror",
+          "raw_label": "mirror",
+          "nyu_label": "mirror",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            4.9719,
+            0.7428,
+            1.8674
+          ],
+          "size": [
+            0.94,
+            0.0426,
+            0.9351
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              4.5019,
+              0.7215,
+              1.3999
+            ],
+            "max": [
+              5.4419,
+              0.7641,
+              2.335
+            ]
+          },
+          "size_aabb": [
+            0.94,
+            0.0426,
+            0.9351
+          ],
+          "bbox_corners": [
+            [
+              5.4419,
+              0.7215,
+              2.335
+            ],
+            [
+              4.5019,
+              0.7215,
+              2.335
+            ],
+            [
+              4.5019,
+              0.7641,
+              2.335
+            ],
+            [
+              5.4419,
+              0.7641,
+              2.335
+            ],
+            [
+              5.4419,
+              0.7215,
+              1.3999
+            ],
+            [
+              4.5019,
+              0.7215,
+              1.3999
+            ],
+            [
+              4.5019,
+              0.7641,
+              1.3999
+            ],
+            [
+              5.4419,
+              0.7641,
+              1.3999
+            ]
+          ],
+          "volume": 0.03745,
+          "phrase": "the mirror"
+        }
+      ],
+      "distractor_ids": [
+        "45"
+      ],
+      "competitors": 1,
+      "margin": 3.441,
+      "evidence": "closest: centre 1.27 m vs runner-up box#45 4.72 m; box-gap 0.61 m vs runner-up box#45 4.05 m",
+      "statement": "the box that is closest to the mirror",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "76",
+          "role": "target",
+          "frames_visible": 55,
+          "distance_m": 0.86,
+          "px_area": 6726,
+          "occlusion": 0.0,
+          "elevation_deg": -4.6,
+          "stamp": 1785528650.832164,
+          "image": "data/crops/visibility/livingroom_3/76_box.png"
+        },
+        {
+          "object_id": "95",
+          "role": "anchor",
+          "frames_visible": 206,
+          "distance_m": 1.5,
+          "px_area": 25955,
+          "occlusion": 0.0,
+          "elevation_deg": 33.3,
+          "stamp": 1785528651.467173,
+          "image": "data/crops/visibility/livingroom_3/95_mirror.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the bowl that is closest to the shelf.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "closest",
+      "target_objects": [
+        "bowl",
+        "shelf"
+      ],
+      "answer": {
+        "object_id": "36",
+        "region": "0",
+        "label": "bowl",
+        "raw_label": "bowl",
+        "nyu_label": "bowl",
+        "colors": [
+          "gray",
+          "brown",
+          "aqua"
+        ],
+        "center": [
+          6.8975,
+          -3.9878,
+          0.8801
+        ],
+        "size": [
+          0.4091,
+          0.4054,
+          0.0927
+        ],
+        "yaw": -1.0535,
+        "aabb": {
+          "min": [
+            6.6202,
+            -4.2658,
+            0.8337
+          ],
+          "max": [
+            7.1748,
+            -3.7097,
+            0.9265
+          ]
+        },
+        "size_aabb": [
+          0.5547,
+          0.556,
+          0.0927
+        ],
+        "bbox_corners": [
+          [
+            6.9726,
+            -3.7097,
+            0.9265
+          ],
+          [
+            7.1748,
+            -4.0653,
+            0.9265
+          ],
+          [
+            6.8225,
+            -4.2658,
+            0.9265
+          ],
+          [
+            6.6202,
+            -3.9102,
+            0.9265
+          ],
+          [
+            6.9726,
+            -3.7097,
+            0.8337
+          ],
+          [
+            7.1748,
+            -4.0653,
+            0.8337
+          ],
+          [
+            6.8225,
+            -4.2658,
+            0.8337
+          ],
+          [
+            6.6202,
+            -3.9102,
+            0.8337
+          ]
+        ],
+        "volume": 0.01538
+      },
+      "anchors": [
+        {
+          "object_id": "91",
+          "region": "0",
+          "label": "shelf",
+          "raw_label": "shelf",
+          "nyu_label": "shelves",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            3.656,
+            -5.8668,
+            2.068
+          ],
+          "size": [
+            2.7427,
+            0.5783,
+            0.477
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              2.2846,
+              -6.156,
+              1.8295
+            ],
+            "max": [
+              5.0274,
+              -5.5777,
+              2.3065
+            ]
+          },
+          "size_aabb": [
+            2.7427,
+            0.5783,
+            0.477
+          ],
+          "bbox_corners": [
+            [
+              2.2846,
+              -5.5777,
+              2.3065
+            ],
+            [
+              5.0274,
+              -5.5777,
+              2.3065
+            ],
+            [
+              5.0274,
+              -6.156,
+              2.3065
+            ],
+            [
+              2.2846,
+              -6.156,
+              2.3065
+            ],
+            [
+              2.2846,
+              -5.5777,
+              1.8295
+            ],
+            [
+              5.0274,
+              -5.5777,
+              1.8295
+            ],
+            [
+              5.0274,
+              -6.156,
+              1.8295
+            ],
+            [
+              2.2846,
+              -6.156,
+              1.8295
+            ]
+          ],
+          "volume": 0.7566,
+          "phrase": "the shelf"
+        }
+      ],
+      "distractor_ids": [
+        "55"
+      ],
+      "competitors": 1,
+      "margin": 2.704,
+      "evidence": "closest: centre 3.93 m vs runner-up bowl#55 6.63 m; box-gap 2.25 m vs runner-up bowl#55 5.82 m",
+      "statement": "the bowl that is closest to the shelves",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "36",
+          "role": "target",
+          "frames_visible": 54,
+          "distance_m": 1.53,
+          "px_area": 1920,
+          "occlusion": 0.0,
+          "elevation_deg": 1.0,
+          "stamp": 1785528656.642186,
+          "image": "data/crops/visibility/livingroom_3/36_bowl.png"
+        },
+        {
+          "object_id": "91",
+          "role": "anchor",
+          "frames_visible": 184,
+          "distance_m": 2.19,
+          "px_area": 42294,
+          "occlusion": 0.0,
+          "elevation_deg": 29.2,
+          "stamp": 1785528666.897147,
+          "image": "data/crops/visibility/livingroom_3/91_shelf.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the window that is farthest from the wall decal.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "window",
+        "wall decal"
+      ],
+      "answer": {
+        "object_id": "47",
+        "region": "0",
+        "label": "window",
+        "raw_label": "window",
+        "nyu_label": "window",
+        "colors": [
+          "black"
+        ],
+        "center": [
+          7.8037,
+          -4.6497,
+          1.4337
+        ],
+        "size": [
+          3.1915,
+          2.6918,
+          2.8674
+        ],
+        "yaw": 1.5708,
+        "aabb": {
+          "min": [
+            6.4578,
+            -6.2455,
+            0.0
+          ],
+          "max": [
+            9.1497,
+            -3.054,
+            2.8674
+          ]
+        },
+        "size_aabb": [
+          2.6918,
+          3.1915,
+          2.8674
+        ],
+        "bbox_corners": [
+          [
+            6.4578,
+            -6.2455,
+            2.8674
+          ],
+          [
+            6.4578,
+            -3.054,
+            2.8674
+          ],
+          [
+            9.1497,
+            -3.054,
+            2.8674
+          ],
+          [
+            9.1497,
+            -6.2455,
+            2.8674
+          ],
+          [
+            6.4578,
+            -6.2455,
+            0.0
+          ],
+          [
+            6.4578,
+            -3.054,
+            0.0
+          ],
+          [
+            9.1497,
+            -3.054,
+            0.0
+          ],
+          [
+            9.1497,
+            -6.2455,
+            0.0
+          ]
+        ],
+        "volume": 24.63408
+      },
+      "anchors": [
+        {
+          "object_id": "54",
+          "region": "0",
+          "label": "wall decal",
+          "raw_label": "wall decal",
+          "nyu_label": "wall decoration",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            2.5797,
+            0.764,
+            1.4996
+          ],
+          "size": [
+            2.8927,
+            0.0,
+            2.5028
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              1.1333,
+              0.764,
+              0.2482
+            ],
+            "max": [
+              4.026,
+              0.764,
+              2.751
+            ]
+          },
+          "size_aabb": [
+            2.8927,
+            0.0,
+            2.5028
+          ],
+          "bbox_corners": [
+            [
+              4.026,
+              0.764,
+              2.751
+            ],
+            [
+              1.1333,
+              0.764,
+              2.751
+            ],
+            [
+              1.1333,
+              0.764,
+              2.751
+            ],
+            [
+              4.026,
+              0.764,
+              2.751
+            ],
+            [
+              4.026,
+              0.764,
+              0.2482
+            ],
+            [
+              1.1333,
+              0.764,
+              0.2482
+            ],
+            [
+              1.1333,
+              0.764,
+              0.2482
+            ],
+            [
+              4.026,
+              0.764,
+              0.2482
+            ]
+          ],
+          "volume": 0.0,
+          "phrase": "the wall decal"
+        }
+      ],
+      "distractor_ids": [
+        "9"
+      ],
+      "competitors": 1,
+      "margin": 1.655,
+      "evidence": "farthest: centre 7.52 m vs runner-up window#9 4.49 m; box-gap 4.53 m vs runner-up window#9 2.87 m",
+      "statement": "the window that is farthest from the wall decoration",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "47",
+          "role": "target",
+          "frames_visible": 215,
+          "distance_m": 0.84,
+          "px_area": 329875,
+          "occlusion": 0.0,
+          "elevation_deg": 15.2,
+          "stamp": 1785528656.887164,
+          "image": "data/crops/visibility/livingroom_3/47_window.png"
+        },
+        {
+          "object_id": "54",
+          "role": "anchor",
+          "frames_visible": 51,
+          "distance_m": 1.48,
+          "px_area": 133665,
+          "occlusion": 0.022,
+          "elevation_deg": 17.4,
+          "stamp": 1785528650.732178,
+          "image": "data/crops/visibility/livingroom_3/54_wall_decal.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

@@ -1,0 +1,2009 @@
+{
+  "scene": "loft",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 75,
+  "objects": {
+    "0": {
+      "label": "dvd",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.25,
+      "best_view": null
+    },
+    "1": {
+      "label": "door",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 43,
+      "min_range_m": 6.06,
+      "best_view": {
+        "n_points": 37,
+        "px_bbox": [
+          1429,
+          251,
+          1465,
+          367
+        ],
+        "px_bbox_unwrapped": [
+          1429,
+          251,
+          1465,
+          367
+        ],
+        "px_area": 4176,
+        "px_area_frac": 0.0034,
+        "distance_m": 5.82,
+        "occlusion": 0.591,
+        "clipped": false,
+        "stamp": 1785528883.17109,
+        "frame": 35,
+        "elevation_deg": 2.1
+      },
+      "view_image": "data/crops/visibility/loft/1_door.png"
+    },
+    "2": {
+      "label": "door frame",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 58,
+      "min_range_m": 6.06,
+      "best_view": {
+        "n_points": 79,
+        "px_bbox": [
+          1417,
+          245,
+          1460,
+          368
+        ],
+        "px_bbox_unwrapped": [
+          1417,
+          245,
+          1460,
+          368
+        ],
+        "px_area": 5289,
+        "px_area_frac": 0.0043,
+        "distance_m": 5.59,
+        "occlusion": 0.511,
+        "clipped": false,
+        "stamp": 1785528882.741082,
+        "frame": 33,
+        "elevation_deg": 2.5
+      },
+      "view_image": "data/crops/visibility/loft/2_door_frame.png"
+    },
+    "3": {
+      "label": "door",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 7.52,
+      "best_view": null
+    },
+    "4": {
+      "label": "door frame",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 7.53,
+      "best_view": null
+    },
+    "5": {
+      "label": "lamp",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.92,
+      "best_view": null
+    },
+    "6": {
+      "label": "shoe rack",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.71,
+      "best_view": null
+    },
+    "7": {
+      "label": "bowl of apples",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 21,
+      "min_range_m": 1.77,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          387,
+          306,
+          452,
+          340
+        ],
+        "px_bbox_unwrapped": [
+          387,
+          306,
+          452,
+          340
+        ],
+        "px_area": 2210,
+        "px_area_frac": 0.0018,
+        "distance_m": 1.65,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528880.716105,
+        "frame": 23,
+        "elevation_deg": -0.4
+      },
+      "view_image": "data/crops/visibility/loft/7_bowl_of_apples.png"
+    },
+    "8": {
+      "label": "lamp",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 68,
+      "min_range_m": 2.32,
+      "best_view": {
+        "n_points": 270,
+        "px_bbox": [
+          372,
+          35,
+          479,
+          177
+        ],
+        "px_bbox_unwrapped": [
+          372,
+          35,
+          479,
+          177
+        ],
+        "px_area": 15194,
+        "px_area_frac": 0.01236,
+        "distance_m": 1.63,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528880.716105,
+        "frame": 23,
+        "elevation_deg": 40.6
+      },
+      "view_image": "data/crops/visibility/loft/8_lamp.png"
+    },
+    "9": {
+      "label": "table",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 51,
+      "min_range_m": 1.85,
+      "best_view": {
+        "n_points": 822,
+        "px_bbox": [
+          307,
+          331,
+          660,
+          613
+        ],
+        "px_bbox_unwrapped": [
+          307,
+          331,
+          660,
+          613
+        ],
+        "px_area": 99546,
+        "px_area_frac": 0.08101,
+        "distance_m": 0.67,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528880.516106,
+        "frame": 22,
+        "elevation_deg": -14.9
+      },
+      "view_image": "data/crops/visibility/loft/9_table.png"
+    },
+    "10": {
+      "label": "chair",
+      "region": "2",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 35,
+      "min_range_m": 1.9,
+      "best_view": {
+        "n_points": 138,
+        "px_bbox": [
+          408,
+          297,
+          527,
+          476
+        ],
+        "px_bbox_unwrapped": [
+          408,
+          297,
+          527,
+          476
+        ],
+        "px_area": 21301,
+        "px_area_frac": 0.01733,
+        "distance_m": 1.82,
+        "occlusion": 0.673,
+        "clipped": false,
+        "stamp": 1785528882.331114,
+        "frame": 31,
+        "elevation_deg": -11.0
+      }
+    },
+    "12": {
+      "label": "fireplace",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 53,
+      "min_range_m": 1.94,
+      "best_view": {
+        "n_points": 1255,
+        "px_bbox": [
+          59,
+          229,
+          241,
+          329
+        ],
+        "px_bbox_unwrapped": [
+          59,
+          229,
+          241,
+          329
+        ],
+        "px_area": 18200,
+        "px_area_frac": 0.01481,
+        "distance_m": 1.67,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": 6.9
+      },
+      "view_image": "data/crops/visibility/loft/12_fireplace.png"
+    },
+    "13": {
+      "label": "vase",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.89,
+      "best_view": null
+    },
+    "14": {
+      "label": "vase",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 48,
+      "min_range_m": 2.18,
+      "best_view": {
+        "n_points": 60,
+        "px_bbox": [
+          436,
+          248,
+          491,
+          443
+        ],
+        "px_bbox_unwrapped": [
+          436,
+          248,
+          491,
+          443
+        ],
+        "px_area": 10725,
+        "px_area_frac": 0.00873,
+        "distance_m": 2.05,
+        "occlusion": 0.55,
+        "clipped": false,
+        "stamp": 1785528889.371101,
+        "frame": 66,
+        "elevation_deg": -4.8
+      },
+      "view_image": "data/crops/visibility/loft/14_vase.png"
+    },
+    "15": {
+      "label": "vase",
+      "region": "2",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 33,
+      "min_range_m": 2.51,
+      "best_view": {
+        "n_points": 27,
+        "px_bbox": [
+          408,
+          296,
+          468,
+          429
+        ],
+        "px_bbox_unwrapped": [
+          408,
+          296,
+          468,
+          429
+        ],
+        "px_area": 7980,
+        "px_area_frac": 0.00649,
+        "distance_m": 2.5,
+        "occlusion": 0.653,
+        "clipped": false,
+        "stamp": 1785528889.371101,
+        "frame": 66,
+        "elevation_deg": -7.5
+      }
+    },
+    "16": {
+      "label": "painting",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 69,
+      "min_range_m": 3.18,
+      "best_view": {
+        "n_points": 400,
+        "px_bbox": [
+          495,
+          205,
+          577,
+          310
+        ],
+        "px_bbox_unwrapped": [
+          495,
+          205,
+          577,
+          310
+        ],
+        "px_area": 8610,
+        "px_area_frac": 0.00701,
+        "distance_m": 2.86,
+        "occlusion": 0.158,
+        "clipped": false,
+        "stamp": 1785528888.391147,
+        "frame": 61,
+        "elevation_deg": 11.3
+      },
+      "view_image": "data/crops/visibility/loft/16_framed_record.png"
+    },
+    "17": {
+      "label": "tv cabinet",
+      "region": "2",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 10,
+      "min_range_m": 4.37,
+      "best_view": {
+        "n_points": 23,
+        "px_bbox": [
+          422,
+          336,
+          542,
+          397
+        ],
+        "px_bbox_unwrapped": [
+          422,
+          336,
+          542,
+          397
+        ],
+        "px_area": 7320,
+        "px_area_frac": 0.00596,
+        "distance_m": 3.49,
+        "occlusion": 0.89,
+        "clipped": false,
+        "stamp": 1785528887.801037,
+        "frame": 58,
+        "elevation_deg": -7.4
+      }
+    },
+    "18": {
+      "label": "tv remote",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.43,
+      "best_view": null
+    },
+    "19": {
+      "label": "newspaper",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.1,
+      "best_view": null
+    },
+    "20": {
+      "label": "table",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.49,
+      "best_view": null
+    },
+    "21": {
+      "label": "table",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.01,
+      "best_view": null
+    },
+    "22": {
+      "label": "table",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.38,
+      "best_view": null
+    },
+    "23": {
+      "label": "mirror",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.62,
+      "best_view": null
+    },
+    "24": {
+      "label": "carpet",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.32,
+      "best_view": null
+    },
+    "25": {
+      "label": "potted plant",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 30,
+      "min_range_m": 5.17,
+      "best_view": {
+        "n_points": 46,
+        "px_bbox": [
+          1174,
+          283,
+          1228,
+          375
+        ],
+        "px_bbox_unwrapped": [
+          1174,
+          283,
+          1228,
+          375
+        ],
+        "px_area": 4968,
+        "px_area_frac": 0.00404,
+        "distance_m": 5.16,
+        "occlusion": 0.387,
+        "clipped": false,
+        "stamp": 1785528883.56612,
+        "frame": 37,
+        "elevation_deg": -1.5
+      },
+      "view_image": "data/crops/visibility/loft/25_plant.png"
+    },
+    "27": {
+      "label": "tv",
+      "region": "2",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 31,
+      "min_range_m": 4.39,
+      "best_view": {
+        "n_points": 23,
+        "px_bbox": [
+          1475,
+          294,
+          1532,
+          341
+        ],
+        "px_bbox_unwrapped": [
+          1475,
+          294,
+          1532,
+          341
+        ],
+        "px_area": 2679,
+        "px_area_frac": 0.00218,
+        "distance_m": 4.32,
+        "occlusion": 0.606,
+        "clipped": false,
+        "stamp": 1785528882.741082,
+        "frame": 33,
+        "elevation_deg": 0.5
+      }
+    },
+    "28": {
+      "label": "sofa",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 55,
+      "min_range_m": 1.28,
+      "best_view": {
+        "n_points": 2356,
+        "px_bbox": [
+          1062,
+          332,
+          1436,
+          564
+        ],
+        "px_bbox_unwrapped": [
+          1062,
+          332,
+          1436,
+          564
+        ],
+        "px_area": 86768,
+        "px_area_frac": 0.07061,
+        "distance_m": 0.75,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528883.17109,
+        "frame": 35,
+        "elevation_deg": -20.7
+      },
+      "view_image": "data/crops/visibility/loft/28_couch.png"
+    },
+    "29": {
+      "label": "sofa",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 53,
+      "min_range_m": 2.22,
+      "best_view": {
+        "n_points": 577,
+        "px_bbox": [
+          412,
+          321,
+          606,
+          482
+        ],
+        "px_bbox_unwrapped": [
+          412,
+          321,
+          606,
+          482
+        ],
+        "px_area": 31234,
+        "px_area_frac": 0.02542,
+        "distance_m": 1.56,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528887.196079,
+        "frame": 55,
+        "elevation_deg": -11.2
+      },
+      "view_image": "data/crops/visibility/loft/29_couch.png"
+    },
+    "30": {
+      "label": "potted bamboo",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.81,
+      "best_view": null
+    },
+    "31": {
+      "label": "painting",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.38,
+      "best_view": null
+    },
+    "32": {
+      "label": "floor",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 73,
+      "min_range_m": 1.85,
+      "best_view": {
+        "n_points": 4945,
+        "px_bbox": [
+          339,
+          347,
+          1572,
+          393
+        ],
+        "px_bbox_unwrapped": [
+          339,
+          347,
+          1572,
+          393
+        ],
+        "px_area": 56718,
+        "px_area_frac": 0.04616,
+        "distance_m": 1.39,
+        "occlusion": 0.136,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": -14.3
+      },
+      "view_image": "data/crops/visibility/loft/32_floor.png"
+    },
+    "33": {
+      "label": "wall lamp",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.46,
+      "best_view": null
+    },
+    "34": {
+      "label": "painting",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.07,
+      "best_view": null
+    },
+    "35": {
+      "label": "cabinet",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.16,
+      "best_view": null
+    },
+    "36": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.9,
+      "best_view": null
+    },
+    "37": {
+      "label": "door",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 67,
+      "min_range_m": 5.76,
+      "best_view": {
+        "n_points": 177,
+        "px_bbox": [
+          1241,
+          245,
+          1298,
+          365
+        ],
+        "px_bbox_unwrapped": [
+          1241,
+          245,
+          1298,
+          365
+        ],
+        "px_area": 6840,
+        "px_area_frac": 0.00557,
+        "distance_m": 5.7,
+        "occlusion": 0.224,
+        "clipped": false,
+        "stamp": 1785528882.961071,
+        "frame": 34,
+        "elevation_deg": 3.0
+      },
+      "view_image": "data/crops/visibility/loft/37_door.png"
+    },
+    "38": {
+      "label": "door",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 74,
+      "min_range_m": 6.46,
+      "best_view": {
+        "n_points": 205,
+        "px_bbox": [
+          1410,
+          251,
+          1457,
+          362
+        ],
+        "px_bbox_unwrapped": [
+          1410,
+          251,
+          1457,
+          362
+        ],
+        "px_area": 5217,
+        "px_area_frac": 0.00425,
+        "distance_m": 6.24,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528883.366117,
+        "frame": 36,
+        "elevation_deg": 2.7
+      },
+      "view_image": "data/crops/visibility/loft/38_door.png"
+    },
+    "39": {
+      "label": "door",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 68,
+      "min_range_m": 5.77,
+      "best_view": {
+        "n_points": 173,
+        "px_bbox": [
+          1187,
+          245,
+          1245,
+          365
+        ],
+        "px_bbox_unwrapped": [
+          1187,
+          245,
+          1245,
+          365
+        ],
+        "px_area": 6960,
+        "px_area_frac": 0.00566,
+        "distance_m": 5.74,
+        "occlusion": 0.208,
+        "clipped": false,
+        "stamp": 1785528883.17109,
+        "frame": 35,
+        "elevation_deg": 3.0
+      },
+      "view_image": "data/crops/visibility/loft/39_door.png"
+    },
+    "40": {
+      "label": "door",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 72,
+      "min_range_m": 6.09,
+      "best_view": {
+        "n_points": 204,
+        "px_bbox": [
+          1305,
+          247,
+          1357,
+          364
+        ],
+        "px_bbox_unwrapped": [
+          1305,
+          247,
+          1357,
+          364
+        ],
+        "px_area": 6084,
+        "px_area_frac": 0.00495,
+        "distance_m": 5.96,
+        "occlusion": 0.037,
+        "clipped": false,
+        "stamp": 1785528883.17109,
+        "frame": 35,
+        "elevation_deg": 2.8
+      },
+      "view_image": "data/crops/visibility/loft/40_door.png"
+    },
+    "43": {
+      "label": "wall",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 5.05,
+      "best_view": null
+    },
+    "44": {
+      "label": "window",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 6.41,
+      "best_view": null
+    },
+    "46": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 57,
+      "min_range_m": 2.58,
+      "best_view": {
+        "n_points": 8000,
+        "px_bbox": [
+          1566,
+          62,
+          345,
+          387
+        ],
+        "px_bbox_unwrapped": [
+          1566,
+          62,
+          2265,
+          387
+        ],
+        "px_area": 227175,
+        "px_area_frac": 0.18488,
+        "distance_m": 1.68,
+        "occlusion": 0.001,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": 45.1
+      },
+      "view_image": "data/crops/visibility/loft/46_wall.png"
+    },
+    "47": {
+      "label": "painting",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 51,
+      "min_range_m": 2.88,
+      "best_view": {
+        "n_points": 540,
+        "px_bbox": [
+          253,
+          194,
+          310,
+          290
+        ],
+        "px_bbox_unwrapped": [
+          253,
+          194,
+          310,
+          290
+        ],
+        "px_area": 5472,
+        "px_area_frac": 0.00445,
+        "distance_m": 2.45,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": 14.0
+      },
+      "view_image": "data/crops/visibility/loft/47_framed_record.png"
+    },
+    "48": {
+      "label": "window",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.46,
+      "best_view": null
+    },
+    "49": {
+      "label": "boot",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.75,
+      "best_view": null
+    },
+    "50": {
+      "label": "boot",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.65,
+      "best_view": null
+    },
+    "52": {
+      "label": "wall",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 75,
+      "min_range_m": 2.44,
+      "best_view": {
+        "n_points": 11802,
+        "px_bbox": [
+          1239,
+          102,
+          120,
+          372
+        ],
+        "px_bbox_unwrapped": [
+          1239,
+          102,
+          2040,
+          372
+        ],
+        "px_area": 216270,
+        "px_area_frac": 0.176,
+        "distance_m": 1.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528886.186199,
+        "frame": 50,
+        "elevation_deg": 48.5
+      },
+      "view_image": "data/crops/visibility/loft/52_wall.png"
+    },
+    "53": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 75,
+      "min_range_m": 2.02,
+      "best_view": {
+        "n_points": 4528,
+        "px_bbox": [
+          1770,
+          67,
+          606,
+          249
+        ],
+        "px_bbox_unwrapped": [
+          1770,
+          67,
+          2526,
+          249
+        ],
+        "px_area": 137592,
+        "px_area_frac": 0.11197,
+        "distance_m": 1.71,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528882.331114,
+        "frame": 31,
+        "elevation_deg": 29.0
+      },
+      "view_image": "data/crops/visibility/loft/53_floor.png"
+    },
+    "54": {
+      "label": "pillow",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.19,
+      "best_view": null
+    },
+    "55": {
+      "label": "pillow",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.68,
+      "best_view": null
+    },
+    "56": {
+      "label": "sphere decoration",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 5.11,
+      "best_view": null
+    },
+    "57": {
+      "label": "vase",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.06,
+      "best_view": null
+    },
+    "58": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.57,
+      "best_view": null
+    },
+    "59": {
+      "label": "photo",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.88,
+      "best_view": null
+    },
+    "60": {
+      "label": "lamp",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.59,
+      "best_view": null
+    },
+    "61": {
+      "label": "clock",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.53,
+      "best_view": null
+    },
+    "62": {
+      "label": "glass",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.36,
+      "best_view": null
+    },
+    "63": {
+      "label": "phone",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.51,
+      "best_view": null
+    },
+    "64": {
+      "label": "mirror",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.46,
+      "best_view": null
+    },
+    "66": {
+      "label": "flower",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.68,
+      "best_view": null
+    },
+    "67": {
+      "label": "vase",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.62,
+      "best_view": null
+    },
+    "68": {
+      "label": "fence",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 19,
+      "min_range_m": 2.8,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1681,
+          0,
+          323,
+          100
+        ],
+        "px_bbox_unwrapped": [
+          1681,
+          0,
+          2243,
+          100
+        ],
+        "px_area": 56200,
+        "px_area_frac": 0.04574,
+        "distance_m": 2.0,
+        "occlusion": 0.31,
+        "clipped": true,
+        "stamp": 1785528879.53611,
+        "frame": 17,
+        "elevation_deg": 66.5
+      },
+      "view_image": "data/crops/visibility/loft/68_fence.png"
+    },
+    "69": {
+      "label": "stairs",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 75,
+      "min_range_m": 1.38,
+      "best_view": {
+        "n_points": 6535,
+        "px_bbox": [
+          597,
+          0,
+          1913,
+          556
+        ],
+        "px_bbox_unwrapped": [
+          597,
+          0,
+          1913,
+          556
+        ],
+        "px_area": 731696,
+        "px_area_frac": 0.59546,
+        "distance_m": 0.66,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528879.126105,
+        "frame": 15,
+        "elevation_deg": 56.3
+      },
+      "view_image": "data/crops/visibility/loft/69_stairs.png"
+    },
+    "70": {
+      "label": "light switch",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 5.41,
+      "best_view": null
+    },
+    "71": {
+      "label": "book",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.91,
+      "best_view": null
+    },
+    "72": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.54,
+      "best_view": null
+    },
+    "73": {
+      "label": "table",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.21,
+      "best_view": null
+    },
+    "74": {
+      "label": "chair",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.77,
+      "best_view": null
+    },
+    "75": {
+      "label": "wardrobe",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.44,
+      "best_view": null
+    },
+    "76": {
+      "label": "blanket",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.24,
+      "best_view": null
+    },
+    "77": {
+      "label": "pillow",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.9,
+      "best_view": null
+    },
+    "78": {
+      "label": "fence",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 4,
+      "min_range_m": 2.9,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          70,
+          0,
+          590,
+          63
+        ],
+        "px_bbox_unwrapped": [
+          70,
+          0,
+          590,
+          63
+        ],
+        "px_area": 32760,
+        "px_area_frac": 0.02666,
+        "distance_m": 1.62,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528883.366117,
+        "frame": 36,
+        "elevation_deg": 65.6
+      },
+      "view_image": "data/crops/visibility/loft/78_fence.png"
+    },
+    "81": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.51,
+      "best_view": null
+    },
+    "82": {
+      "label": "light switch",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 5.49,
+      "best_view": null
+    },
+    "83": {
+      "label": "light switch",
+      "region": "1",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.0,
+      "best_view": null
+    },
+    "84": {
+      "label": "pillow",
+      "region": "2",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.25,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          1078,
+          329,
+          1106,
+          360
+        ],
+        "px_bbox_unwrapped": [
+          1078,
+          329,
+          1106,
+          360
+        ],
+        "px_area": 868,
+        "px_area_frac": 0.00071,
+        "distance_m": 3.44,
+        "occlusion": 0.481,
+        "clipped": false,
+        "stamp": 1785528880.316094,
+        "frame": 21,
+        "elevation_deg": -4.3
+      }
+    },
+    "85": {
+      "label": "pillow",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.1,
+      "best_view": null
+    },
+    "86": {
+      "label": "sofa",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 61,
+      "min_range_m": 1.65,
+      "best_view": {
+        "n_points": 814,
+        "px_bbox": [
+          1317,
+          321,
+          1574,
+          555
+        ],
+        "px_bbox_unwrapped": [
+          1317,
+          321,
+          1574,
+          555
+        ],
+        "px_area": 60138,
+        "px_area_frac": 0.04894,
+        "distance_m": 0.96,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528882.961071,
+        "frame": 34,
+        "elevation_deg": -15.1
+      },
+      "view_image": "data/crops/visibility/loft/86_couch.png"
+    },
+    "87": {
+      "label": "sofa",
+      "region": "2",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 0,
+      "min_range_m": 2.25,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          1059,
+          321,
+          1183,
+          425
+        ],
+        "px_bbox_unwrapped": [
+          1059,
+          321,
+          1183,
+          425
+        ],
+        "px_area": 12896,
+        "px_area_frac": 0.01049,
+        "distance_m": 2.86,
+        "occlusion": 0.937,
+        "clipped": false,
+        "stamp": 1785528881.121049,
+        "frame": 25,
+        "elevation_deg": -8.2
+      }
+    },
+    "88": {
+      "label": "sofa",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.24,
+      "best_view": null
+    },
+    "89": {
+      "label": "pillow",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 2.03,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          352,
+          336,
+          408,
+          392
+        ],
+        "px_bbox_unwrapped": [
+          352,
+          336,
+          408,
+          392
+        ],
+        "px_area": 3136,
+        "px_area_frac": 0.00255,
+        "distance_m": 1.89,
+        "occlusion": 0.107,
+        "clipped": false,
+        "stamp": 1785528887.801037,
+        "frame": 58,
+        "elevation_deg": -7.6
+      },
+      "view_image": "data/crops/visibility/loft/89_pillow.png"
+    },
+    "90": {
+      "label": "pillow",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.29,
+      "best_view": null
+    },
+    "91": {
+      "label": "pillow",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.59,
+      "best_view": null
+    },
+    "94": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 44,
+      "min_range_m": 2.41,
+      "best_view": {
+        "n_points": 83,
+        "px_bbox": [
+          466,
+          302,
+          561,
+          442
+        ],
+        "px_bbox_unwrapped": [
+          466,
+          302,
+          561,
+          442
+        ],
+        "px_area": 13300,
+        "px_area_frac": 0.01082,
+        "distance_m": 2.15,
+        "occlusion": 0.394,
+        "clipped": false,
+        "stamp": 1785528880.716105,
+        "frame": 23,
+        "elevation_deg": -8.7
+      },
+      "view_image": "data/crops/visibility/loft/94_chair.png"
+    },
+    "95": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 15,
+      "min_range_m": 2.88,
+      "best_view": {
+        "n_points": 62,
+        "px_bbox": [
+          427,
+          306,
+          504,
+          418
+        ],
+        "px_bbox_unwrapped": [
+          427,
+          306,
+          504,
+          418
+        ],
+        "px_area": 8624,
+        "px_area_frac": 0.00702,
+        "distance_m": 2.69,
+        "occlusion": 0.558,
+        "clipped": false,
+        "stamp": 1785528880.516106,
+        "frame": 22,
+        "elevation_deg": -7.1
+      },
+      "view_image": "data/crops/visibility/loft/95_chair.png"
+    },
+    "96": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 17,
+      "min_range_m": 2.15,
+      "best_view": {
+        "n_points": 125,
+        "px_bbox": [
+          327,
+          301,
+          424,
+          454
+        ],
+        "px_bbox_unwrapped": [
+          327,
+          301,
+          424,
+          454
+        ],
+        "px_area": 14841,
+        "px_area_frac": 0.01208,
+        "distance_m": 2.01,
+        "occlusion": 0.477,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": -9.7
+      },
+      "view_image": "data/crops/visibility/loft/96_chair.png"
+    },
+    "97": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 62,
+      "min_range_m": 0.87,
+      "best_view": {
+        "n_points": 1543,
+        "px_bbox": [
+          321,
+          242,
+          579,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          321,
+          242,
+          579,
+          639
+        ],
+        "px_area": 102426,
+        "px_area_frac": 0.08335,
+        "distance_m": 0.51,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528881.526092,
+        "frame": 27,
+        "elevation_deg": -23.8
+      },
+      "view_image": "data/crops/visibility/loft/97_chair.png"
+    },
+    "98": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 39,
+      "min_range_m": 1.21,
+      "best_view": {
+        "n_points": 2040,
+        "px_bbox": [
+          389,
+          282,
+          555,
+          545
+        ],
+        "px_bbox_unwrapped": [
+          389,
+          282,
+          555,
+          545
+        ],
+        "px_area": 43658,
+        "px_area_frac": 0.03553,
+        "distance_m": 0.94,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": -17.1
+      },
+      "view_image": "data/crops/visibility/loft/98_chair.png"
+    },
+    "99": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 47,
+      "min_range_m": 1.12,
+      "best_view": {
+        "n_points": 1096,
+        "px_bbox": [
+          288,
+          274,
+          477,
+          575
+        ],
+        "px_bbox_unwrapped": [
+          288,
+          274,
+          477,
+          575
+        ],
+        "px_area": 56889,
+        "px_area_frac": 0.0463,
+        "distance_m": 0.84,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528878.916148,
+        "frame": 14,
+        "elevation_deg": -17.8
+      },
+      "view_image": "data/crops/visibility/loft/99_chair.png"
+    },
+    "100": {
+      "label": "chair",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 66,
+      "min_range_m": 0.77,
+      "best_view": {
+        "n_points": 3064,
+        "px_bbox": [
+          295,
+          221,
+          584,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          295,
+          221,
+          584,
+          639
+        ],
+        "px_area": 120802,
+        "px_area_frac": 0.09831,
+        "distance_m": 0.41,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785528879.926132,
+        "frame": 19,
+        "elevation_deg": -26.7
+      },
+      "view_image": "data/crops/visibility/loft/100_chair.png"
+    },
+    "103": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.88,
+      "best_view": null
+    },
+    "105": {
+      "label": "door",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 75,
+      "min_range_m": 1.94,
+      "best_view": {
+        "n_points": 3635,
+        "px_bbox": [
+          1422,
+          127,
+          1566,
+          458
+        ],
+        "px_bbox_unwrapped": [
+          1422,
+          127,
+          1566,
+          458
+        ],
+        "px_area": 47664,
+        "px_area_frac": 0.03879,
+        "distance_m": 1.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": 6.8
+      },
+      "view_image": "data/crops/visibility/loft/105_door.png"
+    },
+    "106": {
+      "label": "door frame",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 75,
+      "min_range_m": 1.94,
+      "best_view": {
+        "n_points": 5295,
+        "px_bbox": [
+          1406,
+          116,
+          1580,
+          460
+        ],
+        "px_bbox_unwrapped": [
+          1406,
+          116,
+          1580,
+          460
+        ],
+        "px_area": 59856,
+        "px_area_frac": 0.04871,
+        "distance_m": 1.8,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": 8.0
+      },
+      "view_image": "data/crops/visibility/loft/106_door_frame.png"
+    },
+    "107": {
+      "label": "cup",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 15,
+      "min_range_m": 1.21,
+      "best_view": {
+        "n_points": 23,
+        "px_bbox": [
+          515,
+          314,
+          551,
+          348
+        ],
+        "px_bbox_unwrapped": [
+          515,
+          314,
+          551,
+          348
+        ],
+        "px_area": 1224,
+        "px_area_frac": 0.001,
+        "distance_m": 1.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528880.716105,
+        "frame": 23,
+        "elevation_deg": -1.9
+      },
+      "view_image": "data/crops/visibility/loft/107_cup.png"
+    },
+    "108": {
+      "label": "cup",
+      "region": "2",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.27,
+      "best_view": null
+    },
+    "109": {
+      "label": "potted plant",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 42,
+      "min_range_m": 1.71,
+      "best_view": {
+        "n_points": 200,
+        "px_bbox": [
+          1570,
+          280,
+          1776,
+          519
+        ],
+        "px_bbox_unwrapped": [
+          1570,
+          280,
+          1776,
+          519
+        ],
+        "px_area": 49234,
+        "px_area_frac": 0.04007,
+        "distance_m": 1.5,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528876.822749,
+        "frame": 4,
+        "elevation_deg": -11.7
+      },
+      "view_image": "data/crops/visibility/loft/109_plant.png"
+    },
+    "110": {
+      "label": "potted plant",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 46,
+      "min_range_m": 2.95,
+      "best_view": {
+        "n_points": 308,
+        "px_bbox": [
+          400,
+          301,
+          521,
+          427
+        ],
+        "px_bbox_unwrapped": [
+          400,
+          301,
+          521,
+          427
+        ],
+        "px_area": 15246,
+        "px_area_frac": 0.01241,
+        "distance_m": 2.84,
+        "occlusion": 0.259,
+        "clipped": false,
+        "stamp": 1785528888.791116,
+        "frame": 63,
+        "elevation_deg": -6.8
+      },
+      "view_image": "data/crops/visibility/loft/110_plant.png"
+    },
+    "111": {
+      "label": "painting",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 73,
+      "min_range_m": 4.65,
+      "best_view": {
+        "n_points": 317,
+        "px_bbox": [
+          147,
+          204,
+          233,
+          290
+        ],
+        "px_bbox_unwrapped": [
+          147,
+          204,
+          233,
+          290
+        ],
+        "px_area": 7396,
+        "px_area_frac": 0.00602,
+        "distance_m": 4.3,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528885.371097,
+        "frame": 46,
+        "elevation_deg": 13.4
+      },
+      "view_image": "data/crops/visibility/loft/111_framed_record.png"
+    },
+    "112": {
+      "label": "pillow",
+      "region": "2",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 3,
+      "min_range_m": 2.71,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1096,
+          331,
+          1134,
+          364
+        ],
+        "px_bbox_unwrapped": [
+          1096,
+          331,
+          1134,
+          364
+        ],
+        "px_area": 1254,
+        "px_area_frac": 0.00102,
+        "distance_m": 3.24,
+        "occlusion": 0.649,
+        "clipped": false,
+        "stamp": 1785528881.326086,
+        "frame": 26,
+        "elevation_deg": -4.8
+      }
+    },
+    "113": {
+      "label": "coffee cup",
+      "region": "2",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.49,
+      "best_view": {
+        "n_points": 48,
+        "px_bbox": [
+          1388,
+          321,
+          1420,
+          341
+        ],
+        "px_bbox_unwrapped": [
+          1388,
+          321,
+          1420,
+          341
+        ],
+        "px_area": 640,
+        "px_area_frac": 0.00052,
+        "distance_m": 1.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528889.761111,
+        "frame": 68,
+        "elevation_deg": -1.8
+      }
+    },
+    "114": {
+      "label": "flower",
+      "region": "2",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 1.87,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          523,
+          273,
+          543,
+          337
+        ],
+        "px_bbox_unwrapped": [
+          523,
+          273,
+          543,
+          337
+        ],
+        "px_area": 1280,
+        "px_area_frac": 0.00104,
+        "distance_m": 1.89,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785528877.351104,
+        "frame": 7,
+        "elevation_deg": 2.9
+      },
+      "view_image": "data/crops/visibility/loft/114_flower.png"
+    }
+  },
+  "summary": {
+    "objects": 101,
+    "visible": 39,
+    "hidden": 62,
+    "seconds": 5.2
+  }
+}

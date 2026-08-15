@@ -1,0 +1,2548 @@
+{
+  "scene": "arabic_room",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 376,
+  "objects": {
+    "0": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 167,
+      "min_range_m": 0.98,
+      "best_view": {
+        "n_points": 5730,
+        "px_bbox": [
+          574,
+          136,
+          898,
+          623
+        ],
+        "px_bbox_unwrapped": [
+          574,
+          136,
+          898,
+          623
+        ],
+        "px_area": 157788,
+        "px_area_frac": 0.12841,
+        "distance_m": 0.81,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527070.086702,
+        "frame": 168,
+        "elevation_deg": -13.6
+      },
+      "view_image": "data/crops/visibility/arabic_room/0_plant.png"
+    },
+    "1": {
+      "label": "shoes",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.25,
+      "best_view": {
+        "n_points": 28,
+        "px_bbox": [
+          854,
+          389,
+          892,
+          404
+        ],
+        "px_bbox_unwrapped": [
+          854,
+          389,
+          892,
+          404
+        ],
+        "px_area": 570,
+        "px_area_frac": 0.00046,
+        "distance_m": 3.03,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527065.166732,
+        "frame": 130,
+        "elevation_deg": -14.2
+      }
+    },
+    "2": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 16,
+      "min_range_m": 2.88,
+      "best_view": {
+        "n_points": 192,
+        "px_bbox": [
+          1377,
+          346,
+          1428,
+          390
+        ],
+        "px_bbox_unwrapped": [
+          1377,
+          346,
+          1428,
+          390
+        ],
+        "px_area": 2244,
+        "px_area_frac": 0.00183,
+        "distance_m": 2.72,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": -8.7
+      },
+      "view_image": "data/crops/visibility/arabic_room/2_pillow.png"
+    },
+    "3": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 49,
+      "min_range_m": 3.87,
+      "best_view": {
+        "n_points": 135,
+        "px_bbox": [
+          899,
+          222,
+          927,
+          270
+        ],
+        "px_bbox_unwrapped": [
+          899,
+          222,
+          927,
+          270
+        ],
+        "px_area": 1344,
+        "px_area_frac": 0.00109,
+        "distance_m": 3.54,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527065.166732,
+        "frame": 130,
+        "elevation_deg": 13.7
+      },
+      "view_image": "data/crops/visibility/arabic_room/3_framed_record.png"
+    },
+    "4": {
+      "label": "glass",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.83,
+      "best_view": null
+    },
+    "5": {
+      "label": "exterior walls",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 258,
+      "min_range_m": 0.26,
+      "best_view": {
+        "n_points": 18632,
+        "px_bbox": [
+          567,
+          197,
+          1519,
+          512
+        ],
+        "px_bbox_unwrapped": [
+          567,
+          197,
+          1519,
+          512
+        ],
+        "px_area": 299880,
+        "px_area_frac": 0.24404,
+        "distance_m": 1.09,
+        "occlusion": 0.014,
+        "clipped": false,
+        "stamp": 1785527071.201762,
+        "frame": 177,
+        "elevation_deg": -3.5
+      },
+      "view_image": "data/crops/visibility/arabic_room/5_exterior_walls.png"
+    },
+    "6": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 202,
+      "min_range_m": 2.1,
+      "best_view": {
+        "n_points": 11154,
+        "px_bbox": [
+          588,
+          40,
+          1197,
+          483
+        ],
+        "px_bbox_unwrapped": [
+          588,
+          40,
+          1197,
+          483
+        ],
+        "px_area": 269787,
+        "px_area_frac": 0.21955,
+        "distance_m": 1.14,
+        "occlusion": 0.023,
+        "clipped": false,
+        "stamp": 1785527093.936821,
+        "frame": 352,
+        "elevation_deg": 14.8
+      },
+      "view_image": "data/crops/visibility/arabic_room/6_wall.png"
+    },
+    "7": {
+      "label": "pillow",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 22,
+      "min_range_m": 2.13,
+      "best_view": {
+        "n_points": 18,
+        "px_bbox": [
+          1034,
+          353,
+          1070,
+          416
+        ],
+        "px_bbox_unwrapped": [
+          1034,
+          353,
+          1070,
+          416
+        ],
+        "px_area": 2268,
+        "px_area_frac": 0.00185,
+        "distance_m": 1.94,
+        "occlusion": 0.746,
+        "clipped": false,
+        "stamp": 1785527094.466701,
+        "frame": 356,
+        "elevation_deg": -11.7
+      }
+    },
+    "8": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.96,
+      "best_view": {
+        "n_points": 36,
+        "px_bbox": [
+          426,
+          162,
+          444,
+          171
+        ],
+        "px_bbox_unwrapped": [
+          426,
+          162,
+          444,
+          171
+        ],
+        "px_area": 162,
+        "px_area_frac": 0.00013,
+        "distance_m": 3.37,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527066.091778,
+        "frame": 137,
+        "elevation_deg": 28.8
+      }
+    },
+    "9": {
+      "label": "arabic jar",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.21,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1266,
+          321,
+          1289,
+          360
+        ],
+        "px_bbox_unwrapped": [
+          1266,
+          321,
+          1289,
+          360
+        ],
+        "px_area": 897,
+        "px_area_frac": 0.00073,
+        "distance_m": 2.38,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527092.876815,
+        "frame": 344,
+        "elevation_deg": -3.7
+      }
+    },
+    "10": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.2,
+      "best_view": {
+        "n_points": 32,
+        "px_bbox": [
+          1430,
+          364,
+          1460,
+          373
+        ],
+        "px_bbox_unwrapped": [
+          1430,
+          364,
+          1460,
+          373
+        ],
+        "px_area": 270,
+        "px_area_frac": 0.00022,
+        "distance_m": 2.01,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527048.791783,
+        "frame": 3,
+        "elevation_deg": -9.0
+      }
+    },
+    "11": {
+      "label": "coffee pot",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.56,
+      "best_view": {
+        "n_points": 69,
+        "px_bbox": [
+          1585,
+          349,
+          1608,
+          378
+        ],
+        "px_bbox_unwrapped": [
+          1585,
+          349,
+          1608,
+          378
+        ],
+        "px_area": 667,
+        "px_area_frac": 0.00054,
+        "distance_m": 1.61,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527050.376893,
+        "frame": 15,
+        "elevation_deg": -8.0
+      }
+    },
+    "13": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 15,
+      "min_range_m": 3.53,
+      "best_view": {
+        "n_points": 104,
+        "px_bbox": [
+          1161,
+          341,
+          1199,
+          377
+        ],
+        "px_bbox_unwrapped": [
+          1161,
+          341,
+          1199,
+          377
+        ],
+        "px_area": 1368,
+        "px_area_frac": 0.00111,
+        "distance_m": 3.36,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527048.791783,
+        "frame": 3,
+        "elevation_deg": -7.0
+      },
+      "view_image": "data/crops/visibility/arabic_room/13_pillow.png"
+    },
+    "14": {
+      "label": "hookah",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 34,
+      "min_range_m": 1.61,
+      "best_view": {
+        "n_points": 247,
+        "px_bbox": [
+          1254,
+          300,
+          1278,
+          380
+        ],
+        "px_bbox_unwrapped": [
+          1254,
+          300,
+          1278,
+          380
+        ],
+        "px_area": 1920,
+        "px_area_frac": 0.00156,
+        "distance_m": 1.55,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": -3.6
+      },
+      "view_image": "data/crops/visibility/arabic_room/14_hookah.png"
+    },
+    "15": {
+      "label": "hookah wire",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 43,
+      "min_range_m": 1.74,
+      "best_view": {
+        "n_points": 177,
+        "px_bbox": [
+          1448,
+          333,
+          1511,
+          379
+        ],
+        "px_bbox_unwrapped": [
+          1448,
+          333,
+          1511,
+          379
+        ],
+        "px_area": 2898,
+        "px_area_frac": 0.00236,
+        "distance_m": 1.55,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527050.106777,
+        "frame": 13,
+        "elevation_deg": -6.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/15_hookah_wire.png"
+    },
+    "16": {
+      "label": "glass",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.32,
+      "best_view": {
+        "n_points": 23,
+        "px_bbox": [
+          1058,
+          350,
+          1072,
+          359
+        ],
+        "px_bbox_unwrapped": [
+          1058,
+          350,
+          1072,
+          359
+        ],
+        "px_area": 126,
+        "px_area_frac": 0.0001,
+        "distance_m": 2.44,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527048.791783,
+        "frame": 3,
+        "elevation_deg": -6.4
+      }
+    },
+    "17": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 153,
+      "min_range_m": 1.68,
+      "best_view": {
+        "n_points": 274,
+        "px_bbox": [
+          484,
+          85,
+          585,
+          196
+        ],
+        "px_bbox_unwrapped": [
+          484,
+          85,
+          585,
+          196
+        ],
+        "px_area": 11211,
+        "px_area_frac": 0.00912,
+        "distance_m": 1.32,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527068.706785,
+        "frame": 157,
+        "elevation_deg": 34.2
+      },
+      "view_image": "data/crops/visibility/arabic_room/17_framed_record.png"
+    },
+    "18": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 37,
+      "min_range_m": 3.72,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1187,
+          298,
+          1246,
+          392
+        ],
+        "px_bbox_unwrapped": [
+          1187,
+          298,
+          1246,
+          392
+        ],
+        "px_area": 5546,
+        "px_area_frac": 0.00451,
+        "distance_m": 3.98,
+        "occlusion": 0.148,
+        "clipped": false,
+        "stamp": 1785527093.04676,
+        "frame": 345,
+        "elevation_deg": -4.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/18_plant.png"
+    },
+    "19": {
+      "label": "tray",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.3,
+      "best_view": {
+        "n_points": 56,
+        "px_bbox": [
+          1479,
+          352,
+          1539,
+          361
+        ],
+        "px_bbox_unwrapped": [
+          1479,
+          352,
+          1539,
+          361
+        ],
+        "px_area": 540,
+        "px_area_frac": 0.00044,
+        "distance_m": 2.28,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527050.376893,
+        "frame": 15,
+        "elevation_deg": -6.7
+      }
+    },
+    "20": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 239,
+      "min_range_m": 3.54,
+      "best_view": {
+        "n_points": 588,
+        "px_bbox": [
+          1209,
+          193,
+          1252,
+          278
+        ],
+        "px_bbox_unwrapped": [
+          1209,
+          193,
+          1252,
+          278
+        ],
+        "px_area": 3655,
+        "px_area_frac": 0.00297,
+        "distance_m": 3.16,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527048.791783,
+        "frame": 3,
+        "elevation_deg": 15.8
+      },
+      "view_image": "data/crops/visibility/arabic_room/20_window.png"
+    },
+    "22": {
+      "label": "floor",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 272,
+      "min_range_m": 0.78,
+      "best_view": {
+        "n_points": 2118,
+        "px_bbox": [
+          423,
+          357,
+          1402,
+          524
+        ],
+        "px_bbox_unwrapped": [
+          423,
+          357,
+          1402,
+          524
+        ],
+        "px_area": 163493,
+        "px_area_frac": 0.13305,
+        "distance_m": 1.26,
+        "occlusion": 0.019,
+        "clipped": false,
+        "stamp": 1785527071.571775,
+        "frame": 180,
+        "elevation_deg": -16.0
+      },
+      "view_image": "data/crops/visibility/arabic_room/22_floor.png"
+    },
+    "23": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 295,
+      "min_range_m": 0.85,
+      "best_view": {
+        "n_points": 2886,
+        "px_bbox": [
+          402,
+          0,
+          786,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          402,
+          0,
+          786,
+          639
+        ],
+        "px_area": 245376,
+        "px_area_frac": 0.19969,
+        "distance_m": 0.47,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527064.111867,
+        "frame": 122,
+        "elevation_deg": 42.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/23_column.png"
+    },
+    "24": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 35,
+      "min_range_m": 2.67,
+      "best_view": {
+        "n_points": 130,
+        "px_bbox": [
+          661,
+          344,
+          702,
+          399
+        ],
+        "px_bbox_unwrapped": [
+          661,
+          344,
+          702,
+          399
+        ],
+        "px_area": 2255,
+        "px_area_frac": 0.00184,
+        "distance_m": 3.31,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527065.166732,
+        "frame": 130,
+        "elevation_deg": -9.4
+      },
+      "view_image": "data/crops/visibility/arabic_room/24_vase.png"
+    },
+    "25": {
+      "label": "lantern",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 51,
+      "min_range_m": 1.51,
+      "best_view": {
+        "n_points": 50,
+        "px_bbox": [
+          512,
+          405,
+          551,
+          496
+        ],
+        "px_bbox_unwrapped": [
+          512,
+          405,
+          551,
+          496
+        ],
+        "px_area": 3549,
+        "px_area_frac": 0.00289,
+        "distance_m": 1.34,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527073.09185,
+        "frame": 192,
+        "elevation_deg": -24.4
+      },
+      "view_image": "data/crops/visibility/arabic_room/25_lantern.png"
+    },
+    "26": {
+      "label": "wall lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 71,
+      "min_range_m": 1.47,
+      "best_view": {
+        "n_points": 221,
+        "px_bbox": [
+          1918,
+          0,
+          61,
+          84
+        ],
+        "px_bbox_unwrapped": [
+          1918,
+          0,
+          1981,
+          84
+        ],
+        "px_area": 5292,
+        "px_area_frac": 0.00431,
+        "distance_m": 0.84,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527092.491768,
+        "frame": 341,
+        "elevation_deg": 53.2
+      },
+      "view_image": "data/crops/visibility/arabic_room/26_wall_lamp.png"
+    },
+    "27": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 15,
+      "min_range_m": 3.2,
+      "best_view": {
+        "n_points": 112,
+        "px_bbox": [
+          1186,
+          344,
+          1229,
+          384
+        ],
+        "px_bbox_unwrapped": [
+          1186,
+          344,
+          1229,
+          384
+        ],
+        "px_area": 1720,
+        "px_area_frac": 0.0014,
+        "distance_m": 3.05,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527048.791783,
+        "frame": 3,
+        "elevation_deg": -7.9
+      },
+      "view_image": "data/crops/visibility/arabic_room/27_pillow.png"
+    },
+    "28": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 86,
+      "min_range_m": 1.76,
+      "best_view": {
+        "n_points": 962,
+        "px_bbox": [
+          1207,
+          367,
+          1310,
+          487
+        ],
+        "px_bbox_unwrapped": [
+          1207,
+          367,
+          1310,
+          487
+        ],
+        "px_area": 12360,
+        "px_area_frac": 0.01006,
+        "distance_m": 1.44,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": -18.8
+      },
+      "view_image": "data/crops/visibility/arabic_room/28_table.png"
+    },
+    "30": {
+      "label": "column",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 289,
+      "min_range_m": 1.64,
+      "best_view": {
+        "n_points": 1268,
+        "px_bbox": [
+          1725,
+          5,
+          1867,
+          515
+        ],
+        "px_bbox_unwrapped": [
+          1725,
+          5,
+          1867,
+          515
+        ],
+        "px_area": 72420,
+        "px_area_frac": 0.05894,
+        "distance_m": 1.37,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527049.056882,
+        "frame": 5,
+        "elevation_deg": 19.8
+      },
+      "view_image": "data/crops/visibility/arabic_room/30_column.png"
+    },
+    "31": {
+      "label": "lantern",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 21,
+      "min_range_m": 1.88,
+      "best_view": {
+        "n_points": 68,
+        "px_bbox": [
+          465,
+          389,
+          495,
+          461
+        ],
+        "px_bbox_unwrapped": [
+          465,
+          389,
+          495,
+          461
+        ],
+        "px_area": 2160,
+        "px_area_frac": 0.00176,
+        "distance_m": 1.73,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527080.851757,
+        "frame": 251,
+        "elevation_deg": -19.5
+      },
+      "view_image": "data/crops/visibility/arabic_room/31_lantern.png"
+    },
+    "32": {
+      "label": "carpet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 26,
+      "min_range_m": 2.15,
+      "best_view": {
+        "n_points": 152,
+        "px_bbox": [
+          1331,
+          394,
+          1663,
+          577
+        ],
+        "px_bbox_unwrapped": [
+          1331,
+          394,
+          1663,
+          577
+        ],
+        "px_area": 60756,
+        "px_area_frac": 0.04944,
+        "distance_m": 1.92,
+        "occlusion": 0.424,
+        "clipped": false,
+        "stamp": 1785527050.106777,
+        "frame": 13,
+        "elevation_deg": -22.1
+      },
+      "view_image": "data/crops/visibility/arabic_room/32_carpet.png"
+    },
+    "33": {
+      "label": "wall",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 0,
+      "min_range_m": 2.56,
+      "best_view": {
+        "n_points": 65,
+        "px_bbox": [
+          1216,
+          222,
+          1574,
+          365
+        ],
+        "px_bbox_unwrapped": [
+          1216,
+          222,
+          1574,
+          365
+        ],
+        "px_area": 51194,
+        "px_area_frac": 0.04166,
+        "distance_m": 5.58,
+        "occlusion": 0.975,
+        "clipped": false,
+        "stamp": 1785527074.541754,
+        "frame": 203,
+        "elevation_deg": 5.1
+      }
+    },
+    "34": {
+      "label": "stool",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 99,
+      "min_range_m": 3.59,
+      "best_view": {
+        "n_points": 176,
+        "px_bbox": [
+          868,
+          348,
+          933,
+          401
+        ],
+        "px_bbox_unwrapped": [
+          868,
+          348,
+          933,
+          401
+        ],
+        "px_area": 3445,
+        "px_area_frac": 0.0028,
+        "distance_m": 3.17,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527065.166732,
+        "frame": 130,
+        "elevation_deg": -9.7
+      },
+      "view_image": "data/crops/visibility/arabic_room/34_stool.png"
+    },
+    "35": {
+      "label": "pillow",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 19,
+      "min_range_m": 0.98,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1443,
+          361,
+          1493,
+          440
+        ],
+        "px_bbox_unwrapped": [
+          1443,
+          361,
+          1493,
+          440
+        ],
+        "px_area": 3950,
+        "px_area_frac": 0.00321,
+        "distance_m": 1.49,
+        "occlusion": 0.64,
+        "clipped": false,
+        "stamp": 1785527050.911839,
+        "frame": 19,
+        "elevation_deg": -14.2
+      }
+    },
+    "37": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 223,
+      "min_range_m": 2.3,
+      "best_view": {
+        "n_points": 2128,
+        "px_bbox": [
+          517,
+          178,
+          579,
+          434
+        ],
+        "px_bbox_unwrapped": [
+          517,
+          178,
+          579,
+          434
+        ],
+        "px_area": 15872,
+        "px_area_frac": 0.01292,
+        "distance_m": 2.17,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527067.036757,
+        "frame": 144,
+        "elevation_deg": 2.9
+      },
+      "view_image": "data/crops/visibility/arabic_room/37_door.png"
+    },
+    "38": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 253,
+      "min_range_m": 2.69,
+      "best_view": {
+        "n_points": 1281,
+        "px_bbox": [
+          657,
+          199,
+          711,
+          417
+        ],
+        "px_bbox_unwrapped": [
+          657,
+          199,
+          711,
+          417
+        ],
+        "px_area": 11772,
+        "px_area_frac": 0.00958,
+        "distance_m": 2.57,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527065.936821,
+        "frame": 136,
+        "elevation_deg": 2.4
+      },
+      "view_image": "data/crops/visibility/arabic_room/38_door.png"
+    },
+    "39": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 273,
+      "min_range_m": 2.52,
+      "best_view": {
+        "n_points": 4225,
+        "px_bbox": [
+          468,
+          138,
+          642,
+          440
+        ],
+        "px_bbox_unwrapped": [
+          468,
+          138,
+          642,
+          440
+        ],
+        "px_area": 52548,
+        "px_area_frac": 0.04276,
+        "distance_m": 2.08,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527066.906783,
+        "frame": 143,
+        "elevation_deg": 6.1
+      },
+      "view_image": "data/crops/visibility/arabic_room/39_door_frame.png"
+    },
+    "40": {
+      "label": "sofa",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 95,
+      "min_range_m": 2.95,
+      "best_view": {
+        "n_points": 1251,
+        "px_bbox": [
+          1292,
+          334,
+          1506,
+          448
+        ],
+        "px_bbox_unwrapped": [
+          1292,
+          334,
+          1506,
+          448
+        ],
+        "px_area": 24396,
+        "px_area_frac": 0.01985,
+        "distance_m": 2.01,
+        "occlusion": 0.071,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": -9.9
+      },
+      "view_image": "data/crops/visibility/arabic_room/40_couch.png"
+    },
+    "41": {
+      "label": "ceiling lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 225,
+      "min_range_m": 2.23,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          408,
+          0,
+          469,
+          130
+        ],
+        "px_bbox_unwrapped": [
+          408,
+          0,
+          469,
+          130
+        ],
+        "px_area": 7930,
+        "px_area_frac": 0.00645,
+        "distance_m": 1.4,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527066.356818,
+        "frame": 139,
+        "elevation_deg": 50.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/41_ceiling_lamp.png"
+    },
+    "42": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 114,
+      "min_range_m": 1.19,
+      "best_view": {
+        "n_points": 1016,
+        "px_bbox": [
+          549,
+          417,
+          709,
+          575
+        ],
+        "px_bbox_unwrapped": [
+          549,
+          417,
+          709,
+          575
+        ],
+        "px_area": 25280,
+        "px_area_frac": 0.02057,
+        "distance_m": 0.94,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527094.22676,
+        "frame": 354,
+        "elevation_deg": -31.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/42_vase.png"
+    },
+    "43": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 229,
+      "min_range_m": 3.67,
+      "best_view": {
+        "n_points": 903,
+        "px_bbox": [
+          775,
+          232,
+          818,
+          390
+        ],
+        "px_bbox_unwrapped": [
+          775,
+          232,
+          818,
+          390
+        ],
+        "px_area": 6794,
+        "px_area_frac": 0.00553,
+        "distance_m": 3.67,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527065.166732,
+        "frame": 130,
+        "elevation_deg": 1.8
+      },
+      "view_image": "data/crops/visibility/arabic_room/43_door.png"
+    },
+    "44": {
+      "label": "door",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 254,
+      "min_range_m": 3.3,
+      "best_view": {
+        "n_points": 40,
+        "px_bbox": [
+          1836,
+          217,
+          1877,
+          403
+        ],
+        "px_bbox_unwrapped": [
+          1836,
+          217,
+          1877,
+          403
+        ],
+        "px_area": 7626,
+        "px_area_frac": 0.00621,
+        "distance_m": 3.43,
+        "occlusion": 0.968,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": 2.1
+      }
+    },
+    "45": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 295,
+      "min_range_m": 3.5,
+      "best_view": {
+        "n_points": 537,
+        "px_bbox": [
+          1808,
+          183,
+          2,
+          408
+        ],
+        "px_bbox_unwrapped": [
+          1808,
+          183,
+          1922,
+          408
+        ],
+        "px_area": 25650,
+        "px_area_frac": 0.02087,
+        "distance_m": 2.9,
+        "occlusion": 0.497,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": 4.5
+      },
+      "view_image": "data/crops/visibility/arabic_room/45_door_frame.png"
+    },
+    "46": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 273,
+      "min_range_m": 0.76,
+      "best_view": {
+        "n_points": 5994,
+        "px_bbox": [
+          1632,
+          350,
+          674,
+          524
+        ],
+        "px_bbox_unwrapped": [
+          1632,
+          350,
+          2594,
+          524
+        ],
+        "px_area": 167388,
+        "px_area_frac": 0.13622,
+        "distance_m": 3.88,
+        "occlusion": 0.356,
+        "clipped": false,
+        "stamp": 1785527070.716828,
+        "frame": 173,
+        "elevation_deg": -12.6
+      },
+      "view_image": "data/crops/visibility/arabic_room/46_floor.png"
+    },
+    "47": {
+      "label": "glass",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.79,
+      "best_view": null
+    },
+    "48": {
+      "label": "wall",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 0,
+      "min_range_m": 2.58,
+      "best_view": {
+        "n_points": 33,
+        "px_bbox": [
+          1650,
+          220,
+          1863,
+          366
+        ],
+        "px_bbox_unwrapped": [
+          1650,
+          220,
+          1863,
+          366
+        ],
+        "px_area": 31098,
+        "px_area_frac": 0.02531,
+        "distance_m": 6.08,
+        "occlusion": 0.887,
+        "clipped": false,
+        "stamp": 1785527079.536759,
+        "frame": 241,
+        "elevation_deg": 4.7
+      }
+    },
+    "49": {
+      "label": "ceiling",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 326,
+      "min_range_m": 2.42,
+      "best_view": {
+        "n_points": 7532,
+        "px_bbox": [
+          593,
+          0,
+          1799,
+          249
+        ],
+        "px_bbox_unwrapped": [
+          593,
+          0,
+          1799,
+          249
+        ],
+        "px_area": 300294,
+        "px_area_frac": 0.24438,
+        "distance_m": 1.73,
+        "occlusion": 0.068,
+        "clipped": true,
+        "stamp": 1785527093.936821,
+        "frame": 352,
+        "elevation_deg": 35.1
+      },
+      "view_image": "data/crops/visibility/arabic_room/49_ceiling.png"
+    },
+    "50": {
+      "label": "pillow",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 0,
+      "min_range_m": 3.02,
+      "best_view": {
+        "n_points": 16,
+        "px_bbox": [
+          1418,
+          340,
+          1455,
+          371
+        ],
+        "px_bbox_unwrapped": [
+          1418,
+          340,
+          1455,
+          371
+        ],
+        "px_area": 1147,
+        "px_area_frac": 0.00093,
+        "distance_m": 3.96,
+        "occlusion": 0.836,
+        "clipped": false,
+        "stamp": 1785527050.106777,
+        "frame": 13,
+        "elevation_deg": -6.5
+      }
+    },
+    "51": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 376,
+      "min_range_m": 0.63,
+      "best_view": {
+        "n_points": 5060,
+        "px_bbox": [
+          649,
+          0,
+          1634,
+          524
+        ],
+        "px_bbox_unwrapped": [
+          649,
+          0,
+          1634,
+          524
+        ],
+        "px_area": 516140,
+        "px_area_frac": 0.42004,
+        "distance_m": 0.37,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527068.951922,
+        "frame": 159,
+        "elevation_deg": 10.2
+      },
+      "view_image": "data/crops/visibility/arabic_room/51_wall.png"
+    },
+    "52": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 0.9,
+      "best_view": {
+        "n_points": 73,
+        "px_bbox": [
+          1213,
+          350,
+          1253,
+          406
+        ],
+        "px_bbox_unwrapped": [
+          1213,
+          350,
+          1253,
+          406
+        ],
+        "px_area": 2240,
+        "px_area_frac": 0.00182,
+        "distance_m": 2.2,
+        "occlusion": 0.339,
+        "clipped": false,
+        "stamp": 1785527049.976794,
+        "frame": 12,
+        "elevation_deg": -10.4
+      },
+      "view_image": "data/crops/visibility/arabic_room/52_pillow.png"
+    },
+    "53": {
+      "label": "potted plant",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 226,
+      "min_range_m": 0.63,
+      "best_view": {
+        "n_points": 4239,
+        "px_bbox": [
+          321,
+          15,
+          645,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          321,
+          15,
+          645,
+          639
+        ],
+        "px_area": 202176,
+        "px_area_frac": 0.16453,
+        "distance_m": 0.45,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527075.641796,
+        "frame": 211,
+        "elevation_deg": -10.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/53_plant.png"
+    },
+    "54": {
+      "label": "wall lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 81,
+      "min_range_m": 1.47,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1491,
+          14,
+          1548,
+          100
+        ],
+        "px_bbox_unwrapped": [
+          1491,
+          14,
+          1548,
+          100
+        ],
+        "px_area": 4902,
+        "px_area_frac": 0.00399,
+        "distance_m": 1.15,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527067.536826,
+        "frame": 148,
+        "elevation_deg": 50.0
+      },
+      "view_image": "data/crops/visibility/arabic_room/54_wall_lamp.png"
+    },
+    "55": {
+      "label": "potted plant",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 206,
+      "min_range_m": 0.95,
+      "best_view": {
+        "n_points": 3628,
+        "px_bbox": [
+          494,
+          156,
+          864,
+          605
+        ],
+        "px_bbox_unwrapped": [
+          494,
+          156,
+          864,
+          605
+        ],
+        "px_area": 166130,
+        "px_area_frac": 0.1352,
+        "distance_m": 0.81,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527080.061864,
+        "frame": 245,
+        "elevation_deg": -14.0
+      },
+      "view_image": "data/crops/visibility/arabic_room/55_plant.png"
+    },
+    "56": {
+      "label": "sofa",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 168,
+      "min_range_m": 1.06,
+      "best_view": {
+        "n_points": 4633,
+        "px_bbox": [
+          308,
+          344,
+          904,
+          577
+        ],
+        "px_bbox_unwrapped": [
+          308,
+          344,
+          904,
+          577
+        ],
+        "px_area": 138868,
+        "px_area_frac": 0.11301,
+        "distance_m": 0.6,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527096.316813,
+        "frame": 370,
+        "elevation_deg": -24.2
+      },
+      "view_image": "data/crops/visibility/arabic_room/56_couch.png"
+    },
+    "57": {
+      "label": "wall lamp",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.31,
+      "best_view": {
+        "n_points": 152,
+        "px_bbox": [
+          1110,
+          215,
+          1126,
+          248
+        ],
+        "px_bbox_unwrapped": [
+          1110,
+          215,
+          1126,
+          248
+        ],
+        "px_area": 528,
+        "px_area_frac": 0.00043,
+        "distance_m": 4.08,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527094.466701,
+        "frame": 356,
+        "elevation_deg": 16.6
+      }
+    },
+    "58": {
+      "label": "carpet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 85,
+      "min_range_m": 1.63,
+      "best_view": {
+        "n_points": 19,
+        "px_bbox": [
+          195,
+          406,
+          692,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          195,
+          406,
+          692,
+          639
+        ],
+        "px_area": 115801,
+        "px_area_frac": 0.09424,
+        "distance_m": 1.29,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527066.481753,
+        "frame": 140,
+        "elevation_deg": -28.2
+      },
+      "view_image": "data/crops/visibility/arabic_room/58_carpet.png"
+    },
+    "59": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.47,
+      "best_view": {
+        "n_points": 39,
+        "px_bbox": [
+          353,
+          49,
+          382,
+          64
+        ],
+        "px_bbox_unwrapped": [
+          353,
+          49,
+          382,
+          64
+        ],
+        "px_area": 435,
+        "px_area_frac": 0.00035,
+        "distance_m": 1.65,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527069.336752,
+        "frame": 162,
+        "elevation_deg": 49.4
+      }
+    },
+    "60": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 9,
+      "min_range_m": 2.04,
+      "best_view": {
+        "n_points": 20,
+        "px_bbox": [
+          66,
+          12,
+          114,
+          36
+        ],
+        "px_bbox_unwrapped": [
+          66,
+          12,
+          114,
+          36
+        ],
+        "px_area": 1152,
+        "px_area_frac": 0.00094,
+        "distance_m": 1.35,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527091.836779,
+        "frame": 336,
+        "elevation_deg": 55.6
+      },
+      "view_image": "data/crops/visibility/arabic_room/60_focus_light.png"
+    },
+    "61": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.03,
+      "best_view": {
+        "n_points": 38,
+        "px_bbox": [
+          1363,
+          130,
+          1386,
+          142
+        ],
+        "px_bbox_unwrapped": [
+          1363,
+          130,
+          1386,
+          142
+        ],
+        "px_area": 276,
+        "px_area_frac": 0.00022,
+        "distance_m": 2.7,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527053.156829,
+        "frame": 36,
+        "elevation_deg": 34.6
+      }
+    },
+    "62": {
+      "label": "ceiling lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 207,
+      "min_range_m": 2.49,
+      "best_view": {
+        "n_points": 202,
+        "px_bbox": [
+          1394,
+          47,
+          1438,
+          172
+        ],
+        "px_bbox_unwrapped": [
+          1394,
+          47,
+          1438,
+          172
+        ],
+        "px_area": 5500,
+        "px_area_frac": 0.00448,
+        "distance_m": 1.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527094.22676,
+        "frame": 354,
+        "elevation_deg": 40.6
+      },
+      "view_image": "data/crops/visibility/arabic_room/62_ceiling_lamp.png"
+    },
+    "63": {
+      "label": "stool",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 124,
+      "min_range_m": 2.26,
+      "best_view": {
+        "n_points": 252,
+        "px_bbox": [
+          1467,
+          365,
+          1577,
+          441
+        ],
+        "px_bbox_unwrapped": [
+          1467,
+          365,
+          1577,
+          441
+        ],
+        "px_area": 8360,
+        "px_area_frac": 0.0068,
+        "distance_m": 2.01,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527048.926799,
+        "frame": 4,
+        "elevation_deg": -15.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/63_stool.png"
+    },
+    "64": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 28,
+      "min_range_m": 2.29,
+      "best_view": {
+        "n_points": 216,
+        "px_bbox": [
+          1381,
+          354,
+          1472,
+          438
+        ],
+        "px_bbox_unwrapped": [
+          1381,
+          354,
+          1472,
+          438
+        ],
+        "px_area": 7644,
+        "px_area_frac": 0.00622,
+        "distance_m": 2.22,
+        "occlusion": 0.254,
+        "clipped": false,
+        "stamp": 1785527050.106777,
+        "frame": 13,
+        "elevation_deg": -13.2
+      },
+      "view_image": "data/crops/visibility/arabic_room/64_table.png"
+    },
+    "65": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 301,
+      "min_range_m": 2.68,
+      "best_view": {
+        "n_points": 1069,
+        "px_bbox": [
+          1397,
+          160,
+          1472,
+          260
+        ],
+        "px_bbox_unwrapped": [
+          1397,
+          160,
+          1472,
+          260
+        ],
+        "px_area": 7500,
+        "px_area_frac": 0.0061,
+        "distance_m": 2.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527048.791783,
+        "frame": 3,
+        "elevation_deg": 21.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/65_window.png"
+    },
+    "66": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.02,
+      "best_view": {
+        "n_points": 27,
+        "px_bbox": [
+          1460,
+          135,
+          1482,
+          147
+        ],
+        "px_bbox_unwrapped": [
+          1460,
+          135,
+          1482,
+          147
+        ],
+        "px_area": 264,
+        "px_area_frac": 0.00021,
+        "distance_m": 2.77,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527086.986812,
+        "frame": 299,
+        "elevation_deg": 33.6
+      }
+    },
+    "67": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.97,
+      "best_view": {
+        "n_points": 66,
+        "px_bbox": [
+          1589,
+          93,
+          1618,
+          108
+        ],
+        "px_bbox_unwrapped": [
+          1589,
+          93,
+          1618,
+          108
+        ],
+        "px_area": 435,
+        "px_area_frac": 0.00035,
+        "distance_m": 2.07,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527049.451757,
+        "frame": 8,
+        "elevation_deg": 41.2
+      }
+    },
+    "68": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.97,
+      "best_view": {
+        "n_points": 63,
+        "px_bbox": [
+          1849,
+          95,
+          1871,
+          108
+        ],
+        "px_bbox_unwrapped": [
+          1849,
+          95,
+          1871,
+          108
+        ],
+        "px_area": 286,
+        "px_area_frac": 0.00023,
+        "distance_m": 2.08,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527049.451757,
+        "frame": 8,
+        "elevation_deg": 41.1
+      }
+    },
+    "69": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.22,
+      "best_view": {
+        "n_points": 17,
+        "px_bbox": [
+          140,
+          22,
+          180,
+          42
+        ],
+        "px_bbox_unwrapped": [
+          140,
+          22,
+          180,
+          42
+        ],
+        "px_area": 800,
+        "px_area_frac": 0.00065,
+        "distance_m": 1.41,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527096.711815,
+        "frame": 373,
+        "elevation_deg": 54.0
+      }
+    },
+    "70": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 40,
+      "min_range_m": 1.87,
+      "best_view": {
+        "n_points": 41,
+        "px_bbox": [
+          1127,
+          358,
+          1168,
+          431
+        ],
+        "px_bbox_unwrapped": [
+          1127,
+          358,
+          1168,
+          431
+        ],
+        "px_area": 2993,
+        "px_area_frac": 0.00244,
+        "distance_m": 1.66,
+        "occlusion": 0.531,
+        "clipped": false,
+        "stamp": 1785527093.936821,
+        "frame": 352,
+        "elevation_deg": -13.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/70_pillow.png"
+    },
+    "71": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.4,
+      "best_view": {
+        "n_points": 71,
+        "px_bbox": [
+          464,
+          130,
+          487,
+          142
+        ],
+        "px_bbox_unwrapped": [
+          464,
+          130,
+          487,
+          142
+        ],
+        "px_area": 276,
+        "px_area_frac": 0.00022,
+        "distance_m": 2.66,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527066.611754,
+        "frame": 141,
+        "elevation_deg": 34.5
+      }
+    },
+    "72": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.99,
+      "best_view": {
+        "n_points": 38,
+        "px_bbox": [
+          528,
+          168,
+          546,
+          177
+        ],
+        "px_bbox_unwrapped": [
+          528,
+          168,
+          546,
+          177
+        ],
+        "px_area": 162,
+        "px_area_frac": 0.00013,
+        "distance_m": 3.52,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527096.186714,
+        "frame": 369,
+        "elevation_deg": 27.6
+      }
+    },
+    "73": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 31,
+      "min_range_m": 2.61,
+      "best_view": {
+        "n_points": 176,
+        "px_bbox": [
+          1416,
+          348,
+          1471,
+          398
+        ],
+        "px_bbox_unwrapped": [
+          1416,
+          348,
+          1471,
+          398
+        ],
+        "px_area": 2750,
+        "px_area_frac": 0.00224,
+        "distance_m": 2.53,
+        "occlusion": 0.348,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": -9.5
+      },
+      "view_image": "data/crops/visibility/arabic_room/73_pillow.png"
+    },
+    "74": {
+      "label": "sofa",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 41,
+      "min_range_m": 2.46,
+      "best_view": {
+        "n_points": 265,
+        "px_bbox": [
+          299,
+          335,
+          501,
+          498
+        ],
+        "px_bbox_unwrapped": [
+          299,
+          335,
+          501,
+          498
+        ],
+        "px_area": 32926,
+        "px_area_frac": 0.0268,
+        "distance_m": 1.65,
+        "occlusion": 0.79,
+        "clipped": false,
+        "stamp": 1785527096.186714,
+        "frame": 369,
+        "elevation_deg": -11.8
+      }
+    },
+    "75": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 209,
+      "min_range_m": 3.04,
+      "best_view": {
+        "n_points": 275,
+        "px_bbox": [
+          285,
+          183,
+          322,
+          275
+        ],
+        "px_bbox_unwrapped": [
+          285,
+          183,
+          322,
+          275
+        ],
+        "px_area": 3404,
+        "px_area_frac": 0.00277,
+        "distance_m": 2.89,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527096.856809,
+        "frame": 374,
+        "elevation_deg": 16.8
+      },
+      "view_image": "data/crops/visibility/arabic_room/75_window.png"
+    },
+    "76": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 199,
+      "min_range_m": 1.67,
+      "best_view": {
+        "n_points": 1575,
+        "px_bbox": [
+          316,
+          51,
+          446,
+          220
+        ],
+        "px_bbox_unwrapped": [
+          316,
+          51,
+          446,
+          220
+        ],
+        "px_area": 21970,
+        "px_area_frac": 0.01788,
+        "distance_m": 1.16,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527095.531843,
+        "frame": 364,
+        "elevation_deg": 36.5
+      },
+      "view_image": "data/crops/visibility/arabic_room/76_window.png"
+    },
+    "77": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 21,
+      "min_range_m": 1.02,
+      "best_view": {
+        "n_points": 111,
+        "px_bbox": [
+          1274,
+          347,
+          1326,
+          396
+        ],
+        "px_bbox_unwrapped": [
+          1274,
+          347,
+          1326,
+          396
+        ],
+        "px_area": 2548,
+        "px_area_frac": 0.00207,
+        "distance_m": 2.54,
+        "occlusion": 0.178,
+        "clipped": false,
+        "stamp": 1785527050.241833,
+        "frame": 14,
+        "elevation_deg": -9.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/77_pillow.png"
+    },
+    "78": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 8,
+      "min_range_m": 2.55,
+      "best_view": {
+        "n_points": 49,
+        "px_bbox": [
+          1380,
+          340,
+          1419,
+          373
+        ],
+        "px_bbox_unwrapped": [
+          1380,
+          340,
+          1419,
+          373
+        ],
+        "px_area": 1287,
+        "px_area_frac": 0.00105,
+        "distance_m": 3.68,
+        "occlusion": 0.515,
+        "clipped": false,
+        "stamp": 1785527050.106777,
+        "frame": 13,
+        "elevation_deg": -6.7
+      },
+      "view_image": "data/crops/visibility/arabic_room/78_pillow.png"
+    },
+    "79": {
+      "label": "wall lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 16,
+      "min_range_m": 2.86,
+      "best_view": {
+        "n_points": 224,
+        "px_bbox": [
+          1714,
+          157,
+          1740,
+          208
+        ],
+        "px_bbox_unwrapped": [
+          1714,
+          157,
+          1740,
+          208
+        ],
+        "px_area": 1326,
+        "px_area_frac": 0.00108,
+        "distance_m": 2.5,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527049.186795,
+        "frame": 6,
+        "elevation_deg": 25.9
+      },
+      "view_image": "data/crops/visibility/arabic_room/79_wall_lamp.png"
+    },
+    "80": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 1,
+      "min_range_m": 2.2,
+      "best_view": {
+        "n_points": 124,
+        "px_bbox": [
+          111,
+          37,
+          152,
+          59
+        ],
+        "px_bbox_unwrapped": [
+          111,
+          37,
+          152,
+          59
+        ],
+        "px_area": 902,
+        "px_area_frac": 0.00073,
+        "distance_m": 1.46,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527066.221813,
+        "frame": 138,
+        "elevation_deg": 51.0
+      },
+      "view_image": "data/crops/visibility/arabic_room/80_focus_light.png"
+    },
+    "81": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 1,
+      "min_range_m": 2.02,
+      "best_view": {
+        "n_points": 19,
+        "px_bbox": [
+          1898,
+          4,
+          21,
+          25
+        ],
+        "px_bbox_unwrapped": [
+          1898,
+          4,
+          1941,
+          25
+        ],
+        "px_area": 903,
+        "px_area_frac": 0.00073,
+        "distance_m": 1.34,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527088.811817,
+        "frame": 313,
+        "elevation_deg": 57.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/81_focus_light.png"
+    },
+    "82": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.24,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          482,
+          118,
+          506,
+          130
+        ],
+        "px_bbox_unwrapped": [
+          482,
+          118,
+          506,
+          130
+        ],
+        "px_area": 288,
+        "px_area_frac": 0.00023,
+        "distance_m": 2.53,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527095.946771,
+        "frame": 367,
+        "elevation_deg": 36.7
+      }
+    },
+    "83": {
+      "label": "potted plant",
+      "region": "1",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 190,
+      "min_range_m": 2.05,
+      "best_view": {
+        "n_points": 1089,
+        "px_bbox": [
+          766,
+          275,
+          880,
+          466
+        ],
+        "px_bbox_unwrapped": [
+          766,
+          275,
+          880,
+          466
+        ],
+        "px_area": 21774,
+        "px_area_frac": 0.01772,
+        "distance_m": 1.85,
+        "occlusion": 0.021,
+        "clipped": false,
+        "stamp": 1785527080.061864,
+        "frame": 245,
+        "elevation_deg": -8.3
+      },
+      "view_image": "data/crops/visibility/arabic_room/83_plant.png"
+    },
+    "84": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 22,
+      "min_range_m": 0.99,
+      "best_view": {
+        "n_points": 240,
+        "px_bbox": [
+          1213,
+          370,
+          1288,
+          477
+        ],
+        "px_bbox_unwrapped": [
+          1213,
+          370,
+          1288,
+          477
+        ],
+        "px_area": 8025,
+        "px_area_frac": 0.00653,
+        "distance_m": 1.13,
+        "occlusion": 0.003,
+        "clipped": false,
+        "stamp": 1785527050.241833,
+        "frame": 14,
+        "elevation_deg": -18.1
+      },
+      "view_image": "data/crops/visibility/arabic_room/84_pillow.png"
+    }
+  },
+  "summary": {
+    "objects": 81,
+    "visible": 55,
+    "hidden": 26
+  }
+}

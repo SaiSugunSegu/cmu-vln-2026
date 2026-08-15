@@ -3,7 +3,7 @@
 captioner.text_utils and captioner.paths are stdlib-only for exactly this reason, so
 importing them here does not drag torch or rclpy into the unit tests.
 
-The two prompts live here rather than in the node because `views_bench` replays the
+The two prompts live here rather than in the node because `cat1_bench` replays the
 answering step offline against saved crops. A benchmark that measured a prompt slightly
 different from the live one would be worse than no benchmark at all, so both paths read
 the same strings and pick their views with the same function.

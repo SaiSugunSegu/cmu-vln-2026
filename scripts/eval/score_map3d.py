@@ -185,15 +185,33 @@ def question_target_ids(scene: str) -> set[str]:
     """GT object ids the questions actually ask about, per scene.
 
     Scoring every GT object grades us on furniture nobody asks about. None means "no question
-    file" (score everything); an empty set means "asked about nothing"."""
-    ids: set[str] = set()
-    for path in glob.glob(os.path.join(DATA_ROOT, "benchmark", scene, "category_1",
-                                       "*_qa.json")):
-        data = json.load(open(path))
-        for q in (data.get("questions", []) if isinstance(data, dict) else data):
-            for oid in (q.get("object_ids") or []):
-                ids.add(str(oid))
-    return ids
+    file" (score everything); an empty set means "asked about nothing".
+
+    Category 2 is used when the scene has it, because its answer IS one object — exactly what
+    `challenge_bench` needs to place a Marker on. Category 1 is only the fallback: its answers
+    are counts, so its `object_ids` are every object a counting question touches, which
+    over-counts targets and dilutes the cat-2 score with objects nothing points at."""
+    for category, extract in (("category_2", _cat2_target), ("category_1", _cat1_targets)):
+        ids: set[str] = set()
+        found = False
+        for path in glob.glob(os.path.join(DATA_ROOT, "benchmark", scene, category,
+                                           "*_qa.json")):
+            found = True
+            data = json.load(open(path))
+            for q in (data.get("questions", []) if isinstance(data, dict) else data):
+                ids.update(extract(q))
+        if found:
+            return ids
+    return set()
+
+
+def _cat2_target(question: dict) -> list[str]:
+    oid = (question.get("answer") or {}).get("object_id")
+    return [str(oid)] if oid else []
+
+
+def _cat1_targets(question: dict) -> list[str]:
+    return [str(oid) for oid in (question.get("object_ids") or [])]
 
 
 # ---------------------------------------------------------------- labels

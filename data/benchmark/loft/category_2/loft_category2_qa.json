@@ -1,0 +1,2012 @@
+{
+  "scene": "loft",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/loft/visibility/loft_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: data/bags/loft/iref_vla_metadata/loft_referential_statements.json",
+    "source_objects: data/bags/loft/iref_vla_metadata/loft_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 6,
+    "hard": 2
+  },
+  "relation_counts": {
+    "closest": 2,
+    "between": 2,
+    "supports": 1,
+    "near": 1,
+    "farthest": 2
+  },
+  "target_object_coverage": [
+    "bowl of apples",
+    "cabinet",
+    "chair",
+    "coffee cup",
+    "fireplace",
+    "painting",
+    "potted plant",
+    "stairs",
+    "table",
+    "tv",
+    "tv cabinet",
+    "vase"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "The blue chair that is closest to the cup of coffee.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "chair",
+        "coffee cup"
+      ],
+      "answer": {
+        "object_id": "99",
+        "region": "2",
+        "label": "chair",
+        "raw_label": "chair",
+        "nyu_label": "chair",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          0.669,
+          1.1842,
+          0.4841
+        ],
+        "size": [
+          0.5493,
+          0.5067,
+          0.97
+        ],
+        "yaw": 1.574,
+        "aabb": {
+          "min": [
+            0.4147,
+            0.9087,
+            -0.0009
+          ],
+          "max": [
+            0.9232,
+            1.4596,
+            0.9691
+          ]
+        },
+        "size_aabb": [
+          0.5084,
+          0.5509,
+          0.97
+        ],
+        "bbox_corners": [
+          [
+            0.4165,
+            0.9087,
+            0.9691
+          ],
+          [
+            0.4147,
+            1.458,
+            0.9691
+          ],
+          [
+            0.9214,
+            1.4596,
+            0.9691
+          ],
+          [
+            0.9232,
+            0.9103,
+            0.9691
+          ],
+          [
+            0.4165,
+            0.9087,
+            -0.0009
+          ],
+          [
+            0.4147,
+            1.458,
+            -0.0009
+          ],
+          [
+            0.9214,
+            1.4596,
+            -0.0009
+          ],
+          [
+            0.9232,
+            0.9103,
+            -0.0009
+          ]
+        ],
+        "volume": 0.27001
+      },
+      "anchors": [],
+      "distractor_ids": [
+        "10",
+        "100",
+        "94",
+        "95",
+        "96",
+        "97",
+        "98"
+      ],
+      "evidence": "target pinned by override to chair#99",
+      "statement": "the chair that is second closest to the stairs",
+      "region": "2",
+      "images": [
+        "data/pdf_assets/loft/p1_img2.png"
+      ],
+      "views": [
+        {
+          "object_id": "99",
+          "role": "target",
+          "frames_visible": 47,
+          "distance_m": 0.84,
+          "px_area": 56889,
+          "occlusion": 0.0,
+          "elevation_deg": -17.8,
+          "stamp": 1785528878.916148,
+          "image": "data/crops/visibility/loft/99_chair.png"
+        }
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='chair' color='blue' hops=[{'relation': 'closest', 'phrases': ['cup coffee']}]",
+        "head candidates: [chair#74, chair#10, chair#94, chair#95, chair#96, chair#97] ...",
+        "target hop (closest): closest: ranked [chair#99, chair#98, chair#100]",
+        "pick: closest by centre is a tie: chair#99 0.51 m vs chair#98 0.78 m",
+        "result: closest by centre is a tie: chair#99 0.51 m vs chair#98 0.78 m"
+      ],
+      "review_note": "Chair 99 wins under both metrics (0.51 m centre, 0.05 m box-gap) but by less than the 0.30 m margin, because the chairs are only 0.70 m apart. The PDF screenshot outlines the middle near-side chair, which is chair 99."
+    },
+    {
+      "id": "Q02",
+      "question": "Find the potted plant between a vase and the cabinet with a tv on it.",
+      "source": "official",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "potted plant",
+        "vase",
+        "tv cabinet",
+        "cabinet",
+        "tv"
+      ],
+      "answer": {
+        "object_id": "110",
+        "region": "2",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "gray"
+        ],
+        "center": [
+          4.2518,
+          -1.3336,
+          0.4997
+        ],
+        "size": [
+          0.891,
+          0.7921,
+          0.9994
+        ],
+        "yaw": 1.7311,
+        "aabb": {
+          "min": [
+            3.7897,
+            -1.8366,
+            -0.0
+          ],
+          "max": [
+            4.7139,
+            -0.8306,
+            0.9994
+          ]
+        },
+        "size_aabb": [
+          0.9242,
+          1.006,
+          0.9994
+        ],
+        "bbox_corners": [
+          [
+            3.9319,
+            -1.8366,
+            0.9994
+          ],
+          [
+            3.7897,
+            -0.9571,
+            0.9994
+          ],
+          [
+            4.5717,
+            -0.8306,
+            0.9994
+          ],
+          [
+            4.7139,
+            -1.7102,
+            0.9994
+          ],
+          [
+            3.9319,
+            -1.8366,
+            -0.0
+          ],
+          [
+            3.7897,
+            -0.9571,
+            -0.0
+          ],
+          [
+            4.5717,
+            -0.8306,
+            -0.0
+          ],
+          [
+            4.7139,
+            -1.7102,
+            -0.0
+          ]
+        ],
+        "volume": 0.70537
+      },
+      "anchors": [
+        {
+          "object_id": "13",
+          "region": "2",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "aqua"
+          ],
+          "center": [
+            5.3428,
+            -1.582,
+            0.6489
+          ],
+          "size": [
+            0.1437,
+            0.1427,
+            0.1476
+          ],
+          "yaw": 0.1745,
+          "aabb": {
+            "min": [
+              5.2596,
+              -1.6648,
+              0.5751
+            ],
+            "max": [
+              5.4259,
+              -1.4993,
+              0.7227
+            ]
+          },
+          "size_aabb": [
+            0.1663,
+            0.1655,
+            0.1476
+          ],
+          "bbox_corners": [
+            [
+              5.2596,
+              -1.5243,
+              0.7227
+            ],
+            [
+              5.4012,
+              -1.4993,
+              0.7227
+            ],
+            [
+              5.4259,
+              -1.6398,
+              0.7227
+            ],
+            [
+              5.2844,
+              -1.6648,
+              0.7227
+            ],
+            [
+              5.2596,
+              -1.5243,
+              0.5751
+            ],
+            [
+              5.4012,
+              -1.4993,
+              0.5751
+            ],
+            [
+              5.4259,
+              -1.6398,
+              0.5751
+            ],
+            [
+              5.2844,
+              -1.6648,
+              0.5751
+            ]
+          ],
+          "volume": 0.00303
+        },
+        {
+          "object_id": "14",
+          "region": "2",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            3.095,
+            -1.3229,
+            0.6663
+          ],
+          "size": [
+            0.2905,
+            0.2903,
+            1.3282
+          ],
+          "yaw": 0.1886,
+          "aabb": {
+            "min": [
+              2.9252,
+              -1.4928,
+              0.0022
+            ],
+            "max": [
+              3.2649,
+              -1.1531,
+              1.3304
+            ]
+          },
+          "size_aabb": [
+            0.3397,
+            0.3396,
+            1.3282
+          ],
+          "bbox_corners": [
+            [
+              2.9252,
+              -1.2076,
+              1.3304
+            ],
+            [
+              3.2105,
+              -1.1531,
+              1.3304
+            ],
+            [
+              3.2649,
+              -1.4383,
+              1.3304
+            ],
+            [
+              2.9796,
+              -1.4928,
+              1.3304
+            ],
+            [
+              2.9252,
+              -1.2076,
+              0.0022
+            ],
+            [
+              3.2105,
+              -1.1531,
+              0.0022
+            ],
+            [
+              3.2649,
+              -1.4383,
+              0.0022
+            ],
+            [
+              2.9796,
+              -1.4928,
+              0.0022
+            ]
+          ],
+          "volume": 0.11201
+        },
+        {
+          "object_id": "15",
+          "region": "2",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            3.4683,
+            -1.4603,
+            0.516
+          ],
+          "size": [
+            0.3604,
+            0.3603,
+            1.0355
+          ],
+          "yaw": -1.3788,
+          "aabb": {
+            "min": [
+              3.2571,
+              -1.6715,
+              -0.0018
+            ],
+            "max": [
+              3.6795,
+              -1.249,
+              1.0338
+            ]
+          },
+          "size_aabb": [
+            0.4224,
+            0.4225,
+            1.0355
+          ],
+          "bbox_corners": [
+            [
+              3.6108,
+              -1.249,
+              1.0338
+            ],
+            [
+              3.6795,
+              -1.6028,
+              1.0338
+            ],
+            [
+              3.3259,
+              -1.6715,
+              1.0338
+            ],
+            [
+              3.2571,
+              -1.3177,
+              1.0338
+            ],
+            [
+              3.6108,
+              -1.249,
+              -0.0018
+            ],
+            [
+              3.6795,
+              -1.6028,
+              -0.0018
+            ],
+            [
+              3.3259,
+              -1.6715,
+              -0.0018
+            ],
+            [
+              3.2571,
+              -1.3177,
+              -0.0018
+            ]
+          ],
+          "volume": 0.13444
+        },
+        {
+          "object_id": "17",
+          "region": "2",
+          "label": "tv cabinet",
+          "raw_label": "tv cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            6.013,
+            -1.511,
+            0.282
+          ],
+          "size": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            "max": [
+              7.1208,
+              -1.2895,
+              0.5735
+            ]
+          },
+          "size_aabb": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "bbox_corners": [
+            [
+              7.1208,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.2895,
+              -0.0095
+            ],
+            [
+              7.1208,
+              -1.2895,
+              -0.0095
+            ]
+          ],
+          "volume": 0.57232
+        }
+      ],
+      "distractor_ids": [
+        "109",
+        "25"
+      ],
+      "evidence": "solved from geometry: between: potted plant#110 is the only match",
+      "statement": "the plant that is between the vase and the cabinet",
+      "region": "2",
+      "images": [
+        "data/pdf_assets/loft/p2_img1.png"
+      ],
+      "views": [
+        {
+          "object_id": "110",
+          "role": "target",
+          "frames_visible": 46,
+          "distance_m": 2.84,
+          "px_area": 15246,
+          "occlusion": 0.259,
+          "elevation_deg": -6.8,
+          "stamp": 1785528888.791116,
+          "image": "data/crops/visibility/loft/110_plant.png"
+        },
+        {
+          "object_id": "14",
+          "role": "anchor",
+          "frames_visible": 48,
+          "distance_m": 2.05,
+          "px_area": 10725,
+          "occlusion": 0.55,
+          "elevation_deg": -4.8,
+          "stamp": 1785528889.371101,
+          "image": "data/crops/visibility/loft/14_vase.png"
+        }
+      ],
+      "visibility_warning": [
+        "anchor 13 was never resolved by the robot's camera: never_scanned",
+        "anchor 15 was never resolved by the robot's camera: occluded",
+        "anchor 17 was never resolved by the robot's camera: occluded"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='potted plant' color='' hops=[{'relation': 'between', 'phrases': ['vase', 'cabinet']}, {'relation': 'supports', 'phrases': ['tv']}]",
+        "head candidates: [potted plant#25, potted plant#109, potted plant#110]",
+        "anchor hop 1 (supports): host already unique, applying it to the target instead",
+        "target hop (between): between: 1 in the corridor -> [potted plant#110]",
+        "deferred hop 1 (supports): nothing is supports the anchor(s)",
+        "pick: between: potted plant#110 is the only match",
+        "result: between: potted plant#110 is the only match"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the table with the bowl of apples on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "bowl of apples"
+      ],
+      "answer": {
+        "object_id": "9",
+        "region": "2",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "brown",
+          "black"
+        ],
+        "center": [
+          0.728,
+          2.005,
+          0.368
+        ],
+        "size": [
+          2.2307,
+          1.1073,
+          0.7552
+        ],
+        "yaw": 0.0,
+        "aabb": {
+          "min": [
+            -0.3873,
+            1.4514,
+            -0.0096
+          ],
+          "max": [
+            1.8433,
+            2.5586,
+            0.7456
+          ]
+        },
+        "size_aabb": [
+          2.2307,
+          1.1073,
+          0.7552
+        ],
+        "bbox_corners": [
+          [
+            -0.3873,
+            2.5586,
+            0.7456
+          ],
+          [
+            1.8433,
+            2.5586,
+            0.7456
+          ],
+          [
+            1.8433,
+            1.4514,
+            0.7456
+          ],
+          [
+            -0.3873,
+            1.4514,
+            0.7456
+          ],
+          [
+            -0.3873,
+            2.5586,
+            -0.0096
+          ],
+          [
+            1.8433,
+            2.5586,
+            -0.0096
+          ],
+          [
+            1.8433,
+            1.4514,
+            -0.0096
+          ],
+          [
+            -0.3873,
+            1.4514,
+            -0.0096
+          ]
+        ],
+        "volume": 1.8653
+      },
+      "anchors": [
+        {
+          "object_id": "7",
+          "region": "2",
+          "label": "bowl of apples",
+          "raw_label": "bowl of apples",
+          "nyu_label": "apple",
+          "colors": [
+            "black",
+            "brown",
+            "maroon"
+          ],
+          "center": [
+            0.7814,
+            1.9992,
+            0.8378
+          ],
+          "size": [
+            0.2882,
+            0.2894,
+            0.1765
+          ],
+          "yaw": -2.5069,
+          "aabb": {
+            "min": [
+              0.5796,
+              1.7973,
+              0.7496
+            ],
+            "max": [
+              0.9833,
+              2.2012,
+              0.9261
+            ]
+          },
+          "size_aabb": [
+            0.4037,
+            0.4039,
+            0.1765
+          ],
+          "bbox_corners": [
+            [
+              0.9833,
+              1.9682,
+              0.9261
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.9261
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.9261
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.9261
+            ],
+            [
+              0.9833,
+              1.9682,
+              0.7496
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.7496
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.7496
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.7496
+            ]
+          ],
+          "volume": 0.01472,
+          "phrase": "the bowl of apples"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "supports: holds bowl of apples#7 (top 0.75 m, its underside 0.75 m)",
+      "statement": "",
+      "region": "2",
+      "views": [
+        {
+          "object_id": "9",
+          "role": "target",
+          "frames_visible": 51,
+          "distance_m": 0.67,
+          "px_area": 99546,
+          "occlusion": 0.0,
+          "elevation_deg": -14.9,
+          "stamp": 1785528880.516106,
+          "image": "data/crops/visibility/loft/9_table.png"
+        },
+        {
+          "object_id": "7",
+          "role": "anchor",
+          "frames_visible": 21,
+          "distance_m": 1.65,
+          "px_area": 2210,
+          "occlusion": 0.0,
+          "elevation_deg": -0.4,
+          "stamp": 1785528880.716105,
+          "image": "data/crops/visibility/loft/7_bowl_of_apples.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the painting that is near the fireplace.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "near",
+      "target_objects": [
+        "painting",
+        "fireplace"
+      ],
+      "answer": {
+        "object_id": "47",
+        "region": "2",
+        "label": "painting",
+        "raw_label": "painting",
+        "nyu_label": "picture",
+        "colors": [
+          "gray",
+          "maroon"
+        ],
+        "center": [
+          -1.6546,
+          2.22,
+          1.54
+        ],
+        "size": [
+          0.7926,
+          0.0409,
+          0.7652
+        ],
+        "yaw": -1.5708,
+        "aabb": {
+          "min": [
+            -1.675,
+            1.8237,
+            1.1574
+          ],
+          "max": [
+            -1.6341,
+            2.6163,
+            1.9226
+          ]
+        },
+        "size_aabb": [
+          0.0409,
+          0.7926,
+          0.7652
+        ],
+        "bbox_corners": [
+          [
+            -1.6341,
+            2.6163,
+            1.9226
+          ],
+          [
+            -1.6341,
+            1.8237,
+            1.9226
+          ],
+          [
+            -1.675,
+            1.8237,
+            1.9226
+          ],
+          [
+            -1.675,
+            2.6163,
+            1.9226
+          ],
+          [
+            -1.6341,
+            2.6163,
+            1.1574
+          ],
+          [
+            -1.6341,
+            1.8237,
+            1.1574
+          ],
+          [
+            -1.675,
+            1.8237,
+            1.1574
+          ],
+          [
+            -1.675,
+            2.6163,
+            1.1574
+          ]
+        ],
+        "volume": 0.02478
+      },
+      "anchors": [
+        {
+          "object_id": "12",
+          "region": "2",
+          "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.646,
+            0.97,
+            1.08
+          ],
+          "size": [
+            1.2868,
+            0.0803,
+            0.5503
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            "max": [
+              -1.6059,
+              1.6134,
+              1.3551
+            ]
+          },
+          "size_aabb": [
+            0.0803,
+            1.2868,
+            0.5503
+          ],
+          "bbox_corners": [
+            [
+              -1.6059,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              1.6134,
+              0.8049
+            ],
+            [
+              -1.6059,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              1.6134,
+              0.8049
+            ]
+          ],
+          "volume": 0.05683,
+          "phrase": "the fireplace"
+        }
+      ],
+      "distractor_ids": [
+        "111",
+        "16"
+      ],
+      "competitors": 2,
+      "margin": 5.343,
+      "evidence": "near: box-gap 0.21 m; next framed record is 5.55 m away",
+      "statement": "the picture that is near the fireplace",
+      "region": "2",
+      "views": [
+        {
+          "object_id": "47",
+          "role": "target",
+          "frames_visible": 51,
+          "distance_m": 2.45,
+          "px_area": 5472,
+          "occlusion": 0.0,
+          "elevation_deg": 14.0,
+          "stamp": 1785528876.822749,
+          "image": "data/crops/visibility/loft/47_framed_record.png"
+        },
+        {
+          "object_id": "12",
+          "role": "anchor",
+          "frames_visible": 53,
+          "distance_m": 1.67,
+          "px_area": 18200,
+          "occlusion": 0.0,
+          "elevation_deg": 6.9,
+          "stamp": 1785528876.822749,
+          "image": "data/crops/visibility/loft/12_fireplace.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the potted plant that is closest to the fireplace.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "potted plant",
+        "fireplace"
+      ],
+      "answer": {
+        "object_id": "109",
+        "region": "2",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "gray"
+        ],
+        "center": [
+          -1.1819,
+          -1.2162,
+          0.5001
+        ],
+        "size": [
+          0.889,
+          0.7891,
+          1.0002
+        ],
+        "yaw": 1.7405,
+        "aabb": {
+          "min": [
+            -1.6459,
+            -1.7209,
+            -0.0
+          ],
+          "max": [
+            -0.718,
+            -0.7114,
+            1.0002
+          ]
+        },
+        "size_aabb": [
+          0.9279,
+          1.0095,
+          1.0002
+        ],
+        "bbox_corners": [
+          [
+            -1.4957,
+            -1.7209,
+            1.0002
+          ],
+          [
+            -1.6459,
+            -0.8447,
+            1.0002
+          ],
+          [
+            -0.8681,
+            -0.7114,
+            1.0002
+          ],
+          [
+            -0.718,
+            -1.5877,
+            1.0002
+          ],
+          [
+            -1.4957,
+            -1.7209,
+            -0.0
+          ],
+          [
+            -1.6459,
+            -0.8447,
+            -0.0
+          ],
+          [
+            -0.8681,
+            -0.7114,
+            -0.0
+          ],
+          [
+            -0.718,
+            -1.5877,
+            -0.0
+          ]
+        ],
+        "volume": 0.70169
+      },
+      "anchors": [
+        {
+          "object_id": "12",
+          "region": "2",
+          "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.646,
+            0.97,
+            1.08
+          ],
+          "size": [
+            1.2868,
+            0.0803,
+            0.5503
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            "max": [
+              -1.6059,
+              1.6134,
+              1.3551
+            ]
+          },
+          "size_aabb": [
+            0.0803,
+            1.2868,
+            0.5503
+          ],
+          "bbox_corners": [
+            [
+              -1.6059,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              1.6134,
+              0.8049
+            ],
+            [
+              -1.6059,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              1.6134,
+              0.8049
+            ]
+          ],
+          "volume": 0.05683,
+          "phrase": "the fireplace"
+        }
+      ],
+      "distractor_ids": [
+        "110",
+        "25"
+      ],
+      "competitors": 2,
+      "margin": 4.049,
+      "evidence": "closest: centre 2.31 m vs runner-up potted plant#110 6.36 m; box-gap 1.04 m vs runner-up potted plant#110 5.52 m",
+      "statement": "the plant that is closest to the fireplace",
+      "region": "2",
+      "views": [
+        {
+          "object_id": "109",
+          "role": "target",
+          "frames_visible": 42,
+          "distance_m": 1.5,
+          "px_area": 49234,
+          "occlusion": 0.0,
+          "elevation_deg": -11.7,
+          "stamp": 1785528876.822749,
+          "image": "data/crops/visibility/loft/109_plant.png"
+        },
+        {
+          "object_id": "12",
+          "role": "anchor",
+          "frames_visible": 53,
+          "distance_m": 1.67,
+          "px_area": 18200,
+          "occlusion": 0.0,
+          "elevation_deg": 6.9,
+          "stamp": 1785528876.822749,
+          "image": "data/crops/visibility/loft/12_fireplace.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the potted plant that is farthest from the stairs.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "stairs"
+      ],
+      "answer": {
+        "object_id": "25",
+        "region": "2",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "brown",
+          "gray"
+        ],
+        "center": [
+          8.3286,
+          3.0659,
+          0.7166
+        ],
+        "size": [
+          0.6927,
+          0.6569,
+          1.44
+        ],
+        "yaw": -2.431,
+        "aabb": {
+          "min": [
+            7.8518,
+            2.591,
+            -0.0034
+          ],
+          "max": [
+            8.8053,
+            3.5408,
+            1.4366
+          ]
+        },
+        "size_aabb": [
+          0.9535,
+          0.9497,
+          1.44
+        ],
+        "bbox_corners": [
+          [
+            8.8053,
+            3.0429,
+            1.4366
+          ],
+          [
+            8.2803,
+            2.591,
+            1.4366
+          ],
+          [
+            7.8518,
+            3.0889,
+            1.4366
+          ],
+          [
+            8.3769,
+            3.5408,
+            1.4366
+          ],
+          [
+            8.8053,
+            3.0429,
+            -0.0034
+          ],
+          [
+            8.2803,
+            2.591,
+            -0.0034
+          ],
+          [
+            7.8518,
+            3.0889,
+            -0.0034
+          ],
+          [
+            8.3769,
+            3.5408,
+            -0.0034
+          ]
+        ],
+        "volume": 0.65526
+      },
+      "anchors": [
+        {
+          "object_id": "69",
+          "region": "2",
+          "label": "stairs",
+          "raw_label": "stairs",
+          "nyu_label": "stairs",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.8161,
+            -0.3169,
+            1.9529
+          ],
+          "size": [
+            2.5335,
+            1.7805,
+            3.9203
+          ],
+          "yaw": 2.4487,
+          "aabb": {
+            "min": [
+              0.2728,
+              -1.811,
+              -0.0072
+            ],
+            "max": [
+              3.3594,
+              1.1772,
+              3.9131
+            ]
+          },
+          "size_aabb": [
+            3.0866,
+            2.9882,
+            3.9203
+          ],
+          "bbox_corners": [
+            [
+              2.2221,
+              -1.811,
+              3.9131
+            ],
+            [
+              0.2728,
+              -0.1927,
+              3.9131
+            ],
+            [
+              1.4101,
+              1.1772,
+              3.9131
+            ],
+            [
+              3.3594,
+              -0.4411,
+              3.9131
+            ],
+            [
+              2.2221,
+              -1.811,
+              -0.0072
+            ],
+            [
+              0.2728,
+              -0.1927,
+              -0.0072
+            ],
+            [
+              1.4101,
+              1.1772,
+              -0.0072
+            ],
+            [
+              3.3594,
+              -0.4411,
+              -0.0072
+            ]
+          ],
+          "volume": 17.68341,
+          "phrase": "the stairs"
+        }
+      ],
+      "distractor_ids": [
+        "109",
+        "110"
+      ],
+      "competitors": 2,
+      "margin": 3.719,
+      "evidence": "farthest: centre 7.44 m vs runner-up potted plant#109 3.45 m; box-gap 4.71 m vs runner-up potted plant#109 0.99 m",
+      "statement": "the plant that is farthest from the stairs",
+      "region": "2",
+      "views": [
+        {
+          "object_id": "25",
+          "role": "target",
+          "frames_visible": 30,
+          "distance_m": 5.16,
+          "px_area": 4968,
+          "occlusion": 0.387,
+          "elevation_deg": -1.5,
+          "stamp": 1785528883.56612,
+          "image": "data/crops/visibility/loft/25_plant.png"
+        },
+        {
+          "object_id": "69",
+          "role": "anchor",
+          "frames_visible": 75,
+          "distance_m": 0.66,
+          "px_area": 731696,
+          "occlusion": 0.0,
+          "elevation_deg": 56.3,
+          "stamp": 1785528879.126105,
+          "image": "data/crops/visibility/loft/69_stairs.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the painting that is farthest from the bowl of apples.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "painting",
+        "bowl of apples"
+      ],
+      "answer": {
+        "object_id": "111",
+        "region": "2",
+        "label": "painting",
+        "raw_label": "painting",
+        "nyu_label": "picture",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          5.995,
+          -1.758,
+          1.97
+        ],
+        "size": [
+          1.5731,
+          0.0532,
+          1.1842
+        ],
+        "yaw": -3.1416,
+        "aabb": {
+          "min": [
+            5.2085,
+            -1.7846,
+            1.3779
+          ],
+          "max": [
+            6.7815,
+            -1.7314,
+            2.5621
+          ]
+        },
+        "size_aabb": [
+          1.5731,
+          0.0532,
+          1.1842
+        ],
+        "bbox_corners": [
+          [
+            6.7815,
+            -1.7846,
+            2.5621
+          ],
+          [
+            5.2085,
+            -1.7846,
+            2.5621
+          ],
+          [
+            5.2085,
+            -1.7314,
+            2.5621
+          ],
+          [
+            6.7815,
+            -1.7314,
+            2.5621
+          ],
+          [
+            6.7815,
+            -1.7846,
+            1.3779
+          ],
+          [
+            5.2085,
+            -1.7846,
+            1.3779
+          ],
+          [
+            5.2085,
+            -1.7314,
+            1.3779
+          ],
+          [
+            6.7815,
+            -1.7314,
+            1.3779
+          ]
+        ],
+        "volume": 0.09914
+      },
+      "anchors": [
+        {
+          "object_id": "7",
+          "region": "2",
+          "label": "bowl of apples",
+          "raw_label": "bowl of apples",
+          "nyu_label": "apple",
+          "colors": [
+            "black",
+            "brown",
+            "maroon"
+          ],
+          "center": [
+            0.7814,
+            1.9992,
+            0.8378
+          ],
+          "size": [
+            0.2882,
+            0.2894,
+            0.1765
+          ],
+          "yaw": -2.5069,
+          "aabb": {
+            "min": [
+              0.5796,
+              1.7973,
+              0.7496
+            ],
+            "max": [
+              0.9833,
+              2.2012,
+              0.9261
+            ]
+          },
+          "size_aabb": [
+            0.4037,
+            0.4039,
+            0.1765
+          ],
+          "bbox_corners": [
+            [
+              0.9833,
+              1.9682,
+              0.9261
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.9261
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.9261
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.9261
+            ],
+            [
+              0.9833,
+              1.9682,
+              0.7496
+            ],
+            [
+              0.7512,
+              1.7973,
+              0.7496
+            ],
+            [
+              0.5796,
+              2.0303,
+              0.7496
+            ],
+            [
+              0.8117,
+              2.2012,
+              0.7496
+            ]
+          ],
+          "volume": 0.01472,
+          "phrase": "the bowl of apples"
+        }
+      ],
+      "distractor_ids": [
+        "16",
+        "47"
+      ],
+      "competitors": 2,
+      "margin": 1.168,
+      "evidence": "farthest: centre 6.53 m vs runner-up painting#16 5.01 m; box-gap 5.52 m vs runner-up painting#16 4.36 m",
+      "statement": "the picture that is farthest from the apple",
+      "region": "2",
+      "views": [
+        {
+          "object_id": "111",
+          "role": "target",
+          "frames_visible": 73,
+          "distance_m": 4.3,
+          "px_area": 7396,
+          "occlusion": 0.0,
+          "elevation_deg": 13.4,
+          "stamp": 1785528885.371097,
+          "image": "data/crops/visibility/loft/111_framed_record.png"
+        },
+        {
+          "object_id": "7",
+          "role": "anchor",
+          "frames_visible": 21,
+          "distance_m": 1.65,
+          "px_area": 2210,
+          "occlusion": 0.0,
+          "elevation_deg": -0.4,
+          "stamp": 1785528880.716105,
+          "image": "data/crops/visibility/loft/7_bowl_of_apples.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the chair that is between the fireplace and the stairs.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "chair",
+        "fireplace",
+        "stairs"
+      ],
+      "answer": {
+        "object_id": "98",
+        "region": "2",
+        "label": "chair",
+        "raw_label": "chair",
+        "nyu_label": "chair",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          -0.0271,
+          1.1844,
+          0.4845
+        ],
+        "size": [
+          0.5488,
+          0.5066,
+          0.9693
+        ],
+        "yaw": -1.5676,
+        "aabb": {
+          "min": [
+            -0.2812,
+            0.9092,
+            -0.0002
+          ],
+          "max": [
+            0.2271,
+            1.4596,
+            0.9691
+          ]
+        },
+        "size_aabb": [
+          0.5083,
+          0.5504,
+          0.9693
+        ],
+        "bbox_corners": [
+          [
+            0.2254,
+            1.4596,
+            0.9691
+          ],
+          [
+            0.2271,
+            0.9108,
+            0.9691
+          ],
+          [
+            -0.2795,
+            0.9092,
+            0.9691
+          ],
+          [
+            -0.2812,
+            1.458,
+            0.9691
+          ],
+          [
+            0.2254,
+            1.4596,
+            -0.0002
+          ],
+          [
+            0.2271,
+            0.9108,
+            -0.0002
+          ],
+          [
+            -0.2795,
+            0.9092,
+            -0.0002
+          ],
+          [
+            -0.2812,
+            1.458,
+            -0.0002
+          ]
+        ],
+        "volume": 0.26949
+      },
+      "anchors": [
+        {
+          "object_id": "12",
+          "region": "2",
+          "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.646,
+            0.97,
+            1.08
+          ],
+          "size": [
+            1.2868,
+            0.0803,
+            0.5503
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            "max": [
+              -1.6059,
+              1.6134,
+              1.3551
+            ]
+          },
+          "size_aabb": [
+            0.0803,
+            1.2868,
+            0.5503
+          ],
+          "bbox_corners": [
+            [
+              -1.6059,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              1.6134,
+              0.8049
+            ],
+            [
+              -1.6059,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              1.6134,
+              0.8049
+            ]
+          ],
+          "volume": 0.05683,
+          "phrase": "the fireplace"
+        },
+        {
+          "object_id": "69",
+          "region": "2",
+          "label": "stairs",
+          "raw_label": "stairs",
+          "nyu_label": "stairs",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.8161,
+            -0.3169,
+            1.9529
+          ],
+          "size": [
+            2.5335,
+            1.7805,
+            3.9203
+          ],
+          "yaw": 2.4487,
+          "aabb": {
+            "min": [
+              0.2728,
+              -1.811,
+              -0.0072
+            ],
+            "max": [
+              3.3594,
+              1.1772,
+              3.9131
+            ]
+          },
+          "size_aabb": [
+            3.0866,
+            2.9882,
+            3.9203
+          ],
+          "bbox_corners": [
+            [
+              2.2221,
+              -1.811,
+              3.9131
+            ],
+            [
+              0.2728,
+              -0.1927,
+              3.9131
+            ],
+            [
+              1.4101,
+              1.1772,
+              3.9131
+            ],
+            [
+              3.3594,
+              -0.4411,
+              3.9131
+            ],
+            [
+              2.2221,
+              -1.811,
+              -0.0072
+            ],
+            [
+              0.2728,
+              -0.1927,
+              -0.0072
+            ],
+            [
+              1.4101,
+              1.1772,
+              -0.0072
+            ],
+            [
+              3.3594,
+              -0.4411,
+              -0.0072
+            ]
+          ],
+          "volume": 17.68341,
+          "phrase": "the stairs"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 7,
+      "evidence": "between: between fireplace#12 and stairs#69 (lateral offset 0.77 m)",
+      "statement": "",
+      "region": "2",
+      "views": [
+        {
+          "object_id": "98",
+          "role": "target",
+          "frames_visible": 39,
+          "distance_m": 0.94,
+          "px_area": 43658,
+          "occlusion": 0.0,
+          "elevation_deg": -17.1,
+          "stamp": 1785528876.822749,
+          "image": "data/crops/visibility/loft/98_chair.png"
+        },
+        {
+          "object_id": "12",
+          "role": "anchor",
+          "frames_visible": 53,
+          "distance_m": 1.67,
+          "px_area": 18200,
+          "occlusion": 0.0,
+          "elevation_deg": 6.9,
+          "stamp": 1785528876.822749,
+          "image": "data/crops/visibility/loft/12_fireplace.png"
+        },
+        {
+          "object_id": "69",
+          "role": "anchor",
+          "frames_visible": 75,
+          "distance_m": 0.66,
+          "px_area": 731696,
+          "occlusion": 0.0,
+          "elevation_deg": 56.3,
+          "stamp": 1785528879.126105,
+          "image": "data/crops/visibility/loft/69_stairs.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    }
+  ]
+}

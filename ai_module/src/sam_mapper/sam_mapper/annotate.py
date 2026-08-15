@@ -119,6 +119,31 @@ def annotate_frame(image: np.ndarray, detections: dict, mask_alpha: float = 0.45
     return out
 
 
+def mark_frame(image: np.ndarray, marks, thickness: int = 1) -> np.ndarray:
+    """Numbered tabs over a crop that has already been drawn: `marks` is (bbox, id, text).
+
+    The handle a model needs to answer "which one" with an id instead of a description. A
+    category-2 answer is one entry of the 3D map, and the map's keys mean nothing to a model
+    looking at pixels unless the pixels carry the same keys — so the tab text is the track
+    id, and its colour is `_color_for(id)`, the same colour `silhouette_frame` outlined that
+    object with. Marking the silhouette copy therefore leaves each object with an outline and
+    a tab in one colour.
+
+    A thin box is drawn as well as the tab, unlike the silhouette: when two objects stack, a
+    tab alone does not say which of them it belongs to, and a mislabelled tab is worse than a
+    box over readable pixels.
+    """
+    out = image.copy()
+    captions = _CaptionLayout()
+    for box, obj_id, text in marks:
+        color = _color_for(int(obj_id))
+        x1, y1, x2, y2 = (int(round(v)) for v in box)
+        cv2.rectangle(out, (x1, y1), (x2, y2), color, thickness)
+        captions.add(x1, y1, str(text), color)
+    captions.draw(out)
+    return out
+
+
 def silhouette_frame(image: np.ndarray, detections: dict, thickness: int = 2) -> np.ndarray:
     """Mask outline + class name only — no fill, no box, no id, no confidence.
 

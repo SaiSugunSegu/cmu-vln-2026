@@ -1,0 +1,82 @@
+{
+  "_readme": [
+    "Hand corrections for scripts/bench/generate_category2_qa.py, applied on every run so the",
+    "benchmark stays reproducible from the metadata rather than hand-edited afterwards.",
+    "Rules are keyed by question text (case- and period-insensitive), not by question id,",
+    "so renumbering cannot silently move a correction onto a different question.",
+    "",
+    "  pin:    official question text -> object id. Use when the text solver reports the",
+    "          question unresolved: several objects satisfy it, the winner is inside the",
+    "          0.30 m margin, or the object it names is missing from the metadata. The id",
+    "          comes from reading the screenshot the PDF shows beside the question, where",
+    "          the expected answer is outlined, against <scene>_objects.json.",
+    "  reword: question text -> replacement text. Phrasing only; it must still name the",
+    "          same object, since the answer box is not re-derived from the new wording.",
+    "  drop:   list of question texts to exclude. Generated questions are backfilled from",
+    "          the candidate pool, so a scene still lands on 10. Prefer a rule in",
+    "          utils.geometry over a drop when the reason generalises: 'the camera is a",
+    "          confusing landmark' belongs in BAD_LANDMARKS, not in one scene's drop list.",
+    "  hide:   object id -> why. Overrules the visibility report for one object: it is then",
+    "          neither a target nor an anchor anywhere in the scene. Use this, not drop,",
+    "          when the problem is the OBJECT rather than the phrasing -- dropping one",
+    "          question only brings the same object back under the next phrasing. The gate",
+    "          measures whether the sensors reached an object; whether the image tells it",
+    "          apart from what it lies on is the review judgement that lands here.",
+    "  note:   question text -> a note carried into the QA file as review_note.",
+    "",
+    "gen-cat2 prints any rule here that matched nothing, which is how these stay honest:",
+    "a correction whose question the generator no longer produces should be deleted, not",
+    "left looking like a live decision."
+  ],
+
+  "chinese_room": {
+    "pin": {
+      "Find the bowl on the table closest to the folding screen.": "91"
+    },
+    "note": {
+      "Find the bowl on the table closest to the folding screen.": "The painted folding screen is not an object in the metadata, so the anchor cannot be resolved automatically. Both bowls sit on table 88; bowl 91 is the one nearer the screen and the one outlined in the PDF screenshot."
+    }
+  },
+
+  "japanese_room": {
+    "pin": {
+      "The red pillow closest to the sushi.": "46"
+    },
+    "note": {
+      "The red pillow closest to the sushi.": "No object is labelled sushi; the sushi sits on dish 33. Pillow 46 is the closest of the four maroon floor pillows to that dish (0.42 m) and the one outlined in the PDF screenshot."
+    }
+  },
+
+  "livingroom_3": {
+    "hide": {
+      "40": "Vase 40 is a 15 cm flat object on the coffee table's lower shelf, and in its own best view (data/crops/visibility/livingroom_3/40_vase.png) that recess is black on black with nothing discernible in it. The visibility gate passes it because the lidar does return from that volume: returns off a dark surface are as strong as any other, and for a flat object lying in a shelf the shelf's own returns fall inside the box. That is the gate's blind spot -- it measures whether the sensors reached an object, not whether anything in the image tells it apart from what it lies on -- so this one is a review judgement. The vase standing ON the table with the flower in it is a different object and a fine question."
+    }
+  },
+
+  "livingroom_2": {
+    "pin": {
+      "Find the pillow on the sofa that is closest to the lamp.": "39"
+    },
+    "note": {
+      "Find the pillow on the sofa that is closest to the lamp.": "Centre-to-centre distance ties sofa 71 against couch 24 in the other region. The question is about sofa 71: pillow 39 touches lamp 81 and is the black-heart cushion outlined in the PDF screenshot."
+    }
+  },
+
+  "loft": {
+    "pin": {
+      "The blue chair that is closest to the cup of coffee.": "99"
+    },
+    "note": {
+      "The blue chair that is closest to the cup of coffee.": "Chair 99 wins under both metrics (0.51 m centre, 0.05 m box-gap) but by less than the 0.30 m margin, because the chairs are only 0.70 m apart. The PDF screenshot outlines the middle near-side chair, which is chair 99."
+    }
+  },
+
+  "office_2": {
+    "pin": {
+      "Find the box on the cabinet that is closest to the whiteboard.": "36"
+    },
+    "note": {
+      "Find the box on the cabinet that is closest to the whiteboard.": "Cabinet 160 is 0.21 m from whiteboard 113 but its centre distance ties with cabinet 155 across the room. Box 36 is the one resting on cabinet 160, next to the phone, as outlined in the PDF screenshot."
+    }
+  }
+}

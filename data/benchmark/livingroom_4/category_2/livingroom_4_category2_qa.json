@@ -1,0 +1,2918 @@
+{
+  "scene": "livingroom_4",
+  "category": 2,
+  "category_name": "object_reference",
+  "description": "Category 2 (object reference) evaluation questions. Each question names exactly one object; the answer is that object's 3D bounding box and centre, taken from the IRef-VLA scene metadata. target_objects lists SAM3-relevant object nouns (no color adjectives) needed to ground each question.",
+  "notes": [
+    "answer.center + answer.size + answer.yaw are the oriented box; answer.aabb + answer.size_aabb are the axis-aligned equivalent for scorers that ignore orientation. Answer with a CUBE marker, never the RViz wireframe.",
+    "Every entry under anchors carries the same box fields as answer (center, size, yaw, aabb, size_aabb, bbox_corners, volume), taken from the same IRef-VLA metadata -- not just object_id/label -- so every object a question names, not only the one it asks for, has a 3D box to point at.",
+    "source=official questions are verbatim from questions/<scene>/questions.pdf; their target object is solved from the geometry by scripts/utils/text_solver.py and solver_trace records how. images points at the screenshot the PDF shows next to the question, in which the expected answer is outlined.",
+    "source=generated questions carry derivation=statement when mined from one of the scene's referential statements (quoted in statement) and derivation=geometry when the relation was found in the boxes directly, which is how on/in/supports/above/below/between get represented at all: IRef's grammar emits thousands of distance comparisons and a handful of everything else. Both go through the same checks.",
+    "Every generated answer is re-derived from the boxes: it wins by at least 0.3 m under both centre-to-centre and box-gap distance (comparatives) or is the only object the relation holds for, against both raw-label and NYU-label competitors, every anchor is uniquely named in its region, and the question read back by scripts/utils/text_solver.py resolves to this answer across the whole scene.",
+    "Every generated question's target and anchors were seen by the robot's own camera: scripts/eval/object_visibility.py projects each box into the recorded /camera/image frames and requires lidar returns off the object inside the 120 degree band, so IRef geometry the robot drove under, past or behind cannot be asked about. views records the frame each object was best seen in, and a visibility_warning marks an official question whose own object the robot never resolved -- those are asked as the organizers wrote them, not dropped. The report is data/benchmark/livingroom_4/visibility/livingroom_4_visibility.json.",
+    "difficulty: easy = one same-class competitor and a uniquely named anchor; medium = 2-3 competitors, a vertical or containment relation, or a single-hop official question; hard = 4+ competitors, a between relation, or a multi-hop official question.",
+    "source_statements: data/bags/livingroom_4/iref_vla_metadata/livingroom_4_referential_statements.json",
+    "source_objects: data/bags/livingroom_4/iref_vla_metadata/livingroom_4_objects.json"
+  ],
+  "difficulty_counts": {
+    "medium": 7,
+    "hard": 2,
+    "easy": 1
+  },
+  "relation_counts": {
+    "closest": 3,
+    "between": 1,
+    "in": 1,
+    "supports": 1,
+    "near": 1,
+    "farthest": 3
+  },
+  "target_object_coverage": [
+    "bookcase",
+    "clock",
+    "curtain",
+    "firewood",
+    "flowers",
+    "fossil decoration",
+    "lamp",
+    "mirror",
+    "phone",
+    "picture",
+    "potted plant",
+    "sofa",
+    "table",
+    "vase",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "Find the picture closest to a window.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "picture",
+        "window"
+      ],
+      "answer": {
+        "object_id": "30",
+        "region": "0",
+        "label": "picture",
+        "raw_label": "picture",
+        "nyu_label": "picture",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -4.3278,
+          0.457,
+          0.8189
+        ],
+        "size": [
+          0.3137,
+          0.0424,
+          0.1732
+        ],
+        "yaw": 1.5709,
+        "aabb": {
+          "min": [
+            -4.349,
+            0.3002,
+            0.7323
+          ],
+          "max": [
+            -4.3066,
+            0.6138,
+            0.9055
+          ]
+        },
+        "size_aabb": [
+          0.0424,
+          0.3137,
+          0.1732
+        ],
+        "bbox_corners": [
+          [
+            -4.3489,
+            0.3002,
+            0.9055
+          ],
+          [
+            -4.349,
+            0.6138,
+            0.9055
+          ],
+          [
+            -4.3066,
+            0.6138,
+            0.9055
+          ],
+          [
+            -4.3066,
+            0.3002,
+            0.9055
+          ],
+          [
+            -4.3489,
+            0.3002,
+            0.7323
+          ],
+          [
+            -4.349,
+            0.6138,
+            0.7323
+          ],
+          [
+            -4.3066,
+            0.6138,
+            0.7323
+          ],
+          [
+            -4.3066,
+            0.3002,
+            0.7323
+          ]
+        ],
+        "volume": 0.0023
+      },
+      "anchors": [
+        {
+          "object_id": "35",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -3.0491,
+            -5.0296,
+            1.6985
+          ],
+          "size": [
+            0.9979,
+            0.0405,
+            0.7937
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              -3.548,
+              -5.0498,
+              1.3017
+            ],
+            "max": [
+              -2.5501,
+              -5.0093,
+              2.0953
+            ]
+          },
+          "size_aabb": [
+            0.9979,
+            0.0405,
+            0.7937
+          ],
+          "bbox_corners": [
+            [
+              -3.548,
+              -5.0093,
+              2.0953
+            ],
+            [
+              -2.5501,
+              -5.0093,
+              2.0953
+            ],
+            [
+              -2.5501,
+              -5.0498,
+              2.0953
+            ],
+            [
+              -3.548,
+              -5.0498,
+              2.0953
+            ],
+            [
+              -3.548,
+              -5.0093,
+              1.3017
+            ],
+            [
+              -2.5501,
+              -5.0093,
+              1.3017
+            ],
+            [
+              -2.5501,
+              -5.0498,
+              1.3017
+            ],
+            [
+              -3.548,
+              -5.0498,
+              1.3017
+            ]
+          ],
+          "volume": 0.03205
+        },
+        {
+          "object_id": "36",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -3.0491,
+            -4.976,
+            0.9158
+          ],
+          "size": [
+            0.9979,
+            0.0601,
+            0.8208
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              -3.548,
+              -5.006,
+              0.5054
+            ],
+            "max": [
+              -2.5501,
+              -4.9459,
+              1.3262
+            ]
+          },
+          "size_aabb": [
+            0.9979,
+            0.0601,
+            0.8208
+          ],
+          "bbox_corners": [
+            [
+              -3.548,
+              -4.9459,
+              1.3262
+            ],
+            [
+              -2.5501,
+              -4.9459,
+              1.3262
+            ],
+            [
+              -2.5501,
+              -5.006,
+              1.3262
+            ],
+            [
+              -3.548,
+              -5.006,
+              1.3262
+            ],
+            [
+              -3.548,
+              -4.9459,
+              0.5054
+            ],
+            [
+              -2.5501,
+              -4.9459,
+              0.5054
+            ],
+            [
+              -2.5501,
+              -5.006,
+              0.5054
+            ],
+            [
+              -3.548,
+              -5.006,
+              0.5054
+            ]
+          ],
+          "volume": 0.04921
+        },
+        {
+          "object_id": "76",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -4.5106,
+            -1.3349,
+            1.6985
+          ],
+          "size": [
+            0.9979,
+            0.0405,
+            0.7937
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.5308,
+              -1.8339,
+              1.3017
+            ],
+            "max": [
+              -4.4903,
+              -0.836,
+              2.0953
+            ]
+          },
+          "size_aabb": [
+            0.0405,
+            0.9979,
+            0.7937
+          ],
+          "bbox_corners": [
+            [
+              -4.4903,
+              -0.836,
+              2.0953
+            ],
+            [
+              -4.4903,
+              -1.8339,
+              2.0953
+            ],
+            [
+              -4.5308,
+              -1.8339,
+              2.0953
+            ],
+            [
+              -4.5308,
+              -0.836,
+              2.0953
+            ],
+            [
+              -4.4903,
+              -0.836,
+              1.3017
+            ],
+            [
+              -4.4903,
+              -1.8339,
+              1.3017
+            ],
+            [
+              -4.5308,
+              -1.8339,
+              1.3017
+            ],
+            [
+              -4.5308,
+              -0.836,
+              1.3017
+            ]
+          ],
+          "volume": 0.03205
+        },
+        {
+          "object_id": "77",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -4.457,
+            -1.3349,
+            0.9158
+          ],
+          "size": [
+            0.9979,
+            0.0601,
+            0.8208
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.487,
+              -1.8339,
+              0.5054
+            ],
+            "max": [
+              -4.4269,
+              -0.836,
+              1.3262
+            ]
+          },
+          "size_aabb": [
+            0.0601,
+            0.9979,
+            0.8208
+          ],
+          "bbox_corners": [
+            [
+              -4.4269,
+              -0.836,
+              1.3262
+            ],
+            [
+              -4.4269,
+              -1.8339,
+              1.3262
+            ],
+            [
+              -4.487,
+              -1.8339,
+              1.3262
+            ],
+            [
+              -4.487,
+              -0.836,
+              1.3262
+            ],
+            [
+              -4.4269,
+              -0.836,
+              0.5054
+            ],
+            [
+              -4.4269,
+              -1.8339,
+              0.5054
+            ],
+            [
+              -4.487,
+              -1.8339,
+              0.5054
+            ],
+            [
+              -4.487,
+              -0.836,
+              0.5054
+            ]
+          ],
+          "volume": 0.04921
+        },
+        {
+          "object_id": "101",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -4.5106,
+            -3.4379,
+            1.6985
+          ],
+          "size": [
+            0.9979,
+            0.0405,
+            0.7937
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.5308,
+              -3.9369,
+              1.3017
+            ],
+            "max": [
+              -4.4903,
+              -2.939,
+              2.0953
+            ]
+          },
+          "size_aabb": [
+            0.0405,
+            0.9979,
+            0.7937
+          ],
+          "bbox_corners": [
+            [
+              -4.4903,
+              -2.939,
+              2.0953
+            ],
+            [
+              -4.4903,
+              -3.9369,
+              2.0953
+            ],
+            [
+              -4.5308,
+              -3.9369,
+              2.0953
+            ],
+            [
+              -4.5308,
+              -2.939,
+              2.0953
+            ],
+            [
+              -4.4903,
+              -2.939,
+              1.3017
+            ],
+            [
+              -4.4903,
+              -3.9369,
+              1.3017
+            ],
+            [
+              -4.5308,
+              -3.9369,
+              1.3017
+            ],
+            [
+              -4.5308,
+              -2.939,
+              1.3017
+            ]
+          ],
+          "volume": 0.03205
+        },
+        {
+          "object_id": "102",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -4.457,
+            -3.4379,
+            0.9158
+          ],
+          "size": [
+            0.9979,
+            0.0601,
+            0.8208
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -4.487,
+              -3.9369,
+              0.5054
+            ],
+            "max": [
+              -4.4269,
+              -2.939,
+              1.3262
+            ]
+          },
+          "size_aabb": [
+            0.0601,
+            0.9979,
+            0.8208
+          ],
+          "bbox_corners": [
+            [
+              -4.4269,
+              -2.939,
+              1.3262
+            ],
+            [
+              -4.4269,
+              -3.9369,
+              1.3262
+            ],
+            [
+              -4.487,
+              -3.9369,
+              1.3262
+            ],
+            [
+              -4.487,
+              -2.939,
+              1.3262
+            ],
+            [
+              -4.4269,
+              -2.939,
+              0.5054
+            ],
+            [
+              -4.4269,
+              -3.9369,
+              0.5054
+            ],
+            [
+              -4.487,
+              -3.9369,
+              0.5054
+            ],
+            [
+              -4.487,
+              -2.939,
+              0.5054
+            ]
+          ],
+          "volume": 0.04921
+        },
+        {
+          "object_id": "109",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            0.6089,
+            -5.0296,
+            1.6985
+          ],
+          "size": [
+            0.9979,
+            0.0405,
+            0.7937
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              0.11,
+              -5.0498,
+              1.3017
+            ],
+            "max": [
+              1.1079,
+              -5.0093,
+              2.0953
+            ]
+          },
+          "size_aabb": [
+            0.9979,
+            0.0405,
+            0.7937
+          ],
+          "bbox_corners": [
+            [
+              0.11,
+              -5.0093,
+              2.0953
+            ],
+            [
+              1.1079,
+              -5.0093,
+              2.0953
+            ],
+            [
+              1.1079,
+              -5.0498,
+              2.0953
+            ],
+            [
+              0.11,
+              -5.0498,
+              2.0953
+            ],
+            [
+              0.11,
+              -5.0093,
+              1.3017
+            ],
+            [
+              1.1079,
+              -5.0093,
+              1.3017
+            ],
+            [
+              1.1079,
+              -5.0498,
+              1.3017
+            ],
+            [
+              0.11,
+              -5.0498,
+              1.3017
+            ]
+          ],
+          "volume": 0.03205
+        },
+        {
+          "object_id": "110",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            0.6089,
+            -4.976,
+            0.9158
+          ],
+          "size": [
+            0.9979,
+            0.0601,
+            0.8208
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              0.11,
+              -5.006,
+              0.5054
+            ],
+            "max": [
+              1.1079,
+              -4.9459,
+              1.3262
+            ]
+          },
+          "size_aabb": [
+            0.9979,
+            0.0601,
+            0.8208
+          ],
+          "bbox_corners": [
+            [
+              0.11,
+              -4.9459,
+              1.3262
+            ],
+            [
+              1.1079,
+              -4.9459,
+              1.3262
+            ],
+            [
+              1.1079,
+              -5.006,
+              1.3262
+            ],
+            [
+              0.11,
+              -5.006,
+              1.3262
+            ],
+            [
+              0.11,
+              -4.9459,
+              0.5054
+            ],
+            [
+              1.1079,
+              -4.9459,
+              0.5054
+            ],
+            [
+              1.1079,
+              -5.006,
+              0.5054
+            ],
+            [
+              0.11,
+              -5.006,
+              0.5054
+            ]
+          ],
+          "volume": 0.04921
+        }
+      ],
+      "distractor_ids": [
+        "10",
+        "17",
+        "20",
+        "28",
+        "46",
+        "8"
+      ],
+      "evidence": "solved from geometry: closest: centre 1.80 m (next 2.30 m); box-gap 1.14 m (next 1.67 m)",
+      "statement": "the picture that is closest to the bookshelf",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_4/p1_img2.png"
+      ],
+      "views": [
+        {
+          "object_id": "30",
+          "role": "target",
+          "frames_visible": 56,
+          "distance_m": 1.65,
+          "px_area": 1802,
+          "occlusion": 0.162,
+          "elevation_deg": -0.8,
+          "stamp": 1785528751.348911,
+          "image": "data/crops/visibility/livingroom_4/30_framed_record.png"
+        },
+        {
+          "object_id": "35",
+          "role": "anchor",
+          "frames_visible": 7,
+          "distance_m": 4.44,
+          "px_area": 3726,
+          "occlusion": 0.276,
+          "elevation_deg": 10.8,
+          "stamp": 1785528750.423858,
+          "image": "data/crops/visibility/livingroom_4/35_window.png"
+        },
+        {
+          "object_id": "36",
+          "role": "anchor",
+          "frames_visible": 444,
+          "distance_m": 4.26,
+          "px_area": 4118,
+          "occlusion": 0.0,
+          "elevation_deg": 1.0,
+          "stamp": 1785528748.533892,
+          "image": "data/crops/visibility/livingroom_4/36_window.png"
+        },
+        {
+          "object_id": "76",
+          "role": "anchor",
+          "frames_visible": 18,
+          "distance_m": 3.51,
+          "px_area": 5810,
+          "occlusion": 0.23,
+          "elevation_deg": 13.5,
+          "stamp": 1785528754.873989,
+          "image": "data/crops/visibility/livingroom_4/76_window.png"
+        },
+        {
+          "object_id": "77",
+          "role": "anchor",
+          "frames_visible": 463,
+          "distance_m": 1.55,
+          "px_area": 27692,
+          "occlusion": 0.0,
+          "elevation_deg": 2.5,
+          "stamp": 1785528748.398895,
+          "image": "data/crops/visibility/livingroom_4/77_window.png"
+        },
+        {
+          "object_id": "101",
+          "role": "anchor",
+          "frames_visible": 1,
+          "distance_m": 5.65,
+          "px_area": 2068,
+          "occlusion": 0.487,
+          "elevation_deg": 8.5,
+          "stamp": 1785528719.973928,
+          "image": "data/crops/visibility/livingroom_4/101_window.png"
+        },
+        {
+          "object_id": "109",
+          "role": "anchor",
+          "frames_visible": 17,
+          "distance_m": 5.44,
+          "px_area": 2420,
+          "occlusion": 0.179,
+          "elevation_deg": 8.9,
+          "stamp": 1785528743.28895,
+          "image": "data/crops/visibility/livingroom_4/109_window.png"
+        },
+        {
+          "object_id": "110",
+          "role": "anchor",
+          "frames_visible": 443,
+          "distance_m": 4.71,
+          "px_area": 3402,
+          "occlusion": 0.084,
+          "elevation_deg": 0.9,
+          "stamp": 1785528786.942558,
+          "image": "data/crops/visibility/livingroom_4/110_window.png"
+        }
+      ],
+      "visibility_warning": [
+        "anchor 102 was never resolved by the robot's camera: occluded"
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='picture' color='' hops=[{'relation': 'closest', 'phrases': ['window']}]",
+        "head candidates: [picture#8, picture#10, picture#17, picture#20, picture#28, picture#30] ...",
+        "target hop (closest): closest: ranked [picture#30, picture#8, picture#46]",
+        "pick: closest: centre 1.80 m (next 2.30 m); box-gap 1.14 m (next 1.67 m)",
+        "result: closest: centre 1.80 m (next 2.30 m); box-gap 1.14 m (next 1.67 m)"
+      ]
+    },
+    {
+      "id": "Q02",
+      "question": "Find the fossil decoration closest to the phone.",
+      "source": "official",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "fossil decoration",
+        "phone"
+      ],
+      "answer": {
+        "object_id": "94",
+        "region": "0",
+        "label": "fossil decoration",
+        "raw_label": "fossil decoration",
+        "nyu_label": "decoration item",
+        "colors": [
+          "gray",
+          "black"
+        ],
+        "center": [
+          1.8715,
+          -0.461,
+          0.8956
+        ],
+        "size": [
+          0.2815,
+          0.1235,
+          0.3091
+        ],
+        "yaw": 1.5759,
+        "aabb": {
+          "min": [
+            1.809,
+            -0.6021,
+            0.741
+          ],
+          "max": [
+            1.9339,
+            -0.3199,
+            1.0501
+          ]
+        },
+        "size_aabb": [
+          0.1249,
+          0.2822,
+          0.3091
+        ],
+        "bbox_corners": [
+          [
+            1.8105,
+            -0.6021,
+            1.0501
+          ],
+          [
+            1.809,
+            -0.3206,
+            1.0501
+          ],
+          [
+            1.9325,
+            -0.3199,
+            1.0501
+          ],
+          [
+            1.9339,
+            -0.6015,
+            1.0501
+          ],
+          [
+            1.8105,
+            -0.6021,
+            0.741
+          ],
+          [
+            1.809,
+            -0.3206,
+            0.741
+          ],
+          [
+            1.9325,
+            -0.3199,
+            0.741
+          ],
+          [
+            1.9339,
+            -0.6015,
+            0.741
+          ]
+        ],
+        "volume": 0.01075
+      },
+      "anchors": [
+        {
+          "object_id": "86",
+          "region": "0",
+          "label": "phone",
+          "raw_label": "phone",
+          "nyu_label": "telephone",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.8705,
+            0.0316,
+            0.7947
+          ],
+          "size": [
+            0.2265,
+            0.1936,
+            0.1094
+          ],
+          "yaw": 1.5825,
+          "aabb": {
+            "min": [
+              1.7724,
+              -0.0827,
+              0.74
+            ],
+            "max": [
+              1.9686,
+              0.146,
+              0.8494
+            ]
+          },
+          "size_aabb": [
+            0.1962,
+            0.2288,
+            0.1094
+          ],
+          "bbox_corners": [
+            [
+              1.775,
+              -0.0827,
+              0.8494
+            ],
+            [
+              1.7724,
+              0.1437,
+              0.8494
+            ],
+            [
+              1.9659,
+              0.146,
+              0.8494
+            ],
+            [
+              1.9686,
+              -0.0805,
+              0.8494
+            ],
+            [
+              1.775,
+              -0.0827,
+              0.74
+            ],
+            [
+              1.7724,
+              0.1437,
+              0.74
+            ],
+            [
+              1.9659,
+              0.146,
+              0.74
+            ],
+            [
+              1.9686,
+              -0.0805,
+              0.74
+            ]
+          ],
+          "volume": 0.0048
+        }
+      ],
+      "distractor_ids": [
+        "64",
+        "82"
+      ],
+      "evidence": "solved from geometry: closest: centre 0.50 m (next 6.05 m); box-gap 0.24 m (next 5.87 m)",
+      "statement": "the decoration item that is closest to the cabinet",
+      "region": "0",
+      "images": [
+        "data/pdf_assets/livingroom_4/p2_img1.png"
+      ],
+      "views": [
+        {
+          "object_id": "94",
+          "role": "target",
+          "frames_visible": 349,
+          "distance_m": 1.75,
+          "px_area": 2805,
+          "occlusion": 0.0,
+          "elevation_deg": 1.5,
+          "stamp": 1785528721.703854,
+          "image": "data/crops/visibility/livingroom_4/94_fossil_decoration.png"
+        },
+        {
+          "object_id": "86",
+          "role": "anchor",
+          "frames_visible": 32,
+          "distance_m": 1.46,
+          "px_area": 1416,
+          "occlusion": 0.0,
+          "elevation_deg": -1.8,
+          "stamp": 1785528722.64386,
+          "image": "data/crops/visibility/livingroom_4/86_phone.png"
+        }
+      ],
+      "verified": true,
+      "solver_trace": [
+        "head='fossil decoration' color='' hops=[{'relation': 'closest', 'phrases': ['phone']}]",
+        "head candidates: [fossil decoration#64, fossil decoration#94]",
+        "target hop (closest): closest: ranked [fossil decoration#94, fossil decoration#64]",
+        "pick: closest: centre 0.50 m (next 6.05 m); box-gap 0.24 m (next 5.87 m)",
+        "result: closest: centre 0.50 m (next 6.05 m); box-gap 0.24 m (next 5.87 m)"
+      ]
+    },
+    {
+      "id": "Q03",
+      "question": "Find the sofa that is between the bookcase and the flowers.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "between",
+      "target_objects": [
+        "sofa",
+        "bookcase",
+        "flowers"
+      ],
+      "answer": {
+        "object_id": "88",
+        "region": "0",
+        "label": "sofa",
+        "raw_label": "sofa",
+        "nyu_label": "sofa",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          -2.366,
+          -1.3525,
+          0.2778
+        ],
+        "size": [
+          0.9768,
+          0.8129,
+          0.5953
+        ],
+        "yaw": -1.8946,
+        "aabb": {
+          "min": [
+            -2.9067,
+            -1.9448,
+            -0.0199
+          ],
+          "max": [
+            -1.8253,
+            -0.7602,
+            0.5754
+          ]
+        },
+        "size_aabb": [
+          1.0814,
+          1.1847,
+          0.5953
+        ],
+        "bbox_corners": [
+          [
+            -1.8253,
+            -1.0188,
+            0.5754
+          ],
+          [
+            -2.1361,
+            -1.9448,
+            0.5754
+          ],
+          [
+            -2.9067,
+            -1.6862,
+            0.5754
+          ],
+          [
+            -2.5959,
+            -0.7602,
+            0.5754
+          ],
+          [
+            -1.8253,
+            -1.0188,
+            -0.0199
+          ],
+          [
+            -2.1361,
+            -1.9448,
+            -0.0199
+          ],
+          [
+            -2.9067,
+            -1.6862,
+            -0.0199
+          ],
+          [
+            -2.5959,
+            -0.7602,
+            -0.0199
+          ]
+        ],
+        "volume": 0.47267
+      },
+      "anchors": [
+        {
+          "object_id": "23",
+          "region": "0",
+          "label": "bookcase",
+          "raw_label": "bookcase",
+          "nyu_label": "bookshelf",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -4.177,
+            0.4961,
+            0.9918
+          ],
+          "size": [
+            1.0392,
+            0.369,
+            2.0086
+          ],
+          "yaw": 1.5683,
+          "aabb": {
+            "min": [
+              -4.3629,
+              -0.024,
+              -0.0125
+            ],
+            "max": [
+              -3.9912,
+              1.0161,
+              1.9961
+            ]
+          },
+          "size_aabb": [
+            0.3716,
+            1.0401,
+            2.0086
+          ],
+          "bbox_corners": [
+            [
+              -4.3629,
+              -0.023,
+              1.9961
+            ],
+            [
+              -4.3602,
+              1.0161,
+              1.9961
+            ],
+            [
+              -3.9912,
+              1.0152,
+              1.9961
+            ],
+            [
+              -3.9938,
+              -0.024,
+              1.9961
+            ],
+            [
+              -4.3629,
+              -0.023,
+              -0.0125
+            ],
+            [
+              -4.3602,
+              1.0161,
+              -0.0125
+            ],
+            [
+              -3.9912,
+              1.0152,
+              -0.0125
+            ],
+            [
+              -3.9938,
+              -0.024,
+              -0.0125
+            ]
+          ],
+          "volume": 0.77023,
+          "phrase": "the bookcase"
+        },
+        {
+          "object_id": "42",
+          "region": "0",
+          "label": "flowers",
+          "raw_label": "flowers",
+          "nyu_label": "flower",
+          "colors": [
+            "red",
+            "olive",
+            "pink"
+          ],
+          "center": [
+            -1.1565,
+            -1.9711,
+            0.8569
+          ],
+          "size": [
+            0.2749,
+            0.1877,
+            0.4193
+          ],
+          "yaw": -2.6052,
+          "aabb": {
+            "min": [
+              -1.3226,
+              -2.122,
+              0.6473
+            ],
+            "max": [
+              -0.9904,
+              -1.8202,
+              1.0666
+            ]
+          },
+          "size_aabb": [
+            0.3322,
+            0.3018,
+            0.4193
+          ],
+          "bbox_corners": [
+            [
+              -0.9904,
+              -1.9815,
+              1.0666
+            ],
+            [
+              -1.2266,
+              -2.122,
+              1.0666
+            ],
+            [
+              -1.3226,
+              -1.9607,
+              1.0666
+            ],
+            [
+              -1.0863,
+              -1.8202,
+              1.0666
+            ],
+            [
+              -0.9904,
+              -1.9815,
+              0.6473
+            ],
+            [
+              -1.2266,
+              -2.122,
+              0.6473
+            ],
+            [
+              -1.3226,
+              -1.9607,
+              0.6473
+            ],
+            [
+              -1.0863,
+              -1.8202,
+              0.6473
+            ]
+          ],
+          "volume": 0.02163,
+          "phrase": "the flowers"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 2,
+      "evidence": "between: between bookcase#23 and flowers#42 (lateral offset 0.29 m)",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "88",
+          "role": "target",
+          "frames_visible": 281,
+          "distance_m": 0.35,
+          "px_area": 112038,
+          "occlusion": 0.0,
+          "elevation_deg": -33.6,
+          "stamp": 1785528748.398895,
+          "image": "data/crops/visibility/livingroom_4/88_couch.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 494,
+          "distance_m": 1.18,
+          "px_area": 88102,
+          "occlusion": 0.0,
+          "elevation_deg": 5.4,
+          "stamp": 1785528751.218938,
+          "image": "data/crops/visibility/livingroom_4/23_bookcase.png"
+        },
+        {
+          "object_id": "42",
+          "role": "anchor",
+          "frames_visible": 410,
+          "distance_m": 1.61,
+          "px_area": 5185,
+          "occlusion": 0.0,
+          "elevation_deg": 0.5,
+          "stamp": 1785528778.253391,
+          "image": "data/crops/visibility/livingroom_4/42_flowers.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q04",
+      "question": "Find the fossil decoration inside the bookcase.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "in",
+      "target_objects": [
+        "fossil decoration",
+        "bookcase"
+      ],
+      "answer": {
+        "object_id": "64",
+        "region": "0",
+        "label": "fossil decoration",
+        "raw_label": "fossil decoration",
+        "nyu_label": "decoration item",
+        "colors": [
+          "brown",
+          "black"
+        ],
+        "center": [
+          -4.148,
+          0.3158,
+          1.332
+        ],
+        "size": [
+          0.3141,
+          0.1023,
+          0.3639
+        ],
+        "yaw": -1.5379,
+        "aabb": {
+          "min": [
+            -4.2043,
+            0.1572,
+            1.15
+          ],
+          "max": [
+            -4.0917,
+            0.4745,
+            1.5139
+          ]
+        },
+        "size_aabb": [
+          0.1126,
+          0.3173,
+          0.3639
+        ],
+        "bbox_corners": [
+          [
+            -4.1021,
+            0.4745,
+            1.5139
+          ],
+          [
+            -4.0917,
+            0.1606,
+            1.5139
+          ],
+          [
+            -4.1939,
+            0.1572,
+            1.5139
+          ],
+          [
+            -4.2043,
+            0.4711,
+            1.5139
+          ],
+          [
+            -4.1021,
+            0.4745,
+            1.15
+          ],
+          [
+            -4.0917,
+            0.1606,
+            1.15
+          ],
+          [
+            -4.1939,
+            0.1572,
+            1.15
+          ],
+          [
+            -4.2043,
+            0.4711,
+            1.15
+          ]
+        ],
+        "volume": 0.01169
+      },
+      "anchors": [
+        {
+          "object_id": "23",
+          "region": "0",
+          "label": "bookcase",
+          "raw_label": "bookcase",
+          "nyu_label": "bookshelf",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            -4.177,
+            0.4961,
+            0.9918
+          ],
+          "size": [
+            1.0392,
+            0.369,
+            2.0086
+          ],
+          "yaw": 1.5683,
+          "aabb": {
+            "min": [
+              -4.3629,
+              -0.024,
+              -0.0125
+            ],
+            "max": [
+              -3.9912,
+              1.0161,
+              1.9961
+            ]
+          },
+          "size_aabb": [
+            0.3716,
+            1.0401,
+            2.0086
+          ],
+          "bbox_corners": [
+            [
+              -4.3629,
+              -0.023,
+              1.9961
+            ],
+            [
+              -4.3602,
+              1.0161,
+              1.9961
+            ],
+            [
+              -3.9912,
+              1.0152,
+              1.9961
+            ],
+            [
+              -3.9938,
+              -0.024,
+              1.9961
+            ],
+            [
+              -4.3629,
+              -0.023,
+              -0.0125
+            ],
+            [
+              -4.3602,
+              1.0161,
+              -0.0125
+            ],
+            [
+              -3.9912,
+              1.0152,
+              -0.0125
+            ],
+            [
+              -3.9938,
+              -0.024,
+              -0.0125
+            ]
+          ],
+          "volume": 0.77023,
+          "phrase": "the bookcase"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "in: inside bookcase#23: base 1.15 m sits 0.85 m below its rim",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "64",
+          "role": "target",
+          "frames_visible": 364,
+          "distance_m": 1.32,
+          "px_area": 5695,
+          "occlusion": 0.0,
+          "elevation_deg": 18.7,
+          "stamp": 1785528751.218938,
+          "image": "data/crops/visibility/livingroom_4/64_fossil_decoration.png"
+        },
+        {
+          "object_id": "23",
+          "role": "anchor",
+          "frames_visible": 494,
+          "distance_m": 1.18,
+          "px_area": 88102,
+          "occlusion": 0.0,
+          "elevation_deg": 5.4,
+          "stamp": 1785528751.218938,
+          "image": "data/crops/visibility/livingroom_4/23_bookcase.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q05",
+      "question": "Find the table with the vase on it.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "supports",
+      "target_objects": [
+        "table",
+        "vase"
+      ],
+      "answer": {
+        "object_id": "67",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "aqua"
+        ],
+        "center": [
+          -1.172,
+          -1.989,
+          0.2284
+        ],
+        "size": [
+          1.3765,
+          0.7328,
+          0.4942
+        ],
+        "yaw": 1.5708,
+        "aabb": {
+          "min": [
+            -1.5384,
+            -2.6772,
+            -0.0187
+          ],
+          "max": [
+            -0.8056,
+            -1.3007,
+            0.4755
+          ]
+        },
+        "size_aabb": [
+          0.7328,
+          1.3765,
+          0.4942
+        ],
+        "bbox_corners": [
+          [
+            -1.5384,
+            -2.6772,
+            0.4755
+          ],
+          [
+            -1.5384,
+            -1.3007,
+            0.4755
+          ],
+          [
+            -0.8056,
+            -1.3007,
+            0.4755
+          ],
+          [
+            -0.8056,
+            -2.6772,
+            0.4755
+          ],
+          [
+            -1.5384,
+            -2.6772,
+            -0.0187
+          ],
+          [
+            -1.5384,
+            -1.3007,
+            -0.0187
+          ],
+          [
+            -0.8056,
+            -1.3007,
+            -0.0187
+          ],
+          [
+            -0.8056,
+            -2.6772,
+            -0.0187
+          ]
+        ],
+        "volume": 0.49852
+      },
+      "anchors": [
+        {
+          "object_id": "89",
+          "region": "0",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.1607,
+            -2.0015,
+            0.6173
+          ],
+          "size": [
+            0.1516,
+            0.1514,
+            0.2846
+          ],
+          "yaw": -1.3756,
+          "aabb": {
+            "min": [
+              -1.2496,
+              -2.0905,
+              0.475
+            ],
+            "max": [
+              -1.0717,
+              -1.9125,
+              0.7596
+            ]
+          },
+          "size_aabb": [
+            0.1779,
+            0.1781,
+            0.2846
+          ],
+          "bbox_corners": [
+            [
+              -1.1011,
+              -1.9125,
+              0.7596
+            ],
+            [
+              -1.0717,
+              -2.0612,
+              0.7596
+            ],
+            [
+              -1.2203,
+              -2.0905,
+              0.7596
+            ],
+            [
+              -1.2496,
+              -1.9418,
+              0.7596
+            ],
+            [
+              -1.1011,
+              -1.9125,
+              0.475
+            ],
+            [
+              -1.0717,
+              -2.0612,
+              0.475
+            ],
+            [
+              -1.2203,
+              -2.0905,
+              0.475
+            ],
+            [
+              -1.2496,
+              -1.9418,
+              0.475
+            ]
+          ],
+          "volume": 0.00653,
+          "phrase": "the vase"
+        }
+      ],
+      "distractor_ids": [],
+      "competitors": 1,
+      "evidence": "supports: holds vase#89 (top 0.48 m, its underside 0.48 m)",
+      "statement": "",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "67",
+          "role": "target",
+          "frames_visible": 390,
+          "distance_m": 0.98,
+          "px_area": 37648,
+          "occlusion": 0.0,
+          "elevation_deg": -20.1,
+          "stamp": 1785528784.02257,
+          "image": "data/crops/visibility/livingroom_4/67_table.png"
+        },
+        {
+          "object_id": "89",
+          "role": "anchor",
+          "frames_visible": 354,
+          "distance_m": 1.62,
+          "px_area": 2128,
+          "occlusion": 0.0,
+          "elevation_deg": -7.6,
+          "stamp": 1785528787.012662,
+          "image": "data/crops/visibility/livingroom_4/89_vase.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "geometry"
+    },
+    {
+      "id": "Q06",
+      "question": "Find the lamp that is near the flowers.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "near",
+      "target_objects": [
+        "lamp",
+        "flowers"
+      ],
+      "answer": {
+        "object_id": "6",
+        "region": "0",
+        "label": "lamp",
+        "raw_label": "lamp",
+        "nyu_label": "lamp",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          -1.159,
+          -2.1319,
+          2.2773
+        ],
+        "size": [
+          0.7681,
+          0.6794,
+          0.9795
+        ],
+        "yaw": -1.0488,
+        "aabb": {
+          "min": [
+            -1.645,
+            -2.6341,
+            1.7875
+          ],
+          "max": [
+            -0.6731,
+            -1.6296,
+            2.767
+          ]
+        },
+        "size_aabb": [
+          0.9719,
+          1.0046,
+          0.9795
+        ],
+        "bbox_corners": [
+          [
+            -1.056,
+            -1.6296,
+            2.767
+          ],
+          [
+            -0.6731,
+            -2.2954,
+            2.767
+          ],
+          [
+            -1.262,
+            -2.6341,
+            2.767
+          ],
+          [
+            -1.645,
+            -1.9684,
+            2.767
+          ],
+          [
+            -1.056,
+            -1.6296,
+            1.7875
+          ],
+          [
+            -0.6731,
+            -2.2954,
+            1.7875
+          ],
+          [
+            -1.262,
+            -2.6341,
+            1.7875
+          ],
+          [
+            -1.645,
+            -1.9684,
+            1.7875
+          ]
+        ],
+        "volume": 0.51112
+      },
+      "anchors": [
+        {
+          "object_id": "42",
+          "region": "0",
+          "label": "flowers",
+          "raw_label": "flowers",
+          "nyu_label": "flower",
+          "colors": [
+            "red",
+            "olive",
+            "pink"
+          ],
+          "center": [
+            -1.1565,
+            -1.9711,
+            0.8569
+          ],
+          "size": [
+            0.2749,
+            0.1877,
+            0.4193
+          ],
+          "yaw": -2.6052,
+          "aabb": {
+            "min": [
+              -1.3226,
+              -2.122,
+              0.6473
+            ],
+            "max": [
+              -0.9904,
+              -1.8202,
+              1.0666
+            ]
+          },
+          "size_aabb": [
+            0.3322,
+            0.3018,
+            0.4193
+          ],
+          "bbox_corners": [
+            [
+              -0.9904,
+              -1.9815,
+              1.0666
+            ],
+            [
+              -1.2266,
+              -2.122,
+              1.0666
+            ],
+            [
+              -1.3226,
+              -1.9607,
+              1.0666
+            ],
+            [
+              -1.0863,
+              -1.8202,
+              1.0666
+            ],
+            [
+              -0.9904,
+              -1.9815,
+              0.6473
+            ],
+            [
+              -1.2266,
+              -2.122,
+              0.6473
+            ],
+            [
+              -1.3226,
+              -1.9607,
+              0.6473
+            ],
+            [
+              -1.0863,
+              -1.8202,
+              0.6473
+            ]
+          ],
+          "volume": 0.02163,
+          "phrase": "the flowers"
+        }
+      ],
+      "distractor_ids": [
+        "3",
+        "57"
+      ],
+      "competitors": 2,
+      "margin": 2.284,
+      "evidence": "near: box-gap 0.72 m; next lamp is 3.01 m away",
+      "statement": "the lamp that is near the flower",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "6",
+          "role": "target",
+          "frames_visible": 484,
+          "distance_m": 1.67,
+          "px_area": 30600,
+          "occlusion": 0.0,
+          "elevation_deg": 38.3,
+          "stamp": 1785528785.882603,
+          "image": "data/crops/visibility/livingroom_4/6_lamp.png"
+        },
+        {
+          "object_id": "42",
+          "role": "anchor",
+          "frames_visible": 410,
+          "distance_m": 1.61,
+          "px_area": 5185,
+          "occlusion": 0.0,
+          "elevation_deg": 0.5,
+          "stamp": 1785528778.253391,
+          "image": "data/crops/visibility/livingroom_4/42_flowers.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q07",
+      "question": "Find the table that is farthest from the firewood.",
+      "source": "generated",
+      "difficulty": "easy",
+      "relation": "farthest",
+      "target_objects": [
+        "table",
+        "firewood"
+      ],
+      "answer": {
+        "object_id": "62",
+        "region": "0",
+        "label": "table",
+        "raw_label": "table",
+        "nyu_label": "table",
+        "colors": [
+          "aqua",
+          "black"
+        ],
+        "center": [
+          -1.977,
+          1.356,
+          0.3823
+        ],
+        "size": [
+          0.85,
+          1.6033,
+          0.8001
+        ],
+        "yaw": 1.5708,
+        "aabb": {
+          "min": [
+            -2.7786,
+            0.931,
+            -0.0178
+          ],
+          "max": [
+            -1.1754,
+            1.781,
+            0.7823
+          ]
+        },
+        "size_aabb": [
+          1.6033,
+          0.85,
+          0.8001
+        ],
+        "bbox_corners": [
+          [
+            -2.7786,
+            0.931,
+            0.7823
+          ],
+          [
+            -2.7786,
+            1.781,
+            0.7823
+          ],
+          [
+            -1.1754,
+            1.781,
+            0.7823
+          ],
+          [
+            -1.1754,
+            0.931,
+            0.7823
+          ],
+          [
+            -2.7786,
+            0.931,
+            -0.0178
+          ],
+          [
+            -2.7786,
+            1.781,
+            -0.0178
+          ],
+          [
+            -1.1754,
+            1.781,
+            -0.0178
+          ],
+          [
+            -1.1754,
+            0.931,
+            -0.0178
+          ]
+        ],
+        "volume": 1.0903
+      },
+      "anchors": [
+        {
+          "object_id": "29",
+          "region": "0",
+          "label": "firewood",
+          "raw_label": "firewood",
+          "nyu_label": "piece of wood",
+          "colors": [
+            "gray",
+            "aqua",
+            "black"
+          ],
+          "center": [
+            -1.2216,
+            -4.5101,
+            0.2506
+          ],
+          "size": [
+            0.6024,
+            0.3031,
+            0.255
+          ],
+          "yaw": -3.0839,
+          "aabb": {
+            "min": [
+              -1.5311,
+              -4.6787,
+              0.123
+            ],
+            "max": [
+              -0.9122,
+              -4.3414,
+              0.3781
+            ]
+          },
+          "size_aabb": [
+            0.6189,
+            0.3374,
+            0.255
+          ],
+          "bbox_corners": [
+            [
+              -0.9122,
+              -4.644,
+              0.3781
+            ],
+            [
+              -1.5136,
+              -4.6787,
+              0.3781
+            ],
+            [
+              -1.5311,
+              -4.3761,
+              0.3781
+            ],
+            [
+              -0.9297,
+              -4.3414,
+              0.3781
+            ],
+            [
+              -0.9122,
+              -4.644,
+              0.123
+            ],
+            [
+              -1.5136,
+              -4.6787,
+              0.123
+            ],
+            [
+              -1.5311,
+              -4.3761,
+              0.123
+            ],
+            [
+              -0.9297,
+              -4.3414,
+              0.123
+            ]
+          ],
+          "volume": 0.04657,
+          "phrase": "the firewood"
+        }
+      ],
+      "distractor_ids": [
+        "67"
+      ],
+      "competitors": 1,
+      "margin": 3.394,
+      "evidence": "farthest: centre 5.92 m vs runner-up table#67 2.52 m; box-gap 5.27 m vs runner-up table#67 1.66 m",
+      "statement": "the table that is farthest from the piece of wood",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "62",
+          "role": "target",
+          "frames_visible": 492,
+          "distance_m": 0.92,
+          "px_area": 84376,
+          "occlusion": 0.402,
+          "elevation_deg": -18.0,
+          "stamp": 1785528746.093928,
+          "image": "data/crops/visibility/livingroom_4/62_table.png"
+        },
+        {
+          "object_id": "29",
+          "role": "anchor",
+          "frames_visible": 221,
+          "distance_m": 4.27,
+          "px_area": 1056,
+          "occlusion": 0.5,
+          "elevation_deg": -8.1,
+          "stamp": 1785528779.507586,
+          "image": "data/crops/visibility/livingroom_4/29_firewood.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q08",
+      "question": "Find the curtain that is farthest from the clock.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "farthest",
+      "target_objects": [
+        "curtain",
+        "clock"
+      ],
+      "answer": {
+        "object_id": "18",
+        "region": "0",
+        "label": "curtain",
+        "raw_label": "curtain",
+        "nyu_label": "curtain",
+        "colors": [
+          "maroon",
+          "aqua"
+        ],
+        "center": [
+          -4.2669,
+          -1.3383,
+          1.1813
+        ],
+        "size": [
+          1.3785,
+          0.2373,
+          2.3674
+        ],
+        "yaw": -1.5721,
+        "aabb": {
+          "min": [
+            -4.3864,
+            -2.0277,
+            -0.0024
+          ],
+          "max": [
+            -4.1473,
+            -0.649,
+            2.365
+          ]
+        },
+        "size_aabb": [
+          0.2391,
+          1.3788,
+          2.3674
+        ],
+        "bbox_corners": [
+          [
+            -4.1473,
+            -0.6493,
+            2.365
+          ],
+          [
+            -4.1491,
+            -2.0277,
+            2.365
+          ],
+          [
+            -4.3864,
+            -2.0274,
+            2.365
+          ],
+          [
+            -4.3847,
+            -0.649,
+            2.365
+          ],
+          [
+            -4.1473,
+            -0.6493,
+            -0.0024
+          ],
+          [
+            -4.1491,
+            -2.0277,
+            -0.0024
+          ],
+          [
+            -4.3864,
+            -2.0274,
+            -0.0024
+          ],
+          [
+            -4.3847,
+            -0.649,
+            -0.0024
+          ]
+        ],
+        "volume": 0.77449
+      },
+      "anchors": [
+        {
+          "object_id": "69",
+          "region": "0",
+          "label": "clock",
+          "raw_label": "clock",
+          "nyu_label": "clock",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            -1.2301,
+            -4.4525,
+            1.7629
+          ],
+          "size": [
+            0.5101,
+            0.0399,
+            0.5111
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -1.4852,
+              -4.4725,
+              1.5074
+            ],
+            "max": [
+              -0.9751,
+              -4.4326,
+              2.0185
+            ]
+          },
+          "size_aabb": [
+            0.5101,
+            0.0399,
+            0.5111
+          ],
+          "bbox_corners": [
+            [
+              -0.9751,
+              -4.4725,
+              2.0185
+            ],
+            [
+              -1.4852,
+              -4.4725,
+              2.0185
+            ],
+            [
+              -1.4852,
+              -4.4326,
+              2.0185
+            ],
+            [
+              -0.9751,
+              -4.4326,
+              2.0185
+            ],
+            [
+              -0.9751,
+              -4.4725,
+              1.5074
+            ],
+            [
+              -1.4852,
+              -4.4725,
+              1.5074
+            ],
+            [
+              -1.4852,
+              -4.4326,
+              1.5074
+            ],
+            [
+              -0.9751,
+              -4.4326,
+              1.5074
+            ]
+          ],
+          "volume": 0.01039,
+          "phrase": "the clock"
+        }
+      ],
+      "distractor_ids": [
+        "1",
+        "31",
+        "40"
+      ],
+      "competitors": 3,
+      "margin": 0.906,
+      "evidence": "farthest: centre 4.39 m vs runner-up curtain#1 3.26 m; box-gap 3.59 m vs runner-up curtain#1 2.68 m",
+      "statement": "the curtain that is farthest from the clock",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "18",
+          "role": "target",
+          "frames_visible": 500,
+          "distance_m": 1.3,
+          "px_area": 121562,
+          "occlusion": 0.0,
+          "elevation_deg": 12.8,
+          "stamp": 1785528748.398895,
+          "image": "data/crops/visibility/livingroom_4/18_curtain.png"
+        },
+        {
+          "object_id": "69",
+          "role": "anchor",
+          "frames_visible": 415,
+          "distance_m": 4.1,
+          "px_area": 1482,
+          "occlusion": 0.0,
+          "elevation_deg": 12.6,
+          "stamp": 1785528767.736938,
+          "image": "data/crops/visibility/livingroom_4/69_clock.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q09",
+      "question": "Find the potted plant that is farthest from the vase.",
+      "source": "generated",
+      "difficulty": "hard",
+      "relation": "farthest",
+      "target_objects": [
+        "potted plant",
+        "vase"
+      ],
+      "answer": {
+        "object_id": "11",
+        "region": "0",
+        "label": "potted plant",
+        "raw_label": "potted plant",
+        "nyu_label": "plant",
+        "colors": [
+          "olive",
+          "gray"
+        ],
+        "center": [
+          -3.9437,
+          2.3174,
+          0.7485
+        ],
+        "size": [
+          0.9632,
+          0.3438,
+          1.4885
+        ],
+        "yaw": -2.3484,
+        "aabb": {
+          "min": [
+            -4.4041,
+            1.8536,
+            0.0043
+          ],
+          "max": [
+            -3.4833,
+            2.7812,
+            1.4928
+          ]
+        },
+        "size_aabb": [
+          0.9208,
+          0.9276,
+          1.4885
+        ],
+        "bbox_corners": [
+          [
+            -3.4833,
+            2.54,
+            1.4928
+          ],
+          [
+            -4.1591,
+            1.8536,
+            1.4928
+          ],
+          [
+            -4.4041,
+            2.0949,
+            1.4928
+          ],
+          [
+            -3.7283,
+            2.7812,
+            1.4928
+          ],
+          [
+            -3.4833,
+            2.54,
+            0.0043
+          ],
+          [
+            -4.1591,
+            1.8536,
+            0.0043
+          ],
+          [
+            -4.4041,
+            2.0949,
+            0.0043
+          ],
+          [
+            -3.7283,
+            2.7812,
+            0.0043
+          ]
+        ],
+        "volume": 0.49297
+      },
+      "anchors": [
+        {
+          "object_id": "89",
+          "region": "0",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -1.1607,
+            -2.0015,
+            0.6173
+          ],
+          "size": [
+            0.1516,
+            0.1514,
+            0.2846
+          ],
+          "yaw": -1.3756,
+          "aabb": {
+            "min": [
+              -1.2496,
+              -2.0905,
+              0.475
+            ],
+            "max": [
+              -1.0717,
+              -1.9125,
+              0.7596
+            ]
+          },
+          "size_aabb": [
+            0.1779,
+            0.1781,
+            0.2846
+          ],
+          "bbox_corners": [
+            [
+              -1.1011,
+              -1.9125,
+              0.7596
+            ],
+            [
+              -1.0717,
+              -2.0612,
+              0.7596
+            ],
+            [
+              -1.2203,
+              -2.0905,
+              0.7596
+            ],
+            [
+              -1.2496,
+              -1.9418,
+              0.7596
+            ],
+            [
+              -1.1011,
+              -1.9125,
+              0.475
+            ],
+            [
+              -1.0717,
+              -2.0612,
+              0.475
+            ],
+            [
+              -1.2203,
+              -2.0905,
+              0.475
+            ],
+            [
+              -1.2496,
+              -1.9418,
+              0.475
+            ]
+          ],
+          "volume": 0.00653,
+          "phrase": "the vase"
+        }
+      ],
+      "distractor_ids": [
+        "27",
+        "38",
+        "5",
+        "56"
+      ],
+      "competitors": 4,
+      "margin": 0.665,
+      "evidence": "farthest: centre 5.14 m vs runner-up potted plant#27 4.05 m; box-gap 4.38 m vs runner-up potted plant#27 3.71 m",
+      "statement": "the plant that is farthest from the vase",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "11",
+          "role": "target",
+          "frames_visible": 127,
+          "distance_m": 2.81,
+          "px_area": 18297,
+          "occlusion": 0.119,
+          "elevation_deg": -1.9,
+          "stamp": 1785528751.348911,
+          "image": "data/crops/visibility/livingroom_4/11_plant.png"
+        },
+        {
+          "object_id": "89",
+          "role": "anchor",
+          "frames_visible": 354,
+          "distance_m": 1.62,
+          "px_area": 2128,
+          "occlusion": 0.0,
+          "elevation_deg": -7.6,
+          "stamp": 1785528787.012662,
+          "image": "data/crops/visibility/livingroom_4/89_vase.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    },
+    {
+      "id": "Q10",
+      "question": "Find the sofa that is closest to the mirror.",
+      "source": "generated",
+      "difficulty": "medium",
+      "relation": "closest",
+      "target_objects": [
+        "sofa",
+        "mirror"
+      ],
+      "answer": {
+        "object_id": "49",
+        "region": "0",
+        "label": "sofa",
+        "raw_label": "sofa",
+        "nyu_label": "sofa",
+        "colors": [
+          "gray"
+        ],
+        "center": [
+          0.2292,
+          -2.0091,
+          0.3934
+        ],
+        "size": [
+          2.1928,
+          0.8878,
+          0.8127
+        ],
+        "yaw": -1.5711,
+        "aabb": {
+          "min": [
+            -0.215,
+            -3.1057,
+            -0.0129
+          ],
+          "max": [
+            0.6735,
+            -0.9126,
+            0.7997
+          ]
+        },
+        "size_aabb": [
+          0.8885,
+          2.1931,
+          0.8127
+        ],
+        "bbox_corners": [
+          [
+            0.6735,
+            -0.9128,
+            0.7997
+          ],
+          [
+            0.6728,
+            -3.1057,
+            0.7997
+          ],
+          [
+            -0.215,
+            -3.1054,
+            0.7997
+          ],
+          [
+            -0.2143,
+            -0.9126,
+            0.7997
+          ],
+          [
+            0.6735,
+            -0.9128,
+            -0.0129
+          ],
+          [
+            0.6728,
+            -3.1057,
+            -0.0129
+          ],
+          [
+            -0.215,
+            -3.1054,
+            -0.0129
+          ],
+          [
+            -0.2143,
+            -0.9126,
+            -0.0129
+          ]
+        ],
+        "volume": 1.58206
+      },
+      "anchors": [
+        {
+          "object_id": "7",
+          "region": "0",
+          "label": "mirror",
+          "raw_label": "mirror",
+          "nyu_label": "mirror",
+          "colors": [
+            "brown",
+            "yellow",
+            "black"
+          ],
+          "center": [
+            2.07,
+            -0.205,
+            1.3687
+          ],
+          "size": [
+            0.6497,
+            0.0306,
+            0.7394
+          ],
+          "yaw": 1.5337,
+          "aabb": {
+            "min": [
+              2.0427,
+              -0.5302,
+              0.999
+            ],
+            "max": [
+              2.0973,
+              0.1202,
+              1.7385
+            ]
+          },
+          "size_aabb": [
+            0.0546,
+            0.6503,
+            0.7394
+          ],
+          "bbox_corners": [
+            [
+              2.0427,
+              -0.529,
+              1.7385
+            ],
+            [
+              2.0668,
+              0.1202,
+              1.7385
+            ],
+            [
+              2.0973,
+              0.119,
+              1.7385
+            ],
+            [
+              2.0732,
+              -0.5302,
+              1.7385
+            ],
+            [
+              2.0427,
+              -0.529,
+              0.999
+            ],
+            [
+              2.0668,
+              0.1202,
+              0.999
+            ],
+            [
+              2.0973,
+              0.119,
+              0.999
+            ],
+            [
+              2.0732,
+              -0.5302,
+              0.999
+            ]
+          ],
+          "volume": 0.01469,
+          "phrase": "the mirror"
+        }
+      ],
+      "distractor_ids": [
+        "51",
+        "88"
+      ],
+      "competitors": 2,
+      "margin": 1.954,
+      "evidence": "closest: centre 2.76 m vs runner-up sofa#88 4.71 m; box-gap 1.44 m vs runner-up sofa#88 3.90 m",
+      "statement": "the sofa that is closest to the mirror",
+      "region": "0",
+      "views": [
+        {
+          "object_id": "49",
+          "role": "target",
+          "frames_visible": 450,
+          "distance_m": 0.86,
+          "px_area": 78740,
+          "occlusion": 0.0,
+          "elevation_deg": -13.3,
+          "stamp": 1785528784.02257,
+          "image": "data/crops/visibility/livingroom_4/49_couch.png"
+        },
+        {
+          "object_id": "7",
+          "role": "anchor",
+          "frames_visible": 509,
+          "distance_m": 1.73,
+          "px_area": 12054,
+          "occlusion": 0.0,
+          "elevation_deg": 15.7,
+          "stamp": 1785528722.103857,
+          "image": "data/crops/visibility/livingroom_4/7_mirror.png"
+        }
+      ],
+      "verified": true,
+      "derivation": "statement"
+    }
+  ]
+}

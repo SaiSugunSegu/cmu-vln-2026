@@ -13,6 +13,8 @@ data/bags/*
 data/crops/
 data/captions/
 data/runs/
+# regenerate with: just pdf-assets
+data/pdf_assets/
 
 *.ply
 *.onnx
@@ -47,4 +49,7 @@ __pycache__/
 ai_module/build/
 ai_module/install/
 ai_module/log/
+
+# Recorded scenes and their IRef-VLA metadata, too big to track. Nothing here is source:
+# the tools that read it live in scripts/bench and scripts/utils.
 bags/

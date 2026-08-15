@@ -1,0 +1,2772 @@
+{
+  "scene": "chinese_room",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 104,
+  "objects": {
+    "0": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.43,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1378,
+          195,
+          1394,
+          202
+        ],
+        "px_bbox_unwrapped": [
+          1378,
+          195,
+          1394,
+          202
+        ],
+        "px_area": 112,
+        "px_area_frac": 9e-05,
+        "distance_m": 4.11,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527177.494915,
+        "frame": 70,
+        "elevation_deg": 22.7
+      }
+    },
+    "1": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.09,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          265,
+          47,
+          298,
+          65
+        ],
+        "px_bbox_unwrapped": [
+          265,
+          47,
+          298,
+          65
+        ],
+        "px_area": 594,
+        "px_area_frac": 0.00048,
+        "distance_m": 1.53,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527176.969997,
+        "frame": 66,
+        "elevation_deg": 49.7
+      }
+    },
+    "2": {
+      "label": "painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 38,
+      "min_range_m": 4.36,
+      "best_view": {
+        "n_points": 138,
+        "px_bbox": [
+          1614,
+          227,
+          1645,
+          304
+        ],
+        "px_bbox_unwrapped": [
+          1614,
+          227,
+          1645,
+          304
+        ],
+        "px_area": 2387,
+        "px_area_frac": 0.00194,
+        "distance_m": 3.97,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 10.0
+      },
+      "view_image": "data/crops/visibility/chinese_room/2_framed_record.png"
+    },
+    "3": {
+      "label": "elephant figurine",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 9,
+      "min_range_m": 2.19,
+      "best_view": {
+        "n_points": 77,
+        "px_bbox": [
+          1430,
+          346,
+          1483,
+          393
+        ],
+        "px_bbox_unwrapped": [
+          1430,
+          346,
+          1483,
+          393
+        ],
+        "px_area": 2491,
+        "px_area_frac": 0.00203,
+        "distance_m": 2.11,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": -9.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/3_elephant_figurine.png"
+    },
+    "4": {
+      "label": "tablecloth",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 58,
+      "min_range_m": 1.36,
+      "best_view": {
+        "n_points": 312,
+        "px_bbox": [
+          1318,
+          329,
+          1549,
+          381
+        ],
+        "px_bbox_unwrapped": [
+          1318,
+          329,
+          1549,
+          381
+        ],
+        "px_area": 12012,
+        "px_area_frac": 0.00978,
+        "distance_m": 0.84,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527176.360012,
+        "frame": 62,
+        "elevation_deg": -4.8
+      },
+      "view_image": "data/crops/visibility/chinese_room/4_tablecloth.png"
+    },
+    "5": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.82,
+      "best_view": {
+        "n_points": 70,
+        "px_bbox": [
+          105,
+          99,
+          133,
+          115
+        ],
+        "px_bbox_unwrapped": [
+          105,
+          99,
+          133,
+          115
+        ],
+        "px_area": 448,
+        "px_area_frac": 0.00036,
+        "distance_m": 1.99,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 40.0
+      }
+    },
+    "6": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 2,
+      "min_range_m": 2.22,
+      "best_view": {
+        "n_points": 18,
+        "px_bbox": [
+          1712,
+          22,
+          1757,
+          45
+        ],
+        "px_bbox_unwrapped": [
+          1712,
+          22,
+          1757,
+          45
+        ],
+        "px_area": 1035,
+        "px_area_frac": 0.00084,
+        "distance_m": 1.35,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527180.449974,
+        "frame": 91,
+        "elevation_deg": 53.9
+      },
+      "view_image": "data/crops/visibility/chinese_room/6_focus_light.png"
+    },
+    "7": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.81,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          1561,
+          202,
+          1574,
+          208
+        ],
+        "px_bbox_unwrapped": [
+          1561,
+          202,
+          1574,
+          208
+        ],
+        "px_area": 78,
+        "px_area_frac": 6e-05,
+        "distance_m": 4.33,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.279975,
+        "frame": 5,
+        "elevation_deg": 21.6
+      }
+    },
+    "8": {
+      "label": "painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 1.59,
+      "best_view": {
+        "n_points": 2008,
+        "px_bbox": [
+          457,
+          89,
+          581,
+          303
+        ],
+        "px_bbox_unwrapped": [
+          457,
+          89,
+          581,
+          303
+        ],
+        "px_area": 26536,
+        "px_area_frac": 0.0216,
+        "distance_m": 1.33,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527171.109988,
+        "frame": 25,
+        "elevation_deg": 25.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/8_framed_record.png"
+    },
+    "9": {
+      "label": "painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 1.44,
+      "best_view": {
+        "n_points": 2507,
+        "px_bbox": [
+          427,
+          71,
+          568,
+          302
+        ],
+        "px_bbox_unwrapped": [
+          427,
+          71,
+          568,
+          302
+        ],
+        "px_area": 32571,
+        "px_area_frac": 0.02651,
+        "distance_m": 1.17,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527171.839983,
+        "frame": 30,
+        "elevation_deg": 28.1
+      },
+      "view_image": "data/crops/visibility/chinese_room/9_framed_record.png"
+    },
+    "10": {
+      "label": "painting",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 1.34,
+      "best_view": {
+        "n_points": 2340,
+        "px_bbox": [
+          430,
+          59,
+          589,
+          301
+        ],
+        "px_bbox_unwrapped": [
+          430,
+          59,
+          589,
+          301
+        ],
+        "px_area": 38478,
+        "px_area_frac": 0.03131,
+        "distance_m": 1.07,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527172.434958,
+        "frame": 34,
+        "elevation_deg": 30.9
+      },
+      "view_image": "data/crops/visibility/chinese_room/10_framed_record.png"
+    },
+    "11": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 1.53,
+      "best_view": {
+        "n_points": 8410,
+        "px_bbox": [
+          777,
+          90,
+          1495,
+          452
+        ],
+        "px_bbox_unwrapped": [
+          777,
+          90,
+          1495,
+          452
+        ],
+        "px_area": 259916,
+        "px_area_frac": 0.21152,
+        "distance_m": 1.26,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527182.134938,
+        "frame": 103,
+        "elevation_deg": 8.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/11_wall.png"
+    },
+    "12": {
+      "label": "wall",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 64,
+      "min_range_m": 1.47,
+      "best_view": {
+        "n_points": 2613,
+        "px_bbox": [
+          1191,
+          101,
+          30,
+          443
+        ],
+        "px_bbox_unwrapped": [
+          1191,
+          101,
+          1950,
+          443
+        ],
+        "px_area": 259578,
+        "px_area_frac": 0.21125,
+        "distance_m": 1.33,
+        "occlusion": 0.635,
+        "clipped": false,
+        "stamp": 1785527181.134938,
+        "frame": 96,
+        "elevation_deg": 13.3
+      }
+    },
+    "13": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 22,
+      "min_range_m": 4.38,
+      "best_view": {
+        "n_points": 149,
+        "px_bbox": [
+          1296,
+          249,
+          1363,
+          386
+        ],
+        "px_bbox_unwrapped": [
+          1296,
+          249,
+          1363,
+          386
+        ],
+        "px_area": 9179,
+        "px_area_frac": 0.00747,
+        "distance_m": 4.38,
+        "occlusion": 0.197,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 0.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/13_plant.png"
+    },
+    "14": {
+      "label": "tower decoration",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 30,
+      "min_range_m": 1.14,
+      "best_view": {
+        "n_points": 235,
+        "px_bbox": [
+          1500,
+          288,
+          1584,
+          382
+        ],
+        "px_bbox_unwrapped": [
+          1500,
+          288,
+          1584,
+          382
+        ],
+        "px_area": 7896,
+        "px_area_frac": 0.00643,
+        "distance_m": 1.1,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527170.674945,
+        "frame": 22,
+        "elevation_deg": -2.0
+      },
+      "view_image": "data/crops/visibility/chinese_room/14_tower_decoration.png"
+    },
+    "15": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.99,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          940,
+          234,
+          948,
+          237
+        ],
+        "px_bbox_unwrapped": [
+          940,
+          234,
+          948,
+          237
+        ],
+        "px_area": 24,
+        "px_area_frac": 2e-05,
+        "distance_m": 6.09,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 16.0
+      }
+    },
+    "16": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.76,
+      "best_view": {
+        "n_points": 78,
+        "px_bbox": [
+          314,
+          93,
+          345,
+          110
+        ],
+        "px_bbox_unwrapped": [
+          314,
+          93,
+          345,
+          110
+        ],
+        "px_area": 527,
+        "px_area_frac": 0.00043,
+        "distance_m": 1.91,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.834929,
+        "frame": 2,
+        "elevation_deg": 41.1
+      }
+    },
+    "17": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 1.2,
+      "best_view": {
+        "n_points": 5292,
+        "px_bbox": [
+          1101,
+          85,
+          1307,
+          519
+        ],
+        "px_bbox_unwrapped": [
+          1101,
+          85,
+          1307,
+          519
+        ],
+        "px_area": 89404,
+        "px_area_frac": 0.07276,
+        "distance_m": 1.09,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527182.134938,
+        "frame": 103,
+        "elevation_deg": 5.6
+      },
+      "view_image": "data/crops/visibility/chinese_room/17_door.png"
+    },
+    "18": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 1.22,
+      "best_view": {
+        "n_points": 6032,
+        "px_bbox": [
+          1089,
+          81,
+          1329,
+          512
+        ],
+        "px_bbox_unwrapped": [
+          1089,
+          81,
+          1329,
+          512
+        ],
+        "px_area": 103440,
+        "px_area_frac": 0.08418,
+        "distance_m": 1.09,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527182.134938,
+        "frame": 103,
+        "elevation_deg": 7.7
+      },
+      "view_image": "data/crops/visibility/chinese_room/18_door_frame.png"
+    },
+    "19": {
+      "label": "tv",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 16,
+      "min_range_m": 3.09,
+      "best_view": {
+        "n_points": 233,
+        "px_bbox": [
+          1676,
+          253,
+          1750,
+          320
+        ],
+        "px_bbox_unwrapped": [
+          1676,
+          253,
+          1750,
+          320
+        ],
+        "px_area": 4958,
+        "px_area_frac": 0.00403,
+        "distance_m": 2.77,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 5.8
+      },
+      "view_image": "data/crops/visibility/chinese_room/19_television.png"
+    },
+    "20": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.53,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          1464,
+          193,
+          1476,
+          199
+        ],
+        "px_bbox_unwrapped": [
+          1464,
+          193,
+          1476,
+          199
+        ],
+        "px_area": 72,
+        "px_area_frac": 6e-05,
+        "distance_m": 4.03,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527179.329974,
+        "frame": 83,
+        "elevation_deg": 23.3
+      }
+    },
+    "21": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 3,
+      "min_range_m": 1.9,
+      "best_view": {
+        "n_points": 38,
+        "px_bbox": [
+          1811,
+          18,
+          1857,
+          41
+        ],
+        "px_bbox_unwrapped": [
+          1811,
+          18,
+          1857,
+          41
+        ],
+        "px_area": 1058,
+        "px_area_frac": 0.00086,
+        "distance_m": 1.29,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527173.719997,
+        "frame": 43,
+        "elevation_deg": 54.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/21_focus_light.png"
+    },
+    "22": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 71,
+      "min_range_m": 2.49,
+      "best_view": {
+        "n_points": 396,
+        "px_bbox": [
+          43,
+          188,
+          138,
+          429
+        ],
+        "px_bbox_unwrapped": [
+          43,
+          188,
+          138,
+          429
+        ],
+        "px_area": 22895,
+        "px_area_frac": 0.01863,
+        "distance_m": 2.32,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.834929,
+        "frame": 2,
+        "elevation_deg": 2.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/22_door.png"
+    },
+    "23": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 80,
+      "min_range_m": 2.49,
+      "best_view": {
+        "n_points": 948,
+        "px_bbox": [
+          53,
+          176,
+          165,
+          431
+        ],
+        "px_bbox_unwrapped": [
+          53,
+          176,
+          165,
+          431
+        ],
+        "px_area": 28560,
+        "px_area_frac": 0.02324,
+        "distance_m": 2.29,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 3.6
+      },
+      "view_image": "data/crops/visibility/chinese_room/23_door_frame.png"
+    },
+    "24": {
+      "label": "ceiling",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 3.11,
+      "best_view": {
+        "n_points": 9177,
+        "px_bbox": [
+          1374,
+          33,
+          719,
+          264
+        ],
+        "px_bbox_unwrapped": [
+          1374,
+          33,
+          2639,
+          264
+        ],
+        "px_area": 292215,
+        "px_area_frac": 0.23781,
+        "distance_m": 1.65,
+        "occlusion": 0.234,
+        "clipped": false,
+        "stamp": 1785527181.704972,
+        "frame": 100,
+        "elevation_deg": 32.4
+      },
+      "view_image": "data/crops/visibility/chinese_room/24_ceiling.png"
+    },
+    "25": {
+      "label": "potted branch",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 89,
+      "min_range_m": 1.66,
+      "best_view": {
+        "n_points": 146,
+        "px_bbox": [
+          1296,
+          75,
+          1389,
+          250
+        ],
+        "px_bbox_unwrapped": [
+          1296,
+          75,
+          1389,
+          250
+        ],
+        "px_area": 16275,
+        "px_area_frac": 0.01324,
+        "distance_m": 1.34,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527181.704972,
+        "frame": 100,
+        "elevation_deg": 30.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/25_potted_branch.png"
+    },
+    "26": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 76,
+      "min_range_m": 1.46,
+      "best_view": {
+        "n_points": 451,
+        "px_bbox": [
+          1462,
+          230,
+          1517,
+          324
+        ],
+        "px_bbox_unwrapped": [
+          1462,
+          230,
+          1517,
+          324
+        ],
+        "px_area": 5170,
+        "px_area_frac": 0.00421,
+        "distance_m": 1.36,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527182.134938,
+        "frame": 103,
+        "elevation_deg": 7.8
+      },
+      "view_image": "data/crops/visibility/chinese_room/26_vase.png"
+    },
+    "27": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 78,
+      "min_range_m": 2.46,
+      "best_view": {
+        "n_points": 546,
+        "px_bbox": [
+          948,
+          214,
+          1075,
+          332
+        ],
+        "px_bbox_unwrapped": [
+          948,
+          214,
+          1075,
+          332
+        ],
+        "px_area": 14986,
+        "px_area_frac": 0.0122,
+        "distance_m": 2.15,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527178.33997,
+        "frame": 76,
+        "elevation_deg": 7.4
+      },
+      "view_image": "data/crops/visibility/chinese_room/27_plant.png"
+    },
+    "28": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 6,
+      "min_range_m": 2.02,
+      "best_view": {
+        "n_points": 28,
+        "px_bbox": [
+          20,
+          11,
+          73,
+          37
+        ],
+        "px_bbox_unwrapped": [
+          20,
+          11,
+          73,
+          37
+        ],
+        "px_area": 1378,
+        "px_area_frac": 0.00112,
+        "distance_m": 1.27,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527175.105028,
+        "frame": 53,
+        "elevation_deg": 55.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/28_focus_light.png"
+    },
+    "29": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 94,
+      "min_range_m": 0.73,
+      "best_view": {
+        "n_points": 4557,
+        "px_bbox": [
+          1191,
+          284,
+          1635,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1191,
+          284,
+          1635,
+          639
+        ],
+        "px_area": 157620,
+        "px_area_frac": 0.12827,
+        "distance_m": 0.37,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527173.719997,
+        "frame": 43,
+        "elevation_deg": -31.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/29_chair.png"
+    },
+    "30": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 28,
+      "min_range_m": 4.86,
+      "best_view": {
+        "n_points": 25,
+        "px_bbox": [
+          1238,
+          278,
+          1294,
+          321
+        ],
+        "px_bbox_unwrapped": [
+          1238,
+          278,
+          1294,
+          321
+        ],
+        "px_area": 2408,
+        "px_area_frac": 0.00196,
+        "distance_m": 4.76,
+        "occlusion": 0.123,
+        "clipped": false,
+        "stamp": 1785527178.33997,
+        "frame": 76,
+        "elevation_deg": 3.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/30_plant.png"
+    },
+    "31": {
+      "label": "ceiling lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 38,
+      "min_range_m": 2.65,
+      "best_view": {
+        "n_points": 381,
+        "px_bbox": [
+          1456,
+          81,
+          1516,
+          183
+        ],
+        "px_bbox_unwrapped": [
+          1456,
+          81,
+          1516,
+          183
+        ],
+        "px_area": 6120,
+        "px_area_frac": 0.00498,
+        "distance_m": 1.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.124987,
+        "frame": 4,
+        "elevation_deg": 35.6
+      },
+      "view_image": "data/crops/visibility/chinese_room/31_ceiling_lamp.png"
+    },
+    "32": {
+      "label": "carpet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 8,
+      "min_range_m": 2.31,
+      "best_view": {
+        "n_points": 20,
+        "px_bbox": [
+          1333,
+          389,
+          1784,
+          475
+        ],
+        "px_bbox_unwrapped": [
+          1333,
+          389,
+          1784,
+          475
+        ],
+        "px_area": 38786,
+        "px_area_frac": 0.03156,
+        "distance_m": 1.98,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.534943,
+        "frame": 7,
+        "elevation_deg": -20.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/32_carpet.png"
+    },
+    "35": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 75,
+      "min_range_m": 0.56,
+      "best_view": {
+        "n_points": 2628,
+        "px_bbox": [
+          1353,
+          340,
+          1579,
+          570
+        ],
+        "px_bbox_unwrapped": [
+          1353,
+          340,
+          1579,
+          570
+        ],
+        "px_area": 51980,
+        "px_area_frac": 0.0423,
+        "distance_m": 0.36,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527174.964987,
+        "frame": 52,
+        "elevation_deg": -21.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/35_pillow.png"
+    },
+    "36": {
+      "label": "partition wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 42,
+      "min_range_m": 2.98,
+      "best_view": {
+        "n_points": 5577,
+        "px_bbox": [
+          1170,
+          10,
+          1484,
+          527
+        ],
+        "px_bbox_unwrapped": [
+          1170,
+          10,
+          1484,
+          527
+        ],
+        "px_area": 162338,
+        "px_area_frac": 0.13211,
+        "distance_m": 1.13,
+        "occlusion": 0.035,
+        "clipped": false,
+        "stamp": 1785527169.805025,
+        "frame": 16,
+        "elevation_deg": 9.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/36_partition_wall.png"
+    },
+    "37": {
+      "label": "light switch",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.02,
+      "best_view": {
+        "n_points": 607,
+        "px_bbox": [
+          498,
+          279,
+          527,
+          308
+        ],
+        "px_bbox_unwrapped": [
+          498,
+          279,
+          527,
+          308
+        ],
+        "px_area": 841,
+        "px_area_frac": 0.00068,
+        "distance_m": 1.0,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527174.119967,
+        "frame": 46,
+        "elevation_deg": 5.0
+      }
+    },
+    "38": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.86,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          1434,
+          106,
+          1461,
+          121
+        ],
+        "px_bbox_unwrapped": [
+          1434,
+          106,
+          1461,
+          121
+        ],
+        "px_area": 405,
+        "px_area_frac": 0.00033,
+        "distance_m": 2.19,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527171.109988,
+        "frame": 25,
+        "elevation_deg": 39.4
+      }
+    },
+    "39": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.62,
+      "best_view": {
+        "n_points": 43,
+        "px_bbox": [
+          1520,
+          157,
+          1537,
+          166
+        ],
+        "px_bbox_unwrapped": [
+          1520,
+          157,
+          1537,
+          166
+        ],
+        "px_area": 153,
+        "px_area_frac": 0.00012,
+        "distance_m": 2.99,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527179.610015,
+        "frame": 85,
+        "elevation_deg": 29.8
+      }
+    },
+    "40": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.78,
+      "best_view": {
+        "n_points": 14,
+        "px_bbox": [
+          1459,
+          201,
+          1471,
+          207
+        ],
+        "px_bbox_unwrapped": [
+          1459,
+          201,
+          1471,
+          207
+        ],
+        "px_area": 72,
+        "px_area_frac": 6e-05,
+        "distance_m": 4.3,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.399965,
+        "frame": 6,
+        "elevation_deg": 21.9
+      }
+    },
+    "41": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 49,
+      "min_range_m": 2.68,
+      "best_view": {
+        "n_points": 346,
+        "px_bbox": [
+          195,
+          235,
+          300,
+          324
+        ],
+        "px_bbox_unwrapped": [
+          195,
+          235,
+          300,
+          324
+        ],
+        "px_area": 9345,
+        "px_area_frac": 0.0076,
+        "distance_m": 2.55,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 6.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/41_plant.png"
+    },
+    "42": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.91,
+      "best_view": {
+        "n_points": 26,
+        "px_bbox": [
+          1279,
+          203,
+          1293,
+          209
+        ],
+        "px_bbox_unwrapped": [
+          1279,
+          203,
+          1293,
+          209
+        ],
+        "px_area": 84,
+        "px_area_frac": 7e-05,
+        "distance_m": 4.44,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527178.620033,
+        "frame": 78,
+        "elevation_deg": 21.4
+      }
+    },
+    "43": {
+      "label": "ceiling lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 76,
+      "min_range_m": 2.15,
+      "best_view": {
+        "n_points": 19,
+        "px_bbox": [
+          1379,
+          26,
+          1477,
+          157
+        ],
+        "px_bbox_unwrapped": [
+          1379,
+          26,
+          1477,
+          157
+        ],
+        "px_area": 12838,
+        "px_area_frac": 0.01045,
+        "distance_m": 1.49,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527176.665004,
+        "frame": 64,
+        "elevation_deg": 43.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/43_ceiling_lamp.png"
+    },
+    "44": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 67,
+      "min_range_m": 5.17,
+      "best_view": {
+        "n_points": 3350,
+        "px_bbox": [
+          1091,
+          207,
+          1478,
+          378
+        ],
+        "px_bbox_unwrapped": [
+          1091,
+          207,
+          1478,
+          378
+        ],
+        "px_area": 66177,
+        "px_area_frac": 0.05385,
+        "distance_m": 4.5,
+        "occlusion": 0.165,
+        "clipped": false,
+        "stamp": 1785527178.620033,
+        "frame": 78,
+        "elevation_deg": 4.6
+      },
+      "view_image": "data/crops/visibility/chinese_room/44_wall.png"
+    },
+    "45": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.56,
+      "best_view": {
+        "n_points": 24,
+        "px_bbox": [
+          1418,
+          372,
+          1463,
+          385
+        ],
+        "px_bbox_unwrapped": [
+          1418,
+          372,
+          1463,
+          385
+        ],
+        "px_area": 585,
+        "px_area_frac": 0.00048,
+        "distance_m": 2.41,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": -10.8
+      }
+    },
+    "46": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.58,
+      "best_view": {
+        "n_points": 24,
+        "px_bbox": [
+          1516,
+          82,
+          1543,
+          97
+        ],
+        "px_bbox_unwrapped": [
+          1516,
+          82,
+          1543,
+          97
+        ],
+        "px_area": 405,
+        "px_area_frac": 0.00033,
+        "distance_m": 1.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527170.41498,
+        "frame": 20,
+        "elevation_deg": 43.9
+      }
+    },
+    "47": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.09,
+      "best_view": {
+        "n_points": 37,
+        "px_bbox": [
+          1320,
+          181,
+          1337,
+          189
+        ],
+        "px_bbox_unwrapped": [
+          1320,
+          181,
+          1337,
+          189
+        ],
+        "px_area": 136,
+        "px_area_frac": 0.00011,
+        "distance_m": 3.64,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.124987,
+        "frame": 4,
+        "elevation_deg": 25.3
+      }
+    },
+    "48": {
+      "label": "sofa",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 20,
+      "min_range_m": 2.65,
+      "best_view": {
+        "n_points": 1208,
+        "px_bbox": [
+          1242,
+          317,
+          1453,
+          481
+        ],
+        "px_bbox_unwrapped": [
+          1242,
+          317,
+          1453,
+          481
+        ],
+        "px_area": 34604,
+        "px_area_frac": 0.02816,
+        "distance_m": 1.6,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.949966,
+        "frame": 10,
+        "elevation_deg": -8.8
+      },
+      "view_image": "data/crops/visibility/chinese_room/48_couch.png"
+    },
+    "49": {
+      "label": "tv remote",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.15,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          1400,
+          388,
+          1430,
+          395
+        ],
+        "px_bbox_unwrapped": [
+          1400,
+          388,
+          1430,
+          395
+        ],
+        "px_area": 210,
+        "px_area_frac": 0.00017,
+        "distance_m": 2.0,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": -13.3
+      }
+    },
+    "50": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.03,
+      "best_view": {
+        "n_points": 49,
+        "px_bbox": [
+          1749,
+          117,
+          1776,
+          132
+        ],
+        "px_bbox_unwrapped": [
+          1749,
+          117,
+          1776,
+          132
+        ],
+        "px_area": 405,
+        "px_area_frac": 0.00033,
+        "distance_m": 2.27,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 36.7
+      }
+    },
+    "51": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 104,
+      "min_range_m": 2.03,
+      "best_view": {
+        "n_points": 2543,
+        "px_bbox": [
+          1371,
+          347,
+          711,
+          464
+        ],
+        "px_bbox_unwrapped": [
+          1371,
+          347,
+          2631,
+          464
+        ],
+        "px_area": 147420,
+        "px_area_frac": 0.11997,
+        "distance_m": 1.15,
+        "occlusion": 0.034,
+        "clipped": false,
+        "stamp": 1785527181.704972,
+        "frame": 100,
+        "elevation_deg": -13.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/51_floor.png"
+    },
+    "52": {
+      "label": "focus light",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 2,
+      "min_range_m": 1.88,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1901,
+          7,
+          28,
+          30
+        ],
+        "px_bbox_unwrapped": [
+          1901,
+          7,
+          1948,
+          30
+        ],
+        "px_area": 1081,
+        "px_area_frac": 0.00088,
+        "distance_m": 1.27,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527172.12501,
+        "frame": 32,
+        "elevation_deg": 56.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/52_focus_light.png"
+    },
+    "53": {
+      "label": "horse figurine",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 39,
+      "min_range_m": 1.98,
+      "best_view": {
+        "n_points": 159,
+        "px_bbox": [
+          947,
+          280,
+          1002,
+          333
+        ],
+        "px_bbox_unwrapped": [
+          947,
+          280,
+          1002,
+          333
+        ],
+        "px_area": 2915,
+        "px_area_frac": 0.00237,
+        "distance_m": 1.9,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527178.33997,
+        "frame": 76,
+        "elevation_deg": 2.6
+      },
+      "view_image": "data/crops/visibility/chinese_room/53_horse_figurine.png"
+    },
+    "54": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 4.27,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1617,
+          184,
+          1634,
+          192
+        ],
+        "px_bbox_unwrapped": [
+          1617,
+          184,
+          1634,
+          192
+        ],
+        "px_area": 136,
+        "px_area_frac": 0.00011,
+        "distance_m": 3.7,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 24.8
+      }
+    },
+    "55": {
+      "label": "potted bamboo",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 16,
+      "min_range_m": 4.95,
+      "best_view": {
+        "n_points": 46,
+        "px_bbox": [
+          1638,
+          265,
+          1658,
+          372
+        ],
+        "px_bbox_unwrapped": [
+          1638,
+          265,
+          1658,
+          372
+        ],
+        "px_area": 2140,
+        "px_area_frac": 0.00174,
+        "distance_m": 4.99,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.399965,
+        "frame": 6,
+        "elevation_deg": 0.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/55_potted_bamboo.png"
+    },
+    "56": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.98,
+      "best_view": null
+    },
+    "57": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.19,
+      "best_view": null
+    },
+    "58": {
+      "label": "book",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.2,
+      "best_view": null
+    },
+    "59": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.4,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          318,
+          56,
+          357,
+          77
+        ],
+        "px_bbox_unwrapped": [
+          318,
+          56,
+          357,
+          77
+        ],
+        "px_area": 819,
+        "px_area_frac": 0.00067,
+        "distance_m": 1.67,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527170.820139,
+        "frame": 23,
+        "elevation_deg": 47.0
+      }
+    },
+    "60": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 3.73,
+      "best_view": {
+        "n_points": 111,
+        "px_bbox": [
+          1491,
+          317,
+          1551,
+          398
+        ],
+        "px_bbox_unwrapped": [
+          1491,
+          317,
+          1551,
+          398
+        ],
+        "px_area": 4860,
+        "px_area_frac": 0.00396,
+        "distance_m": 3.43,
+        "occlusion": 0.112,
+        "clipped": false,
+        "stamp": 1785527168.124987,
+        "frame": 4,
+        "elevation_deg": -6.4
+      },
+      "view_image": "data/crops/visibility/chinese_room/60_chair.png"
+    },
+    "61": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 24,
+      "min_range_m": 1.57,
+      "best_view": {
+        "n_points": 729,
+        "px_bbox": [
+          1299,
+          311,
+          1464,
+          519
+        ],
+        "px_bbox_unwrapped": [
+          1299,
+          311,
+          1464,
+          519
+        ],
+        "px_area": 34320,
+        "px_area_frac": 0.02793,
+        "distance_m": 1.26,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527171.585031,
+        "frame": 28,
+        "elevation_deg": -14.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/61_chair.png"
+    },
+    "62": {
+      "label": "light switch",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.3,
+      "best_view": null
+    },
+    "63": {
+      "label": "symbol decoraion",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 54,
+      "min_range_m": 1.76,
+      "best_view": {
+        "n_points": 61,
+        "px_bbox": [
+          1360,
+          129,
+          1399,
+          216
+        ],
+        "px_bbox_unwrapped": [
+          1360,
+          129,
+          1399,
+          216
+        ],
+        "px_area": 3393,
+        "px_area_frac": 0.00276,
+        "distance_m": 1.51,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527176.240047,
+        "frame": 61,
+        "elevation_deg": 27.9
+      },
+      "view_image": "data/crops/visibility/chinese_room/63_symbol_decoraion.png"
+    },
+    "64": {
+      "label": "stool",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 99,
+      "min_range_m": 1.47,
+      "best_view": {
+        "n_points": 1061,
+        "px_bbox": [
+          1338,
+          325,
+          1448,
+          516
+        ],
+        "px_bbox_unwrapped": [
+          1338,
+          325,
+          1448,
+          516
+        ],
+        "px_area": 21010,
+        "px_area_frac": 0.0171,
+        "distance_m": 1.23,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527181.824985,
+        "frame": 101,
+        "elevation_deg": -17.1
+      },
+      "view_image": "data/crops/visibility/chinese_room/64_stool.png"
+    },
+    "65": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 26,
+      "min_range_m": 1.5,
+      "best_view": {
+        "n_points": 426,
+        "px_bbox": [
+          1321,
+          334,
+          1399,
+          414
+        ],
+        "px_bbox_unwrapped": [
+          1321,
+          334,
+          1399,
+          414
+        ],
+        "px_area": 6240,
+        "px_area_frac": 0.00508,
+        "distance_m": 1.31,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527171.279984,
+        "frame": 26,
+        "elevation_deg": -8.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/65_pillow.png"
+    },
+    "66": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 15,
+      "min_range_m": 3.31,
+      "best_view": {
+        "n_points": 55,
+        "px_bbox": [
+          1345,
+          313,
+          1386,
+          347
+        ],
+        "px_bbox_unwrapped": [
+          1345,
+          313,
+          1386,
+          347
+        ],
+        "px_area": 1394,
+        "px_area_frac": 0.00113,
+        "distance_m": 3.23,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.67494,
+        "frame": 8,
+        "elevation_deg": -1.6
+      },
+      "view_image": "data/crops/visibility/chinese_room/66_pillow.png"
+    },
+    "67": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 66,
+      "min_range_m": 4.71,
+      "best_view": {
+        "n_points": 2551,
+        "px_bbox": [
+          1081,
+          230,
+          1262,
+          379
+        ],
+        "px_bbox_unwrapped": [
+          1081,
+          230,
+          1262,
+          379
+        ],
+        "px_area": 26969,
+        "px_area_frac": 0.02195,
+        "distance_m": 4.48,
+        "occlusion": 0.059,
+        "clipped": false,
+        "stamp": 1785527178.474938,
+        "frame": 77,
+        "elevation_deg": 2.9
+      },
+      "view_image": "data/crops/visibility/chinese_room/67_window.png"
+    },
+    "69": {
+      "label": "pillow",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 4,
+      "min_range_m": 2.05,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          1410,
+          327,
+          1475,
+          386
+        ],
+        "px_bbox_unwrapped": [
+          1410,
+          327,
+          1475,
+          386
+        ],
+        "px_area": 3835,
+        "px_area_frac": 0.00312,
+        "distance_m": 1.93,
+        "occlusion": 0.99,
+        "clipped": false,
+        "stamp": 1785527178.724963,
+        "frame": 79,
+        "elevation_deg": -6.4
+      }
+    },
+    "70": {
+      "label": "symbol decoraion",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.32,
+      "best_view": null
+    },
+    "71": {
+      "label": "bowl",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 22,
+      "min_range_m": 1.06,
+      "best_view": {
+        "n_points": 78,
+        "px_bbox": [
+          1337,
+          312,
+          1396,
+          340
+        ],
+        "px_bbox_unwrapped": [
+          1337,
+          312,
+          1396,
+          340
+        ],
+        "px_area": 1652,
+        "px_area_frac": 0.00134,
+        "distance_m": 0.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527175.245032,
+        "frame": 54,
+        "elevation_deg": -1.0
+      },
+      "view_image": "data/crops/visibility/chinese_room/71_bowl.png"
+    },
+    "72": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 10,
+      "min_range_m": 3.84,
+      "best_view": {
+        "n_points": 64,
+        "px_bbox": [
+          1501,
+          325,
+          1536,
+          354
+        ],
+        "px_bbox_unwrapped": [
+          1501,
+          325,
+          1536,
+          354
+        ],
+        "px_area": 1015,
+        "px_area_frac": 0.00083,
+        "distance_m": 3.74,
+        "occlusion": 0.031,
+        "clipped": false,
+        "stamp": 1785527168.124987,
+        "frame": 4,
+        "elevation_deg": -3.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/72_pillow.png"
+    },
+    "73": {
+      "label": "stool",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 6,
+      "min_range_m": 2.65,
+      "best_view": {
+        "n_points": 15,
+        "px_bbox": [
+          248,
+          323,
+          307,
+          426
+        ],
+        "px_bbox_unwrapped": [
+          248,
+          323,
+          307,
+          426
+        ],
+        "px_area": 6077,
+        "px_area_frac": 0.00495,
+        "distance_m": 2.57,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527168.279975,
+        "frame": 5,
+        "elevation_deg": -9.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/73_stool.png"
+    },
+    "74": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 61,
+      "min_range_m": 0.49,
+      "best_view": {
+        "n_points": 3847,
+        "px_bbox": [
+          1240,
+          346,
+          1517,
+          605
+        ],
+        "px_bbox_unwrapped": [
+          1240,
+          346,
+          1517,
+          605
+        ],
+        "px_area": 71743,
+        "px_area_frac": 0.05838,
+        "distance_m": 0.3,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527178.33997,
+        "frame": 76,
+        "elevation_deg": -26.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/74_pillow.png"
+    },
+    "75": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.96,
+      "best_view": null
+    },
+    "76": {
+      "label": "tea table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 8,
+      "min_range_m": 2.27,
+      "best_view": {
+        "n_points": 150,
+        "px_bbox": [
+          1380,
+          377,
+          1543,
+          456
+        ],
+        "px_bbox_unwrapped": [
+          1380,
+          377,
+          1543,
+          456
+        ],
+        "px_area": 12877,
+        "px_area_frac": 0.01048,
+        "distance_m": 1.76,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": -17.2
+      },
+      "view_image": "data/crops/visibility/chinese_room/76_tea_table.png"
+    },
+    "77": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 32,
+      "min_range_m": 2.47,
+      "best_view": {
+        "n_points": 1171,
+        "px_bbox": [
+          934,
+          327,
+          1045,
+          469
+        ],
+        "px_bbox_unwrapped": [
+          934,
+          327,
+          1045,
+          469
+        ],
+        "px_area": 15762,
+        "px_area_frac": 0.01283,
+        "distance_m": 1.72,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527178.33997,
+        "frame": 76,
+        "elevation_deg": -10.8
+      },
+      "view_image": "data/crops/visibility/chinese_room/77_table.png"
+    },
+    "78": {
+      "label": "eye glasses",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.45,
+      "best_view": null
+    },
+    "79": {
+      "label": "stool",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 12,
+      "min_range_m": 4.89,
+      "best_view": {
+        "n_points": 35,
+        "px_bbox": [
+          1568,
+          321,
+          1600,
+          374
+        ],
+        "px_bbox_unwrapped": [
+          1568,
+          321,
+          1600,
+          374
+        ],
+        "px_area": 1696,
+        "px_area_frac": 0.00138,
+        "distance_m": 4.81,
+        "occlusion": 0.683,
+        "clipped": false,
+        "stamp": 1785527179.179983,
+        "frame": 82,
+        "elevation_deg": -5.0
+      }
+    },
+    "80": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 11,
+      "min_range_m": 3.83,
+      "best_view": {
+        "n_points": 66,
+        "px_bbox": [
+          1407,
+          325,
+          1441,
+          354
+        ],
+        "px_bbox_unwrapped": [
+          1407,
+          325,
+          1441,
+          354
+        ],
+        "px_area": 986,
+        "px_area_frac": 0.0008,
+        "distance_m": 3.73,
+        "occlusion": 0.065,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": -3.5
+      },
+      "view_image": "data/crops/visibility/chinese_room/80_pillow.png"
+    },
+    "81": {
+      "label": "chair",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 22,
+      "min_range_m": 1.99,
+      "best_view": {
+        "n_points": 19,
+        "px_bbox": [
+          1280,
+          310,
+          1418,
+          478
+        ],
+        "px_bbox_unwrapped": [
+          1280,
+          310,
+          1418,
+          478
+        ],
+        "px_area": 23184,
+        "px_area_frac": 0.01887,
+        "distance_m": 1.93,
+        "occlusion": 0.931,
+        "clipped": false,
+        "stamp": 1785527178.474938,
+        "frame": 77,
+        "elevation_deg": -11.7
+      }
+    },
+    "82": {
+      "label": "side table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 30,
+      "min_range_m": 1.25,
+      "best_view": {
+        "n_points": 1724,
+        "px_bbox": [
+          1257,
+          361,
+          1472,
+          592
+        ],
+        "px_bbox_unwrapped": [
+          1257,
+          361,
+          1472,
+          592
+        ],
+        "px_area": 49665,
+        "px_area_frac": 0.04042,
+        "distance_m": 0.76,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527169.96503,
+        "frame": 17,
+        "elevation_deg": -24.3
+      },
+      "view_image": "data/crops/visibility/chinese_room/82_side_table.png"
+    },
+    "83": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 22,
+      "min_range_m": 2.02,
+      "best_view": {
+        "n_points": 72,
+        "px_bbox": [
+          1490,
+          310,
+          1552,
+          365
+        ],
+        "px_bbox_unwrapped": [
+          1490,
+          310,
+          1552,
+          365
+        ],
+        "px_area": 3410,
+        "px_area_frac": 0.00278,
+        "distance_m": 1.8,
+        "occlusion": 0.447,
+        "clipped": false,
+        "stamp": 1785527170.41498,
+        "frame": 20,
+        "elevation_deg": -2.4
+      },
+      "view_image": "data/crops/visibility/chinese_room/83_pillow.png"
+    },
+    "84": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 18,
+      "min_range_m": 3.73,
+      "best_view": {
+        "n_points": 90,
+        "px_bbox": [
+          1375,
+          317,
+          1432,
+          398
+        ],
+        "px_bbox_unwrapped": [
+          1375,
+          317,
+          1432,
+          398
+        ],
+        "px_area": 4617,
+        "px_area_frac": 0.00376,
+        "distance_m": 3.43,
+        "occlusion": 0.311,
+        "clipped": false,
+        "stamp": 1785527167.834929,
+        "frame": 2,
+        "elevation_deg": -6.4
+      },
+      "view_image": "data/crops/visibility/chinese_room/84_chair.png"
+    },
+    "85": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 2.95,
+      "best_view": {
+        "n_points": 43,
+        "px_bbox": [
+          1360,
+          313,
+          1399,
+          352
+        ],
+        "px_bbox_unwrapped": [
+          1360,
+          313,
+          1399,
+          352
+        ],
+        "px_area": 1521,
+        "px_area_frac": 0.00124,
+        "distance_m": 2.81,
+        "occlusion": 0.412,
+        "clipped": false,
+        "stamp": 1785527169.105001,
+        "frame": 11,
+        "elevation_deg": -1.7
+      },
+      "view_image": "data/crops/visibility/chinese_room/85_pillow.png"
+    },
+    "86": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 80,
+      "min_range_m": 0.65,
+      "best_view": {
+        "n_points": 4902,
+        "px_bbox": [
+          1169,
+          245,
+          1627,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1169,
+          245,
+          1627,
+          639
+        ],
+        "px_area": 180452,
+        "px_area_frac": 0.14685,
+        "distance_m": 0.3,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785527178.33997,
+        "frame": 76,
+        "elevation_deg": -35.1
+      },
+      "view_image": "data/crops/visibility/chinese_room/86_chair.png"
+    },
+    "87": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 14,
+      "min_range_m": 2.33,
+      "best_view": {
+        "n_points": 20,
+        "px_bbox": [
+          1293,
+          310,
+          1331,
+          358
+        ],
+        "px_bbox_unwrapped": [
+          1293,
+          310,
+          1331,
+          358
+        ],
+        "px_area": 1824,
+        "px_area_frac": 0.00148,
+        "distance_m": 2.29,
+        "occlusion": 0.546,
+        "clipped": false,
+        "stamp": 1785527168.814976,
+        "frame": 9,
+        "elevation_deg": -2.1
+      },
+      "view_image": "data/crops/visibility/chinese_room/87_pillow.png"
+    },
+    "88": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 57,
+      "min_range_m": 1.42,
+      "best_view": {
+        "n_points": 1736,
+        "px_bbox": [
+          1282,
+          329,
+          1609,
+          623
+        ],
+        "px_bbox_unwrapped": [
+          1282,
+          329,
+          1609,
+          623
+        ],
+        "px_area": 96138,
+        "px_area_frac": 0.07824,
+        "distance_m": 0.62,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527176.545038,
+        "frame": 63,
+        "elevation_deg": -18.7
+      },
+      "view_image": "data/crops/visibility/chinese_room/88_table.png"
+    },
+    "89": {
+      "label": "cabinet",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.95,
+      "best_view": null
+    },
+    "90": {
+      "label": "window",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 28,
+      "min_range_m": 4.75,
+      "best_view": {
+        "n_points": 1549,
+        "px_bbox": [
+          1359,
+          238,
+          1544,
+          375
+        ],
+        "px_bbox_unwrapped": [
+          1359,
+          238,
+          1544,
+          375
+        ],
+        "px_area": 25345,
+        "px_area_frac": 0.02063,
+        "distance_m": 4.65,
+        "occlusion": 0.17,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 2.8
+      },
+      "view_image": "data/crops/visibility/chinese_room/90_window.png"
+    },
+    "91": {
+      "label": "bowl",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 26,
+      "min_range_m": 1.03,
+      "best_view": {
+        "n_points": 55,
+        "px_bbox": [
+          1361,
+          313,
+          1423,
+          343
+        ],
+        "px_bbox_unwrapped": [
+          1361,
+          313,
+          1423,
+          343
+        ],
+        "px_area": 1860,
+        "px_area_frac": 0.00151,
+        "distance_m": 0.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527176.665004,
+        "frame": 64,
+        "elevation_deg": -1.4
+      },
+      "view_image": "data/crops/visibility/chinese_room/91_bowl.png"
+    },
+    "92": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.39,
+      "best_view": {
+        "n_points": 12,
+        "px_bbox": [
+          638,
+          321,
+          654,
+          355
+        ],
+        "px_bbox_unwrapped": [
+          638,
+          321,
+          654,
+          355
+        ],
+        "px_area": 544,
+        "px_area_frac": 0.00044,
+        "distance_m": 7.38,
+        "occlusion": 0.5,
+        "clipped": false,
+        "stamp": 1785527182.134938,
+        "frame": 103,
+        "elevation_deg": -3.4
+      }
+    },
+    "93": {
+      "label": "circle decoration",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 13,
+      "min_range_m": 3.09,
+      "best_view": {
+        "n_points": 208,
+        "px_bbox": [
+          1245,
+          174,
+          1319,
+          289
+        ],
+        "px_bbox_unwrapped": [
+          1245,
+          174,
+          1319,
+          289
+        ],
+        "px_area": 8510,
+        "px_area_frac": 0.00693,
+        "distance_m": 3.42,
+        "occlusion": 0.488,
+        "clipped": false,
+        "stamp": 1785527168.399965,
+        "frame": 6,
+        "elevation_deg": 16.0
+      },
+      "view_image": "data/crops/visibility/chinese_room/93_circle_decoration.png"
+    },
+    "94": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.56,
+      "best_view": null
+    },
+    "95": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 61,
+      "min_range_m": 2.73,
+      "best_view": {
+        "n_points": 4258,
+        "px_bbox": [
+          1595,
+          166,
+          256,
+          401
+        ],
+        "px_bbox_unwrapped": [
+          1595,
+          166,
+          2176,
+          401
+        ],
+        "px_area": 136535,
+        "px_area_frac": 0.11111,
+        "distance_m": 2.3,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785527167.985023,
+        "frame": 3,
+        "elevation_deg": 9.7
+      },
+      "view_image": "data/crops/visibility/chinese_room/95_wall.png"
+    }
+  },
+  "summary": {
+    "objects": 93,
+    "visible": 60,
+    "hidden": 33,
+    "seconds": 9.4
+  }
+}

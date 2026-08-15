@@ -33,6 +33,9 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from std_msgs.msg import Int32, String
 from visualization_msgs.msg import Marker
 
+from sam_mapper.challenge_marker import payload_from_map_object
+from sam_mapper.ros_markers import create_selected_object_marker
+from smart_vlm.cat2_utils import naive_from_raw
 from smart_vlm.mission_clock import MissionBudget, MissionClock
 from smart_vlm.question import QuestionType, classify, question_text
 
@@ -98,6 +101,11 @@ class SmartVLM(Node):
         self.explore_done_published = False
         self.odom_count = 0
         self.last_odom_t: Optional[float] = None
+        # The last 3D map map_node published, kept only so the object-reference fallback has
+        # a real box to point at. Parsed on arrival rather than at T-30: the fallback runs
+        # when something has already gone wrong, and that is the worst moment to discover
+        # the payload does not parse.
+        self.obj_map: dict = {}
 
         # -- inputs ---------------------------------------------------------
         self.create_subscription(String, "/challenge_question", self._on_question, 10)
@@ -111,15 +119,17 @@ class SmartVLM(Node):
         # a real answer already went out.
         self.create_subscription(Int32, "/numerical_response", self._on_numerical, 10)
         self.create_subscription(Marker, "/selected_object_marker", self._on_marker, 10)
+        self.create_subscription(String, "/obj_map_json", self._on_obj_map, 10)
 
         # -- outputs --------------------------------------------------------
         self.pub_ready = self.create_publisher(String, "/pipeline/ready", _latched())
         self.pub_armed = self.create_publisher(String, "/pipeline/armed", _latched())
         self.pub_explore_done = self.create_publisher(String, "/pipeline/explore_done", 10)
         self.pub_status = self.create_publisher(String, "/smart_vlm/status", _latched())
-        # Second writer on /numerical_response by design: numerical_reasoner owns the
-        # real answer, this one only fires as the T-30 fallback.
+        # Second writer on each answer topic by design: the reasoners own the real answers,
+        # these only fire as the T-30 fallback.
         self.pub_answer = self.create_publisher(Int32, "/numerical_response", 10)
+        self.pub_marker = self.create_publisher(Marker, "/selected_object_marker", 10)
 
         self.create_timer(self.TICK_S, self._tick)
         self.create_timer(self.HEARTBEAT_S, self._heartbeat)
@@ -221,7 +231,17 @@ class SmartVLM(Node):
         self._publish_status()
 
     def _on_marker(self, _msg: Marker) -> None:
+        if self.fallback_published:
+            return  # our own fallback echoing back
         self.answered = True
+
+    def _on_obj_map(self, msg: String) -> None:
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if isinstance(payload, dict):
+            self.obj_map = payload
 
     # ---- scene progress --------------------------------------------------
 
@@ -288,17 +308,53 @@ class SmartVLM(Node):
             self.get_logger().error(
                 f"FALLBACK: no answer by T-{self.clock.budget.fallback_reserve_s:.0f}s — "
                 f"publishing /numerical_response={self.fallback_count} as a guess")
+        elif self.qtype is QuestionType.OBJECT_REFERENCE:
+            self._publish_marker_fallback()
         elif self.qtype is None:
             self.get_logger().error("FALLBACK: budget spent and no question ever arrived")
         else:
-            # A fabricated marker scores ~0 on overlap anyway, and its centre is used as
-            # a navigation waypoint (README 'System Inputs') — so a wrong one actively
-            # drives the robot somewhere wrong. Silence is the better failure.
-            # TODO(M4): emit the best label-matched instance instead of nothing.
             self.get_logger().error(
                 f"FALLBACK: no answer for a {self.qtype.value} question and no guess "
                 f"is available — publishing nothing")
         self._publish_status()
+
+    def _publish_marker_fallback(self) -> None:
+        """Point at the likeliest object in the map, rather than at nothing.
+
+        A box the mapper actually built is never a fabricated one: the object exists, so the
+        marker's centre remains a usable navigation waypoint even when the choice is wrong,
+        and a wrong choice of a real object can still overlap the answer (rooms hold several
+        instances of a class, and the score is graded on overlap, not on identity). Silence
+        scores exactly zero and forfeits the waypoint too, which is strictly worse.
+
+        Only reached when the reasoner produced nothing at all — a crash, a model timeout, or
+        exploration that overran. It publishes the largest instance of the first class the
+        question names; see `cat2_utils.naive_from_raw`.
+        """
+        deadline = f"T-{self.clock.budget.fallback_reserve_s:.0f}s"
+        if not self.obj_map:
+            self.get_logger().error(
+                f"FALLBACK: no answer by {deadline} and /obj_map_json is empty — nothing to "
+                f"point at, publishing nothing")
+            return
+
+        track_id, why = naive_from_raw(self.obj_map, self.question or "")
+        entry = self.obj_map.get(str(track_id)) if track_id else None
+        if entry is None:
+            self.get_logger().error(f"FALLBACK: {why} — publishing nothing")
+            return
+
+        stamp = self.get_clock().now().seconds_nanoseconds()
+        marker = create_selected_object_marker(
+            payload_from_map_object(entry),
+            marker_id=int(track_id) if str(track_id).lstrip("-").isdigit() else 0,
+            seconds=int(stamp[0]),
+            nanoseconds=int(stamp[1]),
+        )
+        self.pub_marker.publish(marker)
+        self.get_logger().error(
+            f"FALLBACK: no answer by {deadline} — publishing /selected_object_marker "
+            f"id={marker.id} ({why}) as a guess")
 
     # ---- diagnostics -----------------------------------------------------
 

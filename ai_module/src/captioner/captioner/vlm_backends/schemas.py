@@ -39,6 +39,33 @@ class CountAnswer(BaseModel):
     count: int = Field(description="Number of matching objects, 0 or more")
 
 
+class ObjectChoice(BaseModel):
+    """Which candidate object a reference question points at.
+
+    An id rather than a description, because the answer to a category-2 question is a box:
+    the id indexes the 3D map the boxes come from, so a chosen id converts to a marker
+    without a second round of matching words to objects. Asking for the reason first is what
+    makes the model cite the evidence in the candidate list rather than pick the first
+    plausible line.
+    """
+
+    reason: str = Field(description="One short sentence naming the evidence for this choice")
+    object_id: int = Field(
+        description="Id of the chosen object, copied exactly from the candidate list")
+
+
+class RelationCheck(BaseModel):
+    """Does one spatial relation hold between two named objects, judged from the pixels.
+
+    The tie-break for candidates the geometry cannot separate: a mapper box is a voxel hull
+    and two of them can both plausibly satisfy "on" when only one object is really resting
+    on the other.
+    """
+
+    reason: str = Field(description="One short sentence describing what the image shows")
+    holds: bool = Field(description="True if the stated relation is visibly true")
+
+
 def _example_value(name: str, field) -> object:
     """The description, wrapped so the example has the field's own shape.
 

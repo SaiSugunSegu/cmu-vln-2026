@@ -190,7 +190,7 @@ bench cannot drift from what ships.
 The organizer's overlap function is unpublished, so all plausible readings are reported:
 
 ```
-category-2 marker score (oracle selection, 29 targets, out of 2.0):
+category-2 marker score (oracle selection, out of 2.0):
   scorer honours orientation   0.020
   scorer ignores orientation   0.020
   if we published the wireframe 0.000   <- structural zero, not a low score
@@ -205,11 +205,23 @@ Selection is **oracle** (best label-compatible prediction per target) because M4
 exist yet. So this is the ceiling the reasoner will work under, and it separates "our boxes
 are bad" from "our reasoner picked the wrong object".
 
-⚠️ The target set currently comes from the category-1 benchmark's `object_ids`, which are
-*numerical*-question objects — a proxy for "objects questions care about", not the 30
-official category-2 targets. Deriving those needs matching question text against
-`<scene>_referential_statements.json` to recover `target_index`. The metric machinery is
-correct; the target list will get sharper.
+The target set is the category-2 benchmark's answer objects — up to 10 per scene, each the
+single object a reference question must be pointed at (see
+[docs/cat2_benchmark.md](cat2_benchmark.md)). Those answers are themselves gated on visibility:
+an IRef box the robot's own camera never resolved is not asked about, so a miss here is a
+mapping failure rather than a question about geometry the sensors never saw. Scenes without a
+category-2 file fall back to the category-1 `object_ids`, which are *numerical*-question
+objects: a proxy that over-counts, since a counting question touches many objects and singles
+out none. Only `home_building_1/2` are on the fallback.
+
+Targets are then intersected with the askable set, as everything here is, and **that is where
+most of them go**: only 81 of the 122 category-2 answers have a label in their scene's prompt
+set, because the sets are curated from the five official questions and capped at 10 while the
+generated questions name whatever the scene contains (`books`, `ceiling lamp`, `towel rack`,
+`tv remote`). Nothing prompted them, so SAM 3 never looked for them and they cannot be found
+by construction. Widening the prompt sets is the fix; it costs SAM 3 time per
+scene, which is why they are capped. Do not instead bias category-2 selection toward objects
+we happen to prompt — that grades the bench against itself.
 
 ### Label mapping
 
@@ -306,4 +318,5 @@ duplicates cost, and it is the honest figure for the finished pipeline.
 
 **`docs/map_node_pipeline.md`** — every stage and threshold in the mapper, and the Tier
 1/2/3 backlog · `docs/M2_perception.md` (the wider perception module) · `docs/cat1_bag_benchmark.md` (the category-1
-loop, which bypasses `map_node`) · `docs/M6_eval_harness.md`
+loop, which bypasses `map_node`) · [`docs/cat2_benchmark.md`](cat2_benchmark.md) (where the
+question-target set and the cat-2 answers come from) · `docs/M6_eval_harness.md`

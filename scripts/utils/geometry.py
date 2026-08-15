@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """IRef-VLA object boxes and the spatial predicates that read them.
 
-Shared by ``utils.text_solver``, ``scripts/bench/generate_category3_qa.py`` and
-``scripts/eval/verify_category3.py``, so a constraint is generated, resolved and audited
-against one definition of "on" and "between" rather than three.
+Shared by ``utils.text_solver``, the category-2/3 generators under ``scripts/bench/``, and
+``scripts/eval/verify_category{2,3}.py``, so a constraint is generated, resolved and
+audited against one definition of "closest", "on" and "between" rather than several.
 
 Two decisions here shape everything downstream:
 
@@ -11,14 +11,9 @@ Two decisions here shape everything downstream:
   challenge's overlap function is unpublished, and the two metrics disagree about which
   object is closest whenever a large object is involved. A grounding is only trusted when
   both agree, so the answer does not depend on which one the grader picked.
-* **Class is read at two granularities** — the raw IRef label and the coarser NYU label.
-  Matching on raw labels alone lets "the table closest to the sofa" pick a "tea table".
-
-Originally written for the category-2 benchmark on the unmerged branch
-``origin/user/anshul/cat2_benchmark``; the uniqueness half that decided whether a *question
-was fair to ask* lives there and was dropped here, since category 3 grounds instructions
-the organizers already wrote. Recover it with
-``git show origin/user/anshul/cat2_benchmark:scripts/utils/geometry.py``.
+* **Ambiguity is checked at two class granularities** — the raw IRef label and the
+  coarser NYU label. Uniqueness over raw labels alone lets "the table closest to the
+  sofa" through in a room that also holds a "tea table".
 """
 
 from __future__ import annotations
@@ -42,13 +37,18 @@ BAGS = REPO / "data" / "bags"
 # byte-identical, so this is a fallback, not a second source of truth. Same two-root union
 # scripts/eval/build_dimension_priors.py already walks.
 DATASET = REPO.parent / "IRef-VLA" / "unity" / "Unity"
+# The generated benchmark, host-only -- gen-cat2 writes here, verify-cat2 and the
+# visual-verification tools (project_bboxes.py, make_bbox_mcap.py) read from here.
+BENCHMARK = REPO / "data" / "benchmark"
 
 SCENE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
 
 # The answer must beat its runner-up by this much (metres) under every metric.
 MIN_MARGIN = 0.30
-# "near" is absolute, not comparative: the target must be this close.
+# "near" is absolute, not comparative: the target must be this close ...
 NEAR_MAX = 1.50
+# ... and every same-class competitor at least this far, or "near" is ambiguous.
+NEAR_CLEAR = 2.50
 # Wall-mounted objects hang a few centimetres off the wall behind the furniture in
 # front of them, so footprints are dilated before above/below tests.
 FOOTPRINT_TOL = 0.15
@@ -58,6 +58,11 @@ REST_TOL = 0.10
 # 2 cm tray, the tray and everything on it share a base height to within the box precision.
 REST_FRACTION = 0.30
 FLAT_SUPPORT = 0.10
+# A landmark this much smaller than the thing it locates is not a landmark. It is what
+# separates "the picture above the suitcase" from "the window above the book" — both are
+# a wall object over a floor object, with the same footprints and the same clearance, and
+# only the sizes say which one a person would say out loud.
+LANDMARK_VOLUME_RATIO = 0.3
 # "in" is containment, not support: the inner object's base has to sit this far below the
 # outer's rim, and the outer needs enough depth for "inside" to mean anything (a tray is
 # 2 cm deep — things are *on* it).
@@ -77,6 +82,42 @@ BETWEEN_LATERAL_MAX = 1.00  # metres
 BETWEEN_MAX_SPAN = 4.50
 BETWEEN_MAX_ANCHOR_GAP = 3.00
 
+# Classes that make poor answers, though they stay usable as anchors when unique.
+# Either there is no meaningful box to point at (wall, floor), or the scene holds a grid
+# of visually identical instances that no image-space grounding can tell apart — twenty
+# recessed downlights are unique only in the metadata.
+STRUCTURAL = {
+    "wall",
+    "walls",
+    "exterior walls",
+    "interior walls",
+    "bathroom walls",
+    "glass wall",
+    "partition wall",
+    "floor",
+    "ceiling",
+    "tatami",
+    "door",
+    "door frame",
+    "window frame",
+    "air vent",
+    "light switch",
+    "handle",
+    "focus light",
+    "spot light",
+    # Architecture, not furniture: a column is a featureless repeat and its box is flush
+    # with the wall, and "the vase inside the stairs" is what a stairwell box invites.
+    "column",
+    "stairs",
+    # Cables have long thin boxes that swallow whatever they run past, so they support and
+    # sit above things they merely lie beside.
+    "hookah wire",
+    "cable",
+    "wire",
+    "cord",
+    "unknown",
+}
+
 # Room-sized datums. "Farthest from the tatami" is not a question anyone can answer,
 # because the tatami is the whole floor -- and a wall is the same thing stood upright: its
 # box is the room's perimeter, so "the cup between the lamp and the wall" holds for anything
@@ -86,6 +127,23 @@ VACUOUS_ANCHORS = {
     "floor", "tatami", "ceiling",
     "wall", "walls", "exterior walls", "interior walls", "bathroom walls", "glass wall",
     "partition wall",
+}
+# Additionally vacuous for the vertical relations: everything in the room is above the
+# carpet, though "near the carpet" is still a real constraint.
+SURFACE_ANCHORS = VACUOUS_ANCHORS | {"carpet"}
+# Never a landmark, whatever the relation.
+#   Cables: the box is a long thin diagonal that runs past half the objects on the table, so
+#   it is neither where it looks nor worth naming.
+#   Cameras: "the chair closest to the camera" reads as the robot's own camera, and a 13 cm
+#   photo camera on a shelf is not what anyone would take it to mean.
+BAD_LANDMARKS = {
+    "hookah wire",
+    "cable",
+    "wire",
+    "cord",
+    "power cord",
+    "camera",
+    "security camera",
 }
 
 # Class folding, same spirit (and mostly the same entries) as scripts/eval/score_map3d.py:
@@ -185,6 +243,10 @@ class Obj:
         return norm_class(self.nyu_label or self.raw_label)
 
     @property
+    def structural(self) -> bool:
+        return self.fine in STRUCTURAL or self.coarse in STRUCTURAL
+
+    @property
     def yaw(self) -> float:
         """Heading of the box's first horizontal edge, for a CUBE marker's pose."""
         edge = self.corners[1][:2] - self.corners[0][:2]
@@ -243,6 +305,79 @@ def load_objects(scene: str, bags: Path | None = None) -> dict[str, Obj]:
         for region, entries in raw.items()
         for oid, obj in entries.items()
     }
+
+
+def load_statements(scene: str, bags: Path | None = None) -> dict[str, Any]:
+    return json.loads(metadata_path(scene, "referential_statements.json", bags).read_text())
+
+
+def region_objects(objects: dict[str, Obj], region: str) -> list[Obj]:
+    return [o for o in objects.values() if o.region == str(region)]
+
+
+class QaObj:
+    """A box read straight from a category-2 QA file's own `answer` block, not
+    re-derived from `<scene>_objects.json`.
+
+    A tool built on this checks the exact numbers a downstream consumer (a scorer, a
+    reasoner) would actually read from the shipped QA file, which is a stronger claim
+    than "the metadata this file was generated from is correct" -- a hand edit, a
+    stale file from before a metadata refresh, or a `verify-cat2` that was never rerun
+    would all be geometry-correct by that weaker check and invisible to it.
+
+    Same attribute surface as `Obj` (id/corners/lo/hi/center/size/display), so anything
+    written against one works unchanged against the other.
+    """
+
+    __slots__ = ("id", "corners", "lo", "hi", "center", "size", "display")
+
+    def __init__(self, answer: dict[str, Any]):
+        self.id = str(answer["object_id"])
+        self.corners = np.asarray(answer["bbox_corners"], dtype=float)
+        self.lo = self.corners.min(axis=0)
+        self.hi = self.corners.max(axis=0)
+        center = answer.get("center")
+        self.center = np.asarray(center, dtype=float) if center else self.corners.mean(axis=0)
+        size = answer.get("size")
+        self.size = np.asarray(size, dtype=float) if size else (self.hi - self.lo)
+        self.display = str(answer.get("label") or "object")
+
+    def __repr__(self) -> str:
+        return f"{self.display}#{self.id} (from QA file)"
+
+
+def category2_qa_path(scene: str, path: Path | None = None) -> Path:
+    """Default location of a scene's category-2 QA file, or `path` if one was given."""
+    return Path(path) if path else BENCHMARK / scene / "category_2" / f"{scene}_category2_qa.json"
+
+
+def load_qa_answers(scene: str, path: Path | None = None) -> dict[str, QaObj]:
+    """Every object with full box geometry actually stored in a category-2 QA file.
+
+    Both a question's *answer* and its *anchors* carry a full box (`bbox_corners`,
+    `center`, `size`, `yaw`, `aabb`, ...) -- see the QA schema in docs/cat2_benchmark.md
+    -- so this covers every object a question names, target or anchor. It is still
+    necessarily a subset of the scene's objects: only the ones some question mentions,
+    which is exactly what a QA-file verification can check (`--source objects` reads
+    `<scene>_objects.json` instead, for objects the QA file never names).
+    """
+    path = category2_qa_path(scene, path)
+    if not path.exists():
+        raise FileNotFoundError(f"no category-2 QA file at {path}")
+    qa = json.loads(path.read_text())
+    boxes: dict[str, QaObj] = {}
+    for q in qa.get("questions", []):
+        answer = q.get("answer") or {}
+        oid = answer.get("object_id")
+        if oid is not None and str(oid) not in boxes:
+            boxes[str(oid)] = QaObj(answer)
+        for anchor in q.get("anchors") or []:
+            aid = anchor.get("object_id")
+            # Older QA files (pre anchor-geometry) only carry object_id/label/phrase
+            # here -- skip those rather than raising on the missing bbox_corners.
+            if aid is not None and str(aid) not in boxes and anchor.get("bbox_corners") is not None:
+                boxes[str(aid)] = QaObj(anchor)
+    return boxes
 
 
 # ---------------------------------------------------------------- distances
@@ -380,6 +515,68 @@ def between_holds(target: Obj, a1: Obj, a2: Obj) -> tuple[bool, float]:
     return holds, lateral
 
 
+def unaskable(target: Obj, anchors: list[Obj], relation: str, region_objs: list[Obj]) -> str:
+    """Why nobody would ask this question, or "" when it is fair game.
+
+    Separate from the geometry: every rule here is about a claim that is *true* and still
+    useless. Shared by the generator (which drops these candidates), the synthesiser and the
+    verifier (which fails a benchmark question that violates them), so a claim mined from an
+    utterance is held to the same standard as one derived from the boxes — being written
+    down in IRef earns an utterance no credit.
+    """
+    # "Find the carpet below the eye glasses" is a support relation read backwards, and
+    # "closest to the book" when the book sits on the target is proximity in costume: the
+    # distance is zero either way and the question turns into a riddle.
+    if relation not in ("on", "supports", "in") and any(
+        rests_on(a, target) or rests_on(target, a) for a in anchors
+    ):
+        return f"{relation}: anchor rests on target"
+    for anchor in anchors:
+        if anchor.fine in BAD_LANDMARKS:
+            return f"{relation}: {anchor} is never a landmark"
+    vacuous = SURFACE_ANCHORS if relation in ("on", "above", "below", "between") else VACUOUS_ANCHORS
+    if any(a.fine in vacuous for a in anchors):
+        return f"{relation}: room-sized anchor"
+    if relation in ("in", "above", "below", "between") and target.fine in SURFACE_ANCHORS:
+        # Everything in the room is above the carpet and most of it is between two things
+        # the carpet reaches under, so neither picks out one carpet from another.
+        return f"{relation}: room-sized target"
+    # A wall's box is the room's perimeter, so it "supports" and sits "above" everything
+    # inside it. Structural classes stay usable for the relations that only need a
+    # position -- "between a door frame and a window" is how the organizers write them.
+    if relation in ("on", "in", "supports", "above", "below") and any(a.structural for a in anchors):
+        return f"{relation}: structural anchor"
+    if relation in ("above", "below") and any(
+        a.volume < LANDMARK_VOLUME_RATIO * target.volume for a in anchors
+    ):
+        return f"{relation}: landmark far smaller than the target"
+    if relation in ("above", "below"):
+        for anchor in anchors:
+            if middle := stacked_through(target, anchor, region_objs, relation == "above"):
+                return f"{relation}: same stack, with {middle} between them"
+    return ""
+
+
+def stacked_through(target: Obj, anchor: Obj, region_objs: list[Obj], upward: bool) -> Obj | None:
+    """The object in the middle when target and anchor are two levels of one stack.
+
+    The flowers are in a vase that stands on the display ledge, so "the flowers above the
+    display ledge" is true — and nobody says it, because the vase is right there to name.
+    """
+    def held_by(item: Obj, base: Obj) -> bool:
+        return rests_on(item, base) or is_inside(item, base)
+
+    for middle in region_objs:
+        if middle.id in (target.id, anchor.id):
+            continue
+        pair = (held_by(target, middle), held_by(middle, anchor))
+        if not upward:
+            pair = (held_by(anchor, middle), held_by(middle, target))
+        if all(pair):
+            return middle
+    return None
+
+
 def relation_holds(target: Obj, anchors: list[Obj], relation: str) -> bool:
     """One object against its anchor(s), for the non-comparative relations."""
     if not anchors:
@@ -403,6 +600,130 @@ def relation_holds(target: Obj, anchors: list[Obj], relation: str) -> bool:
             for a2 in anchors[i + 1:]
         )
     raise ValueError(f"unsupported relation: {relation!r}")
+
+
+# ---------------------------------------------------------------- uniqueness
+
+
+def competitors(target: Obj, anchors: list[Obj], region_objs: list[Obj], coarse: bool) -> list[Obj]:
+    """Objects a reader could confuse with the target when resolving the question."""
+    exclude = {target.id} | {a.id for a in anchors}
+    attr = "coarse" if coarse else "fine"
+    key = getattr(target, attr)
+    return [o for o in region_objs if o.id not in exclude and getattr(o, attr) == key]
+
+
+def rank_holds(target: Obj, anchor: Obj, rivals: list[Obj], mode: str) -> tuple[bool, float, str]:
+    """The target is the unique argmin (closest) / argmax (farthest), by MIN_MARGIN."""
+    if not rivals:
+        return False, 0.0, "no competitor of the same class"
+    worst_margin = math.inf
+    notes = []
+    for name, metric in METRICS.items():
+        d_target = metric(target, anchor)
+        ranked = sorted(((metric(r, anchor), r) for r in rivals), key=lambda p: p[0])
+        d_rival, rival = ranked[0] if mode == "closest" else ranked[-1]
+        margin = (d_rival - d_target) if mode == "closest" else (d_target - d_rival)
+        if margin < MIN_MARGIN:
+            return (
+                False,
+                margin,
+                f"{mode} by {name}: {target} {d_target:.2f} m vs {rival} {d_rival:.2f} m "
+                f"(margin {margin:.2f} m < {MIN_MARGIN})",
+            )
+        worst_margin = min(worst_margin, margin)
+        notes.append(f"{name} {d_target:.2f} m vs runner-up {rival} {d_rival:.2f} m")
+    return True, worst_margin, "; ".join(notes)
+
+
+def near_holds(target: Obj, anchor: Obj, rivals: list[Obj]) -> tuple[bool, float, str]:
+    d_target = gap_dist(target, anchor)
+    if d_target > NEAR_MAX:
+        return False, 0.0, f"target {d_target:.2f} m from anchor, over NEAR_MAX {NEAR_MAX}"
+    if not rivals:
+        return False, 0.0, "no competitor of the same class"
+    d_rival, rival = min(((gap_dist(r, anchor), r) for r in rivals), key=lambda p: p[0])
+    if d_rival < NEAR_CLEAR:
+        return (
+            False,
+            d_rival - d_target,
+            f"{rival} is also {d_rival:.2f} m from the anchor (needs >= {NEAR_CLEAR} m)",
+        )
+    return (
+        True,
+        d_rival - d_target,
+        f"box-gap {d_target:.2f} m; next {target.fine} is {d_rival:.2f} m away",
+    )
+
+
+def predicate_unique(
+    target: Obj, anchors: list[Obj], rivals: list[Obj], relation: str
+) -> tuple[bool, float, str]:
+    """Uniqueness for on / above / below / between."""
+    if relation == "between" and len(anchors) < 2:
+        return False, 0.0, "between needs two anchors"
+    if not relation_holds(target, anchors, relation):
+        return False, 0.0, f"geometry does not support {relation} for {target}"
+    others = [o for o in rivals if relation_holds(o, anchors, relation)]
+    if others:
+        return False, 0.0, f"{len(others)} other {target.fine}(s) also {relation}: {others[:3]}"
+
+    if relation == "between":
+        _holds, lateral = max(
+            (between_holds(target, a1, a2) for i, a1 in enumerate(anchors) for a2 in anchors[i + 1:]),
+            key=lambda p: p[0],
+        )
+        detail = f"between {anchors[0]} and {anchors[1]} (lateral offset {lateral:.2f} m)"
+    elif relation == "on":
+        detail = f"rests on {anchors[0]} (underside {target.lo[2]:.2f} m, top {anchors[0].hi[2]:.2f} m)"
+    elif relation == "supports":
+        held = [a for a in anchors if rests_on(a, target)]
+        detail = f"holds {held[0]} (top {target.hi[2]:.2f} m, its underside {held[0].lo[2]:.2f} m)"
+    elif relation == "in":
+        detail = (
+            f"inside {anchors[0]}: base {target.lo[2]:.2f} m sits "
+            f"{anchors[0].hi[2] - target.lo[2]:.2f} m below its rim"
+        )
+    elif relation == "above":
+        detail = (
+            f"underside {target.lo[2]:.2f} m clears {anchors[0]} top {anchors[0].hi[2]:.2f} m "
+            f"by {vertical_gap(target, anchors[0]):.2f} m"
+        )
+    elif relation == "below":
+        detail = (
+            f"top {target.hi[2]:.2f} m sits {vertical_gap(target, anchors[0]):.2f} m under "
+            f"{anchors[0]} underside {anchors[0].lo[2]:.2f} m"
+        )
+    else:
+        detail = relation
+    return True, float(len(rivals)), detail
+
+
+def verify(
+    target: Obj, anchors: list[Obj], relation: str, region_objs: list[Obj]
+) -> tuple[bool, float, str, int]:
+    """Re-derive a statement's claim from the boxes. Returns (ok, margin, why, n_rivals).
+
+    The claim has to survive both class granularities; see the module docstring.
+    """
+    fine_rivals = competitors(target, anchors, region_objs, coarse=False)
+    coarse_rivals = competitors(target, anchors, region_objs, coarse=True)
+    merged = {o.id: o for o in fine_rivals + coarse_rivals}
+    n_rivals = len(fine_rivals)
+
+    checks: list[tuple[bool, float, str]] = []
+    for rivals in (fine_rivals, list(merged.values())):
+        if relation in ("closest", "farthest"):
+            checks.append(rank_holds(target, anchors[0], rivals, relation))
+        elif relation == "near":
+            checks.append(near_holds(target, anchors[0], rivals))
+        else:
+            checks.append(predicate_unique(target, anchors, rivals, relation))
+
+    for ok, margin, why in checks:
+        if not ok:
+            return False, margin, why, n_rivals
+    return True, min(c[1] for c in checks), checks[0][2], n_rivals
 
 
 # ---------------------------------------------------------------- answer payload

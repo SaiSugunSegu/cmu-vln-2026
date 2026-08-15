@@ -1,0 +1,1740 @@
+{
+  "scene": "studio",
+  "camera": {
+    "width": 1920,
+    "height": 640,
+    "model": "equirect 360x120, sam_mapper mecanum_sim"
+  },
+  "thresholds": {
+    "min_points": 12,
+    "min_px_area": 900,
+    "max_occlusion": 0.6,
+    "max_range_m": 15.0,
+    "window_s": [
+      0.5,
+      0.1
+    ]
+  },
+  "frames": 304,
+  "objects": {
+    "0": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 80,
+      "min_range_m": 3.17,
+      "best_view": {
+        "n_points": 99,
+        "px_bbox": [
+          858,
+          363,
+          895,
+          400
+        ],
+        "px_bbox_unwrapped": [
+          858,
+          363,
+          895,
+          400
+        ],
+        "px_area": 1369,
+        "px_area_frac": 0.00111,
+        "distance_m": 3.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529110.46033,
+        "frame": 169,
+        "elevation_deg": -11.3
+      },
+      "view_image": "data/crops/visibility/studio/0_vase.png"
+    },
+    "1": {
+      "label": "door",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 2.01,
+      "best_view": {
+        "n_points": 4176,
+        "px_bbox": [
+          405,
+          99,
+          554,
+          460
+        ],
+        "px_bbox_unwrapped": [
+          405,
+          99,
+          554,
+          460
+        ],
+        "px_area": 53789,
+        "px_area_frac": 0.04377,
+        "distance_m": 1.76,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529100.515353,
+        "frame": 92,
+        "elevation_deg": 10.1
+      },
+      "view_image": "data/crops/visibility/studio/1_door.png"
+    },
+    "2": {
+      "label": "door frame",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 191,
+      "min_range_m": 2.02,
+      "best_view": {
+        "n_points": 1108,
+        "px_bbox": [
+          301,
+          90,
+          452,
+          460
+        ],
+        "px_bbox_unwrapped": [
+          301,
+          90,
+          452,
+          460
+        ],
+        "px_area": 55870,
+        "px_area_frac": 0.04547,
+        "distance_m": 1.75,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529101.275353,
+        "frame": 98,
+        "elevation_deg": 10.8
+      },
+      "view_image": "data/crops/visibility/studio/2_door_frame.png"
+    },
+    "3": {
+      "label": "light switch",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.74,
+      "best_view": {
+        "n_points": 226,
+        "px_bbox": [
+          434,
+          263,
+          457,
+          286
+        ],
+        "px_bbox_unwrapped": [
+          434,
+          263,
+          457,
+          286
+        ],
+        "px_area": 529,
+        "px_area_frac": 0.00043,
+        "distance_m": 1.7,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529101.530419,
+        "frame": 100,
+        "elevation_deg": 8.8
+      }
+    },
+    "4": {
+      "label": "ceiling",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 2.51,
+      "best_view": {
+        "n_points": 10794,
+        "px_bbox": [
+          847,
+          48,
+          190,
+          242
+        ],
+        "px_bbox_unwrapped": [
+          847,
+          48,
+          2110,
+          242
+        ],
+        "px_area": 245022,
+        "px_area_frac": 0.1994,
+        "distance_m": 1.76,
+        "occlusion": 0.007,
+        "clipped": false,
+        "stamp": 1785529104.360324,
+        "frame": 122,
+        "elevation_deg": 37.5
+      },
+      "view_image": "data/crops/visibility/studio/4_ceiling.png"
+    },
+    "5": {
+      "label": "windows",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 273,
+      "min_range_m": 4.04,
+      "best_view": {
+        "n_points": 719,
+        "px_bbox": [
+          671,
+          123,
+          871,
+          330
+        ],
+        "px_bbox_unwrapped": [
+          671,
+          123,
+          871,
+          330
+        ],
+        "px_area": 41400,
+        "px_area_frac": 0.03369,
+        "distance_m": 3.5,
+        "occlusion": 0.516,
+        "clipped": false,
+        "stamp": 1785529095.902061,
+        "frame": 56,
+        "elevation_deg": 14.0
+      },
+      "view_image": "data/crops/visibility/studio/5_window.png"
+    },
+    "6": {
+      "label": "hanger",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 300,
+      "min_range_m": 2.54,
+      "best_view": {
+        "n_points": 873,
+        "px_bbox": [
+          1264,
+          206,
+          1336,
+          431
+        ],
+        "px_bbox_unwrapped": [
+          1264,
+          206,
+          1336,
+          431
+        ],
+        "px_area": 16200,
+        "px_area_frac": 0.01318,
+        "distance_m": 2.28,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529096.65699,
+        "frame": 62,
+        "elevation_deg": 0.4
+      },
+      "view_image": "data/crops/visibility/studio/6_hanger.png"
+    },
+    "7": {
+      "label": "drawing",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 295,
+      "min_range_m": 0.74,
+      "best_view": {
+        "n_points": 2527,
+        "px_bbox": [
+          260,
+          28,
+          485,
+          469
+        ],
+        "px_bbox_unwrapped": [
+          260,
+          28,
+          485,
+          469
+        ],
+        "px_area": 99225,
+        "px_area_frac": 0.08075,
+        "distance_m": 0.43,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529106.845357,
+        "frame": 141,
+        "elevation_deg": 14.5
+      },
+      "view_image": "data/crops/visibility/studio/7_drawing.png"
+    },
+    "11": {
+      "label": "framed record",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 284,
+      "min_range_m": 4.91,
+      "best_view": {
+        "n_points": 256,
+        "px_bbox": [
+          451,
+          242,
+          493,
+          293
+        ],
+        "px_bbox_unwrapped": [
+          451,
+          242,
+          493,
+          293
+        ],
+        "px_area": 2142,
+        "px_area_frac": 0.00174,
+        "distance_m": 4.8,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529093.02205,
+        "frame": 34,
+        "elevation_deg": 10.3
+      },
+      "view_image": "data/crops/visibility/studio/11_framed_record.png"
+    },
+    "12": {
+      "label": "books",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 206,
+      "min_range_m": 1.13,
+      "best_view": {
+        "n_points": 1156,
+        "px_bbox": [
+          693,
+          276,
+          825,
+          366
+        ],
+        "px_bbox_unwrapped": [
+          693,
+          276,
+          825,
+          366
+        ],
+        "px_area": 11880,
+        "px_area_frac": 0.00967,
+        "distance_m": 0.93,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529104.360324,
+        "frame": 122,
+        "elevation_deg": 0.2
+      },
+      "view_image": "data/crops/visibility/studio/12_book.png"
+    },
+    "14": {
+      "label": "tv",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 2.47,
+      "best_view": {
+        "n_points": 1133,
+        "px_bbox": [
+          374,
+          168,
+          485,
+          294
+        ],
+        "px_bbox_unwrapped": [
+          374,
+          168,
+          485,
+          294
+        ],
+        "px_area": 13986,
+        "px_area_frac": 0.01138,
+        "distance_m": 1.97,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529124.905364,
+        "frame": 282,
+        "elevation_deg": 15.5
+      },
+      "view_image": "data/crops/visibility/studio/14_television.png"
+    },
+    "15": {
+      "label": "books",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 159,
+      "min_range_m": 0.97,
+      "best_view": {
+        "n_points": 1197,
+        "px_bbox": [
+          529,
+          372,
+          690,
+          467
+        ],
+        "px_bbox_unwrapped": [
+          529,
+          372,
+          690,
+          467
+        ],
+        "px_area": 15295,
+        "px_area_frac": 0.01245,
+        "distance_m": 0.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529104.360324,
+        "frame": 122,
+        "elevation_deg": -18.3
+      },
+      "view_image": "data/crops/visibility/studio/15_book.png"
+    },
+    "16": {
+      "label": "couch",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 231,
+      "min_range_m": 3.85,
+      "best_view": {
+        "n_points": 1611,
+        "px_bbox": [
+          1066,
+          313,
+          1324,
+          409
+        ],
+        "px_bbox_unwrapped": [
+          1066,
+          313,
+          1324,
+          409
+        ],
+        "px_area": 24768,
+        "px_area_frac": 0.02016,
+        "distance_m": 2.93,
+        "occlusion": 0.147,
+        "clipped": false,
+        "stamp": 1785529110.585365,
+        "frame": 170,
+        "elevation_deg": -5.8
+      },
+      "view_image": "data/crops/visibility/studio/16_couch.png"
+    },
+    "17": {
+      "label": "pillows",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 237,
+      "min_range_m": 4.09,
+      "best_view": {
+        "n_points": 671,
+        "px_bbox": [
+          1073,
+          304,
+          1290,
+          351
+        ],
+        "px_bbox_unwrapped": [
+          1073,
+          304,
+          1290,
+          351
+        ],
+        "px_area": 10199,
+        "px_area_frac": 0.0083,
+        "distance_m": 3.64,
+        "occlusion": 0.054,
+        "clipped": false,
+        "stamp": 1785529110.585365,
+        "frame": 170,
+        "elevation_deg": -1.1
+      },
+      "view_image": "data/crops/visibility/studio/17_pillows.png"
+    },
+    "18": {
+      "label": "clothes",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 149,
+      "min_range_m": 2.38,
+      "best_view": {
+        "n_points": 282,
+        "px_bbox": [
+          1258,
+          203,
+          1294,
+          318
+        ],
+        "px_bbox_unwrapped": [
+          1258,
+          203,
+          1294,
+          318
+        ],
+        "px_area": 4140,
+        "px_area_frac": 0.00337,
+        "distance_m": 2.26,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529096.392054,
+        "frame": 60,
+        "elevation_deg": 11.1
+      },
+      "view_image": "data/crops/visibility/studio/18_clothes.png"
+    },
+    "19": {
+      "label": "newspaper",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 53,
+      "min_range_m": 2.25,
+      "best_view": {
+        "n_points": 55,
+        "px_bbox": [
+          397,
+          365,
+          462,
+          387
+        ],
+        "px_bbox_unwrapped": [
+          397,
+          365,
+          462,
+          387
+        ],
+        "px_area": 1430,
+        "px_area_frac": 0.00116,
+        "distance_m": 2.04,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529092.887075,
+        "frame": 33,
+        "elevation_deg": -9.9
+      },
+      "view_image": "data/crops/visibility/studio/19_newspaper.png"
+    },
+    "20": {
+      "label": "books",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 244,
+      "min_range_m": 1.03,
+      "best_view": {
+        "n_points": 747,
+        "px_bbox": [
+          569,
+          186,
+          674,
+          271
+        ],
+        "px_bbox_unwrapped": [
+          569,
+          186,
+          674,
+          271
+        ],
+        "px_area": 8925,
+        "px_area_frac": 0.00726,
+        "distance_m": 0.86,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529104.360324,
+        "frame": 122,
+        "elevation_deg": 17.2
+      },
+      "view_image": "data/crops/visibility/studio/20_book.png"
+    },
+    "21": {
+      "label": "picture",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 2.54,
+      "best_view": {
+        "n_points": 1092,
+        "px_bbox": [
+          479,
+          153,
+          579,
+          281
+        ],
+        "px_bbox_unwrapped": [
+          479,
+          153,
+          579,
+          281
+        ],
+        "px_area": 12800,
+        "px_area_frac": 0.01042,
+        "distance_m": 2.26,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529099.092026,
+        "frame": 81,
+        "elevation_deg": 19.6
+      },
+      "view_image": "data/crops/visibility/studio/21_framed_record.png"
+    },
+    "22": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 139,
+      "min_range_m": 1.29,
+      "best_view": {
+        "n_points": 30,
+        "px_bbox": [
+          395,
+          433,
+          521,
+          538
+        ],
+        "px_bbox_unwrapped": [
+          395,
+          433,
+          521,
+          538
+        ],
+        "px_area": 13230,
+        "px_area_frac": 0.01077,
+        "distance_m": 0.85,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529103.960305,
+        "frame": 119,
+        "elevation_deg": -29.5
+      },
+      "view_image": "data/crops/visibility/studio/22_box.png"
+    },
+    "24": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 3.14,
+      "best_view": {
+        "n_points": 45,
+        "px_bbox": [
+          645,
+          312,
+          665,
+          346
+        ],
+        "px_bbox_unwrapped": [
+          645,
+          312,
+          665,
+          346
+        ],
+        "px_area": 680,
+        "px_area_frac": 0.00055,
+        "distance_m": 3.04,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529124.43037,
+        "frame": 278,
+        "elevation_deg": -1.4
+      }
+    },
+    "25": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.98,
+      "best_view": {
+        "n_points": 60,
+        "px_bbox": [
+          884,
+          321,
+          897,
+          346
+        ],
+        "px_bbox_unwrapped": [
+          884,
+          321,
+          897,
+          346
+        ],
+        "px_area": 325,
+        "px_area_frac": 0.00026,
+        "distance_m": 3.02,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529110.585365,
+        "frame": 170,
+        "elevation_deg": -2.3
+      }
+    },
+    "26": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.86,
+      "best_view": {
+        "n_points": 55,
+        "px_bbox": [
+          980,
+          329,
+          990,
+          348
+        ],
+        "px_bbox_unwrapped": [
+          980,
+          329,
+          990,
+          348
+        ],
+        "px_area": 190,
+        "px_area_frac": 0.00015,
+        "distance_m": 2.82,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529123.63035,
+        "frame": 272,
+        "elevation_deg": -3.3
+      }
+    },
+    "27": {
+      "label": "vase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 232,
+      "min_range_m": 1.37,
+      "best_view": {
+        "n_points": 665,
+        "px_bbox": [
+          711,
+          354,
+          802,
+          521
+        ],
+        "px_bbox_unwrapped": [
+          711,
+          354,
+          802,
+          521
+        ],
+        "px_area": 15197,
+        "px_area_frac": 0.01237,
+        "distance_m": 1.17,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529123.520324,
+        "frame": 271,
+        "elevation_deg": -21.1
+      },
+      "view_image": "data/crops/visibility/studio/27_vase.png"
+    },
+    "28": {
+      "label": "wall",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 1.76,
+      "best_view": null
+    },
+    "29": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 284,
+      "min_range_m": 4.74,
+      "best_view": {
+        "n_points": 4688,
+        "px_bbox": [
+          933,
+          195,
+          1360,
+          373
+        ],
+        "px_bbox_unwrapped": [
+          933,
+          195,
+          1360,
+          373
+        ],
+        "px_area": 76006,
+        "px_area_frac": 0.06185,
+        "distance_m": 4.24,
+        "occlusion": 0.126,
+        "clipped": false,
+        "stamp": 1785529110.585365,
+        "frame": 170,
+        "elevation_deg": 7.6
+      },
+      "view_image": "data/crops/visibility/studio/29_wall.png"
+    },
+    "30": {
+      "label": "wall",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.0,
+      "best_view": null
+    },
+    "31": {
+      "label": "wall",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 2.53,
+      "best_view": {
+        "n_points": 20481,
+        "px_bbox": [
+          137,
+          111,
+          962,
+          414
+        ],
+        "px_bbox_unwrapped": [
+          137,
+          111,
+          962,
+          414
+        ],
+        "px_area": 249975,
+        "px_area_frac": 0.20343,
+        "distance_m": 1.93,
+        "occlusion": 0.152,
+        "clipped": false,
+        "stamp": 1785529097.67206,
+        "frame": 70,
+        "elevation_deg": 14.6
+      },
+      "view_image": "data/crops/visibility/studio/31_wall.png"
+    },
+    "32": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 34,
+      "min_range_m": 2.42,
+      "best_view": {
+        "n_points": 153,
+        "px_bbox": [
+          918,
+          362,
+          972,
+          401
+        ],
+        "px_bbox_unwrapped": [
+          918,
+          362,
+          972,
+          401
+        ],
+        "px_area": 2106,
+        "px_area_frac": 0.00171,
+        "distance_m": 2.14,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529096.522034,
+        "frame": 61,
+        "elevation_deg": -10.8
+      },
+      "view_image": "data/crops/visibility/studio/32_box.png"
+    },
+    "34": {
+      "label": "hat",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 82,
+      "min_range_m": 2.57,
+      "best_view": {
+        "n_points": 162,
+        "px_bbox": [
+          1281,
+          197,
+          1337,
+          255
+        ],
+        "px_bbox_unwrapped": [
+          1281,
+          197,
+          1337,
+          255
+        ],
+        "px_area": 3248,
+        "px_area_frac": 0.00264,
+        "distance_m": 2.29,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529096.392054,
+        "frame": 60,
+        "elevation_deg": 17.3
+      },
+      "view_image": "data/crops/visibility/studio/34_hat.png"
+    },
+    "35": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 142,
+      "min_range_m": 1.52,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          426,
+          418,
+          517,
+          500
+        ],
+        "px_bbox_unwrapped": [
+          426,
+          418,
+          517,
+          500
+        ],
+        "px_area": 7462,
+        "px_area_frac": 0.00607,
+        "distance_m": 1.13,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529102.315391,
+        "frame": 106,
+        "elevation_deg": -25.0
+      },
+      "view_image": "data/crops/visibility/studio/35_box.png"
+    },
+    "37": {
+      "label": "books",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 242,
+      "min_range_m": 1.36,
+      "best_view": {
+        "n_points": 656,
+        "px_bbox": [
+          409,
+          286,
+          519,
+          355
+        ],
+        "px_bbox_unwrapped": [
+          409,
+          286,
+          519,
+          355
+        ],
+        "px_area": 7590,
+        "px_area_frac": 0.00618,
+        "distance_m": 1.23,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529102.94537,
+        "frame": 111,
+        "elevation_deg": 0.1
+      },
+      "view_image": "data/crops/visibility/studio/37_book.png"
+    },
+    "38": {
+      "label": "potted plant",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 2.32,
+      "best_view": {
+        "n_points": 3221,
+        "px_bbox": [
+          502,
+          123,
+          720,
+          433
+        ],
+        "px_bbox_unwrapped": [
+          502,
+          123,
+          720,
+          433
+        ],
+        "px_area": 67580,
+        "px_area_frac": 0.055,
+        "distance_m": 2.08,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529097.792041,
+        "frame": 71,
+        "elevation_deg": 7.0
+      },
+      "view_image": "data/crops/visibility/studio/38_plant.png"
+    },
+    "39": {
+      "label": "easel",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 0.78,
+      "best_view": {
+        "n_points": 2413,
+        "px_bbox": [
+          1067,
+          0,
+          1450,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          1067,
+          0,
+          1450,
+          639
+        ],
+        "px_area": 244737,
+        "px_area_frac": 0.19917,
+        "distance_m": 0.38,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529104.360324,
+        "frame": 122,
+        "elevation_deg": 17.1
+      },
+      "view_image": "data/crops/visibility/studio/39_easel.png"
+    },
+    "40": {
+      "label": "chair",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 262,
+      "min_range_m": 1.02,
+      "best_view": {
+        "n_points": 4637,
+        "px_bbox": [
+          431,
+          0,
+          847,
+          639
+        ],
+        "px_bbox_unwrapped": [
+          431,
+          0,
+          847,
+          639
+        ],
+        "px_area": 265824,
+        "px_area_frac": 0.21633,
+        "distance_m": 0.51,
+        "occlusion": 0.0,
+        "clipped": true,
+        "stamp": 1785529095.787108,
+        "frame": 55,
+        "elevation_deg": -12.0
+      },
+      "view_image": "data/crops/visibility/studio/40_chair.png"
+    },
+    "41": {
+      "label": "pillow",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 84,
+      "min_range_m": 1.1,
+      "best_view": {
+        "n_points": 36,
+        "px_bbox": [
+          519,
+          331,
+          658,
+          461
+        ],
+        "px_bbox_unwrapped": [
+          519,
+          331,
+          658,
+          461
+        ],
+        "px_area": 18070,
+        "px_area_frac": 0.01471,
+        "distance_m": 0.72,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529095.902061,
+        "frame": 56,
+        "elevation_deg": -11.3
+      },
+      "view_image": "data/crops/visibility/studio/41_pillow.png"
+    },
+    "42": {
+      "label": "windows",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 2.61,
+      "best_view": {
+        "n_points": 3373,
+        "px_bbox": [
+          894,
+          27,
+          1220,
+          336
+        ],
+        "px_bbox_unwrapped": [
+          894,
+          27,
+          1220,
+          336
+        ],
+        "px_area": 100734,
+        "px_area_frac": 0.08198,
+        "distance_m": 2.18,
+        "occlusion": 0.001,
+        "clipped": false,
+        "stamp": 1785529096.392054,
+        "frame": 60,
+        "elevation_deg": 22.2
+      },
+      "view_image": "data/crops/visibility/studio/42_window.png"
+    },
+    "43": {
+      "label": "box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 34,
+      "min_range_m": 2.36,
+      "best_view": {
+        "n_points": 169,
+        "px_bbox": [
+          956,
+          362,
+          1006,
+          403
+        ],
+        "px_bbox_unwrapped": [
+          956,
+          362,
+          1006,
+          403
+        ],
+        "px_area": 2050,
+        "px_area_frac": 0.00167,
+        "distance_m": 2.1,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529096.007048,
+        "frame": 57,
+        "elevation_deg": -11.1
+      },
+      "view_image": "data/crops/visibility/studio/43_box.png"
+    },
+    "45": {
+      "label": "phone",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 1.96,
+      "best_view": {
+        "n_points": 39,
+        "px_bbox": [
+          473,
+          383,
+          509,
+          392
+        ],
+        "px_bbox_unwrapped": [
+          473,
+          383,
+          509,
+          392
+        ],
+        "px_area": 324,
+        "px_area_frac": 0.00026,
+        "distance_m": 1.79,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529093.157013,
+        "frame": 35,
+        "elevation_deg": -12.3
+      }
+    },
+    "46": {
+      "label": "vase",
+      "region": "0",
+      "visible": false,
+      "reason": "occluded",
+      "frames_visible": 230,
+      "min_range_m": 4.77,
+      "best_view": {
+        "n_points": 13,
+        "px_bbox": [
+          631,
+          216,
+          662,
+          378
+        ],
+        "px_bbox_unwrapped": [
+          631,
+          216,
+          662,
+          378
+        ],
+        "px_area": 5022,
+        "px_area_frac": 0.00409,
+        "distance_m": 5.08,
+        "occlusion": 0.676,
+        "clipped": false,
+        "stamp": 1785529095.637,
+        "frame": 54,
+        "elevation_deg": 4.7
+      }
+    },
+    "47": {
+      "label": "lamp",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 302,
+      "min_range_m": 3.6,
+      "best_view": {
+        "n_points": 373,
+        "px_bbox": [
+          983,
+          232,
+          1045,
+          400
+        ],
+        "px_bbox_unwrapped": [
+          983,
+          232,
+          1045,
+          400
+        ],
+        "px_area": 10416,
+        "px_area_frac": 0.00848,
+        "distance_m": 3.34,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529110.585365,
+        "frame": 170,
+        "elevation_deg": 0.9
+      },
+      "view_image": "data/crops/visibility/studio/47_lamp.png"
+    },
+    "48": {
+      "label": "guitar",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 163,
+      "min_range_m": 3.66,
+      "best_view": {
+        "n_points": 192,
+        "px_bbox": [
+          479,
+          287,
+          545,
+          398
+        ],
+        "px_bbox_unwrapped": [
+          479,
+          287,
+          545,
+          398
+        ],
+        "px_area": 7326,
+        "px_area_frac": 0.00596,
+        "distance_m": 3.56,
+        "occlusion": 0.262,
+        "clipped": false,
+        "stamp": 1785529093.79206,
+        "frame": 40,
+        "elevation_deg": -3.6
+      },
+      "view_image": "data/crops/visibility/studio/48_guitar.png"
+    },
+    "49": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.35,
+      "best_view": null
+    },
+    "51": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.2,
+      "best_view": null
+    },
+    "52": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.39,
+      "best_view": null
+    },
+    "54": {
+      "label": "beer bottle",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.48,
+      "best_view": {
+        "n_points": 29,
+        "px_bbox": [
+          531,
+          334,
+          546,
+          375
+        ],
+        "px_bbox_unwrapped": [
+          531,
+          334,
+          546,
+          375
+        ],
+        "px_area": 615,
+        "px_area_frac": 0.0005,
+        "distance_m": 2.44,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529092.492055,
+        "frame": 30,
+        "elevation_deg": -6.2
+      }
+    },
+    "55": {
+      "label": "cabinet",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 234,
+      "min_range_m": 2.37,
+      "best_view": {
+        "n_points": 1834,
+        "px_bbox": [
+          747,
+          342,
+          998,
+          513
+        ],
+        "px_bbox_unwrapped": [
+          747,
+          342,
+          998,
+          513
+        ],
+        "px_area": 42921,
+        "px_area_frac": 0.03493,
+        "distance_m": 1.24,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529123.395362,
+        "frame": 270,
+        "elevation_deg": -13.3
+      },
+      "view_image": "data/crops/visibility/studio/55_cabinet.png"
+    },
+    "56": {
+      "label": "round box",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 39,
+      "min_range_m": 2.97,
+      "best_view": {
+        "n_points": 102,
+        "px_bbox": [
+          430,
+          353,
+          474,
+          383
+        ],
+        "px_bbox_unwrapped": [
+          430,
+          353,
+          474,
+          383
+        ],
+        "px_area": 1320,
+        "px_area_frac": 0.00107,
+        "distance_m": 2.75,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529098.556984,
+        "frame": 77,
+        "elevation_deg": -8.7
+      },
+      "view_image": "data/crops/visibility/studio/56_round_box.png"
+    },
+    "58": {
+      "label": "bookcase",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 1.01,
+      "best_view": {
+        "n_points": 12587,
+        "px_bbox": [
+          219,
+          97,
+          887,
+          503
+        ],
+        "px_bbox_unwrapped": [
+          219,
+          97,
+          887,
+          503
+        ],
+        "px_area": 271208,
+        "px_area_frac": 0.22071,
+        "distance_m": 0.79,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529104.360324,
+        "frame": 122,
+        "elevation_deg": 8.4
+      },
+      "view_image": "data/crops/visibility/studio/58_bookcase.png"
+    },
+    "59": {
+      "label": "bird decoration",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 182,
+      "min_range_m": 1.69,
+      "best_view": {
+        "n_points": 136,
+        "px_bbox": [
+          833,
+          281,
+          879,
+          370
+        ],
+        "px_bbox_unwrapped": [
+          833,
+          281,
+          879,
+          370
+        ],
+        "px_area": 4094,
+        "px_area_frac": 0.00333,
+        "distance_m": 1.61,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529123.63035,
+        "frame": 272,
+        "elevation_deg": -0.7
+      },
+      "view_image": "data/crops/visibility/studio/59_bird_decoration.png"
+    },
+    "60": {
+      "label": "books",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 126,
+      "min_range_m": 3.98,
+      "best_view": {
+        "n_points": 418,
+        "px_bbox": [
+          714,
+          330,
+          876,
+          382
+        ],
+        "px_bbox_unwrapped": [
+          714,
+          330,
+          876,
+          382
+        ],
+        "px_area": 8424,
+        "px_area_frac": 0.00686,
+        "distance_m": 2.92,
+        "occlusion": 0.254,
+        "clipped": false,
+        "stamp": 1785529095.902061,
+        "frame": 56,
+        "elevation_deg": -5.0
+      },
+      "view_image": "data/crops/visibility/studio/60_book.png"
+    },
+    "61": {
+      "label": "books",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 176,
+      "min_range_m": 1.87,
+      "best_view": {
+        "n_points": 403,
+        "px_bbox": [
+          780,
+          387,
+          922,
+          483
+        ],
+        "px_bbox_unwrapped": [
+          780,
+          387,
+          922,
+          483
+        ],
+        "px_area": 13632,
+        "px_area_frac": 0.01109,
+        "distance_m": 1.47,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529123.395362,
+        "frame": 270,
+        "elevation_deg": -19.8
+      },
+      "view_image": "data/crops/visibility/studio/61_book.png"
+    },
+    "62": {
+      "label": "gymnastics decoration",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.68,
+      "best_view": {
+        "n_points": 22,
+        "px_bbox": [
+          853,
+          372,
+          876,
+          411
+        ],
+        "px_bbox_unwrapped": [
+          853,
+          372,
+          876,
+          411
+        ],
+        "px_area": 897,
+        "px_area_frac": 0.00073,
+        "distance_m": 2.75,
+        "occlusion": 0.553,
+        "clipped": false,
+        "stamp": 1785529110.585365,
+        "frame": 170,
+        "elevation_deg": -13.2
+      }
+    },
+    "63": {
+      "label": "table",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 171,
+      "min_range_m": 2.23,
+      "best_view": {
+        "n_points": 1198,
+        "px_bbox": [
+          539,
+          364,
+          744,
+          483
+        ],
+        "px_bbox_unwrapped": [
+          539,
+          364,
+          744,
+          483
+        ],
+        "px_area": 24395,
+        "px_area_frac": 0.01985,
+        "distance_m": 1.57,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529125.780345,
+        "frame": 289,
+        "elevation_deg": -16.2
+      },
+      "view_image": "data/crops/visibility/studio/63_table.png"
+    },
+    "64": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 4.26,
+      "best_view": null
+    },
+    "66": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.42,
+      "best_view": null
+    },
+    "67": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.9,
+      "best_view": null
+    },
+    "68": {
+      "label": "floor",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 304,
+      "min_range_m": 1.44,
+      "best_view": {
+        "n_points": 1394,
+        "px_bbox": [
+          855,
+          348,
+          157,
+          458
+        ],
+        "px_bbox_unwrapped": [
+          855,
+          348,
+          2077,
+          458
+        ],
+        "px_area": 134420,
+        "px_area_frac": 0.10939,
+        "distance_m": 1.11,
+        "occlusion": 0.178,
+        "clipped": false,
+        "stamp": 1785529104.360324,
+        "frame": 122,
+        "elevation_deg": -13.9
+      },
+      "view_image": "data/crops/visibility/studio/68_floor.png"
+    },
+    "69": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 3.83,
+      "best_view": null
+    },
+    "70": {
+      "label": "focus light",
+      "region": "0",
+      "visible": false,
+      "reason": "never_scanned",
+      "frames_visible": 0,
+      "min_range_m": 2.37,
+      "best_view": null
+    },
+    "71": {
+      "label": "shelf",
+      "region": "0",
+      "visible": true,
+      "reason": null,
+      "frames_visible": 230,
+      "min_range_m": 2.78,
+      "best_view": {
+        "n_points": 2829,
+        "px_bbox": [
+          625,
+          351,
+          1278,
+          399
+        ],
+        "px_bbox_unwrapped": [
+          625,
+          351,
+          1278,
+          399
+        ],
+        "px_area": 31344,
+        "px_area_frac": 0.02551,
+        "distance_m": 1.99,
+        "occlusion": 0.098,
+        "clipped": false,
+        "stamp": 1785529096.392054,
+        "frame": 60,
+        "elevation_deg": -14.6
+      },
+      "view_image": "data/crops/visibility/studio/71_shelf.png"
+    },
+    "72": {
+      "label": "beer bottle",
+      "region": "0",
+      "visible": false,
+      "reason": "too_small",
+      "frames_visible": 0,
+      "min_range_m": 2.11,
+      "best_view": {
+        "n_points": 37,
+        "px_bbox": [
+          419,
+          337,
+          435,
+          384
+        ],
+        "px_bbox_unwrapped": [
+          419,
+          337,
+          435,
+          384
+        ],
+        "px_area": 752,
+        "px_area_frac": 0.00061,
+        "distance_m": 2.09,
+        "occlusion": 0.0,
+        "clipped": false,
+        "stamp": 1785529093.54704,
+        "frame": 38,
+        "elevation_deg": -7.1
+      }
+    }
+  },
+  "summary": {
+    "objects": 61,
+    "visible": 42,
+    "hidden": 19,
+    "seconds": 28.5
+  }
+}
