@@ -25,7 +25,7 @@ class TargetList(BaseModel):
     """
 
     targets: list[str] = Field(
-        description='Object nouns to detect, e.g. ["glass", "arabic jar"]')
+        description='Object nouns to detect, e.g. ["pillow with black stripes", "couch"]')
 
 
 class CountAnswer(BaseModel):

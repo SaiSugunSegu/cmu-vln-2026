@@ -16,6 +16,7 @@
   <depend>visualization_msgs</depend>
   <!-- All three are launch-time includes / topic peers of smart_vlm.launch, not imports. -->
   <exec_depend>captioner</exec_depend>
+  <exec_depend>language_planner</exec_depend>
   <exec_depend>sam_mapper</exec_depend>
   <exec_depend>tare_planner</exec_depend>
 

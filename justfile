@@ -61,7 +61,14 @@ down:
 [group('setup')]
 [doc('ONE-TIME ~15-20 GB weight download (sam3, Qwen3-VL, CLIP) + SAM 3 kernels')]
 hf-fetch models="":
-    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
+    #!/usr/bin/env bash
+    set -euo pipefail
+    extra=()
+    env_file="{{ justfile_directory() }}/.env"
+    if [[ -f "$env_file" ]]; then
+      extra+=(--env-file "$env_file")
+    fi
+    docker exec -e PYTHONUTF8=1 "${extra[@]}" iros2026_ai_module bash -lc \
       "{{capt_env}} && fetch_weights {{models}}"
 
 # Run this after `up-dev`, after pulling, or whenever a launch reports "package '<name>'

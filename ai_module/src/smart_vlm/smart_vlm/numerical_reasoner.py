@@ -295,8 +295,9 @@ class NumericalReasoner(Node):
         """The nouns SAM gets armed with. Never raises: an empty list is caught upstream."""
         reply: list[str] | None = None
         try:
+            # User turn is the raw query, matching language_planner's extract_chain.
             result = self.backend.ask(
-                EXTRACT_SYSTEM, f"Question: {question}", [], TargetList, lite=True)
+                EXTRACT_SYSTEM, question, [], TargetList, lite=True)
             reply = list(result.targets)
             targets = clean_targets(result.targets)
             if targets:
