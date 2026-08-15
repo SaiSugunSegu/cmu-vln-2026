@@ -1,0 +1,1504 @@
+{
+  "scene": "chinese_room",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "hard": 1
+  },
+  "target_object_coverage": [
+    "chair",
+    "elephant figurine",
+    "horse figurine",
+    "painting",
+    "partition wall",
+    "potted plant",
+    "table",
+    "tea table",
+    "tv"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go near the potted plant on the table and stop at the painting near the TV.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "potted plant",
+        "table",
+        "painting",
+        "tv"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the potted plant on the table",
+            "label": "potted plant",
+            "object_ids": [
+              "27"
+            ],
+            "anchor_ids": [
+              "77"
+            ],
+            "center": [
+              6.2038,
+              -2.5819
+            ],
+            "radius": 1.5,
+            "traj_index": 671,
+            "traj_frac": 0.445,
+            "min_dist_m": 0.644,
+            "why": "text was indecisive (no candidate satisfies the question); the demo picks potted plant#27 at 0.64 m",
+            "anchor_why": "on 'table': no box supports the relation; nearest of 2 is table#77 at 0.00 m"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the painting near the tv",
+          "label": "painting",
+          "object_ids": [
+            "2"
+          ],
+          "anchor_ids": [
+            "19"
+          ],
+          "center": [
+            -2.2691,
+            -3.6279
+          ],
+          "radius": 1.5,
+          "traj_index": 1508,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.641,
+          "why": "near: painting#2 is the only match",
+          "anchor_why": "near 'tv': the boxes put tv#19 there"
+        }
+      },
+      "objects": {
+        "27": {
+          "object_id": "27",
+          "region": "0",
+          "label": "potted plant",
+          "raw_label": "potted plant",
+          "nyu_label": "plant",
+          "colors": [
+            "olive",
+            "gray"
+          ],
+          "center": [
+            6.2038,
+            -2.5819,
+            1.1557
+          ],
+          "size": [
+            0.7959,
+            0.7065,
+            0.7615
+          ],
+          "yaw": -0.8319,
+          "aabb": {
+            "min": [
+              5.6747,
+              -3.114,
+              0.7749
+            ],
+            "max": [
+              6.7329,
+              -2.0499,
+              1.5364
+            ]
+          },
+          "size_aabb": [
+            1.0583,
+            1.0641,
+            0.7615
+          ],
+          "bbox_corners": [
+            [
+              6.1969,
+              -2.0499,
+              1.5364
+            ],
+            [
+              6.7329,
+              -2.6382,
+              1.5364
+            ],
+            [
+              6.2107,
+              -3.114,
+              1.5364
+            ],
+            [
+              5.6747,
+              -2.5257,
+              1.5364
+            ],
+            [
+              6.1969,
+              -2.0499,
+              0.7749
+            ],
+            [
+              6.7329,
+              -2.6382,
+              0.7749
+            ],
+            [
+              6.2107,
+              -3.114,
+              0.7749
+            ],
+            [
+              5.6747,
+              -2.5257,
+              0.7749
+            ]
+          ],
+          "volume": 0.42817,
+          "role": "constraint"
+        },
+        "77": {
+          "object_id": "77",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            6.2289,
+            -2.5931,
+            0.3776
+          ],
+          "size": [
+            1.5428,
+            0.4899,
+            0.7947
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              5.984,
+              -3.3646,
+              -0.0198
+            ],
+            "max": [
+              6.4739,
+              -1.8217,
+              0.7749
+            ]
+          },
+          "size_aabb": [
+            0.4899,
+            1.5428,
+            0.7947
+          ],
+          "bbox_corners": [
+            [
+              6.4739,
+              -1.8217,
+              0.7749
+            ],
+            [
+              6.4739,
+              -3.3646,
+              0.7749
+            ],
+            [
+              5.984,
+              -3.3646,
+              0.7749
+            ],
+            [
+              5.984,
+              -1.8217,
+              0.7749
+            ],
+            [
+              6.4739,
+              -1.8217,
+              -0.0198
+            ],
+            [
+              6.4739,
+              -3.3646,
+              -0.0198
+            ],
+            [
+              5.984,
+              -3.3646,
+              -0.0198
+            ],
+            [
+              5.984,
+              -1.8217,
+              -0.0198
+            ]
+          ],
+          "volume": 0.60066,
+          "role": "reference"
+        },
+        "2": {
+          "object_id": "2",
+          "region": "0",
+          "label": "painting",
+          "raw_label": "painting",
+          "nyu_label": "picture",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -2.2691,
+            -3.6279,
+            1.6009
+          ],
+          "size": [
+            0.7653,
+            0.0282,
+            0.9883
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -2.2832,
+              -4.0105,
+              1.1067
+            ],
+            "max": [
+              -2.255,
+              -3.2452,
+              2.0951
+            ]
+          },
+          "size_aabb": [
+            0.0282,
+            0.7653,
+            0.9883
+          ],
+          "bbox_corners": [
+            [
+              -2.255,
+              -3.2452,
+              2.0951
+            ],
+            [
+              -2.255,
+              -4.0105,
+              2.0951
+            ],
+            [
+              -2.2832,
+              -4.0105,
+              2.0951
+            ],
+            [
+              -2.2832,
+              -3.2452,
+              2.0951
+            ],
+            [
+              -2.255,
+              -3.2452,
+              1.1067
+            ],
+            [
+              -2.255,
+              -4.0105,
+              1.1067
+            ],
+            [
+              -2.2832,
+              -4.0105,
+              1.1067
+            ],
+            [
+              -2.2832,
+              -3.2452,
+              1.1067
+            ]
+          ],
+          "volume": 0.02136,
+          "role": "constraint"
+        },
+        "19": {
+          "object_id": "19",
+          "region": "0",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -2.2451,
+            -2.0804,
+            1.1614
+          ],
+          "size": [
+            0.9744,
+            0.0391,
+            0.611
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            "max": [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ]
+          },
+          "size_aabb": [
+            0.0391,
+            0.9744,
+            0.611
+          ],
+          "bbox_corners": [
+            [
+              -2.2646,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              1.4669
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              1.4669
+            ],
+            [
+              -2.2646,
+              -2.5676,
+              0.8559
+            ],
+            [
+              -2.2646,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -1.5932,
+              0.8559
+            ],
+            [
+              -2.2255,
+              -2.5676,
+              0.8559
+            ]
+          ],
+          "volume": 0.0233,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/chinese_room/trajectory_q4.ply",
+        "n_vertices": 1509,
+        "length_m": 19.093,
+        "z": 0.75,
+        "start": [
+          0.011,
+          0.001
+        ],
+        "end": [
+          -1.69,
+          -3.903
+        ],
+        "polyline": [
+          [
+            0.011,
+            0.001
+          ],
+          [
+            0.268,
+            0.035
+          ],
+          [
+            0.524,
+            0.082
+          ],
+          [
+            0.777,
+            0.133
+          ],
+          [
+            1.031,
+            0.179
+          ],
+          [
+            1.277,
+            0.241
+          ],
+          [
+            1.524,
+            0.296
+          ],
+          [
+            1.782,
+            0.325
+          ],
+          [
+            2.037,
+            0.328
+          ],
+          [
+            2.299,
+            0.326
+          ],
+          [
+            2.556,
+            0.305
+          ],
+          [
+            2.775,
+            0.169
+          ],
+          [
+            2.754,
+            -0.085
+          ],
+          [
+            2.693,
+            -0.339
+          ],
+          [
+            2.676,
+            -0.599
+          ],
+          [
+            2.735,
+            -0.848
+          ],
+          [
+            2.829,
+            -1.089
+          ],
+          [
+            2.95,
+            -1.323
+          ],
+          [
+            3.097,
+            -1.539
+          ],
+          [
+            3.267,
+            -1.737
+          ],
+          [
+            3.452,
+            -1.908
+          ],
+          [
+            3.656,
+            -2.058
+          ],
+          [
+            3.878,
+            -2.186
+          ],
+          [
+            4.108,
+            -2.305
+          ],
+          [
+            4.338,
+            -2.412
+          ],
+          [
+            4.576,
+            -2.502
+          ],
+          [
+            4.821,
+            -2.594
+          ],
+          [
+            5.067,
+            -2.681
+          ],
+          [
+            5.311,
+            -2.748
+          ],
+          [
+            5.561,
+            -2.803
+          ],
+          [
+            5.308,
+            -2.751
+          ],
+          [
+            5.061,
+            -2.698
+          ],
+          [
+            4.819,
+            -2.625
+          ],
+          [
+            4.574,
+            -2.546
+          ],
+          [
+            4.327,
+            -2.466
+          ],
+          [
+            4.114,
+            -2.335
+          ],
+          [
+            3.906,
+            -2.182
+          ],
+          [
+            3.721,
+            -2.014
+          ],
+          [
+            3.552,
+            -1.829
+          ],
+          [
+            3.389,
+            -1.636
+          ],
+          [
+            3.225,
+            -1.442
+          ],
+          [
+            3.063,
+            -1.244
+          ],
+          [
+            2.92,
+            -1.037
+          ],
+          [
+            2.803,
+            -0.815
+          ],
+          [
+            2.755,
+            -0.564
+          ],
+          [
+            2.753,
+            -0.308
+          ],
+          [
+            2.727,
+            -0.058
+          ],
+          [
+            2.629,
+            0.182
+          ],
+          [
+            2.504,
+            0.406
+          ],
+          [
+            2.352,
+            0.613
+          ],
+          [
+            2.081,
+            0.589
+          ],
+          [
+            1.839,
+            0.472
+          ],
+          [
+            1.616,
+            0.33
+          ],
+          [
+            1.403,
+            0.174
+          ],
+          [
+            1.197,
+            0.023
+          ],
+          [
+            0.983,
+            -0.134
+          ],
+          [
+            0.773,
+            -0.287
+          ],
+          [
+            0.57,
+            -0.435
+          ],
+          [
+            0.357,
+            -0.591
+          ],
+          [
+            0.144,
+            -0.732
+          ],
+          [
+            -0.074,
+            -0.855
+          ],
+          [
+            -0.278,
+            -1.002
+          ],
+          [
+            -0.442,
+            -1.203
+          ],
+          [
+            -0.605,
+            -1.411
+          ],
+          [
+            -0.75,
+            -1.624
+          ],
+          [
+            -0.864,
+            -1.868
+          ],
+          [
+            -0.967,
+            -2.116
+          ],
+          [
+            -1.067,
+            -2.354
+          ],
+          [
+            -1.158,
+            -2.595
+          ],
+          [
+            -1.227,
+            -2.835
+          ],
+          [
+            -1.298,
+            -3.078
+          ],
+          [
+            -1.391,
+            -3.312
+          ],
+          [
+            -1.49,
+            -3.545
+          ],
+          [
+            -1.605,
+            -3.768
+          ],
+          [
+            -1.69,
+            -3.903
+          ]
+        ]
+      },
+      "evidence": "Demo path passes potted plant at 0.64 m (44% along), and ends 0.64 m from painting.",
+      "solver_trace": [
+        "head='potted plant' color='' hops=[{'relation': 'on', 'phrases': ['table']}]",
+        "head candidates: [potted plant#13, potted plant#27, potted plant#30, potted plant#41]",
+        "target hop (on): nothing is on the anchor(s)",
+        "pick: no candidate satisfies the question",
+        "head='painting' color='' hops=[{'relation': 'near', 'phrases': ['tv']}]",
+        "head candidates: [painting#2, painting#8, painting#9, painting#10]",
+        "target hop (near): near: 1 match(es) -> [painting#2]",
+        "pick: near: painting#2 is the only match"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go near the tea table with the elephant figurine on it, then stop at the table with the horse figurine on it, avoiding the path between the chair and the folding screen.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "hard",
+      "target_objects": [
+        "tea table",
+        "elephant figurine",
+        "table",
+        "horse figurine",
+        "chair",
+        "partition wall"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the tea table with the elephant figurine on it",
+            "label": "tea table",
+            "object_ids": [
+              "76"
+            ],
+            "anchor_ids": [
+              "3"
+            ],
+            "center": [
+              -0.0231,
+              -2.1974
+            ],
+            "radius": 1.5,
+            "traj_index": 113,
+            "traj_frac": 0.18,
+            "min_dist_m": 1.148,
+            "why": "supports: tea table#76 is the only match",
+            "anchor_why": "supports 'elephant figurine': the boxes put elephant figurine#3 there"
+          }
+        ],
+        "avoid": [
+          {
+            "kind": "avoid_between",
+            "phrase": "the chair and the folding screen",
+            "label": "chair, partition wall",
+            "object_ids": [
+              "84",
+              "36"
+            ],
+            "anchor_ids": [],
+            "polygon": [
+              [
+                0.234,
+                -2.837
+              ],
+              [
+                1.539,
+                -1.901
+              ],
+              [
+                2.475,
+                -3.207
+              ],
+              [
+                1.17,
+                -4.143
+              ]
+            ],
+            "why": "chinese_room has no object labelled 'folding screen'; the carved partition in the middle of the room is annotated 'partition wall' #36 (4.65 m long, 7 cm thick), and the actual room walls are 7-9 m, so #36 is the screen. The chair is fixed by elimination against the demo: of the six chairs, the run passes through the between-band for #29, #61, #81 and #86 (98-173 vertices inside), so none of those can be the one it was told to avoid; of the two that remain, #84 is the nearer to the screen (2.29 m vs #60's 3.02 m). Judgement call -- the sentence alone does not distinguish #84 from #60, and both leave the demo compliant."
+          }
+        ],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the table with the horse figurine on it",
+          "label": "table",
+          "object_ids": [
+            "77"
+          ],
+          "anchor_ids": [
+            "53"
+          ],
+          "center": [
+            6.2289,
+            -2.5931
+          ],
+          "radius": 1.5,
+          "traj_index": 629,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.823,
+          "why": "supports: table#77 is the only match",
+          "anchor_why": "supports 'horse figurine': the boxes put horse figurine#53 there"
+        }
+      },
+      "objects": {
+        "76": {
+          "object_id": "76",
+          "region": "0",
+          "label": "tea table",
+          "raw_label": "tea table",
+          "nyu_label": "table",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            -0.0231,
+            -2.1974,
+            0.1706
+          ],
+          "size": [
+            0.9396,
+            0.9397,
+            0.3428
+          ],
+          "yaw": -3.1415,
+          "aabb": {
+            "min": [
+              -0.4929,
+              -2.6673,
+              -0.0008
+            ],
+            "max": [
+              0.4468,
+              -1.7275,
+              0.342
+            ]
+          },
+          "size_aabb": [
+            0.9397,
+            0.9398,
+            0.3428
+          ],
+          "bbox_corners": [
+            [
+              0.4468,
+              -2.6672,
+              0.342
+            ],
+            [
+              -0.4928,
+              -2.6673,
+              0.342
+            ],
+            [
+              -0.4929,
+              -1.7276,
+              0.342
+            ],
+            [
+              0.4467,
+              -1.7275,
+              0.342
+            ],
+            [
+              0.4468,
+              -2.6672,
+              -0.0008
+            ],
+            [
+              -0.4928,
+              -2.6673,
+              -0.0008
+            ],
+            [
+              -0.4929,
+              -1.7276,
+              -0.0008
+            ],
+            [
+              0.4467,
+              -1.7275,
+              -0.0008
+            ]
+          ],
+          "volume": 0.30269,
+          "role": "constraint"
+        },
+        "3": {
+          "object_id": "3",
+          "region": "0",
+          "label": "elephant figurine",
+          "raw_label": "elephant figurine",
+          "nyu_label": "decoration item",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            0.0089,
+            -2.1734,
+            0.4991
+          ],
+          "size": [
+            0.3647,
+            0.1417,
+            0.3255
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -0.1735,
+              -2.2443,
+              0.3364
+            ],
+            "max": [
+              0.1912,
+              -2.1026,
+              0.6619
+            ]
+          },
+          "size_aabb": [
+            0.3647,
+            0.1417,
+            0.3255
+          ],
+          "bbox_corners": [
+            [
+              0.1912,
+              -2.2443,
+              0.6619
+            ],
+            [
+              -0.1735,
+              -2.2443,
+              0.6619
+            ],
+            [
+              -0.1735,
+              -2.1026,
+              0.6619
+            ],
+            [
+              0.1912,
+              -2.1026,
+              0.6619
+            ],
+            [
+              0.1912,
+              -2.2443,
+              0.3364
+            ],
+            [
+              -0.1735,
+              -2.2443,
+              0.3364
+            ],
+            [
+              -0.1735,
+              -2.1026,
+              0.3364
+            ],
+            [
+              0.1912,
+              -2.1026,
+              0.3364
+            ]
+          ],
+          "volume": 0.01682,
+          "role": "reference"
+        },
+        "77": {
+          "object_id": "77",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            6.2289,
+            -2.5931,
+            0.3776
+          ],
+          "size": [
+            1.5428,
+            0.4899,
+            0.7947
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              5.984,
+              -3.3646,
+              -0.0198
+            ],
+            "max": [
+              6.4739,
+              -1.8217,
+              0.7749
+            ]
+          },
+          "size_aabb": [
+            0.4899,
+            1.5428,
+            0.7947
+          ],
+          "bbox_corners": [
+            [
+              6.4739,
+              -1.8217,
+              0.7749
+            ],
+            [
+              6.4739,
+              -3.3646,
+              0.7749
+            ],
+            [
+              5.984,
+              -3.3646,
+              0.7749
+            ],
+            [
+              5.984,
+              -1.8217,
+              0.7749
+            ],
+            [
+              6.4739,
+              -1.8217,
+              -0.0198
+            ],
+            [
+              6.4739,
+              -3.3646,
+              -0.0198
+            ],
+            [
+              5.984,
+              -3.3646,
+              -0.0198
+            ],
+            [
+              5.984,
+              -1.8217,
+              -0.0198
+            ]
+          ],
+          "volume": 0.60066,
+          "role": "constraint"
+        },
+        "53": {
+          "object_id": "53",
+          "region": "0",
+          "label": "horse figurine",
+          "raw_label": "horse figurine",
+          "nyu_label": "decoration item",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            6.3095,
+            -2.083,
+            0.9317
+          ],
+          "size": [
+            0.3245,
+            0.1409,
+            0.3198
+          ],
+          "yaw": -2.3018,
+          "aabb": {
+            "min": [
+              6.1487,
+              -2.2508,
+              0.7717
+            ],
+            "max": [
+              6.4703,
+              -1.9152,
+              1.0916
+            ]
+          },
+          "size_aabb": [
+            0.3215,
+            0.3357,
+            0.3198
+          ],
+          "bbox_corners": [
+            [
+              6.4703,
+              -2.0092,
+              1.0916
+            ],
+            [
+              6.2536,
+              -2.2508,
+              1.0916
+            ],
+            [
+              6.1487,
+              -2.1568,
+              1.0916
+            ],
+            [
+              6.3654,
+              -1.9152,
+              1.0916
+            ],
+            [
+              6.4703,
+              -2.0092,
+              0.7717
+            ],
+            [
+              6.2536,
+              -2.2508,
+              0.7717
+            ],
+            [
+              6.1487,
+              -2.1568,
+              0.7717
+            ],
+            [
+              6.3654,
+              -1.9152,
+              0.7717
+            ]
+          ],
+          "volume": 0.01462,
+          "role": "reference"
+        },
+        "84": {
+          "object_id": "84",
+          "region": "0",
+          "label": "chair",
+          "raw_label": "chair",
+          "nyu_label": "chair",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            0.4219,
+            -3.6905,
+            0.4348
+          ],
+          "size": [
+            0.6307,
+            0.6397,
+            0.9132
+          ],
+          "yaw": -3.1153,
+          "aabb": {
+            "min": [
+              0.0982,
+              -4.0185,
+              -0.0218
+            ],
+            "max": [
+              0.7455,
+              -3.3624,
+              0.8914
+            ]
+          },
+          "size_aabb": [
+            0.6473,
+            0.6561,
+            0.9132
+          ],
+          "bbox_corners": [
+            [
+              0.7455,
+              -4.0019,
+              0.8914
+            ],
+            [
+              0.115,
+              -4.0185,
+              0.8914
+            ],
+            [
+              0.0982,
+              -3.379,
+              0.8914
+            ],
+            [
+              0.7287,
+              -3.3624,
+              0.8914
+            ],
+            [
+              0.7455,
+              -4.0019,
+              -0.0218
+            ],
+            [
+              0.115,
+              -4.0185,
+              -0.0218
+            ],
+            [
+              0.0982,
+              -3.379,
+              -0.0218
+            ],
+            [
+              0.7287,
+              -3.3624,
+              -0.0218
+            ]
+          ],
+          "volume": 0.36843,
+          "role": "constraint"
+        },
+        "36": {
+          "object_id": "36",
+          "region": "0",
+          "label": "partition wall",
+          "raw_label": "partition wall",
+          "nyu_label": "wall",
+          "colors": [
+            "brown",
+            "gray"
+          ],
+          "center": [
+            2.287,
+            -2.3534,
+            1.315
+          ],
+          "size": [
+            4.6521,
+            0.0669,
+            2.67
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              2.2536,
+              -4.6795,
+              -0.02
+            ],
+            "max": [
+              2.3205,
+              -0.0274,
+              2.65
+            ]
+          },
+          "size_aabb": [
+            0.0669,
+            4.6521,
+            2.67
+          ],
+          "bbox_corners": [
+            [
+              2.3205,
+              -0.0274,
+              2.65
+            ],
+            [
+              2.3205,
+              -4.6795,
+              2.65
+            ],
+            [
+              2.2536,
+              -4.6795,
+              2.65
+            ],
+            [
+              2.2536,
+              -0.0274,
+              2.65
+            ],
+            [
+              2.3205,
+              -0.0274,
+              -0.02
+            ],
+            [
+              2.3205,
+              -4.6795,
+              -0.02
+            ],
+            [
+              2.2536,
+              -4.6795,
+              -0.02
+            ],
+            [
+              2.2536,
+              -0.0274,
+              -0.02
+            ]
+          ],
+          "volume": 0.83126,
+          "role": "constraint"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/chinese_room/trajectory_q5.ply",
+        "n_vertices": 630,
+        "length_m": 9.157,
+        "z": 0.75,
+        "start": [
+          0.009,
+          -0.004
+        ],
+        "end": [
+          5.411,
+          -2.501
+        ],
+        "polyline": [
+          [
+            0.009,
+            -0.004
+          ],
+          [
+            0.169,
+            -0.21
+          ],
+          [
+            0.288,
+            -0.44
+          ],
+          [
+            0.378,
+            -0.677
+          ],
+          [
+            0.44,
+            -0.922
+          ],
+          [
+            0.659,
+            -0.795
+          ],
+          [
+            0.788,
+            -0.561
+          ],
+          [
+            0.933,
+            -0.353
+          ],
+          [
+            1.106,
+            -0.157
+          ],
+          [
+            1.305,
+            0.022
+          ],
+          [
+            1.513,
+            0.169
+          ],
+          [
+            1.754,
+            0.257
+          ],
+          [
+            2.006,
+            0.309
+          ],
+          [
+            2.262,
+            0.333
+          ],
+          [
+            2.522,
+            0.328
+          ],
+          [
+            2.777,
+            0.293
+          ],
+          [
+            2.649,
+            0.076
+          ],
+          [
+            2.635,
+            -0.176
+          ],
+          [
+            2.652,
+            -0.431
+          ],
+          [
+            2.712,
+            -0.681
+          ],
+          [
+            2.759,
+            -0.942
+          ],
+          [
+            2.869,
+            -1.175
+          ],
+          [
+            2.997,
+            -1.395
+          ],
+          [
+            3.145,
+            -1.612
+          ],
+          [
+            3.324,
+            -1.817
+          ],
+          [
+            3.538,
+            -1.97
+          ],
+          [
+            3.763,
+            -2.087
+          ],
+          [
+            3.992,
+            -2.194
+          ],
+          [
+            4.229,
+            -2.282
+          ],
+          [
+            4.469,
+            -2.365
+          ],
+          [
+            4.726,
+            -2.423
+          ],
+          [
+            4.979,
+            -2.454
+          ],
+          [
+            5.246,
+            -2.483
+          ],
+          [
+            5.411,
+            -2.501
+          ]
+        ]
+      },
+      "evidence": "Demo path passes tea table at 1.15 m (18% along), and ends 0.82 m from table; it never enters the zone for chair, partition wall.",
+      "solver_trace": [
+        "head='tea table' color='' hops=[{'relation': 'supports', 'phrases': ['elephant figurine']}]",
+        "head candidates: [tea table#76]",
+        "target hop (supports): supports: 1 match(es) -> [tea table#76]",
+        "pick: supports: tea table#76 is the only match",
+        "head='table' color='' hops=[{'relation': 'supports', 'phrases': ['horse figurine']}]",
+        "head candidates: [table#77, table#88]",
+        "target hop (supports): supports: 1 match(es) -> [table#77]",
+        "pick: supports: table#77 is the only match"
+      ],
+      "verified": true
+    }
+  ]
+}

@@ -1,0 +1,442 @@
+#!/usr/bin/env python3
+"""IRef-VLA object boxes and the spatial predicates that read them.
+
+Shared by ``utils.text_solver``, ``scripts/bench/generate_category3_qa.py`` and
+``scripts/eval/verify_category3.py``, so a constraint is generated, resolved and audited
+against one definition of "on" and "between" rather than three.
+
+Two decisions here shape everything downstream:
+
+* **Every comparison is run under two metrics** — centre-to-centre and box-gap. The
+  challenge's overlap function is unpublished, and the two metrics disagree about which
+  object is closest whenever a large object is involved. A grounding is only trusted when
+  both agree, so the answer does not depend on which one the grader picked.
+* **Class is read at two granularities** — the raw IRef label and the coarser NYU label.
+  Matching on raw labels alone lets "the table closest to the sofa" pick a "tea table".
+
+Originally written for the category-2 benchmark on the unmerged branch
+``origin/user/anshul/cat2_benchmark``; the uniqueness half that decided whether a *question
+was fair to ask* lives there and was dropped here, since category 3 grounds instructions
+the organizers already wrote. Recover it with
+``git show origin/user/anshul/cat2_benchmark:scripts/utils/geometry.py``.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import re
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+
+REPO = Path(__file__).resolve().parents[2]
+# Scene recordings and the IRef-VLA metadata beside them. Every reader takes this as a
+# default it can override, because the ai_module container mounts the recordings at
+# /data/bags and never sees the repo root.
+BAGS = REPO / "data" / "bags"
+# home_building_1 and home_building_2 have no recording, so no metadata was bundled beside
+# one -- see the note at the foot of data/bags/scenes.yaml. Their annotations only exist in
+# the dataset checkout next to the repo. Where both roots hold a scene the files are
+# byte-identical, so this is a fallback, not a second source of truth. Same two-root union
+# scripts/eval/build_dimension_priors.py already walks.
+DATASET = REPO.parent / "IRef-VLA" / "unity" / "Unity"
+
+SCENE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
+
+# The answer must beat its runner-up by this much (metres) under every metric.
+MIN_MARGIN = 0.30
+# "near" is absolute, not comparative: the target must be this close.
+NEAR_MAX = 1.50
+# Wall-mounted objects hang a few centimetres off the wall behind the furniture in
+# front of them, so footprints are dilated before above/below tests.
+FOOTPRINT_TOL = 0.15
+REST_TOL = 0.10
+# An object resting on another sits this far up the support's own height; anything lower is
+# standing beside it, inside its box. Supports flatter than FLAT_SUPPORT are exempt: on a
+# 2 cm tray, the tray and everything on it share a base height to within the box precision.
+REST_FRACTION = 0.30
+FLAT_SUPPORT = 0.10
+# "in" is containment, not support: the inner object's base has to sit this far below the
+# outer's rim, and the outer needs enough depth for "inside" to mean anything (a tray is
+# 2 cm deep — things are *on* it).
+INSIDE_DEPTH = 0.10
+INSIDE_MIN_HEIGHT = 0.15
+# "between" needs the target inside the middle stretch of the anchor-anchor segment,
+# not merely somewhere on the infinite line through them.
+BETWEEN_SPAN = (0.15, 0.85)
+# Lateral slack scales with how far apart the anchors are, but never past a metre: with
+# two door frames and four windows in a room, a purely proportional corridor calls four
+# different wall lamps "between a door frame and a window".
+BETWEEN_LATERAL = 0.35  # as a fraction of the anchor separation
+BETWEEN_LATERAL_MAX = 1.00  # metres
+# Betweenness also has to be *visible*. Two anchors 6 m apart with the target dead on the
+# line between them is geometrically perfect and reads as nonsense ("the table between the
+# shoes and the jar"), so the anchors must be near each other and near the target.
+BETWEEN_MAX_SPAN = 4.50
+BETWEEN_MAX_ANCHOR_GAP = 3.00
+
+# Room-sized datums. "Farthest from the tatami" is not a question anyone can answer,
+# because the tatami is the whole floor -- and a wall is the same thing stood upright: its
+# box is the room's perimeter, so "the cup between the lamp and the wall" holds for anything
+# near any wall. Door and window frames are deliberately NOT here: they are room-sized
+# datums' opposite, a specific spot on a wall, and are how the organizers write questions.
+VACUOUS_ANCHORS = {
+    "floor", "tatami", "ceiling",
+    "wall", "walls", "exterior walls", "interior walls", "bathroom walls", "glass wall",
+    "partition wall",
+}
+
+# Class folding, same spirit (and mostly the same entries) as scripts/eval/score_map3d.py:
+# every wrong entry here merges two genuinely different classes and lets an ambiguous
+# question through, so keep it short.
+SYNONYM_GROUPS = [
+    {"sofa", "couch"},
+    {"picture", "painting", "photo", "poster", "framed record", "framed records"},
+    {"carpet", "rug"},
+    {"potted plant", "plant"},
+    {"nightstand", "night stand", "bedside table"},
+    {"tv", "television"},
+    {"book", "books"},
+    {"curtain", "curtains"},
+    {"window", "windows"},
+    {"lamp", "light"},
+    {"trash can", "trash bin", "garbage can"},
+]
+CLASS_ALIAS: dict[str, str] = {}
+for _group in SYNONYM_GROUPS:
+    _canon = sorted(_group)[0]
+    for _name in _group:
+        CLASS_ALIAS[_name] = _canon
+
+COLORS = {
+    "black", "gray", "grey", "white", "brown", "maroon", "olive", "pink", "red", "blue",
+    "green", "yellow", "orange", "aqua", "beige", "tan", "purple", "cyan", "magenta",
+    "gold", "silver", "navy", "teal", "lime", "fuchsia",
+}
+
+ARTICLES = {"a", "an", "the"}
+
+# IRef's palette is CSS colour names fitted to mesh vertices, so a question's everyday
+# colour word and the stored label can differ on the same object: every pillow in
+# japanese_room is "maroon", and the official question calls one of them red.
+COLOR_ALIAS = {
+    "red": {"red", "maroon"},
+    "maroon": {"maroon", "red"},
+    "gray": {"gray", "grey", "silver"},
+    "grey": {"grey", "gray", "silver"},
+    "beige": {"beige", "tan"},
+    "tan": {"tan", "beige"},
+    "green": {"green", "olive", "lime"},
+    "purple": {"purple", "fuchsia", "magenta"},
+    "cyan": {"cyan", "aqua", "teal"},
+    "aqua": {"aqua", "cyan", "teal"},
+}
+
+
+def color_matches(wanted: str, colors: list[str]) -> bool:
+    accepted = COLOR_ALIAS.get(wanted, {wanted})
+    return any(c in accepted for c in colors)
+
+
+def norm_class(name: str) -> str:
+    """Canonical class key: lowercased, whitespace-collapsed, synonyms folded."""
+    key = " ".join(str(name or "").lower().split())
+    return CLASS_ALIAS.get(key, key)
+
+
+class Obj:
+    """One IRef-VLA object: an oriented box with labels and a colour palette."""
+
+    __slots__ = (
+        "id", "region", "raw_label", "nyu_label", "colors", "corners",
+        "lo", "hi", "center", "size", "volume",
+    )
+
+    def __init__(self, oid: str, region: str, raw: dict[str, Any]):
+        corners = np.asarray(raw["bbox"], dtype=float)
+        self.id = str(oid)
+        self.region = str(region)
+        self.raw_label = " ".join(str(raw.get("raw_label") or "").lower().split())
+        self.nyu_label = " ".join(str(raw.get("nyu_label") or "").lower().split())
+        self.colors = [str(c).lower() for c in (raw.get("color_labels") or []) if c and c != "N/A"]
+        self.corners = corners
+        self.lo = corners.min(axis=0)
+        self.hi = corners.max(axis=0)
+        center = raw.get("center")
+        self.center = np.asarray(center, dtype=float) if center else corners.mean(axis=0)
+        size = raw.get("size")
+        self.size = np.asarray(size, dtype=float) if size else (self.hi - self.lo)
+        self.volume = float(raw.get("volume") or float(np.prod(self.size)))
+
+    @property
+    def display(self) -> str:
+        if self.raw_label and self.raw_label != "unknown":
+            return self.raw_label
+        return self.nyu_label or "object"
+
+    @property
+    def fine(self) -> str:
+        return norm_class(self.raw_label or self.nyu_label)
+
+    @property
+    def coarse(self) -> str:
+        return norm_class(self.nyu_label or self.raw_label)
+
+    @property
+    def yaw(self) -> float:
+        """Heading of the box's first horizontal edge, for a CUBE marker's pose."""
+        edge = self.corners[1][:2] - self.corners[0][:2]
+        return float(math.atan2(edge[1], edge[0]))
+
+    def __repr__(self) -> str:
+        return f"{self.display}#{self.id}"
+
+
+# ---------------------------------------------------------------- loading
+
+
+def _resolve_under(root: Path, *parts: str, scene: str) -> Path:
+    """Join under root, refusing traversal out of it."""
+    resolved = root.resolve()
+    path = resolved.joinpath(*parts).resolve()
+    if not str(path).startswith(str(resolved)):
+        raise ValueError(f"scene path escapes {resolved}: {scene!r}")
+    return path
+
+
+def metadata_path(scene: str, suffix: str, bags: Path | None = None) -> Path:
+    """Resolve <scene>_<suffix> from the bags metadata, or the dataset checkout.
+
+    Prefers <bags>/<scene>/iref_vla_metadata/. Falls back to the IRef-VLA checkout beside
+    the repo for the scenes that were never recorded; the returned path is the bags one
+    when neither exists, so the caller's error names the location it is meant to have.
+    """
+    if not SCENE_NAME_RE.match(scene):
+        raise ValueError(f"invalid scene name: {scene!r}")
+    bagged = _resolve_under(
+        Path(bags or BAGS), scene, "iref_vla_metadata", f"{scene}_{suffix}", scene=scene
+    )
+    if bagged.exists() or bags is not None:
+        return bagged
+    dataset = _resolve_under(DATASET, scene, f"{scene}_{suffix}", scene=scene)
+    return dataset if dataset.exists() else bagged
+
+
+def load_objects(scene: str, bags: Path | None = None) -> dict[str, Obj]:
+    """Every annotated object in the scene, keyed by id.
+
+    ``object_data.json`` is the newer of the two per-object builds IRef-VLA ships and the
+    one the rest of the repo scores against (``scripts/eval/score_map3d.py``,
+    ``build_dimension_priors.py``). It carries the same boxes as ``objects.json`` -- same
+    centres, sizes and corner sets -- but a different corner *order*, which is what
+    ``Obj.yaw`` reads, and a re-fitted colour palette. Preferring it keeps a box's
+    orientation the same here as it is in the map scorer.
+    """
+    path = metadata_path(scene, "object_data.json", bags)
+    if not path.exists():
+        path = metadata_path(scene, "objects.json", bags)
+    raw = json.loads(path.read_text())
+    return {
+        str(oid): Obj(oid, region, obj)
+        for region, entries in raw.items()
+        for oid, obj in entries.items()
+    }
+
+
+# ---------------------------------------------------------------- distances
+
+
+def center_dist(a: Obj, b: Obj) -> float:
+    return float(np.linalg.norm(a.center - b.center))
+
+
+def gap_dist(a: Obj, b: Obj) -> float:
+    """Axis-aligned separation between two boxes; 0 when they overlap."""
+    gaps = np.maximum(0.0, np.maximum(a.lo - b.hi, b.lo - a.hi))
+    return float(np.linalg.norm(gaps))
+
+
+METRICS = {"centre": center_dist, "box-gap": gap_dist}
+
+
+def set_dist(obj: Obj, anchors: list[Obj], metric) -> float:
+    return min(metric(obj, a) for a in anchors)
+
+
+# ---------------------------------------------------------------- predicates
+
+
+def footprints_overlap(a: Obj, b: Obj, tol: float = FOOTPRINT_TOL) -> bool:
+    return bool(
+        a.lo[0] - tol <= b.hi[0]
+        and b.lo[0] - tol <= a.hi[0]
+        and a.lo[1] - tol <= b.hi[1]
+        and b.lo[1] - tol <= a.hi[1]
+    )
+
+
+def footprint_area(obj: Obj) -> float:
+    return float((obj.hi[0] - obj.lo[0]) * (obj.hi[1] - obj.lo[1]))
+
+
+def vertical_gap(a: Obj, b: Obj) -> float:
+    """Clear vertical space between two boxes; 0 when their z-ranges overlap.
+
+    Symmetric, so it doubles as the distance metric for "furthest from the floor" —
+    see ``utils.text_solver.metrics_for``.
+    """
+    return float(max(a.lo[2] - b.hi[2], b.lo[2] - a.hi[2], 0.0))
+
+
+def center_inside(inner: Obj, outer: Obj, tol: float = FOOTPRINT_TOL) -> bool:
+    return bool(
+        outer.lo[0] - tol <= inner.center[0] <= outer.hi[0] + tol
+        and outer.lo[1] - tol <= inner.center[1] <= outer.hi[1] + tol
+    )
+
+
+def rests_on(item: Obj, support: Obj) -> bool:
+    """Is the item held up by the support — "on" as a person would say it.
+
+    Not "its underside touches the support's top plane": a pillow *on* a sofa has its
+    underside at seat height, well below the top of the backrest, and a strict plane test
+    rejects every pillow in every scene. The item's base has to sit inside the support's
+    footprint, no lower than the support's own base and no higher than its top.
+
+    Support is asymmetric and the boxes alone do not say which way round it is: a glass and
+    the tray under it have overlapping z-ranges, so the height test passes both ways. Two
+    further conditions pin the direction down.
+
+    The support has to have the bigger footprint — that alone rules out "the tray on the
+    glass". Volume is deliberately not compared: a spray of flowers has a bigger box than
+    the ledge holding it up, and the ledge is still what it stands on.
+
+    And the item has to sit in the support's upper reaches rather than merely inside its
+    box, which is what separates a glass on a tray from a glass standing next to the hookah
+    whose wire box it happens to fall inside. The threshold is a fraction of the support's
+    height rather than its top, because a bed's box is 1.74 m tall thanks to the headboard
+    and a sofa's includes the backrest: the pillow on either one sits nowhere near the top.
+    Flat supports are exempt, since on a 2 cm tray everything shares one base height.
+    """
+    if not center_inside(item, support, tol=0.05):
+        return False
+    if not (support.lo[2] - REST_TOL <= item.lo[2] <= support.hi[2] + REST_TOL):
+        return False
+    if footprint_area(support) < footprint_area(item):
+        return False
+    if support.size[2] <= FLAT_SUPPORT:
+        return True
+    return bool(item.lo[2] - support.lo[2] >= REST_FRACTION * support.size[2])
+
+
+def is_above(upper: Obj, lower: Obj) -> bool:
+    """One object clear of another, over its footprint.
+
+    The tolerance is not slack: a picture hangs a couple of centimetres off the wall and the
+    furniture below it stops short of the skirting, so the true footprints of a picture and
+    the suitcase under it do not intersect at all. Requiring a real intersection here loses
+    every wall-mounted object, including the one the organizers ask about in hotel_room_1.
+    """
+    return footprints_overlap(upper, lower) and upper.lo[2] >= lower.hi[2]
+
+
+def is_inside(inner: Obj, outer: Obj) -> bool:
+    """Containment: the inner object is down inside the outer one, not sitting on it.
+
+    The flower *in* the vase has its stems well above the rim, so this cannot ask for full
+    enclosure; what separates "in" from "on" is that the inner object's base is below the
+    outer's rim rather than level with it.
+    """
+    if outer.size[2] < INSIDE_MIN_HEIGHT or inner.volume > 0.5 * outer.volume:
+        return False
+    for axis in (0, 1):
+        if not (outer.lo[axis] - 0.05 <= inner.lo[axis] and inner.hi[axis] <= outer.hi[axis] + 0.05):
+            return False
+    return bool(
+        inner.lo[2] <= outer.hi[2] - INSIDE_DEPTH and inner.lo[2] >= outer.lo[2] - REST_TOL
+    )
+
+
+def between_holds(target: Obj, a1: Obj, a2: Obj) -> tuple[bool, float]:
+    """True when the target sits in the corridor between two anchors.
+
+    Returns (holds, lateral_offset). The projection parameter must land in the middle
+    stretch of the segment, otherwise "between" degenerates into "somewhere on the line
+    through both anchors", which is how many raw statements read.
+    """
+    p1, p2 = a1.center[:2], a2.center[:2]
+    seg = p2 - p1
+    span = float(np.linalg.norm(seg))
+    if span < 1e-6 or span > BETWEEN_MAX_SPAN:
+        return False, math.inf
+    if max(gap_dist(target, a1), gap_dist(target, a2)) > BETWEEN_MAX_ANCHOR_GAP:
+        return False, math.inf
+    t = float(np.dot(target.center[:2] - p1, seg) / (span * span))
+    lateral = float(np.linalg.norm(target.center[:2] - (p1 + t * seg)))
+    allowed = min(BETWEEN_LATERAL * span, BETWEEN_LATERAL_MAX)
+    holds = BETWEEN_SPAN[0] <= t <= BETWEEN_SPAN[1] and lateral <= allowed
+    return holds, lateral
+
+
+def relation_holds(target: Obj, anchors: list[Obj], relation: str) -> bool:
+    """One object against its anchor(s), for the non-comparative relations."""
+    if not anchors:
+        return False
+    if relation == "on":
+        return any(rests_on(target, a) for a in anchors)
+    if relation == "supports":
+        return any(rests_on(a, target) for a in anchors)
+    if relation == "in":
+        return any(is_inside(target, a) for a in anchors)
+    if relation == "above":
+        return any(is_above(target, a) for a in anchors)
+    if relation == "below":
+        return any(is_above(a, target) for a in anchors)
+    if relation == "near":
+        return any(gap_dist(target, a) <= NEAR_MAX for a in anchors)
+    if relation == "between":
+        return any(
+            between_holds(target, a1, a2)[0]
+            for i, a1 in enumerate(anchors)
+            for a2 in anchors[i + 1:]
+        )
+    raise ValueError(f"unsupported relation: {relation!r}")
+
+
+# ---------------------------------------------------------------- answer payload
+
+
+def round_vec(values) -> list[float]:
+    return [round(float(v), 4) for v in values]
+
+
+def answer_payload(obj: Obj) -> dict[str, Any]:
+    """The GT box in every shape a scorer might want it in."""
+    return {
+        "object_id": obj.id,
+        "region": obj.region,
+        "label": obj.display,
+        "raw_label": obj.raw_label,
+        "nyu_label": obj.nyu_label,
+        "colors": obj.colors,
+        "center": round_vec(obj.center),
+        "size": round_vec(obj.size),
+        "yaw": round(obj.yaw, 4),
+        "aabb": {"min": round_vec(obj.lo), "max": round_vec(obj.hi)},
+        "size_aabb": round_vec(obj.hi - obj.lo),
+        "bbox_corners": [round_vec(c) for c in obj.corners],
+        "volume": round(obj.volume, 5),
+    }
+
+
+def object_nouns(names: list[str]) -> list[str]:
+    """SAM-3 prompt nouns: object names only, no colours, articles or duplicates."""
+    out: list[str] = []
+    for name in names:
+        noun = " ".join(str(name or "").lower().split())
+        noun = " ".join(w for w in noun.split() if w not in COLORS and w not in ARTICLES)
+        if noun and noun not in out:
+            out.append(noun)
+    return out

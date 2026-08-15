@@ -36,7 +36,12 @@ Score based on: constraints achieved, in correct order, penalties for forbidden 
 ## Progress checklist
 - [ ] Constraint spec schema agreed with M4
 - [ ] Baseline ordered waypoints on a training instruction question
-- [ ] Own trajectory scorer (M6) replicating constraint/order/penalty logic vs .ply GT
+- [x] Own trajectory scorer (M6) replicating constraint/order/penalty logic vs .ply GT
+      (Aug 14 — GT for all 30 instruction questions in `data/benchmark/<scene>/category_3/`;
+      `just cat3-verify` replays every provided .ply through `score_instruction` and requires
+      6/6. See [cat3_benchmark.md](cat3_benchmark.md). The constraint spec there —
+      ordered `pass_near` / `avoid` / `goal` over IRef-VLA object ids — is a ready-made
+      candidate for the M4↔M5 schema above.)
 - [ ] Costmap + avoid-zone repulsion
 - [ ] Densification + execution monitor
 - [ ] Replan-on-violation tested (force a violation)
@@ -51,3 +56,5 @@ Score based on: constraints achieved, in correct order, penalties for forbidden 
 | Date | Update |
 |---|---|
 | Jul 21 | Doc created |
+| Aug 14 | Category-3 GT landed for all 15 scenes, recovered from the organizers' demo .ply trajectories. Key finding: the trajectory frame and the IRef-VLA annotation frame are identical, so demo and boxes compare directly. `just cat3-verify` — 29/30 at 6/6. [cat3_benchmark.md](cat3_benchmark.md) |
+| Aug 15 | Category-3 GT now carries the *reference* objects too — the nouns an instruction uses to say which target it means ("the stool **under the picture**"). 94 constraint boxes + 60 reference boxes, each tagged `role`, with `anchor_ids` per constraint. `target_objects` is complete, so it is usable as the SAM-3 prompt list. Scored geometry unchanged; gate still 29/30 at 6/6. |

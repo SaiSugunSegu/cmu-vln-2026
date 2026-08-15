@@ -1,0 +1,1059 @@
+{
+  "scene": "livingroom_3",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "bowl",
+    "cabinet",
+    "lamp",
+    "pillow",
+    "stool",
+    "table",
+    "tv"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Take the path near the TV and go to the pillow farthest from the lamp.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "tv",
+        "pillow",
+        "lamp"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the tv",
+            "label": "tv",
+            "object_ids": [
+              "18"
+            ],
+            "anchor_ids": [],
+            "center": [
+              1.8888,
+              -5.7866
+            ],
+            "radius": 1.75,
+            "traj_index": 349,
+            "traj_frac": 0.598,
+            "min_dist_m": 1.479,
+            "why": "unique by class",
+            "radius_source": "widened from 1.5 m: the demo's own closest approach is 1.48 m, so a tighter radius would fail the reference run"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the pillow farthest from the lamp",
+          "label": "pillow",
+          "object_ids": [
+            "75"
+          ],
+          "anchor_ids": [
+            "93"
+          ],
+          "center": [
+            4.2206,
+            -2.1142
+          ],
+          "radius": 1.6,
+          "traj_index": 584,
+          "traj_frac": 1.0,
+          "min_dist_m": 1.327,
+          "why": "farthest: centre 2.73 m (next 2.22 m); box-gap 2.06 m (next 1.54 m)",
+          "anchor_why": "farthest 'lamp': nearest of 4 is lamp#93 at 2.06 m",
+          "radius_source": "widened from 1.5 m: the demo's own closest approach is 1.33 m, so a tighter radius would fail the reference run"
+        }
+      },
+      "objects": {
+        "18": {
+          "object_id": "18",
+          "region": "0",
+          "label": "tv",
+          "raw_label": "tv",
+          "nyu_label": "television",
+          "colors": [
+            "black",
+            "gray",
+            "blue"
+          ],
+          "center": [
+            1.8888,
+            -5.7866,
+            0.9327
+          ],
+          "size": [
+            1.2399,
+            0.2995,
+            0.7907
+          ],
+          "yaw": 3.014,
+          "aabb": {
+            "min": [
+              1.2548,
+              -6.014,
+              0.5374
+            ],
+            "max": [
+              2.5227,
+              -5.5592,
+              1.3281
+            ]
+          },
+          "size_aabb": [
+            1.268,
+            0.4548,
+            0.7907
+          ],
+          "bbox_corners": [
+            [
+              2.4846,
+              -6.014,
+              1.3281
+            ],
+            [
+              1.2548,
+              -5.8563,
+              1.3281
+            ],
+            [
+              1.2929,
+              -5.5592,
+              1.3281
+            ],
+            [
+              2.5227,
+              -5.7169,
+              1.3281
+            ],
+            [
+              2.4846,
+              -6.014,
+              0.5374
+            ],
+            [
+              1.2548,
+              -5.8563,
+              0.5374
+            ],
+            [
+              1.2929,
+              -5.5592,
+              0.5374
+            ],
+            [
+              2.5227,
+              -5.7169,
+              0.5374
+            ]
+          ],
+          "volume": 0.29363,
+          "role": "constraint"
+        },
+        "75": {
+          "object_id": "75",
+          "region": "0",
+          "label": "pillow",
+          "raw_label": "pillow",
+          "nyu_label": "pillow",
+          "colors": [
+            "maroon",
+            "gray"
+          ],
+          "center": [
+            4.2206,
+            -2.1142,
+            0.7649
+          ],
+          "size": [
+            0.6023,
+            0.2537,
+            0.5266
+          ],
+          "yaw": 2.545,
+          "aabb": {
+            "min": [
+              3.9002,
+              -2.3883,
+              0.5017
+            ],
+            "max": [
+              4.541,
+              -1.8401,
+              1.0282
+            ]
+          },
+          "size_aabb": [
+            0.6408,
+            0.5482,
+            0.5266
+          ],
+          "bbox_corners": [
+            [
+              4.3984,
+              -2.3883,
+              1.0282
+            ],
+            [
+              3.9002,
+              -2.05,
+              1.0282
+            ],
+            [
+              4.0428,
+              -1.8401,
+              1.0282
+            ],
+            [
+              4.541,
+              -2.1785,
+              1.0282
+            ],
+            [
+              4.3984,
+              -2.3883,
+              0.5017
+            ],
+            [
+              3.9002,
+              -2.05,
+              0.5017
+            ],
+            [
+              4.0428,
+              -1.8401,
+              0.5017
+            ],
+            [
+              4.541,
+              -2.1785,
+              0.5017
+            ]
+          ],
+          "volume": 0.08045,
+          "role": "constraint"
+        },
+        "93": {
+          "object_id": "93",
+          "region": "0",
+          "label": "lamp",
+          "raw_label": "lamp",
+          "nyu_label": "lamp",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.5272,
+            -2.5238,
+            0.6597
+          ],
+          "size": [
+            0.6557,
+            0.1536,
+            0.6035
+          ],
+          "yaw": -0.5914,
+          "aabb": {
+            "min": [
+              1.2122,
+              -2.7703,
+              0.3579
+            ],
+            "max": [
+              1.8422,
+              -2.2772,
+              0.9614
+            ]
+          },
+          "size_aabb": [
+            0.63,
+            0.4931,
+            0.6035
+          ],
+          "bbox_corners": [
+            [
+              1.2978,
+              -2.2772,
+              0.9614
+            ],
+            [
+              1.8422,
+              -2.6428,
+              0.9614
+            ],
+            [
+              1.7565,
+              -2.7703,
+              0.9614
+            ],
+            [
+              1.2122,
+              -2.4047,
+              0.9614
+            ],
+            [
+              1.2978,
+              -2.2772,
+              0.3579
+            ],
+            [
+              1.8422,
+              -2.6428,
+              0.3579
+            ],
+            [
+              1.7565,
+              -2.7703,
+              0.3579
+            ],
+            [
+              1.2122,
+              -2.4047,
+              0.3579
+            ]
+          ],
+          "volume": 0.06079,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/livingroom_3/trajectory_q4.ply",
+        "n_vertices": 585,
+        "length_m": 8.604,
+        "z": 0.75,
+        "start": [
+          0.007,
+          -0.008
+        ],
+        "end": [
+          5.225,
+          -2.981
+        ],
+        "polyline": [
+          [
+            0.007,
+            -0.008
+          ],
+          [
+            0.146,
+            -0.223
+          ],
+          [
+            0.199,
+            -0.471
+          ],
+          [
+            0.233,
+            -0.723
+          ],
+          [
+            0.277,
+            -0.978
+          ],
+          [
+            0.337,
+            -1.228
+          ],
+          [
+            0.397,
+            -1.481
+          ],
+          [
+            0.459,
+            -1.74
+          ],
+          [
+            0.522,
+            -2.004
+          ],
+          [
+            0.599,
+            -2.249
+          ],
+          [
+            0.684,
+            -2.495
+          ],
+          [
+            0.774,
+            -2.729
+          ],
+          [
+            0.904,
+            -2.953
+          ],
+          [
+            1.096,
+            -3.153
+          ],
+          [
+            1.294,
+            -3.339
+          ],
+          [
+            1.487,
+            -3.532
+          ],
+          [
+            1.647,
+            -3.732
+          ],
+          [
+            1.783,
+            -3.95
+          ],
+          [
+            1.892,
+            -4.176
+          ],
+          [
+            2.111,
+            -4.322
+          ],
+          [
+            2.362,
+            -4.364
+          ],
+          [
+            2.623,
+            -4.38
+          ],
+          [
+            2.887,
+            -4.389
+          ],
+          [
+            3.141,
+            -4.396
+          ],
+          [
+            3.398,
+            -4.371
+          ],
+          [
+            3.644,
+            -4.287
+          ],
+          [
+            3.876,
+            -4.176
+          ],
+          [
+            4.092,
+            -4.044
+          ],
+          [
+            4.309,
+            -3.901
+          ],
+          [
+            4.513,
+            -3.745
+          ],
+          [
+            4.714,
+            -3.581
+          ],
+          [
+            4.891,
+            -3.398
+          ],
+          [
+            5.061,
+            -3.201
+          ],
+          [
+            5.214,
+            -3.0
+          ],
+          [
+            5.225,
+            -2.981
+          ]
+        ]
+      },
+      "evidence": "Demo path passes tv at 1.48 m (60% along), and ends 1.33 m from pillow.",
+      "solver_trace": [
+        "head='tv' color='' hops=[]",
+        "head candidates: [tv#18]",
+        "head='pillow' color='' hops=[{'relation': 'farthest', 'phrases': ['lamp']}]",
+        "head candidates: [pillow#11, pillow#75, pillow#89, pillow#96]",
+        "target hop (farthest): farthest: ranked [pillow#75, pillow#96, pillow#11]",
+        "pick: farthest: centre 2.73 m (next 2.22 m); box-gap 2.06 m (next 1.54 m)"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go near the stool, then take the path near the cabinet, and stop at the bowl on the table.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "stool",
+        "cabinet",
+        "bowl",
+        "table"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the stool",
+            "label": "stool",
+            "object_ids": [
+              "67"
+            ],
+            "anchor_ids": [],
+            "center": [
+              1.5682,
+              0.3637
+            ],
+            "radius": 1.5,
+            "traj_index": 123,
+            "traj_frac": 0.225,
+            "min_dist_m": 0.741,
+            "why": "unique by class"
+          },
+          {
+            "kind": "pass_near",
+            "phrase": "the cabinet",
+            "label": "cabinet",
+            "object_ids": [
+              "88"
+            ],
+            "anchor_ids": [],
+            "center": [
+              4.9347,
+              0.3542
+            ],
+            "radius": 1.5,
+            "traj_index": 391,
+            "traj_frac": 0.715,
+            "min_dist_m": 0.99,
+            "why": "unique by class"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the bowl on the table",
+          "label": "bowl",
+          "object_ids": [
+            "36"
+          ],
+          "anchor_ids": [
+            "72"
+          ],
+          "center": [
+            6.8975,
+            -3.9878
+          ],
+          "radius": 1.9,
+          "traj_index": 547,
+          "traj_frac": 1.0,
+          "min_dist_m": 1.613,
+          "why": "on: bowl#36 is the only match",
+          "anchor_why": "on 'table': the boxes put table#72 there",
+          "radius_source": "widened from 1.5 m: the demo's own closest approach is 1.61 m, so a tighter radius would fail the reference run"
+        }
+      },
+      "objects": {
+        "67": {
+          "object_id": "67",
+          "region": "0",
+          "label": "stool",
+          "raw_label": "stool",
+          "nyu_label": "stool",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.5682,
+            0.3637,
+            0.2898
+          ],
+          "size": [
+            0.562,
+            0.5527,
+            0.5789
+          ],
+          "yaw": 3.1403,
+          "aabb": {
+            "min": [
+              1.2869,
+              0.0869,
+              0.0003
+            ],
+            "max": [
+              1.8495,
+              0.6404,
+              0.5792
+            ]
+          },
+          "size_aabb": [
+            0.5627,
+            0.5535,
+            0.5789
+          ],
+          "bbox_corners": [
+            [
+              1.8488,
+              0.0869,
+              0.5792
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.5792
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.5792
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.5792
+            ],
+            [
+              1.8488,
+              0.0869,
+              0.0003
+            ],
+            [
+              1.2869,
+              0.0877,
+              0.0003
+            ],
+            [
+              1.2876,
+              0.6404,
+              0.0003
+            ],
+            [
+              1.8495,
+              0.6397,
+              0.0003
+            ]
+          ],
+          "volume": 0.17981,
+          "role": "constraint"
+        },
+        "88": {
+          "object_id": "88",
+          "region": "0",
+          "label": "cabinet",
+          "raw_label": "cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            4.9347,
+            0.3542,
+            0.5115
+          ],
+          "size": [
+            1.6529,
+            0.7427,
+            1.0233
+          ],
+          "yaw": 0.0,
+          "aabb": {
+            "min": [
+              4.1083,
+              -0.0171,
+              -0.0001
+            ],
+            "max": [
+              5.7612,
+              0.7256,
+              1.0232
+            ]
+          },
+          "size_aabb": [
+            1.6529,
+            0.7427,
+            1.0233
+          ],
+          "bbox_corners": [
+            [
+              4.1083,
+              0.7256,
+              1.0232
+            ],
+            [
+              5.7612,
+              0.7256,
+              1.0232
+            ],
+            [
+              5.7612,
+              -0.0171,
+              1.0232
+            ],
+            [
+              4.1083,
+              -0.0171,
+              1.0232
+            ],
+            [
+              4.1083,
+              0.7256,
+              -0.0001
+            ],
+            [
+              5.7612,
+              0.7256,
+              -0.0001
+            ],
+            [
+              5.7612,
+              -0.0171,
+              -0.0001
+            ],
+            [
+              4.1083,
+              -0.0171,
+              -0.0001
+            ]
+          ],
+          "volume": 1.25622,
+          "role": "constraint"
+        },
+        "36": {
+          "object_id": "36",
+          "region": "0",
+          "label": "bowl",
+          "raw_label": "bowl",
+          "nyu_label": "bowl",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            6.8975,
+            -3.9878,
+            0.8801
+          ],
+          "size": [
+            0.4091,
+            0.4054,
+            0.0927
+          ],
+          "yaw": -1.0535,
+          "aabb": {
+            "min": [
+              6.6202,
+              -4.2658,
+              0.8337
+            ],
+            "max": [
+              7.1748,
+              -3.7097,
+              0.9265
+            ]
+          },
+          "size_aabb": [
+            0.5547,
+            0.556,
+            0.0927
+          ],
+          "bbox_corners": [
+            [
+              6.9726,
+              -3.7097,
+              0.9265
+            ],
+            [
+              7.1748,
+              -4.0653,
+              0.9265
+            ],
+            [
+              6.8225,
+              -4.2658,
+              0.9265
+            ],
+            [
+              6.6202,
+              -3.9102,
+              0.9265
+            ],
+            [
+              6.9726,
+              -3.7097,
+              0.8337
+            ],
+            [
+              7.1748,
+              -4.0653,
+              0.8337
+            ],
+            [
+              6.8225,
+              -4.2658,
+              0.8337
+            ],
+            [
+              6.6202,
+              -3.9102,
+              0.8337
+            ]
+          ],
+          "volume": 0.01538,
+          "role": "constraint"
+        },
+        "72": {
+          "object_id": "72",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            6.943,
+            -3.974,
+            0.4138
+          ],
+          "size": [
+            1.1193,
+            1.807,
+            0.8313
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              6.3834,
+              -4.8775,
+              -0.0019
+            ],
+            "max": [
+              7.5026,
+              -3.0705,
+              0.8294
+            ]
+          },
+          "size_aabb": [
+            1.1193,
+            1.807,
+            0.8313
+          ],
+          "bbox_corners": [
+            [
+              7.5026,
+              -4.8775,
+              0.8294
+            ],
+            [
+              6.3834,
+              -4.8775,
+              0.8294
+            ],
+            [
+              6.3834,
+              -3.0705,
+              0.8294
+            ],
+            [
+              7.5026,
+              -3.0705,
+              0.8294
+            ],
+            [
+              7.5026,
+              -4.8775,
+              -0.0019
+            ],
+            [
+              6.3834,
+              -4.8775,
+              -0.0019
+            ],
+            [
+              6.3834,
+              -3.0705,
+              -0.0019
+            ],
+            [
+              7.5026,
+              -3.0705,
+              -0.0019
+            ]
+          ],
+          "volume": 1.6814,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/livingroom_3/trajectory_q5.ply",
+        "n_vertices": 548,
+        "length_m": 7.432,
+        "z": 0.75,
+        "start": [
+          0.011,
+          -0.001
+        ],
+        "end": [
+          6.312,
+          -2.484
+        ],
+        "polyline": [
+          [
+            0.011,
+            -0.001
+          ],
+          [
+            0.262,
+            -0.045
+          ],
+          [
+            0.514,
+            -0.114
+          ],
+          [
+            0.758,
+            -0.181
+          ],
+          [
+            1.004,
+            -0.249
+          ],
+          [
+            1.25,
+            -0.317
+          ],
+          [
+            1.494,
+            -0.385
+          ],
+          [
+            1.744,
+            -0.452
+          ],
+          [
+            1.994,
+            -0.496
+          ],
+          [
+            2.243,
+            -0.517
+          ],
+          [
+            2.516,
+            -0.538
+          ],
+          [
+            2.773,
+            -0.565
+          ],
+          [
+            3.037,
+            -0.616
+          ],
+          [
+            3.288,
+            -0.658
+          ],
+          [
+            3.54,
+            -0.671
+          ],
+          [
+            3.794,
+            -0.674
+          ],
+          [
+            4.049,
+            -0.677
+          ],
+          [
+            4.306,
+            -0.68
+          ],
+          [
+            4.558,
+            -0.683
+          ],
+          [
+            4.819,
+            -0.669
+          ],
+          [
+            5.073,
+            -0.627
+          ],
+          [
+            5.287,
+            -0.765
+          ],
+          [
+            5.478,
+            -0.947
+          ],
+          [
+            5.65,
+            -1.157
+          ],
+          [
+            5.794,
+            -1.363
+          ],
+          [
+            5.931,
+            -1.58
+          ],
+          [
+            6.056,
+            -1.805
+          ],
+          [
+            6.168,
+            -2.041
+          ],
+          [
+            6.255,
+            -2.289
+          ],
+          [
+            6.312,
+            -2.484
+          ]
+        ]
+      },
+      "evidence": "Demo path passes stool at 0.74 m (22% along), then cabinet at 0.99 m (72% along), and ends 1.61 m from bowl.",
+      "solver_trace": [
+        "head='stool' color='' hops=[]",
+        "head candidates: [stool#67]",
+        "head='cabinet' color='' hops=[]",
+        "head candidates: [cabinet#88]",
+        "head='bowl' color='' hops=[{'relation': 'on', 'phrases': ['table']}]",
+        "head candidates: [bowl#36, bowl#55]",
+        "target hop (on): on: 1 match(es) -> [bowl#36]",
+        "pick: on: bowl#36 is the only match"
+      ],
+      "verified": true
+    }
+  ]
+}

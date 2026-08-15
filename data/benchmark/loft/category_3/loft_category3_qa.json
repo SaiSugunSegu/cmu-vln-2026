@@ -1,0 +1,1143 @@
+{
+  "scene": "loft",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "medium": 1,
+    "hard": 1
+  },
+  "target_object_coverage": [
+    "cup",
+    "fireplace",
+    "sphere decoration",
+    "stairs",
+    "tv cabinet",
+    "tv remote"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go to the cup near the TV remote and avoid the path near the cabinet.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "hard",
+      "target_objects": [
+        "cup",
+        "tv remote",
+        "tv cabinet"
+      ],
+      "gt": {
+        "pass_near": [],
+        "avoid": [
+          {
+            "kind": "avoid_near",
+            "phrase": "the cabinet",
+            "label": "tv cabinet",
+            "object_ids": [
+              "17"
+            ],
+            "anchor_ids": [],
+            "polygon": [
+              [
+                3.925,
+                -1.929
+              ],
+              [
+                8.101,
+                -1.929
+              ],
+              [
+                8.101,
+                -1.093
+              ],
+              [
+                3.925,
+                -1.093
+              ]
+            ],
+            "why": "Two cabinets carry the label and the demo avoids both, so the run cannot choose. #17 is the TV cabinet, in region 2 with the cup the instruction sends the robot to, and it is what a direct route to that cup would skirt; #35 sits in region 1, a room this run never enters, which would make the constraint vacuous. Loft's own Q03 ('the cabinet with a TV on it') uses 'the cabinet' the same way."
+          }
+        ],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the cup near the tv remote",
+          "label": "cup",
+          "object_ids": [
+            "108"
+          ],
+          "anchor_ids": [
+            "18"
+          ],
+          "center": [
+            6.2035,
+            0.6841
+          ],
+          "radius": 1.5,
+          "traj_index": 738,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.515,
+          "why": "near: cup#108 is the only match",
+          "anchor_why": "near 'tv remote': the boxes put tv remote#18 there"
+        }
+      },
+      "objects": {
+        "108": {
+          "object_id": "108",
+          "region": "2",
+          "label": "cup",
+          "raw_label": "cup",
+          "nyu_label": "cup",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            6.2035,
+            0.6841,
+            0.4922
+          ],
+          "size": [
+            0.1201,
+            0.1123,
+            0.1271
+          ],
+          "yaw": 0.9655,
+          "aabb": {
+            "min": [
+              6.1232,
+              0.6028,
+              0.4287
+            ],
+            "max": [
+              6.2839,
+              0.7655,
+              0.5558
+            ]
+          },
+          "size_aabb": [
+            0.1607,
+            0.1627,
+            0.1271
+          ],
+          "bbox_corners": [
+            [
+              6.1232,
+              0.6667,
+              0.5558
+            ],
+            [
+              6.1915,
+              0.7655,
+              0.5558
+            ],
+            [
+              6.2839,
+              0.7015,
+              0.5558
+            ],
+            [
+              6.2155,
+              0.6028,
+              0.5558
+            ],
+            [
+              6.1232,
+              0.6667,
+              0.4287
+            ],
+            [
+              6.1915,
+              0.7655,
+              0.4287
+            ],
+            [
+              6.2839,
+              0.7015,
+              0.4287
+            ],
+            [
+              6.2155,
+              0.6028,
+              0.4287
+            ]
+          ],
+          "volume": 0.00172,
+          "role": "constraint"
+        },
+        "18": {
+          "object_id": "18",
+          "region": "2",
+          "label": "tv remote",
+          "raw_label": "tv remote",
+          "nyu_label": "remote control",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            6.3646,
+            0.6652,
+            0.4377
+          ],
+          "size": [
+            0.1985,
+            0.05,
+            0.019
+          ],
+          "yaw": -1.3919,
+          "aabb": {
+            "min": [
+              6.3223,
+              0.5631,
+              0.4282
+            ],
+            "max": [
+              6.4068,
+              0.7673,
+              0.4472
+            ]
+          },
+          "size_aabb": [
+            0.0846,
+            0.2042,
+            0.019
+          ],
+          "bbox_corners": [
+            [
+              6.3715,
+              0.7673,
+              0.4472
+            ],
+            [
+              6.4068,
+              0.572,
+              0.4472
+            ],
+            [
+              6.3576,
+              0.5631,
+              0.4472
+            ],
+            [
+              6.3223,
+              0.7584,
+              0.4472
+            ],
+            [
+              6.3715,
+              0.7673,
+              0.4282
+            ],
+            [
+              6.4068,
+              0.572,
+              0.4282
+            ],
+            [
+              6.3576,
+              0.5631,
+              0.4282
+            ],
+            [
+              6.3223,
+              0.7584,
+              0.4282
+            ]
+          ],
+          "volume": 0.00019,
+          "role": "reference"
+        },
+        "17": {
+          "object_id": "17",
+          "region": "2",
+          "label": "tv cabinet",
+          "raw_label": "tv cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            6.013,
+            -1.511,
+            0.282
+          ],
+          "size": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            "max": [
+              7.1208,
+              -1.2895,
+              0.5735
+            ]
+          },
+          "size_aabb": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "bbox_corners": [
+            [
+              7.1208,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.2895,
+              -0.0095
+            ],
+            [
+              7.1208,
+              -1.2895,
+              -0.0095
+            ]
+          ],
+          "volume": 0.57232,
+          "role": "constraint"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/loft/trajectory_q4.ply",
+        "n_vertices": 739,
+        "length_m": 11.161,
+        "z": 0.75,
+        "start": [
+          0.014,
+          0.0
+        ],
+        "end": [
+          6.128,
+          1.194
+        ],
+        "polyline": [
+          [
+            0.014,
+            0.0
+          ],
+          [
+            0.264,
+            0.025
+          ],
+          [
+            0.523,
+            0.081
+          ],
+          [
+            0.775,
+            0.127
+          ],
+          [
+            1.033,
+            0.167
+          ],
+          [
+            1.28,
+            0.235
+          ],
+          [
+            1.515,
+            0.328
+          ],
+          [
+            1.739,
+            0.449
+          ],
+          [
+            1.966,
+            0.593
+          ],
+          [
+            2.18,
+            0.731
+          ],
+          [
+            2.344,
+            0.93
+          ],
+          [
+            2.481,
+            1.144
+          ],
+          [
+            2.604,
+            1.378
+          ],
+          [
+            2.747,
+            1.598
+          ],
+          [
+            2.945,
+            1.784
+          ],
+          [
+            3.126,
+            1.974
+          ],
+          [
+            3.273,
+            2.181
+          ],
+          [
+            3.449,
+            2.371
+          ],
+          [
+            3.642,
+            2.56
+          ],
+          [
+            3.857,
+            2.699
+          ],
+          [
+            4.108,
+            2.793
+          ],
+          [
+            4.344,
+            2.88
+          ],
+          [
+            4.599,
+            2.93
+          ],
+          [
+            4.855,
+            2.962
+          ],
+          [
+            5.115,
+            2.973
+          ],
+          [
+            5.386,
+            2.968
+          ],
+          [
+            5.648,
+            2.967
+          ],
+          [
+            5.906,
+            2.995
+          ],
+          [
+            6.155,
+            3.027
+          ],
+          [
+            6.413,
+            3.02
+          ],
+          [
+            6.661,
+            2.962
+          ],
+          [
+            6.88,
+            2.807
+          ],
+          [
+            7.074,
+            2.633
+          ],
+          [
+            7.259,
+            2.462
+          ],
+          [
+            7.435,
+            2.264
+          ],
+          [
+            7.603,
+            2.064
+          ],
+          [
+            7.696,
+            1.829
+          ],
+          [
+            7.53,
+            1.63
+          ],
+          [
+            7.321,
+            1.464
+          ],
+          [
+            7.089,
+            1.352
+          ],
+          [
+            6.846,
+            1.265
+          ],
+          [
+            6.602,
+            1.195
+          ],
+          [
+            6.345,
+            1.164
+          ],
+          [
+            6.128,
+            1.194
+          ]
+        ]
+      },
+      "evidence": "Demo path runs, and ends 0.52 m from cup; it never enters the zone for tv cabinet.",
+      "solver_trace": [
+        "head='cup' color='' hops=[{'relation': 'near', 'phrases': ['tv remote']}]",
+        "head candidates: [cup#107, cup#108]",
+        "target hop (near): near: 1 match(es) -> [cup#108]",
+        "pick: near: cup#108 is the only match"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "Go near the fireplace, pass by the stairs, then stop at the sphere decoration on the cabinet.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "fireplace",
+        "stairs",
+        "sphere decoration",
+        "tv cabinet"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the fireplace",
+            "label": "fireplace",
+            "object_ids": [
+              "12"
+            ],
+            "anchor_ids": [],
+            "center": [
+              -1.646,
+              0.97
+            ],
+            "radius": 1.5,
+            "traj_index": 117,
+            "traj_frac": 0.152,
+            "min_dist_m": 0.557,
+            "why": "unique by class"
+          },
+          {
+            "kind": "pass_near",
+            "phrase": "the stairs",
+            "label": "stairs",
+            "object_ids": [
+              "69"
+            ],
+            "anchor_ids": [],
+            "center": [
+              1.8161,
+              -0.3169
+            ],
+            "radius": 1.5,
+            "traj_index": 330,
+            "traj_frac": 0.429,
+            "min_dist_m": 0.689,
+            "why": "unique by class"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the sphere decoration on the cabinet",
+          "label": "sphere decoration",
+          "object_ids": [
+            "56"
+          ],
+          "anchor_ids": [
+            "17"
+          ],
+          "center": [
+            6.8771,
+            -1.6267
+          ],
+          "radius": 1.5,
+          "traj_index": 770,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.963,
+          "why": "on: sphere decoration#56 is the only match",
+          "anchor_why": "on 'cabinet': the boxes put tv cabinet#17 there"
+        }
+      },
+      "objects": {
+        "12": {
+          "object_id": "12",
+          "region": "2",
+          "label": "fireplace",
+          "raw_label": "fireplace",
+          "nyu_label": "fireplace",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            -1.646,
+            0.97,
+            1.08
+          ],
+          "size": [
+            1.2868,
+            0.0803,
+            0.5503
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            "max": [
+              -1.6059,
+              1.6134,
+              1.3551
+            ]
+          },
+          "size_aabb": [
+            0.0803,
+            1.2868,
+            0.5503
+          ],
+          "bbox_corners": [
+            [
+              -1.6059,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              0.3266,
+              1.3551
+            ],
+            [
+              -1.6861,
+              1.6134,
+              1.3551
+            ],
+            [
+              -1.6059,
+              1.6134,
+              0.8049
+            ],
+            [
+              -1.6059,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              0.3266,
+              0.8049
+            ],
+            [
+              -1.6861,
+              1.6134,
+              0.8049
+            ]
+          ],
+          "volume": 0.05683,
+          "role": "constraint"
+        },
+        "69": {
+          "object_id": "69",
+          "region": "2",
+          "label": "stairs",
+          "raw_label": "stairs",
+          "nyu_label": "stairs",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.8161,
+            -0.3169,
+            1.9529
+          ],
+          "size": [
+            2.5335,
+            1.7805,
+            3.9203
+          ],
+          "yaw": 2.4487,
+          "aabb": {
+            "min": [
+              0.2728,
+              -1.811,
+              -0.0072
+            ],
+            "max": [
+              3.3594,
+              1.1772,
+              3.9131
+            ]
+          },
+          "size_aabb": [
+            3.0866,
+            2.9882,
+            3.9203
+          ],
+          "bbox_corners": [
+            [
+              2.2221,
+              -1.811,
+              3.9131
+            ],
+            [
+              0.2728,
+              -0.1927,
+              3.9131
+            ],
+            [
+              1.4101,
+              1.1772,
+              3.9131
+            ],
+            [
+              3.3594,
+              -0.4411,
+              3.9131
+            ],
+            [
+              2.2221,
+              -1.811,
+              -0.0072
+            ],
+            [
+              0.2728,
+              -0.1927,
+              -0.0072
+            ],
+            [
+              1.4101,
+              1.1772,
+              -0.0072
+            ],
+            [
+              3.3594,
+              -0.4411,
+              -0.0072
+            ]
+          ],
+          "volume": 17.68341,
+          "role": "constraint"
+        },
+        "56": {
+          "object_id": "56",
+          "region": "2",
+          "label": "sphere decoration",
+          "raw_label": "sphere decoration",
+          "nyu_label": "decoration item",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            6.8771,
+            -1.6267,
+            0.6677
+          ],
+          "size": [
+            0.3169,
+            0.1859,
+            0.1907
+          ],
+          "yaw": -2.8886,
+          "aabb": {
+            "min": [
+              6.7004,
+              -1.7563,
+              0.5723
+            ],
+            "max": [
+              7.0538,
+              -1.497,
+              0.763
+            ]
+          },
+          "size_aabb": [
+            0.3533,
+            0.2593,
+            0.1907
+          ],
+          "bbox_corners": [
+            [
+              7.0538,
+              -1.677,
+              0.763
+            ],
+            [
+              6.747,
+              -1.7563,
+              0.763
+            ],
+            [
+              6.7004,
+              -1.5763,
+              0.763
+            ],
+            [
+              7.0073,
+              -1.497,
+              0.763
+            ],
+            [
+              7.0538,
+              -1.677,
+              0.5723
+            ],
+            [
+              6.747,
+              -1.7563,
+              0.5723
+            ],
+            [
+              6.7004,
+              -1.5763,
+              0.5723
+            ],
+            [
+              7.0073,
+              -1.497,
+              0.5723
+            ]
+          ],
+          "volume": 0.01124,
+          "role": "constraint"
+        },
+        "17": {
+          "object_id": "17",
+          "region": "2",
+          "label": "tv cabinet",
+          "raw_label": "tv cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "gray",
+            "brown"
+          ],
+          "center": [
+            6.013,
+            -1.511,
+            0.282
+          ],
+          "size": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            "max": [
+              7.1208,
+              -1.2895,
+              0.5735
+            ]
+          },
+          "size_aabb": [
+            2.2157,
+            0.443,
+            0.5831
+          ],
+          "bbox_corners": [
+            [
+              7.1208,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.7325,
+              0.5735
+            ],
+            [
+              4.9051,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.2895,
+              0.5735
+            ],
+            [
+              7.1208,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.7325,
+              -0.0095
+            ],
+            [
+              4.9051,
+              -1.2895,
+              -0.0095
+            ],
+            [
+              7.1208,
+              -1.2895,
+              -0.0095
+            ]
+          ],
+          "volume": 0.57232,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/loft/trajectory_q5.ply",
+        "n_vertices": 771,
+        "length_m": 10.522,
+        "z": 0.75,
+        "start": [
+          -0.011,
+          0.001
+        ],
+        "end": [
+          7.257,
+          -0.742
+        ],
+        "polyline": [
+          [
+            -0.011,
+            0.001
+          ],
+          [
+            -0.254,
+            0.081
+          ],
+          [
+            -0.475,
+            0.203
+          ],
+          [
+            -0.688,
+            0.355
+          ],
+          [
+            -0.867,
+            0.54
+          ],
+          [
+            -1.003,
+            0.756
+          ],
+          [
+            -0.777,
+            0.629
+          ],
+          [
+            -0.552,
+            0.497
+          ],
+          [
+            -0.318,
+            0.392
+          ],
+          [
+            -0.071,
+            0.314
+          ],
+          [
+            0.178,
+            0.265
+          ],
+          [
+            0.444,
+            0.241
+          ],
+          [
+            0.697,
+            0.225
+          ],
+          [
+            0.955,
+            0.238
+          ],
+          [
+            1.206,
+            0.28
+          ],
+          [
+            1.453,
+            0.321
+          ],
+          [
+            1.709,
+            0.364
+          ],
+          [
+            1.973,
+            0.384
+          ],
+          [
+            2.225,
+            0.387
+          ],
+          [
+            2.486,
+            0.386
+          ],
+          [
+            2.735,
+            0.319
+          ],
+          [
+            2.975,
+            0.221
+          ],
+          [
+            3.182,
+            0.065
+          ],
+          [
+            3.355,
+            -0.12
+          ],
+          [
+            3.512,
+            -0.324
+          ],
+          [
+            3.656,
+            -0.532
+          ],
+          [
+            3.829,
+            -0.731
+          ],
+          [
+            4.081,
+            -0.732
+          ],
+          [
+            4.34,
+            -0.735
+          ],
+          [
+            4.594,
+            -0.759
+          ],
+          [
+            4.848,
+            -0.781
+          ],
+          [
+            5.104,
+            -0.78
+          ],
+          [
+            5.359,
+            -0.749
+          ],
+          [
+            5.629,
+            -0.716
+          ],
+          [
+            5.884,
+            -0.684
+          ],
+          [
+            6.143,
+            -0.652
+          ],
+          [
+            6.409,
+            -0.626
+          ],
+          [
+            6.661,
+            -0.627
+          ],
+          [
+            6.922,
+            -0.658
+          ],
+          [
+            7.169,
+            -0.715
+          ],
+          [
+            7.257,
+            -0.742
+          ]
+        ]
+      },
+      "evidence": "Demo path passes fireplace at 0.56 m (15% along), then stairs at 0.69 m (43% along), and ends 0.96 m from sphere decoration.",
+      "solver_trace": [
+        "head='fireplace' color='' hops=[]",
+        "head candidates: [fireplace#12]",
+        "head='stairs' color='' hops=[]",
+        "head candidates: [stairs#69]",
+        "head='sphere decoration' color='' hops=[{'relation': 'on', 'phrases': ['cabinet']}]",
+        "head candidates: [sphere decoration#56]",
+        "target hop (on): on: 1 match(es) -> [sphere decoration#56]",
+        "pick: on: sphere decoration#56 is the only match"
+      ],
+      "verified": true
+    }
+  ]
+}

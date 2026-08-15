@@ -1,0 +1,48 @@
+{
+  "_README": [
+    "Hand decisions for clauses that scripts/bench/generate_category3_qa.py will not settle on its own.",
+    "Keyed <scene>/<question id>/<clause index>; run the generator with --dry-run to print the clause",
+    "indices and the ranked candidates for any clause that needs one.",
+    "",
+    "object_ids is a list of SIDES. A pass or goal has one side, which may hold several objects that are",
+    "one place to stand: [[\"69\", \"70\"]]. A between has two: [\"84\", \"36\"]. A bare id is shorthand for a",
+    "one-object side.",
+    "",
+    "anchor_ids is optional and pins the clause's REFERENCE objects -- the things it names only to say",
+    "which target it means (the picture in 'the stool under the picture'). Leave it out and they are",
+    "re-derived from the pinned target, which is what all four entries below rely on. It is a flat list of",
+    "ids, and setting it also wants an anchor_why saying how they were chosen.",
+    "",
+    "Every entry states the evidence that settled it. An override is a reading of the organizers' own",
+    "recording, never a preference: where the demo cannot distinguish two candidates, say so in why."
+  ],
+
+  "chinese_room/Q05": {
+    "2": {
+      "object_ids": ["84", "36"],
+      "why": "chinese_room has no object labelled 'folding screen'; the carved partition in the middle of the room is annotated 'partition wall' #36 (4.65 m long, 7 cm thick), and the actual room walls are 7-9 m, so #36 is the screen. The chair is fixed by elimination against the demo: of the six chairs, the run passes through the between-band for #29, #61, #81 and #86 (98-173 vertices inside), so none of those can be the one it was told to avoid; of the two that remain, #84 is the nearer to the screen (2.29 m vs #60's 3.02 m). Judgement call -- the sentence alone does not distinguish #84 from #60, and both leave the demo compliant."
+    }
+  },
+
+  "home_building_1/Q05": {
+    "_review": "The recording and the sentence disagree about ORDER on this one, and the recording is what it is. The instruction says nightstand, then between the dining table and the picture, then the trash can; the 33 m run through this multi-room building passes between dining table #266 and photo #76 at 1% of the way (150 vertices inside the band), reaches nightstand #427 at 43%, and ends at trash can #103. After the nightstand it never goes between any table and any picture again -- the nearest such gap centre in the remaining two thirds of the run is 3.13 m off the path. So this demo does not score 6/6 in strict order against its own instruction; score.py gives the middle constraint half credit as out-of-order. Kept as ground truth with the constraint grounded to what the run demonstrably does, rather than inventing a leg the recording does not contain.",
+    "1": {
+      "object_ids": ["266", "76"],
+      "why": "'the picture' is photo #76: it is the only picture whose between-band with dining table #266 the demo actually traverses (150 vertices inside, gap centre 0.66 m off the path). The runner-up, photo #162, puts the gap centre 1.69 m away. The text solver picked a different photo, one the run never goes between."
+    }
+  },
+
+  "loft/Q04": {
+    "1": {
+      "object_ids": ["17"],
+      "why": "Two cabinets carry the label and the demo avoids both, so the run cannot choose. #17 is the TV cabinet, in region 2 with the cup the instruction sends the robot to, and it is what a direct route to that cup would skirt; #35 sits in region 1, a room this run never enters, which would make the constraint vacuous. Loft's own Q03 ('the cabinet with a TV on it') uses 'the cabinet' the same way."
+    }
+  },
+
+  "office_2/Q05": {
+    "1": {
+      "object_ids": [["69", "70"]],
+      "why": "Folders #69 and #70 rest on cabinet #56 and are 7 cm apart, so they are one waypoint whichever the sentence meant. #56 is not the cabinet geometrically closest to whiteboard #113 (#160 is, at 1.88 m), but #160 holds only a phone and a box -- among the cabinets that carry a folder at all, #56 is the closest to the whiteboard. The demo passes 0.65 m from #56."
+    }
+  }
+}

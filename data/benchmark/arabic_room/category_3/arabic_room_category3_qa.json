@@ -1,0 +1,1434 @@
+{
+  "scene": "arabic_room",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "column",
+    "hookah",
+    "picture",
+    "potted plant",
+    "stool",
+    "table",
+    "tray"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go near the stool under the picture and stop at the small table farthest from the columns.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "stool",
+        "picture",
+        "table",
+        "column"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the stool under the picture",
+            "label": "stool",
+            "object_ids": [
+              "34"
+            ],
+            "anchor_ids": [
+              "3"
+            ],
+            "center": [
+              -3.74,
+              -1.672
+            ],
+            "radius": 1.5,
+            "traj_index": 292,
+            "traj_frac": 0.369,
+            "min_dist_m": 0.803,
+            "why": "below: stool#34 is the only match",
+            "anchor_why": "below 'picture': the boxes put picture#3 there"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the small table farthest from the columns",
+          "label": "table",
+          "object_ids": [
+            "64"
+          ],
+          "anchor_ids": [
+            "23",
+            "30"
+          ],
+          "center": [
+            2.434,
+            -0.588
+          ],
+          "radius": 1.5,
+          "traj_index": 791,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.64,
+          "why": "farthest: centre 3.65 m (next 2.85 m); box-gap 2.81 m (next 1.95 m)",
+          "anchor_why": "farthest 'columns': plural, so all 2 are meant"
+        }
+      },
+      "objects": {
+        "34": {
+          "object_id": "34",
+          "region": "0",
+          "label": "stool",
+          "raw_label": "stool",
+          "nyu_label": "stool",
+          "colors": [
+            "brown",
+            "maroon",
+            "gray"
+          ],
+          "center": [
+            -3.74,
+            -1.672,
+            0.2468
+          ],
+          "size": [
+            0.7257,
+            0.4012,
+            0.4844
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -3.9406,
+              -2.0349,
+              0.0046
+            ],
+            "max": [
+              -3.5394,
+              -1.3091,
+              0.489
+            ]
+          },
+          "size_aabb": [
+            0.4012,
+            0.7257,
+            0.4844
+          ],
+          "bbox_corners": [
+            [
+              -3.9406,
+              -2.0349,
+              0.489
+            ],
+            [
+              -3.9406,
+              -1.3091,
+              0.489
+            ],
+            [
+              -3.5394,
+              -1.3091,
+              0.489
+            ],
+            [
+              -3.5394,
+              -2.0349,
+              0.489
+            ],
+            [
+              -3.9406,
+              -2.0349,
+              0.0046
+            ],
+            [
+              -3.9406,
+              -1.3091,
+              0.0046
+            ],
+            [
+              -3.5394,
+              -1.3091,
+              0.0046
+            ],
+            [
+              -3.5394,
+              -2.0349,
+              0.0046
+            ]
+          ],
+          "volume": 0.14105,
+          "role": "constraint"
+        },
+        "3": {
+          "object_id": "3",
+          "region": "0",
+          "label": "picture",
+          "raw_label": "picture",
+          "nyu_label": "picture",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -3.976,
+            -1.719,
+            1.7643
+          ],
+          "size": [
+            0.5156,
+            0.0178,
+            0.5266
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              -3.9849,
+              -1.9768,
+              1.501
+            ],
+            "max": [
+              -3.9671,
+              -1.4612,
+              2.0276
+            ]
+          },
+          "size_aabb": [
+            0.0178,
+            0.5156,
+            0.5266
+          ],
+          "bbox_corners": [
+            [
+              -3.9671,
+              -1.4612,
+              2.0276
+            ],
+            [
+              -3.9671,
+              -1.9768,
+              2.0276
+            ],
+            [
+              -3.9849,
+              -1.9768,
+              2.0276
+            ],
+            [
+              -3.9849,
+              -1.4612,
+              2.0276
+            ],
+            [
+              -3.9671,
+              -1.4612,
+              1.501
+            ],
+            [
+              -3.9671,
+              -1.9768,
+              1.501
+            ],
+            [
+              -3.9849,
+              -1.9768,
+              1.501
+            ],
+            [
+              -3.9849,
+              -1.4612,
+              1.501
+            ]
+          ],
+          "volume": 0.00483,
+          "role": "reference"
+        },
+        "64": {
+          "object_id": "64",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            2.434,
+            -0.588,
+            0.2708
+          ],
+          "size": [
+            0.5619,
+            0.4886,
+            0.5417
+          ],
+          "yaw": 0.5236,
+          "aabb": {
+            "min": [
+              2.0686,
+              -0.94,
+              0.0
+            ],
+            "max": [
+              2.7995,
+              -0.236,
+              0.5417
+            ]
+          },
+          "size_aabb": [
+            0.7309,
+            0.7041,
+            0.5417
+          ],
+          "bbox_corners": [
+            [
+              2.0686,
+              -0.5169,
+              0.5417
+            ],
+            [
+              2.5552,
+              -0.236,
+              0.5417
+            ],
+            [
+              2.7995,
+              -0.6591,
+              0.5417
+            ],
+            [
+              2.3129,
+              -0.94,
+              0.5417
+            ],
+            [
+              2.0686,
+              -0.5169,
+              0.0
+            ],
+            [
+              2.5552,
+              -0.236,
+              0.0
+            ],
+            [
+              2.7995,
+              -0.6591,
+              0.0
+            ],
+            [
+              2.3129,
+              -0.94,
+              0.0
+            ]
+          ],
+          "volume": 0.1487,
+          "role": "constraint"
+        },
+        "23": {
+          "object_id": "23",
+          "region": "0",
+          "label": "column",
+          "raw_label": "column",
+          "nyu_label": "column",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -0.993,
+            1.081,
+            1.3918
+          ],
+          "size": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -1.2444,
+              0.8296,
+              0.001
+            ],
+            "max": [
+              -0.7416,
+              1.3324,
+              2.7827
+            ]
+          },
+          "size_aabb": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "bbox_corners": [
+            [
+              -0.7416,
+              0.8296,
+              2.7827
+            ],
+            [
+              -1.2444,
+              0.8296,
+              2.7827
+            ],
+            [
+              -1.2444,
+              1.3324,
+              2.7827
+            ],
+            [
+              -0.7416,
+              1.3324,
+              2.7827
+            ],
+            [
+              -0.7416,
+              0.8296,
+              0.001
+            ],
+            [
+              -1.2444,
+              0.8296,
+              0.001
+            ],
+            [
+              -1.2444,
+              1.3324,
+              0.001
+            ],
+            [
+              -0.7416,
+              1.3324,
+              0.001
+            ]
+          ],
+          "volume": 0.70321,
+          "role": "reference"
+        },
+        "30": {
+          "object_id": "30",
+          "region": "0",
+          "label": "column",
+          "raw_label": "column",
+          "nyu_label": "column",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -0.993,
+            -1.133,
+            1.3918
+          ],
+          "size": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -1.2444,
+              -1.3844,
+              0.001
+            ],
+            "max": [
+              -0.7416,
+              -0.8816,
+              2.7827
+            ]
+          },
+          "size_aabb": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "bbox_corners": [
+            [
+              -1.2444,
+              -1.3844,
+              2.7827
+            ],
+            [
+              -1.2444,
+              -0.8816,
+              2.7827
+            ],
+            [
+              -0.7416,
+              -0.8816,
+              2.7827
+            ],
+            [
+              -0.7416,
+              -1.3844,
+              2.7827
+            ],
+            [
+              -1.2444,
+              -1.3844,
+              0.001
+            ],
+            [
+              -1.2444,
+              -0.8816,
+              0.001
+            ],
+            [
+              -0.7416,
+              -0.8816,
+              0.001
+            ],
+            [
+              -0.7416,
+              -1.3844,
+              0.001
+            ]
+          ],
+          "volume": 0.70321,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/arabic_room/trajectory_q4.ply",
+        "n_vertices": 792,
+        "length_m": 9.059,
+        "z": 0.75,
+        "start": [
+          -0.01,
+          -0.0
+        ],
+        "end": [
+          2.483,
+          -1.226
+        ],
+        "polyline": [
+          [
+            -0.01,
+            -0.0
+          ],
+          [
+            -0.268,
+            -0.028
+          ],
+          [
+            -0.513,
+            -0.083
+          ],
+          [
+            -0.75,
+            -0.165
+          ],
+          [
+            -0.987,
+            -0.26
+          ],
+          [
+            -1.228,
+            -0.358
+          ],
+          [
+            -1.463,
+            -0.467
+          ],
+          [
+            -1.685,
+            -0.602
+          ],
+          [
+            -1.9,
+            -0.745
+          ],
+          [
+            -2.11,
+            -0.886
+          ],
+          [
+            -2.321,
+            -1.027
+          ],
+          [
+            -2.533,
+            -1.168
+          ],
+          [
+            -2.749,
+            -1.313
+          ],
+          [
+            -2.957,
+            -1.452
+          ],
+          [
+            -2.744,
+            -1.315
+          ],
+          [
+            -2.52,
+            -1.199
+          ],
+          [
+            -2.285,
+            -1.092
+          ],
+          [
+            -2.053,
+            -0.971
+          ],
+          [
+            -1.824,
+            -0.863
+          ],
+          [
+            -1.587,
+            -0.781
+          ],
+          [
+            -1.341,
+            -0.704
+          ],
+          [
+            -1.095,
+            -0.648
+          ],
+          [
+            -0.845,
+            -0.62
+          ],
+          [
+            -0.594,
+            -0.621
+          ],
+          [
+            -0.347,
+            -0.672
+          ],
+          [
+            -0.09,
+            -0.71
+          ],
+          [
+            0.169,
+            -0.745
+          ],
+          [
+            0.413,
+            -0.826
+          ],
+          [
+            0.645,
+            -0.925
+          ],
+          [
+            0.88,
+            -1.024
+          ],
+          [
+            1.123,
+            -1.113
+          ],
+          [
+            1.367,
+            -1.172
+          ],
+          [
+            1.615,
+            -1.211
+          ],
+          [
+            1.875,
+            -1.222
+          ],
+          [
+            2.135,
+            -1.223
+          ],
+          [
+            2.388,
+            -1.225
+          ],
+          [
+            2.483,
+            -1.226
+          ]
+        ]
+      },
+      "evidence": "Demo path passes stool at 0.80 m (37% along), and ends 0.64 m from table.",
+      "solver_trace": [
+        "head='stool' color='' hops=[{'relation': 'below', 'phrases': ['picture']}]",
+        "head candidates: [stool#34, stool#63]",
+        "target hop (below): below: 1 match(es) -> [stool#34]",
+        "pick: below: stool#34 is the only match",
+        "head='table' color='' hops=[{'relation': 'farthest', 'phrases': ['columns']}]",
+        "head candidates: [table#28, table#64]",
+        "target hop (farthest): farthest: ranked [table#64, table#28]",
+        "pick: farthest: centre 3.65 m (next 2.85 m); box-gap 2.81 m (next 1.95 m)"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go to the potted plant furthest from the hookah, then take the path between the two columns, and stop at the tray on the table.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "potted plant",
+        "hookah",
+        "column",
+        "tray",
+        "table"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the potted plant furthest from the hookah",
+            "label": "potted plant",
+            "object_ids": [
+              "0"
+            ],
+            "anchor_ids": [
+              "14"
+            ],
+            "center": [
+              -3.7469,
+              2.0009
+            ],
+            "radius": 1.5,
+            "traj_index": 308,
+            "traj_frac": 0.372,
+            "min_dist_m": 0.815,
+            "why": "farthest: centre 5.85 m (next 2.51 m); box-gap 5.04 m (next 1.90 m)",
+            "anchor_why": "farthest 'hookah': hookah#14 is the only one"
+          },
+          {
+            "kind": "pass_between",
+            "phrase": "the two columns",
+            "label": "column",
+            "object_ids": [
+              "23",
+              "30"
+            ],
+            "anchor_ids": [],
+            "center": [
+              -0.993,
+              -0.026
+            ],
+            "radius": 1.5,
+            "traj_index": 530,
+            "traj_frac": 0.64,
+            "min_dist_m": 0.477,
+            "why": "2 objects share the class"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the tray on the table",
+          "label": "tray",
+          "object_ids": [
+            "19"
+          ],
+          "anchor_ids": [
+            "64"
+          ],
+          "center": [
+            2.4557,
+            -0.6365
+          ],
+          "radius": 1.5,
+          "traj_index": 828,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.615,
+          "why": "on: tray#19 is the only match",
+          "anchor_why": "on 'table': the boxes put table#64 there"
+        }
+      },
+      "objects": {
+        "0": {
+          "object_id": "0",
+          "region": "0",
+          "label": "potted plant",
+          "raw_label": "potted plant",
+          "nyu_label": "plant",
+          "colors": [
+            "olive",
+            "pink",
+            "gray"
+          ],
+          "center": [
+            -3.7469,
+            2.0009,
+            0.6164
+          ],
+          "size": [
+            0.7477,
+            0.791,
+            1.2324
+          ],
+          "yaw": -2.2502,
+          "aabb": {
+            "min": [
+              -4.2895,
+              1.4615,
+              0.0002
+            ],
+            "max": [
+              -3.2044,
+              2.5402,
+              1.2326
+            ]
+          },
+          "size_aabb": [
+            1.0851,
+            1.0786,
+            1.2324
+          ],
+          "bbox_corners": [
+            [
+              -3.2044,
+              2.0432,
+              1.2326
+            ],
+            [
+              -3.6741,
+              1.4615,
+              1.2326
+            ],
+            [
+              -4.2895,
+              1.9585,
+              1.2326
+            ],
+            [
+              -3.8197,
+              2.5402,
+              1.2326
+            ],
+            [
+              -3.2044,
+              2.0432,
+              0.0002
+            ],
+            [
+              -3.6741,
+              1.4615,
+              0.0002
+            ],
+            [
+              -4.2895,
+              1.9585,
+              0.0002
+            ],
+            [
+              -3.8197,
+              2.5402,
+              0.0002
+            ]
+          ],
+          "volume": 0.72883,
+          "role": "constraint"
+        },
+        "14": {
+          "object_id": "14",
+          "region": "0",
+          "label": "hookah",
+          "raw_label": "hookah",
+          "nyu_label": "hookah",
+          "colors": [
+            "black"
+          ],
+          "center": [
+            1.4946,
+            -0.5941,
+            0.7488
+          ],
+          "size": [
+            0.0979,
+            0.0956,
+            0.4069
+          ],
+          "yaw": 2.3953,
+          "aabb": {
+            "min": [
+              1.4262,
+              -0.6624,
+              0.5454
+            ],
+            "max": [
+              1.563,
+              -0.5257,
+              0.9522
+            ]
+          },
+          "size_aabb": [
+            0.1368,
+            0.1367,
+            0.4069
+          ],
+          "bbox_corners": [
+            [
+              1.4981,
+              -0.6624,
+              0.9522
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.9522
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.9522
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.9522
+            ],
+            [
+              1.4981,
+              -0.6624,
+              0.5454
+            ],
+            [
+              1.4262,
+              -0.5959,
+              0.5454
+            ],
+            [
+              1.4911,
+              -0.5257,
+              0.5454
+            ],
+            [
+              1.563,
+              -0.5922,
+              0.5454
+            ]
+          ],
+          "volume": 0.00381,
+          "role": "reference"
+        },
+        "23": {
+          "object_id": "23",
+          "region": "0",
+          "label": "column",
+          "raw_label": "column",
+          "nyu_label": "column",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -0.993,
+            1.081,
+            1.3918
+          ],
+          "size": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -1.2444,
+              0.8296,
+              0.001
+            ],
+            "max": [
+              -0.7416,
+              1.3324,
+              2.7827
+            ]
+          },
+          "size_aabb": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "bbox_corners": [
+            [
+              -0.7416,
+              0.8296,
+              2.7827
+            ],
+            [
+              -1.2444,
+              0.8296,
+              2.7827
+            ],
+            [
+              -1.2444,
+              1.3324,
+              2.7827
+            ],
+            [
+              -0.7416,
+              1.3324,
+              2.7827
+            ],
+            [
+              -0.7416,
+              0.8296,
+              0.001
+            ],
+            [
+              -1.2444,
+              0.8296,
+              0.001
+            ],
+            [
+              -1.2444,
+              1.3324,
+              0.001
+            ],
+            [
+              -0.7416,
+              1.3324,
+              0.001
+            ]
+          ],
+          "volume": 0.70321,
+          "role": "constraint"
+        },
+        "30": {
+          "object_id": "30",
+          "region": "0",
+          "label": "column",
+          "raw_label": "column",
+          "nyu_label": "column",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            -0.993,
+            -1.133,
+            1.3918
+          ],
+          "size": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              -1.2444,
+              -1.3844,
+              0.001
+            ],
+            "max": [
+              -0.7416,
+              -0.8816,
+              2.7827
+            ]
+          },
+          "size_aabb": [
+            0.5028,
+            0.5028,
+            2.7817
+          ],
+          "bbox_corners": [
+            [
+              -1.2444,
+              -1.3844,
+              2.7827
+            ],
+            [
+              -1.2444,
+              -0.8816,
+              2.7827
+            ],
+            [
+              -0.7416,
+              -0.8816,
+              2.7827
+            ],
+            [
+              -0.7416,
+              -1.3844,
+              2.7827
+            ],
+            [
+              -1.2444,
+              -1.3844,
+              0.001
+            ],
+            [
+              -1.2444,
+              -0.8816,
+              0.001
+            ],
+            [
+              -0.7416,
+              -0.8816,
+              0.001
+            ],
+            [
+              -0.7416,
+              -1.3844,
+              0.001
+            ]
+          ],
+          "volume": 0.70321,
+          "role": "constraint"
+        },
+        "19": {
+          "object_id": "19",
+          "region": "0",
+          "label": "tray",
+          "raw_label": "tray",
+          "nyu_label": "tray",
+          "colors": [
+            "gray",
+            "olive",
+            "brown"
+          ],
+          "center": [
+            2.4557,
+            -0.6365,
+            0.5487
+          ],
+          "size": [
+            0.3706,
+            0.3702,
+            0.0141
+          ],
+          "yaw": -1.5693,
+          "aabb": {
+            "min": [
+              2.2703,
+              -0.822,
+              0.5417
+            ],
+            "max": [
+              2.641,
+              -0.4509,
+              0.5558
+            ]
+          },
+          "size_aabb": [
+            0.3707,
+            0.3711,
+            0.0141
+          ],
+          "bbox_corners": [
+            [
+              2.6405,
+              -0.4509,
+              0.5558
+            ],
+            [
+              2.641,
+              -0.8215,
+              0.5558
+            ],
+            [
+              2.2708,
+              -0.822,
+              0.5558
+            ],
+            [
+              2.2703,
+              -0.4515,
+              0.5558
+            ],
+            [
+              2.6405,
+              -0.4509,
+              0.5417
+            ],
+            [
+              2.641,
+              -0.8215,
+              0.5417
+            ],
+            [
+              2.2708,
+              -0.822,
+              0.5417
+            ],
+            [
+              2.2703,
+              -0.4515,
+              0.5417
+            ]
+          ],
+          "volume": 0.00193,
+          "role": "constraint"
+        },
+        "64": {
+          "object_id": "64",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "brown"
+          ],
+          "center": [
+            2.434,
+            -0.588,
+            0.2708
+          ],
+          "size": [
+            0.5619,
+            0.4886,
+            0.5417
+          ],
+          "yaw": 0.5236,
+          "aabb": {
+            "min": [
+              2.0686,
+              -0.94,
+              0.0
+            ],
+            "max": [
+              2.7995,
+              -0.236,
+              0.5417
+            ]
+          },
+          "size_aabb": [
+            0.7309,
+            0.7041,
+            0.5417
+          ],
+          "bbox_corners": [
+            [
+              2.0686,
+              -0.5169,
+              0.5417
+            ],
+            [
+              2.5552,
+              -0.236,
+              0.5417
+            ],
+            [
+              2.7995,
+              -0.6591,
+              0.5417
+            ],
+            [
+              2.3129,
+              -0.94,
+              0.5417
+            ],
+            [
+              2.0686,
+              -0.5169,
+              0.0
+            ],
+            [
+              2.5552,
+              -0.236,
+              0.0
+            ],
+            [
+              2.7995,
+              -0.6591,
+              0.0
+            ],
+            [
+              2.3129,
+              -0.94,
+              0.0
+            ]
+          ],
+          "volume": 0.1487,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/arabic_room/trajectory_q5.ply",
+        "n_vertices": 829,
+        "length_m": 9.532,
+        "z": 0.75,
+        "start": [
+          -0.01,
+          0.0
+        ],
+        "end": [
+          2.522,
+          -0.025
+        ],
+        "polyline": [
+          [
+            -0.01,
+            0.0
+          ],
+          [
+            -0.268,
+            0.03
+          ],
+          [
+            -0.518,
+            0.088
+          ],
+          [
+            -0.754,
+            0.172
+          ],
+          [
+            -0.987,
+            0.287
+          ],
+          [
+            -1.209,
+            0.426
+          ],
+          [
+            -1.43,
+            0.569
+          ],
+          [
+            -1.644,
+            0.707
+          ],
+          [
+            -1.854,
+            0.847
+          ],
+          [
+            -2.054,
+            1.003
+          ],
+          [
+            -2.247,
+            1.164
+          ],
+          [
+            -2.431,
+            1.335
+          ],
+          [
+            -2.616,
+            1.508
+          ],
+          [
+            -2.805,
+            1.684
+          ],
+          [
+            -2.62,
+            1.501
+          ],
+          [
+            -2.42,
+            1.35
+          ],
+          [
+            -2.222,
+            1.183
+          ],
+          [
+            -2.025,
+            1.014
+          ],
+          [
+            -1.83,
+            0.857
+          ],
+          [
+            -1.618,
+            0.723
+          ],
+          [
+            -1.393,
+            0.613
+          ],
+          [
+            -1.156,
+            0.528
+          ],
+          [
+            -0.909,
+            0.448
+          ],
+          [
+            -0.666,
+            0.37
+          ],
+          [
+            -0.414,
+            0.307
+          ],
+          [
+            -0.171,
+            0.231
+          ],
+          [
+            0.074,
+            0.152
+          ],
+          [
+            0.318,
+            0.074
+          ],
+          [
+            0.561,
+            -0.004
+          ],
+          [
+            0.811,
+            -0.056
+          ],
+          [
+            1.067,
+            -0.046
+          ],
+          [
+            1.318,
+            -0.037
+          ],
+          [
+            1.579,
+            -0.041
+          ],
+          [
+            1.836,
+            -0.052
+          ],
+          [
+            2.088,
+            -0.044
+          ],
+          [
+            2.339,
+            -0.033
+          ],
+          [
+            2.522,
+            -0.025
+          ]
+        ]
+      },
+      "evidence": "Demo path passes potted plant at 0.81 m (37% along), then column at 0.48 m (64% along), and ends 0.61 m from tray.",
+      "solver_trace": [
+        "head='potted plant' color='' hops=[{'relation': 'farthest', 'phrases': ['hookah']}]",
+        "head candidates: [potted plant#0, potted plant#18]",
+        "target hop (farthest): farthest: ranked [potted plant#0, potted plant#18]",
+        "pick: farthest: centre 5.85 m (next 2.51 m); box-gap 5.04 m (next 1.90 m)",
+        "head='tray' color='' hops=[{'relation': 'on', 'phrases': ['table']}]",
+        "head candidates: [tray#19]",
+        "target hop (on): on: 1 match(es) -> [tray#19]",
+        "pick: on: tray#19 is the only match"
+      ],
+      "verified": true
+    }
+  ]
+}

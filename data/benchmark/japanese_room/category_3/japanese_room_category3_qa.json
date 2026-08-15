@@ -1,0 +1,1195 @@
+{
+  "scene": "japanese_room",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "display ledge",
+    "fan decoration",
+    "flowers",
+    "jar",
+    "lantern",
+    "table",
+    "vase",
+    "wardrobe door"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go near the small table with a vase on it and then to the flowers near the jar.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "table",
+        "vase",
+        "flowers",
+        "jar"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the small table with a vase on it",
+            "label": "table",
+            "object_ids": [
+              "58"
+            ],
+            "anchor_ids": [
+              "55"
+            ],
+            "center": [
+              1.988,
+              0.152
+            ],
+            "radius": 1.5,
+            "traj_index": 90,
+            "traj_frac": 0.266,
+            "min_dist_m": 0.61,
+            "why": "supports: table#58 is the only match",
+            "anchor_why": "supports 'vase': the boxes put vase#55 there"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the flowers near the jar",
+          "label": "flowers",
+          "object_ids": [
+            "53"
+          ],
+          "anchor_ids": [
+            "60"
+          ],
+          "center": [
+            1.858,
+            3.1337
+          ],
+          "radius": 1.5,
+          "traj_index": 338,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.766,
+          "why": "near: flowers#53 is the only match",
+          "anchor_why": "near 'jar': the boxes put jar#60 there"
+        }
+      },
+      "objects": {
+        "58": {
+          "object_id": "58",
+          "region": "0",
+          "label": "table",
+          "raw_label": "table",
+          "nyu_label": "table",
+          "colors": [
+            "brown",
+            "gray"
+          ],
+          "center": [
+            1.988,
+            0.152,
+            0.115
+          ],
+          "size": [
+            0.4,
+            0.4,
+            0.23
+          ],
+          "yaw": -0.0,
+          "aabb": {
+            "min": [
+              1.788,
+              -0.048,
+              -0.0
+            ],
+            "max": [
+              2.188,
+              0.352,
+              0.23
+            ]
+          },
+          "size_aabb": [
+            0.4,
+            0.4,
+            0.23
+          ],
+          "bbox_corners": [
+            [
+              1.788,
+              0.352,
+              0.23
+            ],
+            [
+              2.188,
+              0.352,
+              0.23
+            ],
+            [
+              2.188,
+              -0.048,
+              0.23
+            ],
+            [
+              1.788,
+              -0.048,
+              0.23
+            ],
+            [
+              1.788,
+              0.352,
+              -0.0
+            ],
+            [
+              2.188,
+              0.352,
+              -0.0
+            ],
+            [
+              2.188,
+              -0.048,
+              -0.0
+            ],
+            [
+              1.788,
+              -0.048,
+              -0.0
+            ]
+          ],
+          "volume": 0.0368,
+          "role": "constraint"
+        },
+        "55": {
+          "object_id": "55",
+          "region": "0",
+          "label": "vase",
+          "raw_label": "vase",
+          "nyu_label": "vase",
+          "colors": [
+            "gray",
+            "olive"
+          ],
+          "center": [
+            1.9895,
+            0.1671,
+            0.5385
+          ],
+          "size": [
+            0.1747,
+            0.1858,
+            0.6729
+          ],
+          "yaw": -0.0672,
+          "aabb": {
+            "min": [
+              1.8961,
+              0.0685,
+              0.202
+            ],
+            "max": [
+              2.0829,
+              0.2656,
+              0.8749
+            ]
+          },
+          "size_aabb": [
+            0.1868,
+            0.1971,
+            0.6729
+          ],
+          "bbox_corners": [
+            [
+              1.9086,
+              0.2656,
+              0.8749
+            ],
+            [
+              2.0829,
+              0.2539,
+              0.8749
+            ],
+            [
+              2.0704,
+              0.0685,
+              0.8749
+            ],
+            [
+              1.8961,
+              0.0802,
+              0.8749
+            ],
+            [
+              1.9086,
+              0.2656,
+              0.202
+            ],
+            [
+              2.0829,
+              0.2539,
+              0.202
+            ],
+            [
+              2.0704,
+              0.0685,
+              0.202
+            ],
+            [
+              1.8961,
+              0.0802,
+              0.202
+            ]
+          ],
+          "volume": 0.02184,
+          "role": "reference"
+        },
+        "53": {
+          "object_id": "53",
+          "region": "0",
+          "label": "flowers",
+          "raw_label": "flowers",
+          "nyu_label": "flower",
+          "colors": [
+            "black",
+            "pink",
+            "gray"
+          ],
+          "center": [
+            1.858,
+            3.1337,
+            0.501
+          ],
+          "size": [
+            0.5824,
+            0.6123,
+            1.0055
+          ],
+          "yaw": -1.2981,
+          "aabb": {
+            "min": [
+              1.4848,
+              2.7708,
+              -0.0018
+            ],
+            "max": [
+              2.2313,
+              3.4966,
+              1.0037
+            ]
+          },
+          "size_aabb": [
+            0.7466,
+            0.7258,
+            1.0055
+          ],
+          "bbox_corners": [
+            [
+              2.0745,
+              3.4966,
+              1.0037
+            ],
+            [
+              2.2313,
+              2.9357,
+              1.0037
+            ],
+            [
+              1.6416,
+              2.7708,
+              1.0037
+            ],
+            [
+              1.4848,
+              3.3317,
+              1.0037
+            ],
+            [
+              2.0745,
+              3.4966,
+              -0.0018
+            ],
+            [
+              2.2313,
+              2.9357,
+              -0.0018
+            ],
+            [
+              1.6416,
+              2.7708,
+              -0.0018
+            ],
+            [
+              1.4848,
+              3.3317,
+              -0.0018
+            ]
+          ],
+          "volume": 0.35858,
+          "role": "constraint"
+        },
+        "60": {
+          "object_id": "60",
+          "region": "0",
+          "label": "jar",
+          "raw_label": "jar",
+          "nyu_label": "jar",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            1.9974,
+            3.8931,
+            0.4088
+          ],
+          "size": [
+            0.2933,
+            0.2933,
+            0.4415
+          ],
+          "yaw": -0.8519,
+          "aabb": {
+            "min": [
+              1.7905,
+              3.6861,
+              0.188
+            ],
+            "max": [
+              2.2044,
+              4.1,
+              0.6295
+            ]
+          },
+          "size_aabb": [
+            0.4139,
+            0.4139,
+            0.4415
+          ],
+          "bbox_corners": [
+            [
+              2.0113,
+              4.1,
+              0.6295
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.6295
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.6295
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.6295
+            ],
+            [
+              2.0113,
+              4.1,
+              0.188
+            ],
+            [
+              2.2044,
+              3.8793,
+              0.188
+            ],
+            [
+              1.9836,
+              3.6861,
+              0.188
+            ],
+            [
+              1.7905,
+              3.9068,
+              0.188
+            ]
+          ],
+          "volume": 0.03798,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/japanese_room/trajectory_q4.ply",
+        "n_vertices": 339,
+        "length_m": 4.998,
+        "z": 0.75,
+        "start": [
+          0.011,
+          0.0
+        ],
+        "end": [
+          1.222,
+          3.56
+        ],
+        "polyline": [
+          [
+            0.011,
+            0.0
+          ],
+          [
+            0.272,
+            0.0
+          ],
+          [
+            0.528,
+            0.0
+          ],
+          [
+            0.79,
+            0.0
+          ],
+          [
+            1.054,
+            0.0
+          ],
+          [
+            1.307,
+            0.0
+          ],
+          [
+            1.336,
+            0.262
+          ],
+          [
+            1.329,
+            0.513
+          ],
+          [
+            1.331,
+            0.765
+          ],
+          [
+            1.315,
+            1.025
+          ],
+          [
+            1.268,
+            1.28
+          ],
+          [
+            1.212,
+            1.538
+          ],
+          [
+            1.159,
+            1.784
+          ],
+          [
+            1.122,
+            2.033
+          ],
+          [
+            1.099,
+            2.284
+          ],
+          [
+            1.087,
+            2.546
+          ],
+          [
+            1.09,
+            2.8
+          ],
+          [
+            1.103,
+            3.05
+          ],
+          [
+            1.146,
+            3.304
+          ],
+          [
+            1.218,
+            3.55
+          ],
+          [
+            1.222,
+            3.56
+          ]
+        ]
+      },
+      "evidence": "Demo path passes table at 0.61 m (27% along), and ends 0.77 m from flowers.",
+      "solver_trace": [
+        "head='table' color='' hops=[{'relation': 'supports', 'phrases': ['vase']}]",
+        "head candidates: [table#26, table#58, table#59]",
+        "target hop (supports): supports: 1 match(es) -> [table#58]",
+        "pick: supports: table#58 is the only match",
+        "head='flowers' color='' hops=[{'relation': 'near', 'phrases': ['jar']}]",
+        "head candidates: [flowers#4, flowers#6, flowers#53]",
+        "target hop (near): near: 1 match(es) -> [flowers#53]",
+        "pick: near: flowers#53 is the only match"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "Go to the lantern closest to the fan decoration, then take the path near the wardrobe doors to the flowers on the display ledge.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "lantern",
+        "fan decoration",
+        "wardrobe door",
+        "flowers",
+        "display ledge"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the lantern closest to the fan decoration",
+            "label": "lantern",
+            "object_ids": [
+              "61"
+            ],
+            "anchor_ids": [
+              "62"
+            ],
+            "center": [
+              1.397,
+              -0.521
+            ],
+            "radius": 1.5,
+            "traj_index": 93,
+            "traj_frac": 0.13,
+            "min_dist_m": 0.458,
+            "why": "closest: centre 1.14 m (next 6.57 m); box-gap 0.47 m (next 6.30 m)",
+            "anchor_why": "closest 'fan decoration': fan decoration#62 is the only one"
+          },
+          {
+            "kind": "pass_near",
+            "phrase": "the wardrobe doors",
+            "label": "wardrobe door",
+            "object_ids": [
+              "0"
+            ],
+            "anchor_ids": [],
+            "center": [
+              0.1395,
+              4.4857
+            ],
+            "radius": 1.5,
+            "traj_index": 489,
+            "traj_frac": 0.683,
+            "min_dist_m": 0.863,
+            "why": "text was indecisive (2 objects share the head noun and no relation narrows it); the demo picks wardrobe door#0 at 0.86 m"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the flowers on the display ledge",
+          "label": "flowers",
+          "object_ids": [
+            "6"
+          ],
+          "anchor_ids": [
+            "16"
+          ],
+          "center": [
+            -2.3475,
+            4.8572
+          ],
+          "radius": 1.5,
+          "traj_index": 716,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.994,
+          "why": "on: flowers#6 is the only match",
+          "anchor_why": "on 'display ledge': the boxes put display ledge#16 there"
+        }
+      },
+      "objects": {
+        "61": {
+          "object_id": "61",
+          "region": "0",
+          "label": "lantern",
+          "raw_label": "lantern",
+          "nyu_label": "lamp",
+          "colors": [
+            "brown",
+            "black"
+          ],
+          "center": [
+            1.397,
+            -0.521,
+            0.2501
+          ],
+          "size": [
+            0.2,
+            0.2,
+            0.4999
+          ],
+          "yaw": -0.0,
+          "aabb": {
+            "min": [
+              1.297,
+              -0.621,
+              0.0001
+            ],
+            "max": [
+              1.497,
+              -0.421,
+              0.5
+            ]
+          },
+          "size_aabb": [
+            0.2,
+            0.2,
+            0.4999
+          ],
+          "bbox_corners": [
+            [
+              1.297,
+              -0.421,
+              0.5
+            ],
+            [
+              1.497,
+              -0.421,
+              0.5
+            ],
+            [
+              1.497,
+              -0.621,
+              0.5
+            ],
+            [
+              1.297,
+              -0.621,
+              0.5
+            ],
+            [
+              1.297,
+              -0.421,
+              0.0001
+            ],
+            [
+              1.497,
+              -0.421,
+              0.0001
+            ],
+            [
+              1.497,
+              -0.621,
+              0.0001
+            ],
+            [
+              1.297,
+              -0.621,
+              0.0001
+            ]
+          ],
+          "volume": 0.01999,
+          "role": "constraint"
+        },
+        "62": {
+          "object_id": "62",
+          "region": "0",
+          "label": "fan decoration",
+          "raw_label": "fan decoration",
+          "nyu_label": "decoration item",
+          "colors": [
+            "gray",
+            "blue"
+          ],
+          "center": [
+            0.9544,
+            -0.9755,
+            1.1985
+          ],
+          "size": [
+            0.6425,
+            0.0103,
+            0.7763
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              0.6332,
+              -0.9806,
+              0.8103
+            ],
+            "max": [
+              1.2756,
+              -0.9703,
+              1.5867
+            ]
+          },
+          "size_aabb": [
+            0.6425,
+            0.0103,
+            0.7763
+          ],
+          "bbox_corners": [
+            [
+              1.2756,
+              -0.9806,
+              1.5867
+            ],
+            [
+              0.6332,
+              -0.9806,
+              1.5867
+            ],
+            [
+              0.6332,
+              -0.9703,
+              1.5867
+            ],
+            [
+              1.2756,
+              -0.9703,
+              1.5867
+            ],
+            [
+              1.2756,
+              -0.9806,
+              0.8103
+            ],
+            [
+              0.6332,
+              -0.9806,
+              0.8103
+            ],
+            [
+              0.6332,
+              -0.9703,
+              0.8103
+            ],
+            [
+              1.2756,
+              -0.9703,
+              0.8103
+            ]
+          ],
+          "volume": 0.00514,
+          "role": "reference"
+        },
+        "0": {
+          "object_id": "0",
+          "region": "0",
+          "label": "wardrobe door",
+          "raw_label": "wardrobe door",
+          "nyu_label": "door",
+          "colors": [
+            "gray",
+            "yellow"
+          ],
+          "center": [
+            0.1395,
+            4.4857,
+            1.0835
+          ],
+          "size": [
+            1.3549,
+            0.049,
+            2.217
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -0.5379,
+              4.4613,
+              -0.0249
+            ],
+            "max": [
+              0.817,
+              4.5102,
+              2.192
+            ]
+          },
+          "size_aabb": [
+            1.3549,
+            0.049,
+            2.217
+          ],
+          "bbox_corners": [
+            [
+              0.817,
+              4.4613,
+              2.192
+            ],
+            [
+              -0.5379,
+              4.4613,
+              2.192
+            ],
+            [
+              -0.5379,
+              4.5102,
+              2.192
+            ],
+            [
+              0.817,
+              4.5102,
+              2.192
+            ],
+            [
+              0.817,
+              4.4613,
+              -0.0249
+            ],
+            [
+              -0.5379,
+              4.4613,
+              -0.0249
+            ],
+            [
+              -0.5379,
+              4.5102,
+              -0.0249
+            ],
+            [
+              0.817,
+              4.5102,
+              -0.0249
+            ]
+          ],
+          "volume": 0.1471,
+          "role": "constraint"
+        },
+        "6": {
+          "object_id": "6",
+          "region": "0",
+          "label": "flowers",
+          "raw_label": "flowers",
+          "nyu_label": "flower",
+          "colors": [
+            "black",
+            "pink",
+            "gray"
+          ],
+          "center": [
+            -2.3475,
+            4.8572,
+            0.6681
+          ],
+          "size": [
+            0.5896,
+            0.6258,
+            1.0177
+          ],
+          "yaw": 0.8659,
+          "aabb": {
+            "min": [
+              -2.7769,
+              4.4299,
+              0.1593
+            ],
+            "max": [
+              -1.9182,
+              5.2845,
+              1.177
+            ]
+          },
+          "size_aabb": [
+            0.8588,
+            0.8546,
+            1.0177
+          ],
+          "bbox_corners": [
+            [
+              -2.7769,
+              4.8354,
+              1.177
+            ],
+            [
+              -2.3948,
+              5.2845,
+              1.177
+            ],
+            [
+              -1.9182,
+              4.879,
+              1.177
+            ],
+            [
+              -2.3002,
+              4.4299,
+              1.177
+            ],
+            [
+              -2.7769,
+              4.8354,
+              0.1593
+            ],
+            [
+              -2.3948,
+              5.2845,
+              0.1593
+            ],
+            [
+              -1.9182,
+              4.879,
+              0.1593
+            ],
+            [
+              -2.3002,
+              4.4299,
+              0.1593
+            ]
+          ],
+          "volume": 0.37555,
+          "role": "constraint"
+        },
+        "16": {
+          "object_id": "16",
+          "region": "0",
+          "label": "display ledge",
+          "raw_label": "display ledge",
+          "nyu_label": "mini display platform",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            -1.8645,
+            4.9215,
+            0.0671
+          ],
+          "size": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            "max": [
+              -0.7366,
+              5.3685,
+              0.1569
+            ]
+          },
+          "size_aabb": [
+            2.2559,
+            0.8939,
+            0.1796
+          ],
+          "bbox_corners": [
+            [
+              -0.7366,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              4.4745,
+              0.1569
+            ],
+            [
+              -2.9925,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              5.3685,
+              0.1569
+            ],
+            [
+              -0.7366,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              4.4745,
+              -0.0227
+            ],
+            [
+              -2.9925,
+              5.3685,
+              -0.0227
+            ],
+            [
+              -0.7366,
+              5.3685,
+              -0.0227
+            ]
+          ],
+          "volume": 0.36229,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/japanese_room/trajectory_q5.ply",
+        "n_vertices": 717,
+        "length_m": 8.181,
+        "z": 0.75,
+        "start": [
+          0.011,
+          -0.001
+        ],
+        "end": [
+          -2.393,
+          3.864
+        ],
+        "polyline": [
+          [
+            0.011,
+            -0.001
+          ],
+          [
+            0.264,
+            -0.044
+          ],
+          [
+            0.512,
+            -0.115
+          ],
+          [
+            0.753,
+            -0.216
+          ],
+          [
+            0.974,
+            -0.344
+          ],
+          [
+            0.86,
+            -0.113
+          ],
+          [
+            0.778,
+            0.135
+          ],
+          [
+            0.726,
+            0.38
+          ],
+          [
+            0.701,
+            0.639
+          ],
+          [
+            0.704,
+            0.896
+          ],
+          [
+            0.715,
+            1.147
+          ],
+          [
+            0.726,
+            1.399
+          ],
+          [
+            0.737,
+            1.65
+          ],
+          [
+            0.74,
+            1.911
+          ],
+          [
+            0.724,
+            2.169
+          ],
+          [
+            0.708,
+            2.423
+          ],
+          [
+            0.691,
+            2.682
+          ],
+          [
+            0.675,
+            2.934
+          ],
+          [
+            0.658,
+            3.191
+          ],
+          [
+            0.642,
+            3.45
+          ],
+          [
+            0.503,
+            3.659
+          ],
+          [
+            0.252,
+            3.627
+          ],
+          [
+            -0.001,
+            3.616
+          ],
+          [
+            -0.257,
+            3.606
+          ],
+          [
+            -0.508,
+            3.597
+          ],
+          [
+            -0.769,
+            3.586
+          ],
+          [
+            -1.024,
+            3.576
+          ],
+          [
+            -1.275,
+            3.576
+          ],
+          [
+            -1.526,
+            3.603
+          ],
+          [
+            -1.771,
+            3.658
+          ],
+          [
+            -2.018,
+            3.738
+          ],
+          [
+            -2.262,
+            3.82
+          ],
+          [
+            -2.393,
+            3.864
+          ]
+        ]
+      },
+      "evidence": "Demo path passes lantern at 0.46 m (13% along), then wardrobe door at 0.86 m (68% along), and ends 0.99 m from flowers.",
+      "solver_trace": [
+        "head='lantern' color='' hops=[{'relation': 'closest', 'phrases': ['fan decoration']}]",
+        "head candidates: [lantern#56, lantern#57, lantern#61]",
+        "target hop (closest): closest: ranked [lantern#61, lantern#56, lantern#57]",
+        "pick: closest: centre 1.14 m (next 6.57 m); box-gap 0.47 m (next 6.30 m)",
+        "head='wardrobe doors' color='' hops=[]",
+        "head candidates: [wardrobe door#0, wardrobe door#1]",
+        "head='flowers' color='' hops=[{'relation': 'on', 'phrases': ['display ledge']}]",
+        "head candidates: [flowers#4, flowers#6, flowers#53]",
+        "target hop (on): on: 1 match(es) -> [flowers#6]",
+        "pick: on: flowers#6 is the only match"
+      ],
+      "verified": true
+    }
+  ]
+}

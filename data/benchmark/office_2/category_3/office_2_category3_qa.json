@@ -1,0 +1,1710 @@
+{
+  "scene": "office_2",
+  "category": 3,
+  "category_name": "instruction_following",
+  "description": "Category 3 (instruction following) evaluation questions, verbatim from questions/<scene>/questions.pdf. Ground truth is the ordered constraint set the organizers' own demonstration satisfies: each constraint names IRef-VLA objects and the map-frame point the robot must come within radius metres of, in order, ending at goal. Derived and audited by scripts/bench/generate_category3_qa.py and scripts/eval/verify_category3.py.",
+  "notes": [
+    "gt.pass_near is ORDERED and excludes the goal; gt.goal is scored on the final pose, gt.avoid on the whole path. The block is shaped for scripts/eval/score.py::score_instruction, which reads center/radius/polygon and ignores the diagnostic keys beside them.",
+    "traj_index / traj_frac / min_dist_m record where the organizers' demo satisfies each constraint. They are the evidence for the grounding, not something a system under test has to reproduce.",
+    "The trajectory .ply and the IRef-VLA boxes share one map frame: demos start at the robot spawn (0, 0) and run at z = 0.75, the simulator's vehicleHeight. Compare (x, y) directly; z = 0.75 is the sensor plane, not the floor.",
+    "reference_trajectory.polyline is the demo resampled to ~0.25 m. It is a recording of a correct executed path, not the sparse waypoint sequence a system publishes on /way_point_with_heading.",
+    "objects holds every referenced IRef-VLA box so the file is self-contained, in the order the instruction names them, each tagged role: constraint (a place the robot is scored on reaching) or reference (a thing it must find only to know which place that is -- the picture in 'the stool under the picture'). target_objects lists the SAM3 nouns for both: a system that never detects the reference objects cannot ground the constraint ones.",
+    "Each constraint's anchor_ids names its own reference objects and anchor_why says how each was chosen. They are documentation of the grounding, not geometry: no anchor moves a centre, a radius or a polygon."
+  ],
+  "difficulty_counts": {
+    "easy": 1,
+    "medium": 1
+  },
+  "target_object_coverage": [
+    "cabinet",
+    "clock",
+    "door",
+    "exit sign",
+    "folder",
+    "potted plant",
+    "trash can",
+    "whiteboard",
+    "window"
+  ],
+  "questions": [
+    {
+      "id": "Q04",
+      "question": "Go near the potted plant on the cabinet and stop at the window closest to the clock.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "easy",
+      "target_objects": [
+        "potted plant",
+        "cabinet",
+        "window",
+        "clock"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the potted plant on the cabinet",
+            "label": "potted plant",
+            "object_ids": [
+              "30"
+            ],
+            "anchor_ids": [
+              "155"
+            ],
+            "center": [
+              4.5865,
+              -0.6037
+            ],
+            "radius": 1.5,
+            "traj_index": 413,
+            "traj_frac": 0.596,
+            "min_dist_m": 0.912,
+            "why": "on: potted plant#30 is the only match",
+            "anchor_why": "on 'cabinet': the boxes put cabinet#155 there"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the window closest to the clock",
+          "label": "window",
+          "object_ids": [
+            "45",
+            "44"
+          ],
+          "anchor_ids": [
+            "119"
+          ],
+          "center": [
+            4.9055,
+            4.1474
+          ],
+          "radius": 1.5,
+          "traj_index": 693,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.74,
+          "why": "2 co-located windows the demo visits together",
+          "anchor_why": "closest 'clock': clock#119 is the only one"
+        }
+      },
+      "objects": {
+        "30": {
+          "object_id": "30",
+          "region": "0",
+          "label": "potted plant",
+          "raw_label": "potted plant",
+          "nyu_label": "plant",
+          "colors": [
+            "olive",
+            "black"
+          ],
+          "center": [
+            4.5865,
+            -0.6037,
+            0.9284
+          ],
+          "size": [
+            0.1979,
+            0.1724,
+            0.2032
+          ],
+          "yaw": 1.3965,
+          "aabb": {
+            "min": [
+              4.4844,
+              -0.7161,
+              0.8267
+            ],
+            "max": [
+              4.6885,
+              -0.4913,
+              1.03
+            ]
+          },
+          "size_aabb": [
+            0.2041,
+            0.2248,
+            0.2032
+          ],
+          "bbox_corners": [
+            [
+              4.4844,
+              -0.6862,
+              1.03
+            ],
+            [
+              4.5187,
+              -0.4913,
+              1.03
+            ],
+            [
+              4.6885,
+              -0.5212,
+              1.03
+            ],
+            [
+              4.6542,
+              -0.7161,
+              1.03
+            ],
+            [
+              4.4844,
+              -0.6862,
+              0.8267
+            ],
+            [
+              4.5187,
+              -0.4913,
+              0.8267
+            ],
+            [
+              4.6885,
+              -0.5212,
+              0.8267
+            ],
+            [
+              4.6542,
+              -0.7161,
+              0.8267
+            ]
+          ],
+          "volume": 0.00693,
+          "role": "constraint"
+        },
+        "155": {
+          "object_id": "155",
+          "region": "0",
+          "label": "cabinet",
+          "raw_label": "cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "black",
+            "brown",
+            "red"
+          ],
+          "center": [
+            4.6083,
+            -0.4512,
+            0.4131
+          ],
+          "size": [
+            1.0095,
+            0.5224,
+            0.8286
+          ],
+          "yaw": 3.1416,
+          "aabb": {
+            "min": [
+              4.1036,
+              -0.7124,
+              -0.0012
+            ],
+            "max": [
+              5.1131,
+              -0.19,
+              0.8274
+            ]
+          },
+          "size_aabb": [
+            1.0095,
+            0.5224,
+            0.8286
+          ],
+          "bbox_corners": [
+            [
+              5.113,
+              -0.7124,
+              0.8274
+            ],
+            [
+              4.1036,
+              -0.7124,
+              0.8274
+            ],
+            [
+              4.1036,
+              -0.19,
+              0.8274
+            ],
+            [
+              5.1131,
+              -0.19,
+              0.8274
+            ],
+            [
+              5.113,
+              -0.7124,
+              -0.0012
+            ],
+            [
+              4.1036,
+              -0.7124,
+              -0.0012
+            ],
+            [
+              4.1036,
+              -0.19,
+              -0.0012
+            ],
+            [
+              5.1131,
+              -0.19,
+              -0.0012
+            ]
+          ],
+          "volume": 0.43696,
+          "role": "reference"
+        },
+        "45": {
+          "object_id": "45",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            4.9055,
+            4.1207,
+            1.2715
+          ],
+          "size": [
+            0.8819,
+            0.0601,
+            0.7224
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              4.4645,
+              4.0906,
+              0.9103
+            ],
+            "max": [
+              5.3464,
+              4.1507,
+              1.6327
+            ]
+          },
+          "size_aabb": [
+            0.8819,
+            0.0601,
+            0.7224
+          ],
+          "bbox_corners": [
+            [
+              5.3464,
+              4.0906,
+              1.6327
+            ],
+            [
+              4.4645,
+              4.0906,
+              1.6327
+            ],
+            [
+              4.4645,
+              4.1507,
+              1.6327
+            ],
+            [
+              5.3464,
+              4.1507,
+              1.6327
+            ],
+            [
+              5.3464,
+              4.0906,
+              0.9103
+            ],
+            [
+              4.4645,
+              4.0906,
+              0.9103
+            ],
+            [
+              4.4645,
+              4.1507,
+              0.9103
+            ],
+            [
+              5.3464,
+              4.1507,
+              0.9103
+            ]
+          ],
+          "volume": 0.03827,
+          "role": "constraint"
+        },
+        "44": {
+          "object_id": "44",
+          "region": "0",
+          "label": "window",
+          "raw_label": "window",
+          "nyu_label": "window",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            4.9055,
+            4.1742,
+            1.9604
+          ],
+          "size": [
+            0.8819,
+            0.0405,
+            0.6985
+          ],
+          "yaw": -3.1416,
+          "aabb": {
+            "min": [
+              4.4645,
+              4.154,
+              1.6111
+            ],
+            "max": [
+              5.3464,
+              4.1945,
+              2.3096
+            ]
+          },
+          "size_aabb": [
+            0.8819,
+            0.0405,
+            0.6985
+          ],
+          "bbox_corners": [
+            [
+              5.3464,
+              4.154,
+              2.3096
+            ],
+            [
+              4.4645,
+              4.154,
+              2.3096
+            ],
+            [
+              4.4645,
+              4.1945,
+              2.3096
+            ],
+            [
+              5.3464,
+              4.1945,
+              2.3096
+            ],
+            [
+              5.3464,
+              4.154,
+              1.6111
+            ],
+            [
+              4.4645,
+              4.154,
+              1.6111
+            ],
+            [
+              4.4645,
+              4.1945,
+              1.6111
+            ],
+            [
+              5.3464,
+              4.1945,
+              1.6111
+            ]
+          ],
+          "volume": 0.02493,
+          "role": "constraint"
+        },
+        "119": {
+          "object_id": "119",
+          "region": "0",
+          "label": "clock",
+          "raw_label": "clock",
+          "nyu_label": "clock",
+          "colors": [
+            "black",
+            "gray"
+          ],
+          "center": [
+            6.085,
+            2.8081,
+            2.2101
+          ],
+          "size": [
+            0.3617,
+            0.0247,
+            0.3617
+          ],
+          "yaw": -1.5708,
+          "aabb": {
+            "min": [
+              6.0726,
+              2.6273,
+              2.0293
+            ],
+            "max": [
+              6.0974,
+              2.989,
+              2.391
+            ]
+          },
+          "size_aabb": [
+            0.0247,
+            0.3617,
+            0.3617
+          ],
+          "bbox_corners": [
+            [
+              6.0974,
+              2.989,
+              2.391
+            ],
+            [
+              6.0974,
+              2.6273,
+              2.391
+            ],
+            [
+              6.0726,
+              2.6273,
+              2.391
+            ],
+            [
+              6.0726,
+              2.989,
+              2.391
+            ],
+            [
+              6.0974,
+              2.989,
+              2.0293
+            ],
+            [
+              6.0974,
+              2.6273,
+              2.0293
+            ],
+            [
+              6.0726,
+              2.6273,
+              2.0293
+            ],
+            [
+              6.0726,
+              2.989,
+              2.0293
+            ]
+          ],
+          "volume": 0.00323,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/office_2/trajectory_q4.ply",
+        "n_vertices": 694,
+        "length_m": 7.928,
+        "z": 0.75,
+        "start": [
+          0.011,
+          0.0
+        ],
+        "end": [
+          5.066,
+          3.425
+        ],
+        "polyline": [
+          [
+            0.011,
+            0.0
+          ],
+          [
+            0.262,
+            0.0
+          ],
+          [
+            0.519,
+            0.0
+          ],
+          [
+            0.772,
+            0.008
+          ],
+          [
+            1.021,
+            0.031
+          ],
+          [
+            1.271,
+            0.053
+          ],
+          [
+            1.526,
+            0.076
+          ],
+          [
+            1.783,
+            0.108
+          ],
+          [
+            2.034,
+            0.169
+          ],
+          [
+            2.277,
+            0.244
+          ],
+          [
+            2.519,
+            0.309
+          ],
+          [
+            2.774,
+            0.359
+          ],
+          [
+            3.02,
+            0.408
+          ],
+          [
+            3.267,
+            0.45
+          ],
+          [
+            3.525,
+            0.474
+          ],
+          [
+            3.785,
+            0.489
+          ],
+          [
+            4.037,
+            0.476
+          ],
+          [
+            4.291,
+            0.434
+          ],
+          [
+            4.534,
+            0.365
+          ],
+          [
+            4.672,
+            0.585
+          ],
+          [
+            4.665,
+            0.842
+          ],
+          [
+            4.691,
+            1.097
+          ],
+          [
+            4.735,
+            1.348
+          ],
+          [
+            4.785,
+            1.605
+          ],
+          [
+            4.841,
+            1.856
+          ],
+          [
+            4.916,
+            2.096
+          ],
+          [
+            4.989,
+            2.339
+          ],
+          [
+            5.035,
+            2.585
+          ],
+          [
+            5.061,
+            2.838
+          ],
+          [
+            5.081,
+            3.089
+          ],
+          [
+            5.074,
+            3.341
+          ],
+          [
+            5.066,
+            3.425
+          ]
+        ]
+      },
+      "evidence": "Demo path passes potted plant at 0.91 m (60% along), and ends 0.74 m from window.",
+      "solver_trace": [
+        "head='potted plant' color='' hops=[{'relation': 'on', 'phrases': ['cabinet']}]",
+        "head candidates: [potted plant#12, potted plant#30, potted plant#110]",
+        "target hop (on): on: 1 match(es) -> [potted plant#30]",
+        "pick: on: potted plant#30 is the only match",
+        "head='window' color='' hops=[{'relation': 'closest', 'phrases': ['clock']}]",
+        "head candidates: [window#26, window#27, window#44, window#45, window#50, window#51] ...",
+        "target hop (closest): closest: ranked [window#44, window#45, window#62]",
+        "pick: closest by centre is a tie: window#44 1.82 m vs window#45 2.00 m"
+      ],
+      "verified": true
+    },
+    {
+      "id": "Q05",
+      "question": "First, go to the trash can near the cabinet, then go to the folder on the cabinet closest to the whiteboard, and finally, to the door near the exit sign.",
+      "source": "official",
+      "type": "instruction_following",
+      "difficulty": "medium",
+      "target_objects": [
+        "trash can",
+        "cabinet",
+        "folder",
+        "whiteboard",
+        "door",
+        "exit sign"
+      ],
+      "gt": {
+        "pass_near": [
+          {
+            "kind": "pass_near",
+            "phrase": "the trash can near the cabinet",
+            "label": "trash can",
+            "object_ids": [
+              "16"
+            ],
+            "anchor_ids": [
+              "132"
+            ],
+            "center": [
+              2.8917,
+              -0.533
+            ],
+            "radius": 1.5,
+            "traj_index": 233,
+            "traj_frac": 0.16,
+            "min_dist_m": 0.453,
+            "why": "near: trash can#16 is the only match",
+            "anchor_why": "near 'cabinet': the boxes put cabinet#132, cabinet#155 there; nearest of 2 is cabinet#132 at 0.00 m"
+          },
+          {
+            "kind": "pass_near",
+            "phrase": "the folder on the cabinet closest to the whiteboard",
+            "label": "folder",
+            "object_ids": [
+              "69",
+              "70"
+            ],
+            "anchor_ids": [
+              "56",
+              "113"
+            ],
+            "center": [
+              5.904,
+              3.1062
+            ],
+            "radius": 1.5,
+            "traj_index": 621,
+            "traj_frac": 0.427,
+            "min_dist_m": 0.775,
+            "why": "Folders #69 and #70 rest on cabinet #56 and are 7 cm apart, so they are one waypoint whichever the sentence meant. #56 is not the cabinet geometrically closest to whiteboard #113 (#160 is, at 1.88 m), but #160 holds only a phone and a box -- among the cabinets that carry a folder at all, #56 is the closest to the whiteboard. The demo passes 0.65 m from #56.",
+            "anchor_why": "on 'cabinet': the boxes put cabinet#56 there; closest 'whiteboard': whiteboard#113 is the only one"
+          }
+        ],
+        "avoid": [],
+        "goal": {
+          "kind": "goal",
+          "phrase": "the door near the exit sign",
+          "label": "door",
+          "object_ids": [
+            "81"
+          ],
+          "anchor_ids": [
+            "88"
+          ],
+          "center": [
+            6.1414,
+            -1.7087
+          ],
+          "radius": 1.5,
+          "traj_index": 1453,
+          "traj_frac": 1.0,
+          "min_dist_m": 0.701,
+          "why": "near: door#81 is the only match",
+          "anchor_why": "near 'exit sign': the boxes put exit sign#88 there"
+        }
+      },
+      "objects": {
+        "16": {
+          "object_id": "16",
+          "region": "0",
+          "label": "trash can",
+          "raw_label": "trash can",
+          "nyu_label": "garbage bin",
+          "colors": [
+            "gray"
+          ],
+          "center": [
+            2.8917,
+            -0.533,
+            0.1844
+          ],
+          "size": [
+            0.3285,
+            0.3198,
+            0.3887
+          ],
+          "yaw": -0.9271,
+          "aabb": {
+            "min": [
+              2.6652,
+              -0.7604,
+              -0.0099
+            ],
+            "max": [
+              3.1181,
+              -0.3057,
+              0.3787
+            ]
+          },
+          "size_aabb": [
+            0.453,
+            0.4547,
+            0.3887
+          ],
+          "bbox_corners": [
+            [
+              2.921,
+              -0.3057,
+              0.3787
+            ],
+            [
+              3.1181,
+              -0.5684,
+              0.3787
+            ],
+            [
+              2.8623,
+              -0.7604,
+              0.3787
+            ],
+            [
+              2.6652,
+              -0.4976,
+              0.3787
+            ],
+            [
+              2.921,
+              -0.3057,
+              -0.0099
+            ],
+            [
+              3.1181,
+              -0.5684,
+              -0.0099
+            ],
+            [
+              2.8623,
+              -0.7604,
+              -0.0099
+            ],
+            [
+              2.6652,
+              -0.4976,
+              -0.0099
+            ]
+          ],
+          "volume": 0.04083,
+          "role": "constraint"
+        },
+        "132": {
+          "object_id": "132",
+          "region": "0",
+          "label": "cabinet",
+          "raw_label": "cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "black",
+            "brown",
+            "red"
+          ],
+          "center": [
+            3.6133,
+            -0.4512,
+            0.4131
+          ],
+          "size": [
+            1.0095,
+            0.5224,
+            0.8286
+          ],
+          "yaw": -0.0,
+          "aabb": {
+            "min": [
+              3.1086,
+              -0.7124,
+              -0.0012
+            ],
+            "max": [
+              4.118,
+              -0.19,
+              0.8274
+            ]
+          },
+          "size_aabb": [
+            1.0095,
+            0.5224,
+            0.8286
+          ],
+          "bbox_corners": [
+            [
+              3.1086,
+              -0.19,
+              0.8274
+            ],
+            [
+              4.118,
+              -0.19,
+              0.8274
+            ],
+            [
+              4.118,
+              -0.7124,
+              0.8274
+            ],
+            [
+              3.1086,
+              -0.7124,
+              0.8274
+            ],
+            [
+              3.1086,
+              -0.19,
+              -0.0012
+            ],
+            [
+              4.118,
+              -0.19,
+              -0.0012
+            ],
+            [
+              4.118,
+              -0.7124,
+              -0.0012
+            ],
+            [
+              3.1086,
+              -0.7124,
+              -0.0012
+            ]
+          ],
+          "volume": 0.43694,
+          "role": "reference"
+        },
+        "69": {
+          "object_id": "69",
+          "region": "0",
+          "label": "folder",
+          "raw_label": "folder",
+          "nyu_label": "folder",
+          "colors": [
+            "green",
+            "gray"
+          ],
+          "center": [
+            5.9039,
+            3.1395,
+            0.997
+          ],
+          "size": [
+            0.2565,
+            0.0662,
+            0.3424
+          ],
+          "yaw": -3.1371,
+          "aabb": {
+            "min": [
+              5.7755,
+              3.1059,
+              0.8258
+            ],
+            "max": [
+              6.0323,
+              3.1732,
+              1.1682
+            ]
+          },
+          "size_aabb": [
+            0.2568,
+            0.0673,
+            0.3424
+          ],
+          "bbox_corners": [
+            [
+              6.0323,
+              3.107,
+              1.1682
+            ],
+            [
+              5.7758,
+              3.1059,
+              1.1682
+            ],
+            [
+              5.7755,
+              3.1721,
+              1.1682
+            ],
+            [
+              6.032,
+              3.1732,
+              1.1682
+            ],
+            [
+              6.0323,
+              3.107,
+              0.8258
+            ],
+            [
+              5.7758,
+              3.1059,
+              0.8258
+            ],
+            [
+              5.7755,
+              3.1721,
+              0.8258
+            ],
+            [
+              6.032,
+              3.1732,
+              0.8258
+            ]
+          ],
+          "volume": 0.00581,
+          "role": "constraint"
+        },
+        "70": {
+          "object_id": "70",
+          "region": "0",
+          "label": "folder",
+          "raw_label": "folder",
+          "nyu_label": "folder",
+          "colors": [
+            "green",
+            "gray"
+          ],
+          "center": [
+            5.9041,
+            3.0729,
+            0.9967
+          ],
+          "size": [
+            0.2565,
+            0.0662,
+            0.3423
+          ],
+          "yaw": -3.1371,
+          "aabb": {
+            "min": [
+              5.7758,
+              3.0392,
+              0.8255
+            ],
+            "max": [
+              6.0325,
+              3.1065,
+              1.1679
+            ]
+          },
+          "size_aabb": [
+            0.2568,
+            0.0673,
+            0.3423
+          ],
+          "bbox_corners": [
+            [
+              6.0325,
+              3.0403,
+              1.1679
+            ],
+            [
+              5.776,
+              3.0392,
+              1.1679
+            ],
+            [
+              5.7758,
+              3.1054,
+              1.1679
+            ],
+            [
+              6.0322,
+              3.1065,
+              1.1679
+            ],
+            [
+              6.0325,
+              3.0403,
+              0.8255
+            ],
+            [
+              5.776,
+              3.0392,
+              0.8255
+            ],
+            [
+              5.7758,
+              3.1054,
+              0.8255
+            ],
+            [
+              6.0322,
+              3.1065,
+              0.8255
+            ]
+          ],
+          "volume": 0.00581,
+          "role": "constraint"
+        },
+        "56": {
+          "object_id": "56",
+          "region": "0",
+          "label": "cabinet",
+          "raw_label": "cabinet",
+          "nyu_label": "cabinet",
+          "colors": [
+            "black",
+            "brown",
+            "red"
+          ],
+          "center": [
+            5.7903,
+            3.228,
+            0.4153
+          ],
+          "size": [
+            1.0095,
+            0.5224,
+            0.8287
+          ],
+          "yaw": 1.5752,
+          "aabb": {
+            "min": [
+              5.5268,
+              2.7221,
+              0.001
+            ],
+            "max": [
+              6.0537,
+              3.7339,
+              0.8296
+            ]
+          },
+          "size_aabb": [
+            0.5268,
+            1.0118,
+            0.8287
+          ],
+          "bbox_corners": [
+            [
+              5.5313,
+              2.7221,
+              0.8296
+            ],
+            [
+              5.5268,
+              3.7316,
+              0.8296
+            ],
+            [
+              6.0492,
+              3.7339,
+              0.8296
+            ],
+            [
+              6.0537,
+              2.7244,
+              0.8296
+            ],
+            [
+              5.5313,
+              2.7221,
+              0.001
+            ],
+            [
+              5.5268,
+              3.7316,
+              0.001
+            ],
+            [
+              6.0492,
+              3.7339,
+              0.001
+            ],
+            [
+              6.0537,
+              2.7244,
+              0.001
+            ]
+          ],
+          "volume": 0.43696,
+          "role": "reference"
+        },
+        "113": {
+          "object_id": "113",
+          "region": "0",
+          "label": "whiteboard",
+          "raw_label": "whiteboard",
+          "nyu_label": "whiteboard",
+          "colors": [
+            "gray",
+            "black"
+          ],
+          "center": [
+            6.02,
+            0.705,
+            1.513
+          ],
+          "size": [
+            1.7792,
+            0.1637,
+            1.0268
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              5.9382,
+              -0.1846,
+              0.9996
+            ],
+            "max": [
+              6.1018,
+              1.5946,
+              2.0264
+            ]
+          },
+          "size_aabb": [
+            0.1637,
+            1.7792,
+            1.0268
+          ],
+          "bbox_corners": [
+            [
+              5.9382,
+              -0.1846,
+              2.0264
+            ],
+            [
+              5.9382,
+              1.5946,
+              2.0264
+            ],
+            [
+              6.1018,
+              1.5946,
+              2.0264
+            ],
+            [
+              6.1018,
+              -0.1846,
+              2.0264
+            ],
+            [
+              5.9382,
+              -0.1846,
+              0.9996
+            ],
+            [
+              5.9382,
+              1.5946,
+              0.9996
+            ],
+            [
+              6.1018,
+              1.5946,
+              0.9996
+            ],
+            [
+              6.1018,
+              -0.1846,
+              0.9996
+            ]
+          ],
+          "volume": 0.29899,
+          "role": "reference"
+        },
+        "81": {
+          "object_id": "81",
+          "region": "0",
+          "label": "door",
+          "raw_label": "door",
+          "nyu_label": "door",
+          "colors": [
+            "brown",
+            "red"
+          ],
+          "center": [
+            6.1414,
+            -1.7087,
+            1.0325
+          ],
+          "size": [
+            0.8348,
+            0.1748,
+            2.0797
+          ],
+          "yaw": 1.5778,
+          "aabb": {
+            "min": [
+              6.0511,
+              -2.1268,
+              -0.0074
+            ],
+            "max": [
+              6.2317,
+              -1.2907,
+              2.0724
+            ]
+          },
+          "size_aabb": [
+            0.1806,
+            0.836,
+            2.0797
+          ],
+          "bbox_corners": [
+            [
+              6.0569,
+              -2.1268,
+              2.0724
+            ],
+            [
+              6.0511,
+              -1.292,
+              2.0724
+            ],
+            [
+              6.2258,
+              -1.2907,
+              2.0724
+            ],
+            [
+              6.2317,
+              -2.1255,
+              2.0724
+            ],
+            [
+              6.0569,
+              -2.1268,
+              -0.0074
+            ],
+            [
+              6.0511,
+              -1.292,
+              -0.0074
+            ],
+            [
+              6.2258,
+              -1.2907,
+              -0.0074
+            ],
+            [
+              6.2317,
+              -2.1255,
+              -0.0074
+            ]
+          ],
+          "volume": 0.30342,
+          "role": "constraint"
+        },
+        "88": {
+          "object_id": "88",
+          "region": "0",
+          "label": "exit sign",
+          "raw_label": "exit sign",
+          "nyu_label": "exit sign",
+          "colors": [
+            "gray",
+            "green"
+          ],
+          "center": [
+            6.0921,
+            -1.7249,
+            2.3438
+          ],
+          "size": [
+            0.3381,
+            0.0505,
+            0.1716
+          ],
+          "yaw": 1.5708,
+          "aabb": {
+            "min": [
+              6.0669,
+              -1.8939,
+              2.258
+            ],
+            "max": [
+              6.1173,
+              -1.5558,
+              2.4296
+            ]
+          },
+          "size_aabb": [
+            0.0505,
+            0.3381,
+            0.1716
+          ],
+          "bbox_corners": [
+            [
+              6.0669,
+              -1.8939,
+              2.4296
+            ],
+            [
+              6.0669,
+              -1.5558,
+              2.4296
+            ],
+            [
+              6.1173,
+              -1.5558,
+              2.4296
+            ],
+            [
+              6.1173,
+              -1.8939,
+              2.4296
+            ],
+            [
+              6.0669,
+              -1.8939,
+              2.258
+            ],
+            [
+              6.0669,
+              -1.5558,
+              2.258
+            ],
+            [
+              6.1173,
+              -1.5558,
+              2.258
+            ],
+            [
+              6.1173,
+              -1.8939,
+              2.258
+            ]
+          ],
+          "volume": 0.00293,
+          "role": "reference"
+        }
+      },
+      "reference_trajectory": {
+        "ply": "questions/office_2/trajectory_q5.ply",
+        "n_vertices": 1454,
+        "length_m": 16.674,
+        "z": 0.75,
+        "start": [
+          0.011,
+          -0.001
+        ],
+        "end": [
+          5.446,
+          -1.802
+        ],
+        "polyline": [
+          [
+            0.011,
+            -0.001
+          ],
+          [
+            0.264,
+            -0.026
+          ],
+          [
+            0.522,
+            -0.051
+          ],
+          [
+            0.779,
+            -0.077
+          ],
+          [
+            1.035,
+            -0.103
+          ],
+          [
+            1.294,
+            -0.15
+          ],
+          [
+            1.542,
+            -0.197
+          ],
+          [
+            1.793,
+            -0.245
+          ],
+          [
+            2.05,
+            -0.294
+          ],
+          [
+            2.305,
+            -0.343
+          ],
+          [
+            2.536,
+            -0.236
+          ],
+          [
+            2.734,
+            -0.08
+          ],
+          [
+            2.946,
+            0.067
+          ],
+          [
+            3.159,
+            0.2
+          ],
+          [
+            3.38,
+            0.322
+          ],
+          [
+            3.604,
+            0.437
+          ],
+          [
+            3.828,
+            0.569
+          ],
+          [
+            4.027,
+            0.722
+          ],
+          [
+            4.18,
+            0.921
+          ],
+          [
+            4.303,
+            1.141
+          ],
+          [
+            4.423,
+            1.367
+          ],
+          [
+            4.562,
+            1.588
+          ],
+          [
+            4.702,
+            1.804
+          ],
+          [
+            4.839,
+            2.021
+          ],
+          [
+            4.948,
+            2.256
+          ],
+          [
+            5.002,
+            2.512
+          ],
+          [
+            5.051,
+            2.762
+          ],
+          [
+            5.1,
+            3.009
+          ],
+          [
+            5.141,
+            3.256
+          ],
+          [
+            5.098,
+            3.003
+          ],
+          [
+            5.034,
+            2.751
+          ],
+          [
+            4.959,
+            2.506
+          ],
+          [
+            4.888,
+            2.265
+          ],
+          [
+            4.816,
+            2.021
+          ],
+          [
+            4.737,
+            1.782
+          ],
+          [
+            4.624,
+            1.552
+          ],
+          [
+            4.471,
+            1.349
+          ],
+          [
+            4.301,
+            1.164
+          ],
+          [
+            4.091,
+            1.02
+          ],
+          [
+            3.871,
+            0.889
+          ],
+          [
+            3.64,
+            0.774
+          ],
+          [
+            3.409,
+            0.659
+          ],
+          [
+            3.195,
+            0.524
+          ],
+          [
+            2.994,
+            0.374
+          ],
+          [
+            2.789,
+            0.221
+          ],
+          [
+            2.583,
+            0.066
+          ],
+          [
+            2.387,
+            -0.09
+          ],
+          [
+            2.216,
+            -0.277
+          ],
+          [
+            2.087,
+            -0.495
+          ],
+          [
+            1.995,
+            -0.733
+          ],
+          [
+            1.913,
+            -0.974
+          ],
+          [
+            2.108,
+            -1.134
+          ],
+          [
+            2.334,
+            -1.244
+          ],
+          [
+            2.576,
+            -1.33
+          ],
+          [
+            2.828,
+            -1.404
+          ],
+          [
+            3.074,
+            -1.463
+          ],
+          [
+            3.327,
+            -1.514
+          ],
+          [
+            3.575,
+            -1.565
+          ],
+          [
+            3.831,
+            -1.618
+          ],
+          [
+            4.082,
+            -1.652
+          ],
+          [
+            4.338,
+            -1.683
+          ],
+          [
+            4.588,
+            -1.712
+          ],
+          [
+            4.841,
+            -1.742
+          ],
+          [
+            5.095,
+            -1.772
+          ],
+          [
+            5.35,
+            -1.797
+          ],
+          [
+            5.446,
+            -1.802
+          ]
+        ]
+      },
+      "evidence": "Demo path passes trash can at 0.45 m (16% along), then folder at 0.78 m (43% along), and ends 0.70 m from door.",
+      "solver_trace": [
+        "head='trash can' color='' hops=[{'relation': 'near', 'phrases': ['cabinet']}]",
+        "head candidates: [trash can#16]",
+        "target hop (near): near: 1 match(es) -> [trash can#16]",
+        "pick: near: trash can#16 is the only match",
+        "head='door' color='' hops=[{'relation': 'near', 'phrases': ['exit sign']}]",
+        "head candidates: [door#32, door#81]",
+        "target hop (near): near: 1 match(es) -> [door#81]",
+        "pick: near: door#81 is the only match"
+      ],
+      "verified": true
+    }
+  ]
+}
