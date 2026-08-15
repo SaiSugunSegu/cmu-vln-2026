@@ -19,7 +19,8 @@ from sam_mapper.challenge_marker import track_to_map_id
 from sam_mapper.detections import PromptTable
 
 
-def _collector(tmp_path, run_id=None, save_silhouette_copy=False):
+def _collector(tmp_path, run_id=None, save_silhouette_copy=False, save_full_views=False,
+               crop_to_roi=True):
     table = PromptTable([
         {"prompt": "cabinet", "instance": True},
         {"prompt": "tv", "instance": True},
@@ -29,8 +30,9 @@ def _collector(tmp_path, run_id=None, save_silhouette_copy=False):
         "output_dir": str(tmp_path),
         "save_annotated_copy": False,
         "save_silhouette_copy": save_silhouette_copy,
+        "save_full_views": save_full_views,
         "min_instance_score": 0.0,
-        "crop_to_roi": True,
+        "crop_to_roi": crop_to_roi,
         "roi_padding_frac": 0.0,
         "roi_min_size_px": 1,
         "roi_cluster_gap_px": 1000,
@@ -293,6 +295,61 @@ def test_finalize_re_renders_only_when_the_lookup_changed(tmp_path):
     # A new selection invalidates what is on disk, so the same lookup must render again.
     _consider_bigger_cabinet(collector)
     assert collector.finalize({7: 9}) is True
+
+
+def test_full_views_are_not_written_unless_asked_for(tmp_path):
+    collector = _collector(tmp_path, save_silhouette_copy=True)
+    _consider_one_cabinet(collector)
+    collector.finalize(None)
+
+    assert not os.path.exists(os.path.join(collector.run_dir, "full"))
+
+
+def test_full_views_mirror_the_crops_at_frame_size(tmp_path):
+    collector = _collector(tmp_path, save_silhouette_copy=True, save_full_views=True)
+    _consider_one_cabinet(collector)                    # 200x800 frame, cabinet at x 300-420
+
+    name = "best_rank1_cabinet+tv.png"
+    full = cv2.imread(os.path.join(collector.run_dir, "full", name))
+    crop = cv2.imread(os.path.join(collector.run_dir, name))
+    assert full.shape[:2] == (200, 800)                 # the whole frame, not the roi
+    assert crop.shape[:2] != full.shape[:2]
+
+    overlay_path = os.path.join(collector.run_dir, "full", "silhouette", name)
+    assert not os.path.exists(overlay_path)             # overlays wait for finalize, as before
+
+    collector.finalize(None)
+    overlay = cv2.imread(overlay_path)
+    assert overlay is not None
+    assert overlay.shape == full.shape
+    assert not np.array_equal(overlay, full)            # something was actually drawn
+
+
+def test_full_detections_rebuild_the_mask_and_frame_bboxes(tmp_path):
+    # The masks are pasted back rather than stored, so this is the load-bearing claim: a mask
+    # never leaves its bbox and the roi is the union of the cluster's bboxes, so nothing is lost.
+    collector = _collector(tmp_path, save_full_views=True)
+    _consider_one_cabinet(collector)
+    cand = collector._written[0][1]
+
+    full = BestViewCollector._full_detections(cand)
+
+    assert full["masks"].shape[1:] == (200, 800)
+    assert full["masks"][0].sum() == cand.crop_detections["masks"][0].sum()
+    assert list(full["bboxes"][0]) == [300.0, 40.0, 420.0, 120.0]    # back in frame coords
+    assert list(full["ids"]) == list(cand.crop_detections["ids"])
+
+
+def test_full_views_are_skipped_when_the_crop_is_already_the_frame(tmp_path):
+    # crop_to_roi off means roi is the whole frame, so full/ would be byte-identical copies.
+    collector = _collector(tmp_path, save_silhouette_copy=True, save_full_views=True,
+                           crop_to_roi=False)
+    _consider_one_cabinet(collector)
+    collector.finalize(None)
+
+    assert not os.path.exists(os.path.join(collector.run_dir, "full"))
+    crop = cv2.imread(os.path.join(collector.run_dir, "best_rank1_cabinet+tv.png"))
+    assert crop.shape[:2] == (200, 800)
 
 
 def test_silhouette_frame_outlines_without_filling():

@@ -19,6 +19,9 @@ The overlay copies are the exception: `finalize()` draws them once at the end of
 because their labels carry map_node's object ids and world merges keep renaming those. That
 is what makes a crop readable against `obj_map.json` alone — `chair [3]` names the entry
 keyed `3`, no manifest lookup in between.
+
+`save_full_views` mirrors the whole output under `full/`, uncropped: same filenames, same
+overlays, same captions, the difference being only how much room is in shot.
 """
 from __future__ import annotations
 
@@ -70,6 +73,7 @@ class BestViewConfig:
     output_dir: str
     save_annotated_copy: bool
     save_silhouette_copy: bool
+    save_full_views: bool
     min_instance_score: float
     crop_to_roi: bool
     roi_padding_frac: float
@@ -97,6 +101,8 @@ class BestViewConfig:
             output_dir=raw.get("output_dir", "/data/crops"),
             save_annotated_copy=bool(raw.get("save_annotated_copy", True)),
             save_silhouette_copy=bool(raw.get("save_silhouette_copy", False)),
+            # Opt-in: it roughly doubles the images on disk, and every overlay with them.
+            save_full_views=bool(raw.get("save_full_views", False)),
             # An object covers well under 1% of a 1920x640 panorama, so real scores land
             # around 1e-3 to 1e-2, not near 1. This floor only rejects near-empty masks.
             min_instance_score=float(raw.get("min_instance_score", 0.0005)),
@@ -123,8 +129,13 @@ class _Inst:
 class Candidate:
     """One spatial cluster of target objects, from one frame, already cropped.
 
-    Keeps the crop rather than the full frame and only this cluster's masks: the pool is
-    keyed by track id and never evicted, so pinning whole panoramas would grow unbounded.
+    Keeps the crop and only this cluster's masks: the pool is keyed by track id and never
+    evicted, so pinning a panorama per candidate would grow unbounded.
+
+    `frame` is that rule's one exception, for `save_full_views`, and is affordable because it
+    is a REFERENCE — nothing downstream mutates the decoded image, so every cluster of one
+    frame shares one array and the cost is per distinct frame retained, not per candidate.
+    Full-frame masks are still never held: `_full_detections` rebuilds them on demand.
     """
     seq: int                   # monotonic identity for dedup/change detection (never id())
     stamp: float
@@ -133,6 +144,7 @@ class Candidate:
     roi: tuple                 # (x0,y0,x1,y1) in the ORIGINAL frame
     instance_scores: dict      # cluster member track_id -> coverage*confidence
     instance_bboxes: dict      # cluster member track_id -> bbox in FRAME coordinates
+    frame: np.ndarray | None = None   # uncropped BGR, only when save_full_views
 
     @property
     def cluster_score(self) -> float:
@@ -177,8 +189,20 @@ class BestViewCollector:
             ("annotated", annotate_frame, config.save_annotated_copy),
             ("silhouette", silhouette_frame, config.save_silhouette_copy),
         ) if enabled}
-        for name in self._overlays:
-            os.makedirs(os.path.join(self.run_dir, name), exist_ok=True)
+
+        # The geometries each best view is saved in: "" is the crop, "full" the frame it was
+        # taken from. One list drives the mkdirs, both writes and both cleanups, so the two
+        # can never drift apart.
+        self._save_full = config.save_full_views and config.crop_to_roi
+        if config.save_full_views and not config.crop_to_roi:
+            # roi is the whole frame, so full/ would be byte-identical duplicates.
+            self.log("best-view collector: save_full_views ignored — crop_to_roi is off, so "
+                     "the crops are already full frames")
+        self._geometries = ("", "full") if self._save_full else ("",)
+        for geometry in self._geometries:
+            os.makedirs(os.path.join(self.run_dir, geometry), exist_ok=True)
+            for name in self._overlays:
+                os.makedirs(os.path.join(self.run_dir, geometry, name), exist_ok=True)
 
         self.best_for_id: dict[int, Candidate] = {}
         self._selected_key: tuple = ()   # seqs of the last-written selection
@@ -323,7 +347,39 @@ class BestViewCollector:
             roi=roi,
             instance_scores={i.tid: i.score for i in cluster},
             instance_bboxes={i.tid: i.bbox for i in cluster},
+            # Deliberately not copied — see Candidate. Every cluster of this frame gets the
+            # same array, so a frame with six clusters still costs one frame.
+            frame=image_bgr if self._save_full else None,
         )
+
+    @staticmethod
+    def _full_detections(cand: Candidate) -> dict:
+        """`crop_detections` mapped back onto the whole frame.
+
+        The masks are rebuilt rather than stored: one is 1.2 MB at 1920x640, so a handful of
+        instances would outweigh the image. Pasting loses nothing — a mask never extends
+        beyond its own bbox, and the roi is the padded union of the cluster's bboxes.
+        """
+        x0, y0, x1, y1 = cand.roi
+        crop_masks = cand.crop_detections["masks"]
+        masks = np.zeros((len(crop_masks), *cand.frame.shape[:2]), dtype=bool)
+        masks[:, y0:y1, x0:x1] = crop_masks
+        return {
+            **cand.crop_detections,
+            "masks": masks,
+            "bboxes": np.asarray([cand.instance_bboxes[int(tid)]
+                                  for tid in cand.crop_detections["ids"]], dtype=float),
+        }
+
+    def _views(self, cand: Candidate):
+        """(subdir, image, detections thunk) once per geometry this run saves.
+
+        The detections are a thunk because `_flush` writes raw images only and must not pay
+        to rebuild masks it will not draw.
+        """
+        yield "", cand.crop, lambda: cand.crop_detections
+        if cand.frame is not None:
+            yield "full", cand.frame, lambda: self._full_detections(cand)
 
     # -- geometry -------------------------------------------------------------
 
@@ -420,7 +476,11 @@ class BestViewCollector:
         written: list[tuple] = []   # (rank, cand, new_count) -- only images on disk
         for rank, (cand, new_count) in enumerate(selected, start=1):
             name = f"best_rank{rank}_{self._target_tag}.png"
-            if not cv2.imwrite(os.path.join(self.run_dir, name), cand.crop):
+            # A list, not all(...): short-circuiting would skip the remaining geometries and
+            # leave the rank half written. A rank counts only if every geometry landed.
+            ok = [cv2.imwrite(os.path.join(self.run_dir, geometry, name), image)
+                  for geometry, image, _ in self._views(cand)]
+            if not all(ok):
                 self.log(f"best-view collector: failed to write {name}")
                 continue
             written.append((rank, cand, new_count))
@@ -432,10 +492,12 @@ class BestViewCollector:
 
         # The pool can shrink (two ids' bests can converge on one cluster), so drop any
         # file past the current selection rather than leaving a stale rank behind.
-        for stale in glob.glob(os.path.join(self.run_dir, f"best_rank*_{self._target_tag}.png")):
-            rank = int(os.path.basename(stale).split("_")[1].removeprefix("rank"))
-            if rank > len(selected):
-                os.remove(stale)
+        for geometry in self._geometries:
+            for stale in glob.glob(os.path.join(self.run_dir, geometry,
+                                                f"best_rank*_{self._target_tag}.png")):
+                rank = int(os.path.basename(stale).split("_")[1].removeprefix("rank"))
+                if rank > len(selected):
+                    os.remove(stale)
 
         def _crop_relative_bbox(cand: Candidate, tid: int) -> list:
             rx0, ry0, _, _ = cand.roi
@@ -549,21 +611,26 @@ class BestViewCollector:
         for rank, cand in self._written:
             name = f"best_rank{rank}_{self._target_tag}.png"
             names.add(name)
+            # Once per candidate, not per geometry: the crop and the full frame hold the same
+            # instances, so they carry the same captions and the same colours.
             captions, ids = self._resolve(cand, track_to_map)
-            labelled = dict(cand.crop_detections)
-            labelled["labels"] = np.asarray(captions, dtype=object)
-            labelled["ids"] = np.asarray(ids, dtype=int)
-            for subdir, render in self._overlays.items():
-                overlay = render(cand.crop, labelled)
-                if not cv2.imwrite(os.path.join(self.run_dir, subdir, name), overlay):
-                    self.log(f"best-view collector: failed to write {subdir}/{name}")
+            for geometry, image, detections in self._views(cand):
+                labelled = dict(detections())
+                labelled["labels"] = np.asarray(captions, dtype=object)
+                labelled["ids"] = np.asarray(ids, dtype=int)
+                for subdir, render in self._overlays.items():
+                    overlay = render(image, labelled)
+                    path = os.path.join(self.run_dir, geometry, subdir, name)
+                    if not cv2.imwrite(path, overlay):
+                        self.log(f"best-view collector: failed to write {path}")
 
         # A previous pass may have left a rank the current selection no longer has.
-        for subdir in self._overlays:
-            for stale in glob.glob(os.path.join(self.run_dir, subdir,
-                                                f"best_rank*_{self._target_tag}.png")):
-                if os.path.basename(stale) not in names:
-                    os.remove(stale)
+        for geometry in self._geometries:
+            for subdir in self._overlays:
+                for stale in glob.glob(os.path.join(self.run_dir, geometry, subdir,
+                                                    f"best_rank*_{self._target_tag}.png")):
+                    if os.path.basename(stale) not in names:
+                        os.remove(stale)
 
         resolved = sum(1 for _, cand in self._written for tid in cand.crop_detections["ids"]
                        if track_to_map is None or int(tid) in track_to_map)
