@@ -73,7 +73,7 @@ save_best_target_view_images:
   crop_to_roi: true          # crop to the objects rather than saving the whole panorama
   roi_padding_frac: 0.2      # margin around the object group, as a fraction of its size
   roi_min_size_px: 300       # floor, so a small/far object still gives a readable crop
-  roi_cluster_gap_px: 250    # objects further apart than this are cropped as separate images
+  roi_cluster_gap_px: 800    # objects further apart than this are cropped as separate images
 
 # 3D mapping stage (map_node). Every filter in docs/map_node_pipeline.md stages B-E, with
 # an on/off switch and its thresholds. Omitted keys fall back to the defaults in
