@@ -58,10 +58,12 @@ PROVIDERS = {
         "claude-haiku-4-5",
     ),
     "dashscope": (
-        "https://dashscope-us.aliyuncs.com/compatible-mode/v1",
+        # Singapore / international. Override with VLM_BASE_URL for a workspace host
+        # (e.g. https://ws-….ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1).
+        "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
         "DASHSCOPE_API_KEY",
-        "qwen3.6-plus",
-        "qwen3.6-flash",
+        "qwen3.7-flash",
+        "qwen3.7-flash",
     ),
     "openrouter": (
         "https://openrouter.ai/api/v1",
