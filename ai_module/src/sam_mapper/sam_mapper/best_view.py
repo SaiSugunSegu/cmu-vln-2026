@@ -14,6 +14,11 @@ cluster count as covered.
 
 Output is written through on every change, so killing the node mid-bag still leaves a
 correct selection on disk.
+
+The overlay copies are the exception: `finalize()` draws them once at the end of the run,
+because their labels carry map_node's object ids and world merges keep renaming those. That
+is what makes a crop readable against `obj_map.json` alone — `chair [3]` names the entry
+keyed `3`, no manifest lookup in between.
 """
 from __future__ import annotations
 
@@ -70,6 +75,7 @@ class BestViewConfig:
     roi_padding_frac: float
     roi_min_size_px: int
     roi_cluster_gap_px: float
+    finalize_obj_map_wait_s: float
 
     @staticmethod
     def from_dict(raw: dict, table: PromptTable) -> "BestViewConfig":
@@ -98,6 +104,9 @@ class BestViewConfig:
             roi_padding_frac=float(raw.get("roi_padding_frac", 0.2)),
             roi_min_size_px=int(raw.get("roi_min_size_px", 300)),
             roi_cluster_gap_px=float(raw.get("roi_cluster_gap_px", 250)),
+            # finalize()'s wait for map_node's obj_map.json. Same file, same settling time
+            # as object_reference_reasoner.MAP_WAIT_S.
+            finalize_obj_map_wait_s=float(raw.get("finalize_obj_map_wait_s", 5.0)),
         )
 
 
@@ -175,6 +184,11 @@ class BestViewCollector:
         self._selected_key: tuple = ()   # seqs of the last-written selection
         self._seq = itertools.count()
         self._frozen = False
+        # What is on disk right now, so finalize() can re-render exactly those ranks.
+        self._written: list[tuple[int, Candidate]] = []
+        # The id lookup the overlays currently show. `False`, not None, for "never
+        # rendered": None is itself a valid lookup, meaning no 3D map at all.
+        self._rendered_with: object = False
 
         self.log(f"best-view collector: targets={sorted(self.targets)} "
                  f"top_n={config.top_n} -> {self.run_dir}")
@@ -410,9 +424,11 @@ class BestViewCollector:
                 self.log(f"best-view collector: failed to write {name}")
                 continue
             written.append((rank, cand, new_count))
-            for subdir, render in self._overlays.items():
-                overlay = render(cand.crop, cand.crop_detections)
-                cv2.imwrite(os.path.join(self.run_dir, subdir, name), overlay)
+
+        # No overlays here: they carry map ids, and obj_map.json is still moving while frames
+        # arrive — see finalize(). Raw crops stay per-flush, so a kill mid-bag loses nothing.
+        self._written = [(rank, cand) for rank, cand, _ in written]
+        self._rendered_with = False
 
         # The pool can shrink (two ids' bests can converge on one cluster), so drop any
         # file past the current selection rather than leaving a stale rank behind.
@@ -420,10 +436,6 @@ class BestViewCollector:
             rank = int(os.path.basename(stale).split("_")[1].removeprefix("rank"))
             if rank > len(selected):
                 os.remove(stale)
-                for subdir in self._overlays:
-                    overlay = os.path.join(self.run_dir, subdir, os.path.basename(stale))
-                    if os.path.exists(overlay):
-                        os.remove(overlay)
 
         def _crop_relative_bbox(cand: Candidate, tid: int) -> list:
             rx0, ry0, _, _ = cand.roi
@@ -479,3 +491,82 @@ class BestViewCollector:
         covered_ids = {tid for _, cand, _ in written for tid in cand.instance_scores}
         self.log(f"best-view collector: wrote {len(written)}/{self.config.top_n} images, "
                  f"covering {len(covered_ids)} instance(s) -> {self.run_dir}")
+
+    # -- finalize -------------------------------------------------------------
+
+    @staticmethod
+    def _caption(label: str, track_id: int, track_to_map: dict | None) -> str:
+        """What one instance is called on the overlay.
+
+        The bracketed number is a key of `obj_map.json` — that join is the whole point.
+        No map at all: fall back to the track id, the only id there is. A map but no entry
+        for this instance: no brackets, because the object never reached a 3D box (too few
+        lidar points, pruned, no centroid) and an id there would resolve to nothing.
+        """
+        if track_to_map is None:
+            return f"{label} [{track_id}]"
+        map_id = track_to_map.get(track_id)
+        return label if map_id is None else f"{label} [{map_id}]"
+
+    def _resolve(self, cand: Candidate, track_to_map: dict | None) -> tuple[list, list]:
+        """(captions, ids) for one crop, both keyed on the 3D map wherever it knows the object.
+
+        The ids matter as much as the captions: an outline's colour is `_color_for(id)`, so
+        leaving track ids here drew one object in two colours across crops while every
+        caption named it the same. Map object 1 is track 1 in two of a run's three crops and
+        track 3 in the other.
+
+        An instance the map has no entry for keeps its track id, which cannot collide with a
+        map key: every key is the `id[0]` of its own entry, hence itself a resolved track id.
+
+        A map id seen twice in one crop keeps only the first caption — two tabs naming one
+        object is noise — but both outlines, which are separate mask regions.
+        """
+        captions, ids, seen = [], [], set()
+        for label, raw in zip(cand.crop_detections["labels"], cand.crop_detections["ids"]):
+            track_id = int(raw)
+            map_id = track_id if track_to_map is None else track_to_map.get(track_id)
+            ids.append(track_id if map_id is None else map_id)
+            captions.append("" if map_id in seen else self._caption(str(label), track_id,
+                                                                    track_to_map))
+            if map_id is not None:
+                seen.add(map_id)
+        return captions, ids
+
+    def finalize(self, track_to_map: dict | None) -> bool:
+        """Render the overlay copies for the crops on disk. True if it drew anything.
+
+        Deferred rather than per-flush because the ids are map_node's, and it rewrites
+        obj_map.json on every publish until exploration closes. Re-runnable on purpose —
+        bag loop, /pipeline/explore_done and shutdown all call it, and the last call with
+        better data wins; an unchanged lookup does nothing.
+        """
+        if not self._overlays or self._rendered_with == track_to_map:
+            return False
+        self._rendered_with = dict(track_to_map) if track_to_map is not None else None
+
+        names = set()
+        for rank, cand in self._written:
+            name = f"best_rank{rank}_{self._target_tag}.png"
+            names.add(name)
+            captions, ids = self._resolve(cand, track_to_map)
+            labelled = dict(cand.crop_detections)
+            labelled["labels"] = np.asarray(captions, dtype=object)
+            labelled["ids"] = np.asarray(ids, dtype=int)
+            for subdir, render in self._overlays.items():
+                overlay = render(cand.crop, labelled)
+                if not cv2.imwrite(os.path.join(self.run_dir, subdir, name), overlay):
+                    self.log(f"best-view collector: failed to write {subdir}/{name}")
+
+        # A previous pass may have left a rank the current selection no longer has.
+        for subdir in self._overlays:
+            for stale in glob.glob(os.path.join(self.run_dir, subdir,
+                                                f"best_rank*_{self._target_tag}.png")):
+                if os.path.basename(stale) not in names:
+                    os.remove(stale)
+
+        resolved = sum(1 for _, cand in self._written for tid in cand.crop_detections["ids"]
+                       if track_to_map is None or int(tid) in track_to_map)
+        self.log(f"best-view collector: finalized {len(self._written)} image(s), "
+                 f"{resolved} instance label(s) carrying a map id -> {self.run_dir}")
+        return True

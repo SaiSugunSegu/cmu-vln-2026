@@ -45,6 +45,28 @@ Everything that goes into the answer Marker, as plain data.
     }
 
 
+def track_to_map_id(objects: dict) -> dict[int, int]:
+    """Every SAM track id -> the key of the obj_map entry that absorbed it.
+    Later entries do not overwrite earlier ones: a track id belongs to exactly one object
+    (the association loop breaks on first match), so a duplicate means a malformed map and
+    the first claim is as good as any.
+    """
+    out: dict[int, int] = {}
+    for key, entry in (objects or {}).items():
+        if not isinstance(entry, dict):
+            continue
+        try:
+            map_id = int(key)
+        except (TypeError, ValueError):
+            continue
+        for track_id in entry.get("id") or [map_id]:
+            try:
+                out.setdefault(int(track_id), map_id)
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
 def payload_from_map_object(obj: dict) -> dict:
     """
 

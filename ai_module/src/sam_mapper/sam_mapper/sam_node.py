@@ -20,6 +20,9 @@ Publishes:
 
 Subscribes:
     /sam3/set_prompts    std_msgs/String     JSON {"prompts": [...], "run_id": "..."}
+    /pipeline/explore_done std_msgs/String   obj_map.json has settled — label the best-view
+                                             overlays with its ids. Optional; a bag loop and
+                                             shutdown trigger the same pass.
 
 With `wait_for_prompts:=true` the node ignores the config's `objects:` and boots UNARMED:
 weights still load (the slow part, ~60 s), but no frame is processed and no best-view run
@@ -36,6 +39,7 @@ so ObjMapper.update_map() needs no changes.
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 import traceback
@@ -52,6 +56,7 @@ from std_msgs.msg import String
 
 from sam_mapper.annotate import annotate_frame
 from sam_mapper.best_view import BestViewCollector, BestViewConfig
+from sam_mapper.challenge_marker import track_to_map_id
 from sam_mapper.detections import PromptTable, build_id_map, to_detections
 from sam_mapper.node_base import WorkerNodeMixin, run_node
 from sam_mapper.sam3_backend import make_backend
@@ -138,6 +143,9 @@ class SamNode(WorkerNodeMixin, Node):
         self.create_subscription(Image, '/camera/image', self.image_callback, 10,
                                  callback_group=group())
         self.create_subscription(String, '/sam3/set_prompts', self._on_set_prompts, 10,
+                                 callback_group=group())
+        # Optional: without smart_vlm nothing publishes it, and bag loop / shutdown finalize.
+        self.create_subscription(String, '/pipeline/explore_done', self._on_explore_done, 10,
                                  callback_group=group())
         self.annotated_pub = self.create_publisher(Image, '/annotated_image', 2)
         self.instance_map_pub = self.create_publisher(Image, '/sam3/instance_map', 2)
@@ -283,6 +291,63 @@ class SamNode(WorkerNodeMixin, Node):
         self._publish_status('ready')
         self.log(f'set_prompts ok: {ack["prompts"]} -> {run_dir}')
 
+    # -- best-view finalize -----------------------------------------------------
+
+    def _on_explore_done(self, msg: String) -> None:
+        """Exploration is closed, so map_node's obj_map.json has stopped moving.
+
+        Off the executor thread: this waits on another process's file, and blocking a
+        callback group would stall the frames queued behind it.
+        """
+        self.log(f"explore_done ({msg.data or 'ok'}) — finalizing best-view overlays")
+        threading.Thread(target=self._finalize_best_views, daemon=True).start()
+
+    def _finalize_best_views(self, wait_s: float | None = None) -> None:
+        """Render the overlay copies with the 3D map's object ids drawn on.
+
+        End of run, not per flush: map_node rewrites obj_map.json on every publish, so an
+        overlay drawn mid-run would show ids a later world merge renames. Safe to call more
+        than once — the collector re-renders only on a changed lookup.
+        """
+        with self.prompt_lock:
+            collector = self.best_view_collector
+        if collector is None:
+            return
+
+        path = os.path.join(collector.run_dir, 'obj_map.json')
+        if wait_s is None:
+            wait_s = collector.config.finalize_obj_map_wait_s
+        objects = self._read_obj_map(path, wait_s)
+        try:
+            # None, not {}: "no 3D map at all" makes the track id the only id there is,
+            # while an empty map means every instance genuinely failed to reach a box.
+            rendered = collector.finalize(None if objects is None else track_to_map_id(objects))
+        except Exception:  # noqa: BLE001 — a render fault must not take the node down
+            self.get_logger().error(f'best-view finalize failed:\n{traceback.format_exc()}')
+            return
+        if not rendered:
+            # Three callers land here; only the first with a given map costs a render. Logged
+            # so a silent second pass reads as a no-op, not as one that failed.
+            self.log('best-view overlays already current — nothing re-rendered')
+
+    def _read_obj_map(self, path: str, wait_s: float) -> dict | None:
+        """map_node's map, or None if it never landed.
+
+        Polled because map_node is a separate process with no ordering guarantee. A partial
+        read cannot happen (it writes a temp file and os.replace()s it), but the file can be
+        late, or absent forever when map_node is not in the launch.
+        """
+        deadline = time.monotonic() + max(wait_s, 0.0)
+        while True:
+            try:
+                with open(path) as handle:
+                    return json.load(handle)
+            except (OSError, json.JSONDecodeError):
+                if time.monotonic() >= deadline:
+                    self.log(f'no readable {path} — labelling crops with SAM track ids')
+                    return None
+                time.sleep(0.25)
+
     # -- bag-loop handling ------------------------------------------------------
 
     def _handle_time_jump(self, stamp: float) -> None:
@@ -306,6 +371,10 @@ class SamNode(WorkerNodeMixin, Node):
         # the collector would otherwise count as another object to cover.
         if self.best_view_collector:
             self.best_view_collector.on_time_jump()
+            # Frozen from here, so draw now rather than trust a shutdown the harness may
+            # never deliver as a clean SIGINT. No wait: one full pass is already in the map.
+            threading.Thread(target=self._finalize_best_views, args=(0.0,),
+                             daemon=True).start()
 
     # -- worker ---------------------------------------------------------------
 
@@ -444,6 +513,20 @@ class SamNode(WorkerNodeMixin, Node):
         msg.header.stamp = Time(seconds=seconds, nanoseconds=int((stamp - seconds) * 1e9)).to_msg()
         msg.header.frame_id = 'camera'
         self.annotated_pub.publish(msg)
+
+    def destroy_node(self):
+        """Last chance to draw the overlays: `just run-sam` on a bag that never loops and
+        never sees /pipeline/explore_done gets them here and nowhere else.
+
+        Inline, no wait — run_node() allows the worker 2 s to join, and obj_map.json has
+        either landed by now or is not coming.
+        """
+        try:
+            self._finalize_best_views(wait_s=0.0)
+        except Exception:  # noqa: BLE001 — an exception here reads as a crashed node to
+            pass           # the eval harness; teardown must stay clean
+        super().destroy_node()
+
 
 def main(args=None):
     run_node(SamNode, 'sam_node_bootstrap', ('objects', 'sam3'),
