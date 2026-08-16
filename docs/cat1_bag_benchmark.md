@@ -95,7 +95,7 @@ category1_reasoner ◀── VQA on best_rank1 ───────────
 | `qwen_vqa_server` | `just vqa-up` | Persistent Qwen3-VL (extract, numerical VQA, attributes) |
 | `sam_node` | `just run-sam` | SAM 3 detection + best-view crops + manifest |
 | `category1_reasoner` | `just cat1-reasoner` | Orchestrates extract → prompts → answer |
-| `cat1_bag_bench` | `just cat1-bag-bench …` | Per-question driver: question → wait SAM → bag → score |
+| `cat1_bag_bench` | `just bag-bench-cat1 …` | Per-question driver: question → wait SAM → bag → score |
 | `bag_replay` | started by the driver | Single-pass bag play for the scene |
 
 ## Commands
@@ -141,26 +141,26 @@ Wait for `category1_reasoner ready`.
 Smoke (first 3 questions):
 
 ```bash
-just cat1-bag-bench arabic_room 3
+just bag-bench-cat1 arabic_room 3
 ```
 
 Specific question IDs:
 
 ```bash
-just cat1-bag-bench arabic_room 0 "Q01 Q02 Q03"
+just bag-bench-cat1 arabic_room 0 "Q01 Q02 Q03"
 ```
 
 Full scene (all 30 questions):
 
 ```bash
-just cat1-bag-bench arabic_room 0
+just bag-bench-cat1 arabic_room 0
 ```
 
 Other scenes (must have a bag in `data/bags/scenes.yaml` and a QA JSON under `data/benchmark/`):
 
 ```bash
-just cat1-bag-bench japanese_room 3
-just cat1-bag-bench livingroom_1 0 "Q01"
+just bag-bench-cat1 japanese_room 3
+just bag-bench-cat1 livingroom_1 0 "Q01"
 ```
 
 ### Direct driver (inside the AI container)
@@ -187,7 +187,7 @@ Useful flags: `--speed`, `--post-bag-wait` (SAM drain after bag), `--sam-ready-t
 | Best-view images + `manifest.json` | `data/crops/cat1_<run>_…/` | `/data/crops/…` |
 | Per-question scores | `data/runs/cat1_<scene>/` | `/data/runs/cat1_<scene>/` |
 
-Default score dir for `just cat1-bag-bench`: `data/runs/cat1_<scene>/`.
+Default score dir for `just bag-bench-cat1`: `data/runs/cat1_<scene>/`.
 
 ### `manifest.json` (after a successful answer)
 

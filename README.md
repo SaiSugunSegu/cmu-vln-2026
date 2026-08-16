@@ -60,7 +60,7 @@
 - In: ordered grounded constraints, terrain map · Out: dense waypoint sequence
 - Costmap with avoid zones, ~1 m waypoint spacing so base planner can't shortcut, replan on violation
 
-**M6 · Eval bench** (`scripts/eval/`) — 15 scenes × 5 questions, challenge-style scoring; every change measured. `just cat1-bag-bench` scores category-1 offline against recorded bags
+**M6 · Eval bench** (`scripts/eval/`) — 15 scenes × 5 questions, challenge-style scoring; every change measured. `just bag-bench-cat1` scores category-1 offline against recorded bags
 
 Full plan: [TEAM_PLAN.md](TEAM_PLAN.md) · deep dives: [docs/](docs/)
 
@@ -102,7 +102,7 @@ The category-1 loop — the one that runs today — needs four terminals:
 just vqa-up                          # A — load Qwen once, stays resident
 just run-sam                         # B — SAM 3 detector
 just cat1-reasoner                   # C — extract targets → prompt SAM → answer
-just cat1-bag-bench arabic_room 3    # D — score 3 questions; results in data/runs/
+just bag-bench-cat1 arabic_room 3    # D — score 3 questions; results in data/runs/
 ```
 [docs/cat1_bag_benchmark.md](docs/cat1_bag_benchmark.md) · [docs/M0.5_rosbag_infra.md](docs/M0.5_rosbag_infra.md)
 
@@ -199,7 +199,7 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 | **perception** | `sam-status` · `sam-map-json` · `sam-frames` · `sam-probe` · `sam-prompts` |
 | **debug** | `foxglove` · `topics` · `shell-ai` · `shell-sys` |
 | **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `caption` |
-| **cat1** | `cat1-reasoner` · `cat1-bag-bench <scene> [limit]` |
+| **cat1** | `cat1-reasoner` · `bag-bench-cat1 <scene> [limit]` |
 | **cat2** | `gen-cat2` · `verify-cat2` · `pdf-assets` |
 | **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` |
 | **map3d** | `map3d-record <scene> [stride]` · `map3d-replay <scene> [jobs]` · `map3d-score` · `map3d-determinism` · `map3d-audit` |
