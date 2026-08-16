@@ -33,10 +33,10 @@ drops anything that arrives before the worker consumes it, so a bag played faste
 SAM 3 can process just produces sparser, worse crops with no error. Measured live (its
 own `frame N: ... | dropped D/I` log) on an idle H200 with a 3-object-prompt question,
 the busiest scene (arabic_room, ~7.4 Hz native /camera/image) held zero steady-state
-drops at speed 0.15 and accumulated a growing backlog at 0.3 — that bound comes from
+drops at speed 0.2; 0.25 crept and 0.5 dropped most frames. That bound comes from
 SAM 3's per-frame cost against the bag's camera rate, not from anything this script
-changes. --speed still defaults to 0.1 (eval_orchestrator's own value) for that reason;
-raise it only after confirming `dropped` stays flat on your own GPU and scenes.
+changes. --speed defaults to 0.2 for that reason; raise it only after confirming
+`dropped` stays flat on your own GPU and scenes.
 
   just cache-cat1 [scene] [limit] [backend] [target_source]
   just cache-cat2 [scene] [limit] [backend] [target_source] [mode]
@@ -305,6 +305,19 @@ class CacheBenchDriver(Node):
                 return True
         return predicate()
 
+    def wait_sam_up(self, timeout_s: float, *, context: str = "SAM") -> None:
+        """Block until sam_node has loaded weights.
+
+        With wait_for_prompts:=true the node boots `awaiting_prompts`, not `ready` —
+        `ready` only lands after the first /sam3/set_prompts. Either state means the
+        node can take a question.
+        """
+        if not self._spin_until(
+                lambda: self._sam_status in ("ready", "awaiting_prompts"), timeout_s):
+            raise TimeoutError(
+                f"/sam3/status not up within {timeout_s:.0f}s "
+                f"(last={self._sam_status!r}) — {context}")
+
     def wait_sam_ready(self, timeout_s: float, *, context: str = "SAM") -> None:
         if not self._spin_until(lambda: self._sam_status == "ready", timeout_s):
             raise TimeoutError(
@@ -353,7 +366,7 @@ def run_question(driver: CacheBenchDriver, cfg: SweepConfig, scene: str, entry: 
         targets = entry.get("target_objects", []) if args.target_source == "gt" else []
         driver.gt_pub.publish(String(data=json.dumps(targets)))
 
-        driver.wait_sam_ready(args.sam_ready_timeout, context=f"{scene} {qid} (idle)")
+        driver.wait_sam_up(args.sam_ready_timeout, context=f"{scene} {qid} (idle)")
         driver.start_question()
         ack = driver.wait_ack(args.ack_timeout)
         driver.stop_question()
@@ -434,7 +447,7 @@ def spawn_pipeline(args) -> list[Managed]:
 
 def wait_pipeline_ready(driver: CacheBenchDriver, args) -> None:
     log("waiting for SAM 3 weights (~60s, longer on first download) ...")
-    driver.wait_sam_ready(args.ready_timeout, context="startup")
+    driver.wait_sam_up(args.ready_timeout, context="startup")
     if args.resolved_backend == "local":
         log("waiting for the local Qwen VQA server ...")
         driver.wait_vqa_ready(args.ready_timeout)
@@ -453,7 +466,7 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=0, dest="question_limit",
                     help="max questions PER SCENE (0 = all)")
     ap.add_argument("--target-source", choices=("gt", "vlm"), default="vlm")
-    ap.add_argument("--speed", type=float, default=0.1,
+    ap.add_argument("--speed", type=float, default=0.2,
                     help="bag playback rate. Bounded by SAM 3's own per-frame throughput"
                          " against the bag's native camera rate (measured 3.5-7.4 Hz"
                          " across scenes) — sam_node's 'latest-frame-wins' policy means a"
@@ -461,8 +474,8 @@ def main(argv=None) -> int:
                          " erroring. This has nothing to do with the relaunch cost this"
                          " script removes: raising it must be justified by sam_node's own"
                          " 'frame N: ... | dropped D/I' log staying flat, not by there"
-                         " being no relaunch left to hide behind. Defaults to the same"
-                         " 0.1 eval_orchestrator itself uses (eval-cat1/eval-cat2)")
+                         " being no relaunch left to hide behind. Defaults to 0.2 (idle"
+                         " H200, arabic_room, zero steady-state drops)")
     ap.add_argument("--backend", default="auto", help="cloud | local | auto ($VLM_BACKEND)")
     ap.add_argument("--cat2-mode", default="hybrid")
     ap.add_argument("--cache", default="/data/runs/views_cache.json", dest="report_file")

@@ -454,16 +454,16 @@ eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" bac
 # /sam3/set_prompts handling) -- unlike eval-cat1, which must relaunch per question for
 # an honest scored time budget. Software/scheduling, not GPU-specific: helps the same
 # way on the 4090 deployment target. See scripts/eval/cache_bag_bench.py for the driver.
-# speed=0.1: measured live (sam_node's own `frame N: ... | dropped D/I` log), speed is
+# speed=0.2: measured live (sam_node's own `frame N: ... | dropped D/I` log), speed is
 # bounded by SAM3's own per-frame throughput against the bag's native camera rate
 # (3.5-7.4 Hz across scenes) -- pushing it up when the camera rate does not change just
 # trades a shorter replay for dropped frames. On an idle H200 with a 3-prompt question,
-# 0.15 held with zero steady-state drops on the busiest scene (arabic_room, 7.4 Hz)
-# while 0.3 did not (backlog grew without bound); re-run that check on your own
-# GPU/scenes before raising it, especially on the slower 4090.
+# 0.2 held with zero steady-state drops on the busiest scene (arabic_room, 7.4 Hz);
+# 0.25 crept and 0.5 dropped most frames. Re-run that check on your own GPU/scenes
+# before raising it, especially on the slower 4090.
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
-cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
+cache-cat1 scene="all" limit="0" speed="0.2" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/cache_bag_bench.py --category 1 --scene {{scene}} --limit {{limit}} --speed {{speed}} --backend {{backend}} --target-source {{target_source}} --cache {{cache}} --resume"
 
 # Phase 2: answer-only replay over those crops. No TARE, no SAM, no bag -- minutes per
@@ -492,7 +492,7 @@ cache-bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit
 # not by relaunch cost.
 [group('eval')]
 [doc('Cache maps + crops for every category-2 question, without answering')]
-cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" mode="hybrid" cache="/data/runs/cat2_cache.json":
+cache-cat2 scene="all" limit="0" speed="0.2" backend="cloud" target_source="vlm" mode="hybrid" cache="/data/runs/cat2_cache.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/cache_bag_bench.py --category 2 --scene {{scene}} --limit {{limit}} --speed {{speed}} --backend {{backend}} --target-source {{target_source}} --cat2-mode {{mode}} --cache {{cache}} --resume"
 
 # Phase 2 for category 2, the same shape as cache-bench-cat1: replay the selection step over
