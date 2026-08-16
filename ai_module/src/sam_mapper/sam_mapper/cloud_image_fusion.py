@@ -1,7 +1,6 @@
 """Equirectangular lidar->camera projection, owned copy (see docs/M2_perception.md 3.6-split).
 
-Ported from semantic_mapping/cloud_image_fusion.py, trimmed to the two platforms sam_mapper
-actually uses (mecanum_sim, mecanum) — the wheelchair/diablo/scannet variants, the generic
+sam_mapper actually uses (mecanum_sim, mecanum) — the wheelchair/diablo/scannet variants, the generic
 scan2pixels, and the unused generate_seg_cloud_v2 (debug-only, never called) are dropped.
 """
 from __future__ import annotations

@@ -1,6 +1,5 @@
 """One tracked 3D instance: voxel-voted points, class/id lifecycle, and box fitting.
 
-Owned copy of semantic_mapping/single_object.py, trimmed to what sam_mapper calls.
 Thresholds live in mapping_config (DbscanConfig, DimensionPriorsConfig, PruneConfig)."""
 from __future__ import annotations
 

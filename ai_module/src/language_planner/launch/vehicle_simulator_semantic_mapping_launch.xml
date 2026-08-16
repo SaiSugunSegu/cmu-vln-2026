@@ -65,6 +65,4 @@
     <param name="depth_raw_out_topic" value="/camera/depth_image"/>
   </node>
 
-  <node launch-prefix="nice" pkg="rviz2" exec="rviz2" name="rvizGA" args="-d $(find-pkg-share language_planner)/rviz/vehicle_simulator_semantic_mapping.rviz"/>
-
 </launch>

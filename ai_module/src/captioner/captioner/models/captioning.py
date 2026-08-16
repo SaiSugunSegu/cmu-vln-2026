@@ -515,7 +515,7 @@ class Qwen3VLHFBackend(QwenVLHFBackend):
     @staticmethod
     def model_class():
         # Imported here rather than at module level: on transformers < 4.57 the import
-        # fails, and semantic_mapper treats any ImportError from the captioner package
+        # fails, and sam_mapper treats any ImportError from the captioner package
         # as "no captioner installed", which would silently disable captioning.
         try:
             from transformers import Qwen3VLForConditionalGeneration

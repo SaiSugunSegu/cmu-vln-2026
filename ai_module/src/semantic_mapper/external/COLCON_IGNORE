@@ -1,9 +1,0 @@
-Vendored third-party sources (Grounded-SAM-2, byte_track, cython_bbox) — not ROS packages
-and not built by this workspace. colcon otherwise discovers cython_bbox's setup.py and
-fails the whole `colcon build`, which is why builds here used --packages-select and
-silently left packages like tare_planner out of install/.
-
-Nothing under ai_module/src imports these: sam_mapper carries its own port of the 3D
-back-end (see docs/M2_perception.md 3.6-split) and the ByteTrack/spaCy front-end it needed
-is superseded by SAM 3. semantic_mapper itself is a plain pyproject package run directly
-(ros2_system.py), not via colcon, so ignoring this subtree changes nothing for it.

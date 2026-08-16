@@ -32,7 +32,6 @@ def make_result(object_ids, scores, prompt_to_obj_ids, h=4, w=6):
 
 
 def test_default_label_strips_spaces_to_match_dimension_priors():
-    # semantic_mapping's DIMENSION_PRIORS spells these without spaces.
     assert default_label("potted plant") == "pottedplant"
     assert default_label("fire extinguisher") == "fireextinguisher"
     assert default_label("Chair") == "chair"

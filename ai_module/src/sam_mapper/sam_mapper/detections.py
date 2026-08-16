@@ -1,6 +1,6 @@
 """Translate SAM 3 output into the detections dict that ObjMapper.update_map consumes.
 
-The 3D mapper's contract (unchanged from semantic_mapper, see docs/M2_perception.md 2.4):
+The 3D mapper's contract  see docs/M2_perception.md 2.4):
 
     {'bboxes':      (M,4)   float xyxy pixels,
      'confidences': (M,)    float,
@@ -63,7 +63,7 @@ class PromptTable:
 
         # Background classes get ids -1, -2, -3, ... one per unique LABEL (not per
         # prompt, since several prompts may share a label). Fixed up front rather than
-        # grown at runtime, so ids stay stable across frames — semantic_mapper grows a
+        # grown at runtime, so ids stay stable across frames — sam_mapper grows a
         # module global instead, which leaks state between instances (docs quirk #7).
         background_labels = []
         for spec in self.specs:
