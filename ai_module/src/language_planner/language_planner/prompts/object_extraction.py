@@ -1,4 +1,3 @@
-
 def get_object_extraction_prompt():
     prompt = '''You are an AI assistant that extracts referenced objects that are relevant to a natural language request. You will be given ONE natural language command at a time. The command will contain references to objects in the environment. Your task is to extract and list all objects referenced in the command in a bracket format. If there are no object references, output an empty list. Do not enclose your response with triple backticks. You should not have repeated objects in the output, unless they have different meaningful attributes such as color and size. Some objects must be inferred from the sentence structure and are indirectly referenced; if that is the case, generate direct object references from the indirect ones. Here are some examples of the input and outputs:
 

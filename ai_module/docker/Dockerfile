@@ -191,11 +191,13 @@ COPY src/dummy_vlm /home/docker/ai_module/src/dummy_vlm
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm
 COPY src/sam_mapper /home/docker/ai_module/src/sam_mapper
 COPY src/captioner /home/docker/ai_module/src/captioner
+# smart_vlm imports language_planner.prompts at module load (EXTRACT_SYSTEM).
+COPY src/language_planner /home/docker/ai_module/src/language_planner
 RUN /bin/bash -c "\
     source /opt/ros/jazzy/setup.bash && \
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=Release \
-      --packages-select dummy_vlm smart_vlm sam_mapper captioner"
+      --packages-select dummy_vlm smart_vlm sam_mapper captioner language_planner"
 
 # Ensure the updated install is sourced in every new shell
 RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc \
@@ -218,6 +220,8 @@ from captioner.paths import ALLOWED_ROOTS; \
 from captioner.text_utils import extract_integer; \
 from captioner.vlm_backends.schemas import CountAnswer, TargetList; \
 from captioner.vlm_backends.openai_backend import OpenAIBackend; \
+from smart_vlm.numerical_utils import EXTRACT_SYSTEM; \
+from smart_vlm.cat2_utils import EXTRACT_SYSTEM as CAT2_EXTRACT; \
 import openai; \
 print('import check OK: transformers', transformers.__version__)\""
 

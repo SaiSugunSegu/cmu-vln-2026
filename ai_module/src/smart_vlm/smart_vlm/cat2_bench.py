@@ -14,6 +14,10 @@ difference in score is therefore a difference in reasoning.
     # then, per mode, as often as you like
     ros2 run smart_vlm cat2_bench --mode hybrid --report /data/runs/cat2_hybrid.json
 
+    # backend defaults to cloud; --backend local answers vlm/hybrid over the resident
+    # Qwen server instead (needs `just vqa-up` already running)
+    ros2 run smart_vlm cat2_bench --mode hybrid --backend local --report /data/runs/cat2_hybrid_local.json
+
 Four modes, and the gap between them is the whole point:
 
     naive   largest instance of the class the question names. The floor.
@@ -76,6 +80,9 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
                         help="first N questions per scene, 0 = all")
     parser.add_argument("--views", type=int, default=3,
                         help="best-view ranks shown to the model (default: %(default)s)")
+    parser.add_argument("--backend", default="cloud", choices=("cloud", "local"),
+                        help="where the vlm/hybrid model call runs; local needs "
+                             "`just vqa-up` already up (default: %(default)s)")
     return parser.parse_args(argv)
 
 
@@ -278,10 +285,16 @@ def per_relation(results: list[dict]) -> dict[str, dict]:
 def cat2_extras(results: list[dict], args) -> dict[str, Any]:
     n = len(results) or 1
     found = [r for r in results if r["found"]]
+    uses_model = args.mode in ("vlm", "hybrid")
+    model, provider = None, None
+    if uses_model:
+        model, provider = (MODEL_NAME, VLM_PROVIDER) if args.backend == "cloud" \
+            else ("qwen_vqa_server (local)", "local")
     return {
         "mode": args.mode,
-        "model": MODEL_NAME if args.mode in ("vlm", "hybrid") else None,
-        "provider": VLM_PROVIDER if args.mode in ("vlm", "hybrid") else None,
+        "backend": args.backend if uses_model else None,
+        "model": model,
+        "provider": provider,
         "views": args.views,
         # The map contains the answer this often: the hard ceiling on everything below.
         "found_rate": round(len(found) / n, 4),
@@ -294,6 +307,23 @@ def cat2_extras(results: list[dict], args) -> dict[str, Any]:
         "per_relation": per_relation(results),
         "cache": args.cache,
     }
+
+
+def build_backend(args):
+    """No model call at all for naive/solver. vlm/hybrid default to cloud; --backend local
+    answers over the resident qwen_vqa_server instead of the ROS graph a scored sweep would
+    use, via a client that holds nothing but the /qwen_vqa topics open.
+
+    Returns (backend, vqa_client); vqa_client is only set for --backend local and must be
+    closed by the caller.
+    """
+    if args.mode not in ("vlm", "hybrid"):
+        return None, None
+    if args.backend == "local":
+        from captioner.vlm_backends.qwen_ros_client import LocalVqaClient
+        vqa_client = LocalVqaClient(log=log)
+        return make_backend("local", ask_vqa=vqa_client.ask_vqa, log=log), vqa_client
+    return make_backend("cloud", log=log), None
 
 
 def main(argv: Optional[list[str]] = None) -> None:
@@ -318,9 +348,7 @@ def main(argv: Optional[list[str]] = None) -> None:
         sys.exit(1)
     index = load_index(cache_path)
 
-    # Cloud only, and only when a mode actually asks a model: the local Qwen answers over
-    # ROS topics, which is the graph this script exists to avoid.
-    backend = make_backend("cloud", log=log) if args.mode in ("vlm", "hybrid") else None
+    backend, vqa_client = build_backend(args)
     log(f"{len(questions)} question(s), mode={args.mode}"
         + (f", backend {backend.name}" if backend else ""))
 
@@ -339,6 +367,9 @@ def main(argv: Optional[list[str]] = None) -> None:
     except KeyboardInterrupt:
         interrupted = True
         log("interrupted — writing the partial report", err=True)
+    finally:
+        if vqa_client is not None:
+            vqa_client.close()
 
     if results:
         write_report(report_path, results, cat2_extras(results, args))

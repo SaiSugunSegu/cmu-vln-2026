@@ -489,10 +489,13 @@ cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm"
 # Every row carries ceiling_score -- twice the best IoU reachable against the cached boxes --
 # so one run says whether a low score is selection or perception. Give a separate report=
 # when A/B-ing two modes, or the second run overwrites the first.
+# backend only matters for mode=vlm/hybrid (naive/solver never call a model): cloud is the
+# default; backend=local answers over the resident Qwen server instead, so `just vqa-up`
+# must already be running.
 [group('eval')]
 [doc('Score category-2 object selection over the cached maps (no SAM, no bag)')]
-bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}}"
+bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json" backend="cloud":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}} --backend {{backend}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3
