@@ -24,7 +24,7 @@ from std_msgs.msg import String
 
 from sam_mapper.detections import PromptTable, encode_instance_id, to_detections
 from sam_mapper.node_base import load_config, resolve_config_path
-from sam_mapper.sam3_backend import Sam3Backend
+from sam_mapper.sam3_backend import Sam3Backend, make_backend
 from sam_mapper.tools.dump_frames import open_reader
 
 INSTANCE_MAP_TOPIC = "/sam3/instance_map"
@@ -102,6 +102,9 @@ def companion_paths(bags_dir: str, scene: str, variant: str | None = None) -> tu
 
 
 def load_backend(args) -> tuple[Sam3Backend, dict]:
+    # Return type stays Sam3Backend for the common case; make_backend() below may hand
+    # back a Sam31Backend instead (backend: native_sam31), which implements the same
+    # set_prompts/reset/release/process_frame interface used everywhere below.
     """Load SAM 3 ONCE, for however many scenes follow.
 
     A `--scene all` sweep used to construct a Sam3Backend per scene, reloading 1797 weight
@@ -111,9 +114,14 @@ def load_backend(args) -> tuple[Sam3Backend, dict]:
 
     Prompts are per-scene, but `set_prompts` already resets the video session, so one
     model serves every scene with no state carried across.
+
+    Goes through `make_backend()` (not a direct `Sam3Backend(...)` call) so `sam3.backend:
+    native_sam31` in the config actually takes effect here — measured 1.65x faster than
+    hf_sam3 (sam3_backend.py). This recorder had bypassed that switch entirely: every
+    `map3d-record` run paid the slower backend regardless of the yaml.
     """
     config = load_config(resolve_config_path(args.config), required_keys=("sam3",))
-    backend = Sam3Backend(config["sam3"], log=lambda m: print(f"  [sam3] {m}", flush=True))
+    backend = make_backend(config["sam3"], log=lambda m: print(f"  [sam3] {m}", flush=True))
     return backend, config
 
 

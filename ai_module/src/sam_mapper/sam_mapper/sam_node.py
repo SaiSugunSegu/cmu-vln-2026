@@ -279,6 +279,11 @@ class SamNode(WorkerNodeMixin, Node):
                 self._nack_prompts(f'{type(err).__name__}: {err}')
                 return
 
+        if previous_collector is not None and previous_collector is not self.best_view_collector:
+            # Orphaned by the swap above. Off-thread: draining its write queue can take a
+            # moment, and this callback's ack is what the eval harness is waiting on.
+            threading.Thread(target=previous_collector.close, daemon=True).start()
+
         ack = {
             "ok": True,
             "error": None,
@@ -518,12 +523,27 @@ class SamNode(WorkerNodeMixin, Node):
         """Last chance to draw the overlays: `just run-sam` on a bag that never loops and
         never sees /pipeline/explore_done gets them here and nowhere else.
 
-        Inline, no wait — run_node() allows the worker 2 s to join, and obj_map.json has
-        either landed by now or is not coming.
+        Inline, no wait for finalize() itself — run_node() allows the worker 2 s to join, and
+        obj_map.json has either landed by now or is not coming. The collector's own writer
+        thread gets a short, bounded drain first: without it, a crop still queued from the
+        final processed frame could be lost on exit, which is exactly the case the per-flush
+        design exists to survive.
         """
+        # Catches KeyboardInterrupt too, not just Exception: a second SIGINT (or the first
+        # one, delivered late — rclpy's own signal handling can let executor.spin() return
+        # before Python's pending-signal check fires) can raise KeyboardInterrupt at any
+        # bytecode boundary here, including inside cv2 calls in finalize()'s overlay
+        # rendering — reproduced live, mid-shutdown, on an otherwise clean single Ctrl-C.
+        # _worker_loop already treats a SIGINT mid-frame as a normal shutdown, not a frame
+        # error; teardown deserves the same treatment, or the eval harness sees a crash.
+        if self.best_view_collector is not None:
+            try:
+                self.best_view_collector.close(timeout=2.0)
+            except (Exception, KeyboardInterrupt):  # noqa: BLE001 — see above
+                pass
         try:
             self._finalize_best_views(wait_s=0.0)
-        except Exception:  # noqa: BLE001 — an exception here reads as a crashed node to
+        except (Exception, KeyboardInterrupt):  # noqa: BLE001 — see above
             pass           # the eval harness; teardown must stay clean
         super().destroy_node()
 

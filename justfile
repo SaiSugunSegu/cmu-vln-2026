@@ -443,17 +443,28 @@ eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" bac
 
 # Phase 1 of the two-phase VLM comparison: eval-cat1 minus the counting call, so it
 # costs one cheap text-only extraction per question instead of a 3-image one.
-# Hours for all 15 scenes -- run it in tmux. Accuracy in the report it writes is
-# meaningless (every prediction is a placeholder); the report is a cache index.
 # target_source=vlm is the point: the model picks the SAM prompts, as it must on a
 # scored run where there is no ground truth to hand it.
 # Resumable: re-running keeps every question whose crops are already on disk, so an
 # interruption costs one question rather than the whole sweep. To force a full rebuild,
 # delete the cache= report first.
+# SAM 3 + the VQA server + the reasoner are launched ONCE for the whole sweep, not once
+# per question: crops_only never answers, so there is nothing for cross-question state
+# to bias, and sam_node/map_node already support re-arming in place (see their
+# /sam3/set_prompts handling) -- unlike eval-cat1, which must relaunch per question for
+# an honest scored time budget. Software/scheduling, not GPU-specific: helps the same
+# way on the 4090 deployment target. See scripts/eval/cache_bag_bench.py for the driver.
+# speed=0.1: measured live (sam_node's own `frame N: ... | dropped D/I` log), speed is
+# bounded by SAM3's own per-frame throughput against the bag's native camera rate
+# (3.5-7.4 Hz across scenes) -- pushing it up when the camera rate does not change just
+# trades a shorter replay for dropped frames. On an idle H200 with a 3-prompt question,
+# 0.15 held with zero steady-state drops on the busiest scene (arabic_room, 7.4 Hz)
+# while 0.3 did not (backlog grew without bound); re-run that check on your own
+# GPU/scenes before raising it, especially on the slower 4090.
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
 cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/cache_bag_bench.py --category 1 --scene {{scene}} --limit {{limit}} --speed {{speed}} --backend {{backend}} --target-source {{target_source}} --cache {{cache}} --resume"
 
 # Phase 2: answer-only replay over those crops. No TARE, no SAM, no bag -- minutes per
 # model instead of hours, and every model sees byte-identical images, which is what
@@ -470,15 +481,19 @@ cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm"
 bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/cat1_bench_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat1_bench --cache {{cache}} --views {{views}} --scene {{scene}} --limit {{limit}} --report {{report}}"
 
-# The category-2 half of the same two-phase split, and the same warning: 122 questions at
-# roughly 2.5 minutes each is about 5.5 hours, so run it in tmux. Resumable question by
-# question. What it caches is the 3D map as much as the crops -- a reference question is
-# answered by choosing one entry of obj_map.json, so a run whose map never landed is a hole
-# in the cache and gets replayed rather than counted as done.
+# The category-2 half of the same two-phase split. Resumable question by question. What it
+# caches is the 3D map as much as the crops -- a reference question is answered by choosing
+# one entry of obj_map.json, so a run whose map never landed is a hole in the cache and gets
+# replayed rather than counted as done.
+# SAM 3 + map_node + the VQA server + the object-reference reasoner all stay resident for
+# the whole sweep; only the bag replay and a session/map reset repeat per question. See
+# cache-cat1's comment above for why this is safe for a crops_only cache (unlike the scored
+# eval-cat2), why it is not GPU-specific, and why speed is bounded by measured frame drops,
+# not by relaunch cost.
 [group('eval')]
 [doc('Cache maps + crops for every category-2 question, without answering')]
-cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/cat2_cache.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" mode="hybrid" cache="/data/runs/cat2_cache.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/cache_bag_bench.py --category 2 --scene {{scene}} --limit {{limit}} --speed {{speed}} --backend {{backend}} --target-source {{target_source}} --cat2-mode {{mode}} --cache {{cache}} --resume"
 
 # Phase 2 for category 2, the same shape as bench-cat1: replay the selection step over
 # those cached maps and crops. Seconds per mode for solver and naive, which ask no model,

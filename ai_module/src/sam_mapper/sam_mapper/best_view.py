@@ -13,7 +13,7 @@ first, so several objects beat a sharper shot of fewer. Only objects inside the 
 cluster count as covered.
 
 Output is written through on every change, so killing the node mid-bag still leaves a
-correct selection on disk.
+correct selection on disk (call `close()` first — see below).
 
 The overlay copies are the exception: `finalize()` draws them once at the end of the run,
 because their labels carry map_node's object ids and world merges keep renaming those. That
@@ -22,6 +22,16 @@ keyed `3`, no manifest lookup in between.
 
 `save_full_views` mirrors the whole output under `full/`, uncropped: same filenames, same
 overlays, same captions, the difference being only how much room is in shot.
+
+Disk writes from `_flush()` (up to top_n x len(geometries) PNGs, every time the selection
+changes — i.e. almost every frame while new objects are still appearing) run on a dedicated
+background thread, not the caller's. Measured live on an H200 sim bag: with these on the
+SAM3 worker thread, `cv2.imwrite()` was ~48% of processed-frame time during the discovery
+phase, because the GIL serialises it against the *next* frame's `backend.process_frame()`
+call, which is otherwise the same thread's only other job. One writer thread, not a pool,
+so the queue preserves submission order — required so a later flush's stale-rank cleanup
+can never run before, and get undone by, an earlier flush's still-queued write to the same
+path (see `_enqueue_cleanup`).
 """
 from __future__ import annotations
 
@@ -30,8 +40,11 @@ import itertools
 import json
 import math
 import os
+import queue
 import re
+import threading
 import time
+import traceback
 from dataclasses import dataclass
 
 import cv2
@@ -214,8 +227,49 @@ class BestViewCollector:
         # rendered": None is itself a valid lookup, meaning no 3D map at all.
         self._rendered_with: object = False
 
+        # `_flush()`'s raw-crop writes run here instead of on the caller's thread — see
+        # module docstring. Jobs are plain closures so one queue can carry both writes and
+        # the stale-rank cleanup that must run after them, in the same order `_flush()`
+        # used to run both inline.
+        self._write_queue: queue.Queue = queue.Queue()
+        self._writer_thread = threading.Thread(
+            target=self._writer_loop, name="best-view-writer", daemon=True)
+        self._writer_thread.start()
+
         self.log(f"best-view collector: targets={sorted(self.targets)} "
                  f"top_n={config.top_n} -> {self.run_dir}")
+
+    # -- background disk I/O ---------------------------------------------------
+
+    def _writer_loop(self) -> None:
+        while True:
+            job = self._write_queue.get()
+            if job is None:      # close()'s sentinel
+                return
+            try:
+                job()
+            except Exception:  # noqa: BLE001 — one bad write must not kill the writer thread
+                self.log(f"best-view collector: write job raised:\n{traceback.format_exc()}")
+
+    def _enqueue_write(self, path: str, image: np.ndarray) -> None:
+        def _write():
+            if not cv2.imwrite(path, image):
+                self.log(f"best-view collector: failed to write {path}")
+        self._write_queue.put(_write)
+
+    def close(self, timeout: float = 5.0) -> None:
+        """Drain pending writes and stop the background thread.
+
+        Call before the process exits (sam_node.destroy_node does) or before dropping a
+        collector replaced by /sam3/set_prompts — otherwise a write queued just before
+        that point could be silently lost, which is exactly the "kill mid-bag" case the
+        per-flush design promises to survive.
+        """
+        self._write_queue.put(None)
+        self._writer_thread.join(timeout=timeout)
+        if self._writer_thread.is_alive():
+            self.log(f"best-view collector: writer thread did not drain within {timeout:.0f}s "
+                     f"— some crops in {self.run_dir} may be stale or missing")
 
     def _clear_stale_crops(self) -> None:
         """Empty a reused run directory before writing into it.
@@ -473,31 +527,44 @@ class BestViewCollector:
         self._flush(selected)
 
     def _flush(self, selected: list[tuple]) -> None:
-        written: list[tuple] = []   # (rank, cand, new_count) -- only images on disk
-        for rank, (cand, new_count) in enumerate(selected, start=1):
+        # Writes (and the stale-rank cleanup below) are enqueued for the background writer
+        # thread, not done inline — see module docstring. `written` is therefore optimistic:
+        # every selected rank counts immediately rather than after its write confirms, since
+        # that confirmation no longer happens on this thread. A real write failure still gets
+        # a loud log line from the writer thread (`_enqueue_write`), just after the fact
+        # instead of gating the manifest — local-disk `cv2.imwrite` failures here are an
+        # operational fault (disk full, bad permissions), not a normal-path outcome worth
+        # serialising every frame's writes to detect synchronously.
+        written = [(rank, cand, new_count)
+                  for rank, (cand, new_count) in enumerate(selected, start=1)]
+        for rank, cand, _ in written:
             name = f"best_rank{rank}_{self._target_tag}.png"
-            # A list, not all(...): short-circuiting would skip the remaining geometries and
-            # leave the rank half written. A rank counts only if every geometry landed.
-            ok = [cv2.imwrite(os.path.join(self.run_dir, geometry, name), image)
-                  for geometry, image, _ in self._views(cand)]
-            if not all(ok):
-                self.log(f"best-view collector: failed to write {name}")
-                continue
-            written.append((rank, cand, new_count))
+            for geometry, image, _ in self._views(cand):
+                self._enqueue_write(os.path.join(self.run_dir, geometry, name), image)
 
         # No overlays here: they carry map ids, and obj_map.json is still moving while frames
-        # arrive — see finalize(). Raw crops stay per-flush, so a kill mid-bag loses nothing.
+        # arrive — see finalize(). Raw crops stay per-flush, so a kill mid-bag loses nothing
+        # as long as close() is called before the process exits.
         self._written = [(rank, cand) for rank, cand, _ in written]
         self._rendered_with = False
 
-        # The pool can shrink (two ids' bests can converge on one cluster), so drop any
-        # file past the current selection rather than leaving a stale rank behind.
-        for geometry in self._geometries:
-            for stale in glob.glob(os.path.join(self.run_dir, geometry,
-                                                f"best_rank*_{self._target_tag}.png")):
-                rank = int(os.path.basename(stale).split("_")[1].removeprefix("rank"))
-                if rank > len(selected):
-                    os.remove(stale)
+        # The pool can shrink (two ids' bests can converge on one cluster), so drop any file
+        # past the current selection rather than leaving a stale rank behind. Enqueued (not
+        # run inline) so it executes strictly after this flush's own writes above, on the same
+        # single-consumer queue — otherwise it could race ahead of a still-queued write from
+        # THIS flush for a rank that is also being cleaned up by a later one, and undo it.
+        geometries, target_tag, run_dir, n_selected = (
+            self._geometries, self._target_tag, self.run_dir, len(selected))
+
+        def _cleanup_stale():
+            for geometry in geometries:
+                for stale in glob.glob(os.path.join(run_dir, geometry,
+                                                    f"best_rank*_{target_tag}.png")):
+                    rank = int(os.path.basename(stale).split("_")[1].removeprefix("rank"))
+                    if rank > n_selected:
+                        os.remove(stale)
+
+        self._write_queue.put(_cleanup_stale)
 
         def _crop_relative_bbox(cand: Candidate, tid: int) -> list:
             rx0, ry0, _, _ = cand.roi
@@ -512,7 +579,8 @@ class BestViewCollector:
                     return str(label)
             return ""
 
-        # From `written`, so the manifest never names a file that failed to write.
+        # From `written`, so the manifest always matches this flush's selection — the file
+        # itself lands asynchronously (see above), a write failure is reported separately.
         manifest = {
             "targets": sorted(self.targets),
             "top_n": self.config.top_n,

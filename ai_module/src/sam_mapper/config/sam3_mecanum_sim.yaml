@@ -152,7 +152,20 @@ mapping:
 runtime:
   # Read by both nodes. MultiThreadedExecutor defaults to cpu_count() threads, which all
   # spin holding the GIL; keep it lean (the real fix was the process split, M2 3.6-split).
-  executor_threads: 16
+  # sam_node itself only ever registers 4 callback entities (3 subscriptions + 1 heartbeat
+  # timer, each its own MutuallyExclusiveCallbackGroup) — the heavy per-frame work runs on
+  # a separate `threading.Thread`, not the executor, so more than ~4 executor threads can
+  # never do useful work and only add GIL contention against that worker thread. This used
+  # to say 16, i.e. "less than cpu_count() on a big box" but never tuned further. Measured
+  # live on an H200 (sam3_mecanum_sim.yaml, hf_sam3 backend, arabic_room bag at native
+  # speed, runtime.profile: true): dropping this to 2 — matching the already-tuned
+  # sam3_mecanum_real.yaml — cut median per-frame wall time from ~100ms to ~74ms (9.5 Hz ->
+  # 13.5 Hz) and the profiler's "residual (off-seam)" from 25-32% down to ~7%, with the GPU
+  # measured idle for whole seconds at a time either way (nvidia-smi dmon), ruling out GPU
+  # contention/throttling as the cause — i.e. this was CPU-side GIL contention from mostly-
+  # idle executor threads, not a GPU cost. Software-only, benefits any GPU including the
+  # 4090 deployment target.
+  executor_threads: 2
   publish_annotated: false
   log_every_n_frames: 5
   profile: false                    # per-stage breakdown in BOTH node logs, 
