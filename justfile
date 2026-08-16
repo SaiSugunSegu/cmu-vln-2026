@@ -11,10 +11,10 @@
 #   scored eval   just eval-cat1 arabic_room 2 gt 0.1 cloud   # one command, per-question relaunch
 #                 just eval-cat2 chinese_room 2               # the same for object reference
 #   free dev loop just vqa-up, then the same with `local` instead of `cloud`
-#   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
-#                 just cache-cat2                then just bench-cat2  (per selection mode)
+#   compare VLMs  just cache-cat1   (once, hours) then just cache-bench-cat1  (per model, minutes)
+#                 just cache-cat2                then just cache-bench-cat2  (per selection mode)
 #   live sim      just sim          | just vqa-up && just ai | just ask "How many …"
-#   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
+#   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just bag-bench-cat1
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
 # Container path (compose_dev mounts host ai_module here).
@@ -385,7 +385,7 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
     "
 
 # ---------- Category-1 bag bench (SAM best-views + Qwen VQA) ---------------
-# Terminals: just vqa-up | just run-sam | just cat1-reasoner | just cat1-bag-bench
+# Terminals: just vqa-up | just run-sam | just cat1-reasoner | just bag-bench-cat1
 # Bench waits for /sam3/status=ready before (and after) prompts, then starts the bag.
 #
 # backend=cloud answers with a hosted model over its OpenAI-compatible endpoint and is
@@ -419,7 +419,7 @@ cat1-reasoner backend="auto" views="3":
 # the second sweep overwrites the first.
 # Crops land in data/crops/<report name>/<scene>/<question id>-<question>/ and the report
 # records the directory, so any sweep's report doubles as the cache index that
-# `just bench-cat1` replays from -- and a second sweep with its own report= keeps its
+# `just cache-bench-cat1` replays from -- and a second sweep with its own report= keeps its
 # own crops rather than overwriting the first one's question by question.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
@@ -435,7 +435,7 @@ eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" re
 # mode= is how the reasoner chooses: hybrid (ships: solver, model only where the geometry
 # is not decisive), solver (no model call), vlm, naive. See cat2_utils.select_object.
 # A row records the score, not what was reachable: whether a zero is selection or perception
-# takes the run's obj_map.json against the answer's box. bench-cat2 carries that ceiling.
+# takes the run's obj_map.json against the answer's box. cache-bench-cat2 carries that ceiling.
 [group('eval')]
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
 eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" backend="auto" report="/data/runs/cat2_report.json":
@@ -443,22 +443,33 @@ eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" bac
 
 # Phase 1 of the two-phase VLM comparison: eval-cat1 minus the counting call, so it
 # costs one cheap text-only extraction per question instead of a 3-image one.
-# Hours for all 15 scenes -- run it in tmux. Accuracy in the report it writes is
-# meaningless (every prediction is a placeholder); the report is a cache index.
 # target_source=vlm is the point: the model picks the SAM prompts, as it must on a
 # scored run where there is no ground truth to hand it.
 # Resumable: re-running keeps every question whose crops are already on disk, so an
 # interruption costs one question rather than the whole sweep. To force a full rebuild,
 # delete the cache= report first.
+# SAM 3 + the VQA server + the reasoner are launched ONCE for the whole sweep, not once
+# per question: crops_only never answers, so there is nothing for cross-question state
+# to bias, and sam_node/map_node already support re-arming in place (see their
+# /sam3/set_prompts handling) -- unlike eval-cat1, which must relaunch per question for
+# an honest scored time budget. Software/scheduling, not GPU-specific: helps the same
+# way on the 4090 deployment target. See scripts/eval/cache_bag_bench.py for the driver.
+# speed=0.2: measured live (sam_node's own `frame N: ... | dropped D/I` log), speed is
+# bounded by SAM3's own per-frame throughput against the bag's native camera rate
+# (3.5-7.4 Hz across scenes) -- pushing it up when the camera rate does not change just
+# trades a shorter replay for dropped frames. On an idle H200 with a 3-prompt question,
+# 0.2 held with zero steady-state drops on the busiest scene (arabic_room, 7.4 Hz);
+# 0.25 crept and 0.5 dropped most frames. Re-run that check on your own GPU/scenes
+# before raising it, especially on the slower 4090.
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
-cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+cache-cat1 scene="all" limit="0" speed="0.2" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/cache_bag_bench.py --category 1 --scene {{scene}} --limit {{limit}} --speed {{speed}} --backend {{backend}} --target-source {{target_source}} --cache {{cache}} --resume"
 
 # Phase 2: answer-only replay over those crops. No TARE, no SAM, no bag -- minutes per
 # model instead of hours, and every model sees byte-identical images, which is what
 # makes the comparison about the model. cache= is any sweep's report, cache-cat1 or not.
-#   just bench-cat1 /data/runs/views_cache.json 3 all 0 /data/runs/bench_gemini.json
+#   just cache-bench-cat1 /data/runs/views_cache.json 3 all 0 /data/runs/bench_gemini.json
 # Which model answers comes from VLM_PROVIDER / VLM_MODEL in .env, so comparing two
 # providers is: edit .env, re-run with a different report=. The summary records which
 # model produced the numbers. Only the counting step is replayed -- a model that would
@@ -467,25 +478,29 @@ cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm"
 # and renaming the default would hide 14 scenes of them from the recipe that reads them.
 [group('eval')]
 [doc('Benchmark a VLM against the cached best views (no SAM, no bag)')]
-bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/cat1_bench_report.json":
+cache-bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/cat1_bench_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat1_bench --cache {{cache}} --views {{views}} --scene {{scene}} --limit {{limit}} --report {{report}}"
 
-# The category-2 half of the same two-phase split, and the same warning: 122 questions at
-# roughly 2.5 minutes each is about 5.5 hours, so run it in tmux. Resumable question by
-# question. What it caches is the 3D map as much as the crops -- a reference question is
-# answered by choosing one entry of obj_map.json, so a run whose map never landed is a hole
-# in the cache and gets replayed rather than counted as done.
+# The category-2 half of the same two-phase split. Resumable question by question. What it
+# caches is the 3D map as much as the crops -- a reference question is answered by choosing
+# one entry of obj_map.json, so a run whose map never landed is a hole in the cache and gets
+# replayed rather than counted as done.
+# SAM 3 + map_node + the VQA server + the object-reference reasoner all stay resident for
+# the whole sweep; only the bag replay and a session/map reset repeat per question. See
+# cache-cat1's comment above for why this is safe for a crops_only cache (unlike the scored
+# eval-cat2), why it is not GPU-specific, and why speed is bounded by measured frame drops,
+# not by relaunch cost.
 [group('eval')]
 [doc('Cache maps + crops for every category-2 question, without answering')]
-cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/cat2_cache.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+cache-cat2 scene="all" limit="0" speed="0.2" backend="cloud" target_source="vlm" mode="hybrid" cache="/data/runs/cat2_cache.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/cache_bag_bench.py --category 2 --scene {{scene}} --limit {{limit}} --speed {{speed}} --backend {{backend}} --target-source {{target_source}} --cat2-mode {{mode}} --cache {{cache}} --resume"
 
-# Phase 2 for category 2, the same shape as bench-cat1: replay the selection step over
+# Phase 2 for category 2, the same shape as cache-bench-cat1: replay the selection step over
 # those cached maps and crops. Seconds per mode for solver and naive, which ask no model,
 # so this is the loop a change to selection is measured in.
-#   just bench-cat2 hybrid    # what ships: solver, model only where the geometry is not decisive
-#   just bench-cat2 solver    # no model call at all
-#   just bench-cat2 naive     # the floor: largest instance of the named class
+#   just cache-bench-cat2 hybrid    # what ships: solver, model only where the geometry is not decisive
+#   just cache-bench-cat2 solver    # no model call at all
+#   just cache-bench-cat2 naive     # the floor: largest instance of the named class
 # Every row carries ceiling_score -- twice the best IoU reachable against the cached boxes --
 # so one run says whether a low score is selection or perception. Give a separate report=
 # when A/B-ing two modes, or the second run overwrites the first.
@@ -494,20 +509,22 @@ cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm"
 # must already be running.
 [group('eval')]
 [doc('Score category-2 object selection over the cached maps (no SAM, no bag)')]
-bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json" backend="cloud":
+cache-bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json" backend="cloud":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}} --backend {{backend}}"
 
-# Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
-#   just cat1-bag-bench arabic_room 3
-#   just cat1-bag-bench arabic_room 0 "Q01 Q02 Q03"
+# Requires vqa-up + run-sam + cat1-reasoner already running in other terminals. Named to
+# pair with cache-bench-cat1 (both score category-1 questions, cache-bench-cat1 against
+# already-cached crops, this one by driving the bag live -- "bag" vs "cache" is the axis).
+#   just bag-bench-cat1 arabic_room 3
+#   just bag-bench-cat1 arabic_room 0 "Q01 Q02 Q03"
 # `tag` suffixes the output dir. The bench does not start the reasoner, so nothing in the
 # results says which backend answered -- tag the run or an A/B overwrites its own baseline.
 [group('cat1')]
 [doc('Score category-1 questions against a recorded scene bag')]
-cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
+bag-bench-cat1 scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
     #!/usr/bin/env bash
     set -euo pipefail
-    # Support both `just cat1-bag-bench arabic_room 3` and key=value forms.
+    # Support both `just bag-bench-cat1 arabic_room 3` and key=value forms.
     scene="{{scene}}"
     limit="{{limit}}"
     ids="{{ids}}"

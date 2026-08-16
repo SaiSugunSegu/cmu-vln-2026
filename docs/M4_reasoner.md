@@ -44,7 +44,7 @@ fallback publishes the largest instance of the class the question names from the
 
 **Selection is not the bottleneck and tuning it further is not worth doing.** Selection
 accuracy is 1.0 on every question whose answer is reachable in the map, and the ceiling every
-`bench-cat2` row carries — twice the best IoU reachable against the cached boxes, whatever the
+`cache-bench-cat2` row carries — twice the best IoU reachable against the cached boxes, whatever the
 mode — averages 0.31/2. So reasoning owns 1.3 points of the 20 and perception owns 16.9. Per
 question the loss splits into 5 loose boxes, 3 answers whose instance was never mapped (all
 along one wall, and no class was missing from the map, so it reads as coverage rather than
@@ -107,7 +107,7 @@ between two bowls, and the 4B model lost it.
 
 Neither finding was visible from the report. `eval-cat2` rows carry the score but not the
 ceiling, so telling selection from perception meant reading `obj_map.json` by hand; the
-`bench-cat2` ceiling is per-cache, not per-run.
+`cache-bench-cat2` ceiling is per-cache, not per-run.
 
 ## Metrics (via M6)
 - Numerical exact-match %, object-ref IoU on 75 training questions (target ≥70% by W3)
@@ -140,5 +140,5 @@ ceiling, so telling selection from perception meant reading `obj_map.json` by ha
 | Date | Update |
 |---|---|
 | Jul 21 | Doc created |
-| Aug 12 | Category-2 path shipped in hybrid mode, with the `cache-cat2` / `bench-cat2` / `eval-cat2` recipes. Box refinement and centre-bias correction measured and rejected: perception holds the score on the cached bench. |
+| Aug 12 | Category-2 path shipped in hybrid mode, with the `cache-cat2` / `cache-bench-cat2` / `eval-cat2` recipes. Box refinement and centre-bias correction measured and rejected: perception holds the score on the cached bench. |
 | Aug 12 | First end-to-end `eval-cat2` run (chinese_room Q01-Q02, local Qwen3-VL-4B): the path answers, and both questions lose a reachable score to `rests_on` — 18 mm short on one, an unmappable anchor on the other. |
