@@ -33,8 +33,7 @@ def find_neighbouring_stamps(stamp_list, q):
 def interpolate_odom(odom_stack, odom_stamps, target):
     """Pose at exactly `target`, from the bracketing odom samples.
 
-    Linear for position/velocity, SLERP for orientation. Ported from semantic_mapper's
-    mapping_ros2_node.py:514-570.
+    Linear for position/velocity, SLERP for orientation. mapping_ros2_node.py:514-570.
 
     Returns (odom_dict, OK), or (None, reason) when the frame cannot be synced.
     Does not mutate odom_stack/odom_stamps — trimming is the caller's business.

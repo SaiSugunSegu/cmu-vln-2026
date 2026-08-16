@@ -5,7 +5,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 AI_MODULE="$( cd "$SCRIPT_DIR/../.." && pwd )"
 REPO_ROOT="$( cd "$AI_MODULE/.." && pwd )"
 AUTONOMY="$REPO_ROOT/autonomy_stack_mecanum_wheel_platform"
-SEMANTIC_MAPPER="$AI_MODULE/src/semantic_mapper"
 
 source /opt/ros/humble/setup.bash
 source "$AUTONOMY/install/setup.bash"
@@ -22,6 +21,3 @@ sleep 1
 
 ros2 run language_planner language_planner_node --platform mecanum &
 sleep 5
-
-cd "$SEMANTIC_MAPPER"
-python -m semantic_mapping.mapping_ros2_node --config config/mapping_mecanum_sim.yaml --captioner_batch_size 16 --captioning_model qwen3vl

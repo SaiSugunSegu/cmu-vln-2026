@@ -2,9 +2,7 @@
 <package format="3">
   <name>sam_mapper</name>
   <version>0.1.0</version>
-  <description>3D open-vocabulary instance mapping driven by SAM 3 / SAM 3.1. Replaces the
-  Grounding DINO + spaCy + ByteTrack + SAM2 front-end of semantic_mapper with a single
-  concept-prompted model, and reuses semantic_mapping's 3D back-end unchanged.</description>
+  <description>SAM mapper.</description>
   <maintainer email="team@example.com">CMU-VLN Team</maintainer>
   <license>MIT</license>
 

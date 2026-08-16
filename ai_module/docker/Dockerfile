@@ -177,15 +177,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
  && python3 -m spacy download en_core_web_sm
 USER docker
 
-# semantic_mapper is a plain pip package (setup.cfg only, no package.xml/setup.py), so
-# it is pip-installed rather than colcon-built. --no-deps: nothing in external/ is
-# installed — Grounded-SAM-2 is unused, and ByteTrack is covered by the shim below.
-COPY src/semantic_mapper /home/docker/ai_module/src/semantic_mapper
-USER root
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --no-deps -e /home/docker/ai_module/src/semantic_mapper
-USER docker
-
 # Copy and compile active dev packages (takes <5s and updates instantly on edit)
 COPY src/dummy_vlm /home/docker/ai_module/src/dummy_vlm
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm

@@ -254,8 +254,7 @@ someone fixes a defect without removing the marker, so the suite is a live check
 | `test_single_object.py` | 13 | box fitting, derived dimension priors; **1 xfail** |
 | `test_object_mapper.py` | 19 | lifecycle, merging, B7 range-gap, D8 co-visibility; **2 xfail** |
 
-Named `test_projection.py`, not `test_cloud_image_fusion.py`, because a file of that
-basename exists in the vendored `semantic_mapper/tests/` and pytest aborts on same-named
+Named `test_projection.py`, not `test_cloud_image_fusion.py`, pytest aborts on same-named
 modules in directories without `__init__.py`.
 
 `test_single_object.py` and `test_object_mapper.py` need `open3d` and `importorskip` on the

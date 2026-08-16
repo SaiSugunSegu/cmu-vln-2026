@@ -64,20 +64,6 @@ hf-fetch models="":
     docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "{{capt_env}} && fetch_weights {{models}}"
 
-# Run this after `up-dev`, after pulling, or whenever a launch reports "package '<name>'
-# not found": with compose_dev bind-mounting the host tree, install/ is whatever your last
-# --packages-select left behind, so a package present in src/ can be missing from install/.
-# src/semantic_mapper is a plain pyproject package, not ament — colcon skips it, as intended.
-# setuptools<80 (ament_python --symlink-install needs --editable) is pinned in
-# docker/requirements_captioner.txt and baked into the image — no runtime install.
-[group('setup')]
-[doc('colcon build the ai_module workspace (or `just build sam_mapper` for one pkg)')]
-build pkgs="":
-    docker exec iros2026_ai_module bash -lc "\
-      source /opt/ros/jazzy/setup.bash && \
-      cd {{ai_src}} && \
-      colcon build --symlink-install {{ if pkgs != '' { '--packages-select ' + pkgs } else { '' } }}"
-
 # Runs in the container because sam_mapper/smart_vlm tests need cv2 + rclpy;
 # the captioner/ ones are stdlib-only and also run on the host:
 #   python3 -m pytest ai_module/src/captioner/tests ai_module/src/smart_vlm/tests -q

@@ -24,9 +24,7 @@ Design notes (full write-up in docs/M2_perception.md 3.6):
   * The instance-map/detections pair is matched by stamp — /sam3/instance_map's real
     header.stamp against the stamp embedded in /sam3/detections' JSON (std_msgs/String has
     no header of its own). Both are published back-to-back by sam_node from the same call,
-    so they always share a stamp.
-  * The 3D stage (object_mapper.py) is sam_mapper's own, trimmed port of semantic_mapping's
-    ObjMapper (docs/M2_perception.md 3.6-split) — no more semantic_mapping dependency at all.
+    so they always share a stamp..
 """
 from __future__ import annotations
 

@@ -1,7 +1,6 @@
 """Marker/PointCloud2 builders for /obj_boxes, /obj_labels, /obj_points.
 
-Owned copy of the 5 functions ObjMapper.to_ros2_msgs needs from
-semantic_mapping/tools/ros2_bag_utils.py (docs/M2_perception.md 3.6-split) — that module imports
+module imports
 rosbag2_py at module scope for bag-writing helpers we don't use, so porting just these avoids it.
 """
 from __future__ import annotations

@@ -1,7 +1,6 @@
 """3D instance mapper: fuses per-frame 2D detections + lidar into persistent tracked objects.
 
-Owned copy of semantic_mapping's ObjMapper (docs/M2_perception.md 3.6-split), trimmed to
-what sam_mapper calls. Every threshold is configurable — see mapping_config.MappingConfig
+sam_mapper calls. Every threshold is configurable — see mapping_config.MappingConfig
 and the `mapping:` block of the node yaml.
 
 Kept dormant: the `captioner` param and its branches. map_node passes captioner=None."""
@@ -396,7 +395,6 @@ class ObjMapper:
                             # anyway (probably one object split across ids); high IoU + co-visible ->
                             # exchange only the ambiguous overlapping voxels via
                             # single_obj.pop()/target_obj.add() rather than merging whole objects.
-                            # Needs pytorch3d installed to bring back — see semantic_mapping's
                             # semantic_map.py (pre-split) for the original, fuller version.
 
                             if merged_obj:
