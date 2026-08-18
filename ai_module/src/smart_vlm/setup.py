@@ -30,6 +30,7 @@ setup(
             'eval_orchestrator = smart_vlm.eval_orchestrator:main',
             'cat1_bench = smart_vlm.cat1_bench:main',
             'cat2_bench = smart_vlm.cat2_bench:main',
+            'extract_bench = smart_vlm.extract_bench:main',
             'wait_ready = smart_vlm.wait_ready:main',
         ],
     },

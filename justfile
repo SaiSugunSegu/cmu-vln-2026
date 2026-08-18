@@ -13,6 +13,7 @@
 #   free dev loop just vqa-up, then the same with `local` instead of `cloud`
 #   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
+#   extract nouns just bench-extract [--backend local]  # text-only SAM prompts vs target_objects
 #   live sim      just sim          | just ai | just ask "How many …"
 #   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
 
@@ -511,6 +512,23 @@ cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm"
 [doc('Score category-2 object selection over the cached maps (no SAM, no bag)')]
 bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}}"
+
+# Text-only extract call the live reasoners use to arm SAM, scored against each
+# question's target_objects. `flags` go straight to extract_bench (see --help).
+#   just bench-extract
+#   just bench-extract --backend local
+#   just bench-extract --backend local --category 1 --scene arabic_room --limit 2
+#   just bench-extract --backend cloud --report /data/runs/extract_qwen.json
+# backend defaults to cloud (VLM_PROVIDER / VLM_MODEL_LITE in .env). --backend local
+# answers over the resident Qwen server, so `just vqa-up` must already be running.
+# Give a separate --report when A/B-ing two backends.
+[group('eval')]
+[doc('Score target extraction against benchmark target_objects (text only, no SAM)')]
+bench-extract *flags:
+    docker exec -it iros2026_ai_module bash -lc \
+      "source {{ai_src}}/install/setup.bash && \
+       export PYTHONPATH={{ai_src}}/src/smart_vlm:{{ai_src}}/src/captioner:{{ai_src}}/src/language_planner:\$PYTHONPATH && \
+       python3 -m smart_vlm.extract_bench {{flags}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3

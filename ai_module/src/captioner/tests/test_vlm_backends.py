@@ -207,6 +207,18 @@ def test_parses_target_list():
     assert result.targets == ["glass", "arabic jar"]
 
 
+def test_parses_bare_target_list():
+    """language_planner's extract prompt asks for a bracket list, not a JSON object."""
+    result = parse_json_object('["pillow with black stripes", "couch"]', TargetList)
+    assert result.targets == ["pillow with black stripes", "couch"]
+
+
+def test_parses_bare_target_list_with_preamble():
+    result = parse_json_object(
+        'Sure, here you go:\n["red box", "chair", "desk"]\n', TargetList)
+    assert result.targets == ["red box", "chair", "desk"]
+
+
 def test_rejects_target_list_given_a_bare_string():
     with pytest.raises(VLMError):
         parse_json_object('{"targets": "glass"}', TargetList)

@@ -3,10 +3,11 @@
 captioner.text_utils and captioner.paths are stdlib-only for exactly this reason, so
 importing them here does not drag torch or rclpy into the unit tests.
 
-The two prompts live here rather than in the node because `cat1_bench` replays the
+The answering prompt lives here rather than in the node because `cat1_bench` replays the
 answering step offline against saved crops. A benchmark that measured a prompt slightly
 different from the live one would be worse than no benchmark at all, so both paths read
-the same strings and pick their views with the same function.
+the same string and pick their views with the same function. Target extraction uses the
+language planner's `get_object_extraction_prompt()` for the same reason.
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from captioner.paths import secure_path
 # implementation with the VQA server: two of them drifted apart before (one
 # stripped thousands separators, the other did not).
 from captioner.text_utils import extract_integer
+from language_planner.prompts.object_extraction import get_object_extraction_prompt
 
 __all__ = [
     "ANSWER_SYSTEM",
@@ -28,12 +30,9 @@ __all__ = [
     "select_context_views",
 ]
 
-EXTRACT_SYSTEM = (
-    "You list the objects a detector should look for in order to answer a counting "
-    "question. Include EVERY referenced object: the things being counted and any "
-    "landmark they are described relative to, such as a jar or a table. Bare nouns "
-    "only, no colours and no other adjectives."
-)
+# Same object-extraction system prompt the language planner uses for /challenge_question
+# target nouns. Shared so the reasoner and the planner cannot drift apart.
+EXTRACT_SYSTEM = get_object_extraction_prompt()
 
 # Several views of one room, said explicitly. The local server prepends its own
 # version of this for multi-image requests; the cloud backend has no such wrapper,
