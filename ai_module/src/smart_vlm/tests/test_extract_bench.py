@@ -1,8 +1,11 @@
 """Pure-python tests for extract_bench scoring (no ROS / GPU / network)."""
 from __future__ import annotations
 
+import json
+
 from smart_vlm.extract_bench import (
     categories_from_arg,
+    load_questions,
     noun_covers,
     parse_args,
     score_extraction,
@@ -57,17 +60,43 @@ def test_score_extraction_empty_gt_is_full_coverage():
 
 
 def test_categories_from_arg():
-    assert categories_from_arg("all") == (1, 2)
+    assert categories_from_arg("all") == (1, 2, 3)
     assert categories_from_arg("1") == (1,)
     assert categories_from_arg("2") == (2,)
+    assert categories_from_arg("3") == (3,)
 
 
-def test_parse_args_backend_defaults_to_cloud():
+def test_parse_args_backend_defaults_to_local():
     args = parse_args([])
-    assert args.backend == "cloud"
-
-
-def test_parse_args_backend_local():
-    args = parse_args(["--backend", "local", "--category", "1"])
     assert args.backend == "local"
+
+
+def test_parse_args_backend_cloud():
+    args = parse_args(["--backend", "cloud", "--category", "1"])
+    assert args.backend == "cloud"
     assert args.category == "1"
+
+
+def test_parse_args_category_3():
+    args = parse_args(["--category", "3"])
+    assert args.category == "3"
+
+
+def test_load_questions_reads_cat3_target_objects(tmp_path):
+    """Category 3 uses the same target_objects field as cat1/cat2."""
+    qa = {
+        "questions": [{
+            "id": "Q04",
+            "question": "Go near the stool under the picture.",
+            "target_objects": ["stool", "picture"],
+        }]
+    }
+    folder = tmp_path / "arabic_room" / "category_3"
+    folder.mkdir(parents=True)
+    (folder / "arabic_room_category3_qa.json").write_text(json.dumps(qa))
+    rows = load_questions(tmp_path, (3,), "arabic_room", 0)
+    assert len(rows) == 1
+    cat, scene, entry = rows[0]
+    assert cat == 3
+    assert scene == "arabic_room"
+    assert entry["target_objects"] == ["stool", "picture"]

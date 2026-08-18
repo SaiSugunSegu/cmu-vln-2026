@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """Score target extraction against each question's `target_objects`, text only.
 
-Cat1 and cat2 arm SAM with nouns taken from the question. This replays that extract
-call — the same `EXTRACT_SYSTEM` and raw-question user turn the live reasoners use —
-against every QA file, and compares the cleaned list to the benchmark's
-`target_objects`. No bag, no SAM, no crops: one cheap `lite=True` call per question.
+Cat1, cat2, and cat3 arm SAM with nouns taken from the question. This replays that extract
+call — the same `EXTRACT_SYSTEM` and raw-question user turn the live reasoners (and the
+language planner) use — against every QA file, and compares the cleaned list to the
+benchmark's `target_objects`. No bag, no SAM, no crops: one cheap `lite=True` call per
+question.
 
     ros2 run smart_vlm extract_bench --category all --report /data/runs/extract_bench.json
-    ros2 run smart_vlm extract_bench --backend local --category 1 --scene arabic_room --limit 2
+    ros2 run smart_vlm extract_bench --backend cloud --category 3 --scene arabic_room --limit 2
 
 `exact` / `correct` is set equality after `clean_targets`. `coverage` is the fraction
 of GT nouns the model still named, allowing "trash can" to cover "black trash can"
 (the extract prompt drops color and pattern). `precision` is the fraction of predicted
 nouns that cover at least one GT entry.
 
-`--backend` defaults to cloud (VLM_PROVIDER / VLM_MODEL_LITE in .env; extract is a
-`lite=True` call). `--backend local` answers over the resident qwen_vqa_server instead
-(`just vqa-up` must already be running). Comparing two backends is two runs with
-different --report paths.
+`--backend` defaults to local (the resident qwen_vqa_server; `just vqa-up` must already
+be running). `--backend cloud` uses VLM_PROVIDER / VLM_MODEL_LITE in .env; extract is a
+`lite=True` call. Comparing two backends is two runs with different --report paths.
 """
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ from captioner.vlm_backends.schemas import TargetList
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM, clean_targets
 from smart_vlm.report_utils import summarise, write_report
 
-CATEGORIES = (1, 2)
+CATEGORIES = (1, 2, 3)
 
 
 def log(message: str, *, err: bool = False) -> None:
@@ -76,8 +76,8 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Score target extraction against benchmark target_objects (text only).")
     parser.add_argument(
-        "--category", default="all", choices=("1", "2", "all"),
-        help="1, 2, or both (default: %(default)s)")
+        "--category", default="all", choices=("1", "2", "3", "all"),
+        help="1, 2, 3, or all three (default: %(default)s)")
     parser.add_argument("--scene", default="all", help="restrict to one scene")
     parser.add_argument(
         "--limit", type=int, default=0, help="first N questions per scene, 0 = all")
@@ -88,7 +88,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         "--report", default="/data/runs/extract_bench_report.json",
         help="where to write this run's report (default: %(default)s)")
     parser.add_argument(
-        "--backend", default="cloud", choices=("cloud", "local"),
+        "--backend", default="local", choices=("cloud", "local"),
         help="where the extract call runs; local needs `just vqa-up` already up "
              "(default: %(default)s)")
     return parser.parse_args(argv)
@@ -189,6 +189,7 @@ def extract_extras(results: list[dict], args, backend) -> dict[str, Any]:
             "all": _agg(results),
             "cat1": _agg([r for r in results if r["category"] == 1]),
             "cat2": _agg([r for r in results if r["category"] == 2]),
+            "cat3": _agg([r for r in results if r["category"] == 3]),
         },
     }
 
