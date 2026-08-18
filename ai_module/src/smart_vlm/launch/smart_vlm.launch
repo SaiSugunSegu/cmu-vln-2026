@@ -7,36 +7,42 @@
        then SIGINTs the whole process group. Every node here therefore starts fresh and
        dies together — there is no in-process reset path anywhere, by design.
 
-       Startup ordering matters, and is enforced by two latched gates rather than sleeps:
+         ros2 launch smart_vlm smart_vlm.launch
+
+       Startup ordering matters, and is enforced by latched gates rather than sleeps:
 
          sam_node boots UNARMED (wait_for_prompts) and loads weights   ~60 s
            -> smart_vlm sees sam + qwen ready      -> /pipeline/ready   (harness may ask)
            -> the reasoner extracts targets        -> /sam3/set_prompts
            -> sam_node arms, fresh session+run_dir -> /sam3/prompts_ack
-           -> smart_vlm                            -> /pipeline/armed   (bag may play)
+           -> smart_vlm                            -> /pipeline/armed
+                                                   -> /start_exploration (TARE drives)
 
        The reasoner is inside that chain, not downstream of it: if it never publishes
-       /sam3/set_prompts the bag never plays and the question times out rather than
+       /sam3/set_prompts the robot never moves and the question times out rather than
        answering wrongly.
 
-       The bag blocks on /pipeline/armed, so the detector never streams frames while it
-       is still loading weights or still holding the config's placeholder prompts.
+       Nothing consumes the scene until /pipeline/armed, so the detector never sees a
+       frame while it is still loading weights or still holding placeholder prompts —
+       that is why TARE is held at /start_exploration, and why the bag in
+       eval_bag.launch waits on /pipeline/armed.
 
-       Offline (default):  ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=arabic_room
-       Live sim:           ros2 launch smart_vlm smart_vlm.launch use_bag:=false
-
-       With vlm_backend:=local, needs the Qwen VQA server already resident
-       (`just vqa-up`) — it is deliberately NOT in here, because reloading a 15 GB model
-       per question would dominate the 10-minute budget for no benefit. A cloud run
-       needs nothing beyond an API key. -->
-
-  <!-- Scene source -->
-  <arg name="use_bag" default="false"/>   <!-- true = replay a recorded bag instead of the live sim -->
-  <arg name="bag"     default="scene_0"/> <!-- scene name under /data/bags (when use_bag) -->
-  <arg name="speed"   default="1.0"/>     <!-- rosbag playback rate multiplier -->
+       It is self-contained in either inference mode — see vlm_backend below. Nothing
+       has to be started by hand first, because at eval there is nobody to start it:
+       the organizers build the image and run this launch, and that is the whole
+       procedure. `just vqa-up` remains only as a dev convenience for keeping a server
+       resident ACROSS relaunches, which is a speed-up, not a requirement. -->
 
   <!-- Perception -->
   <arg name="sam_config" default="sam3_mecanum_sim.yaml"/> <!-- sam_mapper config file name -->
+
+  <!-- Exploration. Which tare_planner config drives coverage.
+       cmu_challenge is ours — a copy of the vendored indoor_small tuning that also
+       holds the robot until the supervisor opens the gate (kAutoStart: false).
+       indoor_small | indoor_large | outdoor are the upstream scenarios, and all
+       three auto-start, so selecting one here means the robot drives before SAM
+       is armed. -->
+  <arg name="tare_scenario" default="cmu_challenge"/>
 
   <!-- Mission budget (README "Timing": 10 minutes per question, from startup) -->
   <arg name="question_budget_s"  default="600.0"/> <!-- hard limit, includes model load -->
@@ -50,18 +56,22 @@
   <arg name="vqa_timeout_s" default="180.0"/>            <!-- max wait for a VLM reply -->
 
   <!-- Where the reasoner runs inference, through captioner.vlm_backends.
-       auto = $VLM_BACKEND | cloud (a hosted model over its OpenAI-compatible endpoint,
-       the scored path, picked with VLM_PROVIDER) | local (the resident Qwen server,
-       which costs nothing and so is the dev loop). -->
-  <arg name="vlm_backend"  default="auto"/>
+       local (default) = Qwen, served by the node this launch starts below
+       cloud           = a hosted model over its OpenAI-compatible endpoint, picked
+                         with VLM_PROVIDER and needing that provider's API key -->
+  <arg name="vlm_backend"  default="local"/>
+  <arg name="local_vqa"
+       default="$(eval '&quot;$(var vlm_backend)&quot; == &quot;local&quot;')"/>
+  <arg name="vqa_model"        default="qwen3vl"/>
+  <arg name="vqa_quantization" default="int4"/>
   <!-- How many best-view ranks the reasoner answers from at once. Rank 1 alone misses
        objects it does not happen to frame; each extra view costs a full image of
        visual tokens. -->
   <arg name="max_context_views" default="3"/>
   <!-- A cloud run never calls /qwen_vqa, so waiting on it would burn ready_timeout_s
-       per question for a model nobody uses. eval_orchestrator turns this off for
-       backend:=cloud. -->
-  <arg name="require_vqa_ready" default="true"/>
+       (300 s of a 600 s question) waiting for a model nobody started. Derived rather
+       than defaulted, so it can only ever be true when there is actually a server. -->
+  <arg name="require_vqa_ready" default="$(var local_vqa)"/>
   <!-- Where this question's best-view crops are saved, under the crops root from the
        sam config. The eval harness passes "<sweep>/<scene>/<question id>-<question>";
        empty falls back to a run name with a random id in it, fine for a one-off. -->
@@ -73,6 +83,17 @@
        hybrid (geometry, with a model call only where the geometry is not decisive) |
        solver | vlm | naive. See smart_vlm/cat2_utils.py. -->
   <arg name="cat2_mode" default="hybrid"/>
+
+  <!-- 0. Qwen VQA server (local backend only) — before SAM, so the two model loads
+          overlap instead of queueing. Deliberately absent on the cloud path: it would
+          be 8.3 GB loaded per question for a model nothing queries.
+          Do NOT also run `just vqa-up` when this is on — two servers would claim the
+          same node name and the same /qwen_vqa topics.
+       Output:  /qwen_vqa/{status,response} -->
+  <include file="$(find-pkg-share captioner)/launch/vqa_server.launch" if="$(var local_vqa)">
+    <arg name="model"        value="$(var vqa_model)"/>
+    <arg name="quantization" value="$(var vqa_quantization)"/>
+  </include>
 
   <!-- 1. SAM 3 detector — FIRST, so weights load while everything else comes up.
           Boots unarmed: this pipeline's prompts come from the question, so anything
@@ -139,20 +160,21 @@
     <param name="mode" value="$(var cat2_mode)"/>
   </node>
 
-  <!-- 4a. Bag replay (offline) — held at the gate until SAM is armed.
-       Output:  the 6 allowed sensor topics, + /tf -->
-  <include file="$(find-pkg-share smart_vlm)/launch/bag_replay.launch" if="$(var use_bag)">
-    <arg name="scene" value="$(var bag)"/>
-    <arg name="speed" value="$(var speed)"/>
-    <arg name="loop" value="false"/>
-    <arg name="wait_for_armed" value="true"/>
-  </include>
-
-  <!-- 4b. TARE exploration (live sim) — drives the robot to cover the scene.
-       Input:   /terrain_map_ext, /state_estimation
-       Output:  /way_point_with_heading -->
-  <include file="$(find-pkg-share tare_planner)/launch/explore.launch" unless="$(var use_bag)">
-    <arg name="scenario" value="indoor_small"/>
+  <!-- 4. TARE exploration — drives the robot to cover the scene.
+       Held until the supervisor publishes /start_exploration, which it does alongside
+       /pipeline/armed the instant SAM holds this question's prompts. The wait is
+       kAutoStart: false in cmu_challenge.yaml, not a launch argument — see
+       explore.launch for why an override cannot win against the scenario yaml.
+       Without it the robot would spend the first ~60 s covering the scene against a
+       detector still loading weights, ground that then never gets re-explored.
+       Runs unconditionally, including under eval_bag.launch: keeping the node set
+       identical to the scored configuration is worth more than the CPU it costs
+       replaying a bag, where its waypoints simply have no consumer.
+       Input:   /registered_scan, /terrain_map, /terrain_map_ext, /state_estimation,
+                /start_exploration
+       Output:  /way_point_with_heading (Pose2D) -->
+  <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
+    <arg name="scenario" value="$(var tare_scenario)"/>
   </include>
 
 </launch>

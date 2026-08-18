@@ -45,7 +45,7 @@ services:
     # Folded scalar: every line must sit at the SAME indent, or YAML keeps the
     # newlines and the shell sees a line starting with `&&`.
     command: >-
-      sh -c "mkdir -p /data/bags /data/crops /data/captions /data/runs &&
+      sh -c "mkdir -p /data/bags /data/scenes /data/crops /data/captions /data/runs &&
       chmod -R a+w /data &&
       mkdir -p /hf &&
       if [ \"$$(stat -c %u /hf)\" != 1001 ]; then chown -R 1001:1001 /hf; fi"

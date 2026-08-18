@@ -50,6 +50,7 @@ from std_msgs.msg import Int32, String
 from captioner.paths import secure_path
 from captioner.qwen_vqa_protocol import vqa_image_fields
 from captioner.ros_utils import wait_for_subscriber
+from captioner.ros_utils import shutdown_guard
 from captioner.vlm_backends import VLMError, make_backend
 from captioner.vlm_backends.constants import VLM_BACKEND
 from captioner.vlm_backends.schemas import CountAnswer, TargetList
@@ -389,8 +390,9 @@ class NumericalReasoner(Node):
                     f"crops_only: {len(image_paths)} view(s) saved to {run_dir}, "
                     "publishing a placeholder answer")
                 answer = 0
+                reason = None
             else:
-                answer = self._count_from_views(question, image_paths)
+                answer, reason = self._count_from_views(question, image_paths)
 
             # Record first, publish second. The harness tears the pipeline down the
             # moment it sees /numerical_response, and it gets there before a file write
@@ -410,6 +412,10 @@ class NumericalReasoner(Node):
             # None rather than the placeholder 0: a cached directory that claims an
             # answer nobody computed is a trap for whoever reads it next.
             manifest["predicted_answer"] = None if self.crops_only else answer
+            # The model's own account of the count. None under crops_only for the same
+            # reason predicted_answer is: no answering call was made, so claiming a
+            # rationale would dress a cache run up as a scored one.
+            manifest["answer_reason"] = reason
             manifest["context_views"] = [p.name for p in image_paths]
             manifest["backend"] = self.backend.name
             manifest["crops_only"] = self.crops_only
@@ -426,12 +432,20 @@ class NumericalReasoner(Node):
         # Soft reset so the next question can start (bag harness relaunches per Q).
         self._reset_to_idle("idle")
 
-    def _count_from_views(self, question: str, image_paths: list[Path]) -> int:
-        """Ask the backend for a count over every view at once."""
+    def _count_from_views(self, question: str,
+                          image_paths: list[Path]) -> tuple[int, str]:
+        """Ask the backend for a count over every view at once.
+
+        Returns the reason alongside the count so the manifest can keep it. The schema
+        asks for it first precisely because it makes the model enumerate rather than
+        guess (see CountAnswer), which makes it the one field that says whether a wrong
+        number came from bad perception or bad reasoning — worth more than the log line
+        it used to end up in.
+        """
         result = self.backend.ask(ANSWER_SYSTEM, question, image_paths, CountAnswer)
         self.get_logger().info(
             f"count={result.count} from {len(image_paths)} view(s): {result.reason}")
-        return max(0, int(result.count))
+        return max(0, int(result.count)), result.reason
 
     def _reset_to_idle(self, status: str) -> None:
         """Drop the current question so the next one is accepted."""
@@ -470,10 +484,11 @@ def main(args=None):
         if rclpy.ok():
             raise
     finally:
-        executor.shutdown()
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        with shutdown_guard():
+            executor.shutdown()
+            node.destroy_node()
+            if rclpy.ok():
+                rclpy.shutdown()
 
 
 if __name__ == "__main__":

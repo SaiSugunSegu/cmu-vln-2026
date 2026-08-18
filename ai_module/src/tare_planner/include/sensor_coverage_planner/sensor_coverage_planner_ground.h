@@ -18,6 +18,7 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <geometry_msgs/msg/polygon_stamped.hpp>
 #include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/pose2_d.hpp>
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/time_synchronizer.h>
@@ -240,7 +241,11 @@ private:
       to_nearest_global_subspace_path_publisher_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr local_tsp_path_publisher_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr exploration_path_publisher_;
-  rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr waypoint_pub_;
+  // Pose2D on /way_point_with_heading: the only drive output the challenge
+  // firewall relays out of the AI module's domain (challenge_topics_bridge.yaml).
+  // Upstream published PointStamped on /way_point, which is the *system's* topic,
+  // written by waypoint_converter downstream of us.
+  rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr waypoint_pub_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr exploration_finish_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32MultiArray>::SharedPtr
       runtime_breakdown_pub_;
@@ -302,6 +307,9 @@ private:
   double GetRobotToHomeDistance();
   void PublishExplorationState();
   void PublishWaypoint();
+  // Single funnel for every waypoint this node emits, so the message type and the
+  // heading convention live in exactly one place.
+  void SendWaypoint(double x, double y);
   bool
   GetLookAheadPoint(const exploration_path_ns::ExplorationPath &local_path,
                     const exploration_path_ns::ExplorationPath &global_path,

@@ -9,7 +9,9 @@ since what happens per frame is genuinely different.
 """
 from __future__ import annotations
 
+import contextlib
 import os
+import signal
 import threading
 import time
 
@@ -79,12 +81,25 @@ def run_node(node_cls, bootstrap_name: str, required_keys: tuple, launch_hint: s
         if rclpy.ok():
             raise
     finally:
-        node.destroy_node()
-        # executor.spin() already tears the context down on SIGINT; calling shutdown a
-        # second time raises RCLError and turns a clean Ctrl-C into exit code 1, which
-        # makes the eval harness's teardown look like a crash.
-        if rclpy.ok():
-            rclpy.shutdown()
+        # SIGINT arrives twice on a launch teardown — the terminal delivers it to the
+        # whole foreground process group, and `ros2 launch` also signals each child — so
+        # without this the second one lands mid-destroy_node() and escapes as a
+        # KeyboardInterrupt traceback out of rclpy's cleanup, on an ordinary Ctrl-C.
+        # (captioner.ros_utils.shutdown_guard is the same guard; duplicated rather than
+        # imported because sam_mapper does not depend on captioner and four lines is a
+        # poor reason to make it.) Not restored: the process is exiting, and a restored
+        # handler could let a queued signal fire right after the guard.
+        with contextlib.suppress(ValueError):  # not the main thread: nothing to install
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+        try:
+            node.destroy_node()
+            # executor.spin() already tears the context down on SIGINT; calling shutdown
+            # a second time raises RCLError and turns a clean Ctrl-C into exit code 1,
+            # which makes the eval harness's teardown look like a crash.
+            if rclpy.ok():
+                rclpy.shutdown()
+        except KeyboardInterrupt:
+            pass
 
 
 class WorkerNodeMixin:

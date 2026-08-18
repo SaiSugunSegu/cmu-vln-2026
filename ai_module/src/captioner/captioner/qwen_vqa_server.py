@@ -33,6 +33,8 @@ from typing import Optional
 import imageio.v3 as iio
 import numpy as np
 import rclpy
+
+from captioner.ros_utils import shutdown_guard
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
@@ -226,10 +228,11 @@ def main(args: Optional[list] = None):
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        if node is not None:
-            node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        with shutdown_guard():
+            if node is not None:
+                node.destroy_node()
+            if rclpy.ok():
+                rclpy.shutdown()
 
 
 if __name__ == "__main__":

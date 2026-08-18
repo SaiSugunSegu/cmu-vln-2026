@@ -298,9 +298,9 @@ duplicates cost, and it is the honest figure for the finished pipeline.
 
 ## Gotchas
 
-- **`docker/compose.yml` does not bind-mount `ai_module`** — only `compose_dev.yml`
-  (`just up-dev`) does. Confirm which compose is running before trusting any container
-  measurement; a frozen copy would silently invalidate all of it.
+- **The container never bind-mounts `ai_module`** — it runs the copy baked into the
+  image, so a measurement is only as fresh as the last `just up`. Re-run it after any
+  source edit, or the numbers describe code you are no longer looking at.
 - **Companion bags are prompt-set specific.** Re-record after changing
   `bench_prompts.json`, or the manifest and the detections disagree.
 - **`--force` overwrites** an existing companion bag; without it, recording refuses.

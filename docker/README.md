@@ -74,9 +74,11 @@ Nothing forces offline mode, so a load can always fetch what it needs. Seed the 
 anyway, so your first real run is not also a ~15-20 GB download:
 
 ```bash
+
 just up          # build + start; `init` makes /data and the HF cache writable
 just hf-fetch    # one-time download: facebook/sam3, Qwen3-VL-4B, DFN5B-CLIP
-just vqa-up      # loads Qwen from the now-populated cache
+just vqa-up      # OPTIONAL: keeps Qwen resident across relaunches; the
+                 # pipeline starts its own server if you skip this
 ```
 
 `just hf-fetch --list` shows what will be pulled; `just hf-fetch "qwen3vl sam3"`
@@ -158,23 +160,29 @@ You should see the vehicle following waypoints and the selected object being hig
 
 `ros2 launch smart_vlm smart_vlm.launch` brings up the whole per-question pipeline:
 `sam_node` (booted unarmed — it loads weights but detects nothing until the question
-supplies prompts), the `smart_vlm` supervisor, `numerical_reasoner`, and the scene
-source (bag replay with `use_bag:=true`, else TARE exploration).
+supplies prompts), the `smart_vlm` supervisor, `numerical_reasoner`, and TARE
+exploration. It starts **no scene source** — it is the submission artifact, and consumes
+the six allowed topics from whatever is publishing them. For offline replay use
+`eval_bag.launch`, which wraps it and adds a bag.
 
 `numerical_reasoner` answers **How many / Count** questions and publishes an `Int32` on
 `/numerical_response`. It works from SAM's best-view crops rather than raw frames:
 question → target nouns → `/sam3/set_prompts` → wait for `/pipeline/explore_done` →
 ask Qwen about the best crop.
 
-**Start `qwen_vqa_server` first.** Nothing in this launch loads a checkpoint of its own —
-requests go to the shared server, so one copy of the weights serves the reasoner, the
-target extractor, and `just vqa-ask`. Without it, the reasoner waits `vqa_timeout_s` and
-then errors.
+**The VQA server starts itself.** On the default `local` backend the launch brings up
+`qwen_vqa_server` as part of the module and the supervisor gates `/pipeline/ready` on
+`/qwen_vqa/status` reaching `ready` — the same way it gates on `/sam3/status`. That is
+deliberate: at evaluation nobody runs a setup step for you.
+
+`just vqa-up` is therefore optional. It keeps one server resident *across* relaunches,
+which saves the ~8.3 GB reload each question costs — useful in a long sweep, but do not
+run it while the launch is also starting one, or the two collide on the node name and
+the `/qwen_vqa` topics. With `vlm_backend:=cloud` no server is started or waited for.
 
 ```bash
 # after colcon build --packages-select captioner smart_vlm sam_mapper
-just vqa-up                      # loads Qwen once; blocks until ready
-ros2 launch smart_vlm smart_vlm.launch use_bag:=true bag:=arabic_room
+ros2 launch smart_vlm eval_bag.launch bag:=arabic_room
 # elsewhere — the bag is held at /pipeline/armed until this arrives:
 ros2 topic pub --once /challenge_question std_msgs/msg/String \
   "{data: 'How many pillows are on the bed?'}"
@@ -248,16 +256,15 @@ docker exec -it iros2026_ai_module bash -lc '
 '
 ```
 
-After editing captioner Python sources with the [dev overlay](compose_dev.yml), rebuild only the package inside the container (ML wheels stay in the image):
+After editing captioner Python sources, rebuild the image — `ai_module` is never
+bind-mounted, so that is what carries the edit into the container:
 
 ```bash
-docker compose -f compose_gpu.yml -f compose_dev.yml up -d
-docker exec -it iros2026_ai_module bash -lc '
-  source /opt/ros/jazzy/setup.bash &&
-  cd /home/docker/ai_module &&
-  colcon build --symlink-install --packages-select captioner
-'
+just up      # or: docker compose -f compose_gpu.yml up --build -d
 ```
+
+The ML wheels (torch, transformers, …) live in an earlier layer and stay cached, so
+only the source-copy and colcon layers re-run.
 
 ## Integrate your AI model
 

@@ -3,17 +3,24 @@
 
 The challenge relaunches the whole system for each language command so nothing carries
 over between questions (README "Evaluation"). This harness does the same: per question it
-spawns `smart_vlm.launch` as its own process group, drives it over topics, records the
-result, then SIGINTs the group. Model loading therefore lands inside the measured budget,
+spawns the pipeline as its own process group, drives it over topics, records the
+result, then SIGINTs the group. `scene_source` decides WHICH launch that is, rather than
+passing a flag into one: `smart_vlm.launch` is the submission artifact and owns no scene
+source, so bag runs go through the eval-only `eval_bag.launch` wrapper instead. A sim run
+spawns the submission launch verbatim; it cannot switch Unity scenes itself, so
+`scripts/eval/run_sim_sweep.py` drives it one scene at a time. Model loading therefore lands inside the measured budget,
 exactly as it will on the real evaluation — `time_taken_s` in the report is honest.
 
 Per question:
 
   1. publish /gt_target_objects            (latched, so the reasoner sees it whenever it starts)
-  2. spawn  smart_vlm.launch use_bag:=true bag:=<scene>
+  2. spawn  eval_bag.launch bag:=<scene>    (scene_source:=bag, the default)
+            smart_vlm.launch                 (scene_source:=sim — the submission launch
+                                              verbatim, fed by a sim someone else started)
   3. wait   /pipeline/ready                 models loaded
   4. publish /challenge_question @ 1 Hz     (the eval node's own cadence)
-  5. wait   /pipeline/armed                 SAM holds this question's prompts; the bag is released
+  5. wait   /pipeline/armed                 SAM holds this question's prompts; the scene
+                                            is released — the bag plays, or TARE drives
   6. wait   the answer topic for the category (see ANSWER_TOPIC)
   7. record, tear the group down, wait for the ROS graph to drain, next
 
@@ -58,8 +65,9 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from std_msgs.msg import Int32, String
 from visualization_msgs.msg import Marker
 
+from captioner.ros_utils import shutdown_guard
 from captioner.vlm_backends.constants import VLM_BACKEND
-from smart_vlm.report_utils import iou3d, summarise, write_report
+from smart_vlm.report_utils import iou3d, previous_results, summarise, write_report
 
 LATCHED = QoSProfile(
     depth=1,
@@ -94,6 +102,15 @@ class EvalOrchestratorNode(Node):
         self.category = int(self._param("category", 1))
         if self.category not in ANSWER_TOPIC:
             raise ValueError(f"category must be 1 or 2, got {self.category}")
+        # Where the six allowed topics come from. bag: replay a recording from
+        # bags_dir, which is why a bag sweep can walk every scene by itself. sim: the
+        # live Unity sim in the OTHER container, which this process cannot start,
+        # stop or re-scene — scripts/eval/run_sim_sweep.py owns that loop and calls
+        # this one scene at a time.
+        self.scene_source = str(self._param("scene_source", "bag")).strip().lower()
+        if self.scene_source not in ("bag", "sim"):
+            raise ValueError(
+                f"scene_source must be 'bag' or 'sim', got {self.scene_source!r}")
         self.report_file = str(self._param("report_file", "/data/runs/challenge_report.json"))
         # Top level of the crop layout, so one sweep's crops sit together and the next
         # sweep cannot overwrite them question by question. Defaults to the report's own
@@ -123,6 +140,13 @@ class EvalOrchestratorNode(Node):
         # scene runs for hours, so an interruption in hour five must not mean starting
         # over. Off by default: a scored run has to answer every question itself.
         self.resume = bool(self._param("resume", False))
+        # Extend an existing report instead of replacing it. One sweep of the live sim is
+        # several orchestrator runs — the Unity scene can only be changed from the host,
+        # so run_sim_sweep.py invokes us once per scene — and without this each run would
+        # overwrite the last, leaving only the final scene. With it, every scene lands in
+        # ONE report whose summary (and per_scene block) covers the whole sweep, exactly
+        # as a single-process bag sweep produces.
+        self.append = bool(self._param("append", False))
         self.benchmark_dir = Path(str(self._param("benchmark_dir", "/data/benchmark")))
         self.bags_dir = Path(str(self._param("bags_dir", "/data/bags")))
         # Phase budgets. Generous, because a first run may download weights; a phase that
@@ -239,19 +263,29 @@ class EvalOrchestratorNode(Node):
 # -- process control --------------------------------------------------------
 
 def spawn_pipeline(node: EvalOrchestratorNode, scene: str, run_id: str) -> subprocess.Popen:
-    cmd = [
-        "ros2", "launch", "smart_vlm", "smart_vlm.launch",
-        "use_bag:=true",
-        f"bag:={scene}",
-        f"speed:={node.speed}",
+    # The scene source is a different LAUNCH FILE, not a flag: smart_vlm.launch is the
+    # submission artifact and knows nothing about bags, so offline runs go through the
+    # eval-only wrapper that adds one. A sim run therefore spawns exactly what the
+    # organizers will.
+    if node.scene_source == "bag":
+        cmd = [
+            "ros2", "launch", "smart_vlm", "eval_bag.launch",
+            f"bag:={scene}",
+            f"speed:={node.speed}",
+        ]
+    else:
+        cmd = ["ros2", "launch", "smart_vlm", "smart_vlm.launch"]
+    cmd += [
         f"sam_config:={node.sam_config}",
         f"vlm_backend:={node.vlm_backend}",
         f"run_id:={run_id}",
         f"crops_only:={'true' if node.crops_only else 'false'}",
         f"cat2_mode:={node.cat2_mode}",
-        # Only the local backend publishes to /qwen_vqa; for cloud and none, making the
-        # supervisor wait for a server nobody started costs ready_timeout_s per question.
-        f"require_vqa_ready:={'true' if node.resolved_backend == 'local' else 'false'}",
+        # The launch derives this from vlm_backend, but only we know what "auto"
+        # resolved to against the environment — so pin it. true makes the pipeline start
+        # its own Qwen server per question, which is why a local sweep needs no
+        # `just vqa-up`; require_vqa_ready follows from it inside the launch.
+        f"local_vqa:={'true' if node.resolved_backend == 'local' else 'false'}",
     ]
     log(f"launching: {' '.join(cmd)}")
     # Own process group, so one killpg reclaims every node it started — including the
@@ -319,11 +353,22 @@ def discover_questions(node: EvalOrchestratorNode) -> Iterator[tuple[str, dict]]
     folder = f"category_{node.category}"
     if node.scene and node.scene != "all":
         scenes = [node.scene]
+    elif node.scene_source == "sim":
+        # Unity holds one scene per launch and this process cannot swap it — the mesh
+        # lives in the other container's image. Sweeping "all" here would score every
+        # scene's questions against whichever scene happens to be loaded, and score
+        # them plausibly, so fail loudly instead. scripts/eval/run_sim_sweep.py is the
+        # thing that can walk scenes: it re-meshes and restarts the sim, then calls
+        # this driver once per scene.
+        raise ValueError(
+            "scene_source:=sim needs an explicit scene (Unity holds one per launch); "
+            "use scripts/eval/run_sim_sweep.py, or `just eval-cat1-sim`, to sweep")
     else:
         scenes = sorted(p.name for p in node.benchmark_dir.iterdir()
                         if (p / folder).is_dir())
 
-    playable = available_scenes(node)
+    # Only bags can be missing from disk; the sim supplies whatever is loaded.
+    playable = available_scenes(node) if node.scene_source == "bag" else set(scenes)
     for scene in scenes:
         qa_file = (node.benchmark_dir / scene / folder
                    / f"{scene}_category{node.category}_qa.json")
@@ -339,6 +384,39 @@ def discover_questions(node: EvalOrchestratorNode) -> Iterator[tuple[str, dict]]
             questions = questions[:node.question_limit]
         for entry in questions:
             yield scene, entry
+
+
+def answer_rationale(best_view_dir: Optional[str], category: int) -> tuple:
+    """The model's own explanation of this answer, from the run directory's manifest.
+
+    Read from disk rather than a topic because the answer topics carry only the answer —
+    an Int32 or a Marker — and there is nowhere in them to put a sentence. Both reasoners
+    already write the manifest BEFORE publishing (see the "Record first, publish second"
+    comments), so by the time a row is built, after teardown, the file is there.
+
+    The two categories name the field differently because they explain different
+    decisions: cat1 explains a count, cat2 explains which candidate object it picked.
+    Both surface as `reason` in the report so one column means one thing.
+
+    Anything missing yields (None, None): a question that failed before the reasoner ran
+    has no manifest, and losing the row over an absent explanation would be a bad trade.
+    """
+    if not best_view_dir:
+        return None, None
+    manifest_path = Path(best_view_dir) / "manifest.json"
+    if not manifest_path.is_file():
+        return None, None
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as handle:
+            manifest = json.load(handle)
+    except (OSError, json.JSONDecodeError) as err:
+        log(f"could not read {manifest_path} for the rationale: {err}", err=True)
+        return None, None
+    if not isinstance(manifest, dict):
+        return None, None
+    key = "selection_reason" if category == 2 else "answer_reason"
+    views = manifest.get("context_views")
+    return manifest.get(key), (len(views) if isinstance(views, list) else None)
 
 
 # -- one question -----------------------------------------------------------
@@ -451,6 +529,7 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
 
     elapsed = time.monotonic() - t_start
     outcome = grade(node, entry)
+    reason, n_views = answer_rationale(node.best_view_dir, node.category)
     log(f"result: predicted={outcome['predicted']} gt={gt_answer} "
         f"correct={outcome['correct']}"
         + (f" score={outcome['score']:.2f}/2" if node.category == 2 else "")
@@ -463,10 +542,18 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         "category": node.category,
         **outcome,
         "time_taken_s": round(elapsed, 2),
+        # Which world answered. A bag row and a sim row are not comparable — same
+        # question, different trajectory and different exploration — so the report has
+        # to say which it was rather than leaving it to the filename.
+        "scene_source": node.scene_source,
         "target_source": node.target_source,
         "vlm_backend": node.resolved_backend,
         "prompts": node.armed_prompts,
         "best_view_dir": node.best_view_dir,
+        # Why the model answered as it did, and over how many views. A bare number tells
+        # you a row is wrong; these tell you whether perception or reasoning was at fault.
+        "reason": reason,
+        "n_context_views": n_views,
         "error": error,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
@@ -516,12 +603,13 @@ def run_orchestration(node: EvalOrchestratorNode) -> int:
         log("no questions to run — check scene/benchmark_dir", err=True)
         return 1
     scenes = sorted({s for s, _ in questions})
-    log(f"category {node.category}: {len(questions)} question(s) across "
-        f"{len(scenes)} scene(s): {scenes}")
+    log(f"category {node.category} from the {node.scene_source}: {len(questions)} "
+        f"question(s) across {len(scenes)} scene(s): {scenes}")
 
     # So a cache report cannot be mistaken for a scored one: with crops_only every
     # prediction is a placeholder, and the accuracy beside it means nothing.
-    extra = {"crops_only": node.crops_only, "category": node.category}
+    extra = {"crops_only": node.crops_only, "category": node.category,
+             "scene_source": node.scene_source}
     if node.category == 2:
         extra["cat2_mode"] = node.cat2_mode
 
@@ -529,7 +617,9 @@ def run_orchestration(node: EvalOrchestratorNode) -> int:
     if cached:
         log(f"resume: {len(cached)} question(s) already have crops — keeping their rows")
 
-    results: list[dict] = []
+    results: list[dict] = previous_results(report_path) if node.append else []
+    if results:
+        log(f"append: carrying {len(results)} row(s) already in {report_path}")
     interrupted = False
     try:
         for scene, entry in questions:
@@ -564,9 +654,10 @@ def main(args=None) -> None:
     except Exception as exc:  # noqa: BLE001 — report the real failure, not a NameError
         log(f"fatal: {type(exc).__name__}: {exc}", err=True)
     finally:
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        with shutdown_guard():
+            node.destroy_node()
+            if rclpy.ok():
+                rclpy.shutdown()
     sys.exit(ret)
 
 

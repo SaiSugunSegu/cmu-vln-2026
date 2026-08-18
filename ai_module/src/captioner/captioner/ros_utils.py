@@ -1,10 +1,41 @@
 """Small rclpy helpers shared by the captioner and smart_vlm nodes."""
 from __future__ import annotations
 
+import contextlib
+import signal
 import time
 from typing import Callable, Optional
 
 DEFAULT_CONNECT_TIMEOUT_S = 2.0
+
+
+@contextlib.contextmanager
+def shutdown_guard():
+    """Run node teardown without a second Ctrl-C turning it into a traceback.
+
+    Every node here already catches KeyboardInterrupt around spin(), but the cleanup
+    itself runs in a `finally:` that nothing protects. On a launch teardown a process
+    gets SIGINT twice — once because the terminal delivers it to the whole foreground
+    process group, and again because `ros2 launch` signals each child explicitly — so
+    the second one lands mid-`destroy_node()` and escapes main(). The result is a wall
+    of KeyboardInterrupt tracebacks out of rclpy's service cleanup on an ordinary,
+    successful Ctrl-C, which is alarming and, across a per-question eval sweep, makes
+    every normal teardown look like a crash.
+
+    Ignoring SIGINT for the duration of cleanup addresses the cause rather than the
+    symptom; the KeyboardInterrupt catch covers a signal that arrived a moment before
+    the handler was installed. The previous handler is deliberately NOT restored — the
+    process is exiting, and restoring it could let a queued signal fire after the
+    guard, which is the very traceback this exists to prevent.
+
+    Other exceptions propagate: a real bug in teardown should still be visible.
+    """
+    with contextlib.suppress(ValueError):  # not the main thread: nothing to install
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        yield
+    except KeyboardInterrupt:
+        pass
 
 
 def wait_for_subscriber(

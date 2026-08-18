@@ -36,7 +36,6 @@ find_package(Eigen3 REQUIRED)
   include
   or-tools/include
   ${EIGEN3_INCLUDE_DIR}
-  /opt/ros/humble/include
   # /usr/local/include
   # /usr/include
 )
@@ -121,10 +120,6 @@ add_library(sensor_coverage_planner_ground src/sensor_coverage_planner/sensor_co
 ament_target_dependencies(sensor_coverage_planner_ground rclcpp std_msgs nav_msgs geometry_msgs sensor_msgs tf2_ros tf2_geometry_msgs tf2)
 target_link_libraries(sensor_coverage_planner_ground ${catkin_LIBRARIES} graph planning_env keypose_graph viewpoint_manager pointcloud_manager grid_world local_coverage_planner tare_visualizer)
 
-add_executable(navigationBoundary src/navigation_boundary_publisher/navigationBoundary.cpp)
-ament_target_dependencies(navigationBoundary rclcpp std_msgs nav_msgs geometry_msgs sensor_msgs tf2_ros tf2_geometry_msgs tf2 pcl_ros pcl_conversions)
-target_link_libraries(navigationBoundary ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-
 add_executable(tare_planner_node src/tare_planner_node/tare_planner_node.cpp)
 ament_target_dependencies(tare_planner_node rclcpp std_msgs nav_msgs geometry_msgs sensor_msgs tf2_ros tf2_geometry_msgs tf2)
 target_link_libraries(tare_planner_node ${catkin_LIBRARIES} sensor_coverage_planner_ground)
@@ -134,7 +129,6 @@ target_link_libraries(tare_planner_node ${catkin_LIBRARIES} sensor_coverage_plan
 #############
 
 install(TARGETS
-  navigationBoundary
   tare_planner_node
   DESTINATION lib/${PROJECT_NAME})
 
@@ -155,9 +149,6 @@ install(DIRECTORY rviz
 install(DIRECTORY config/
         DESTINATION share/${PROJECT_NAME}
       )
-#install(DIRECTORY data
-#        DESTINATION share/${PROJECT_NAME}
-#      )
 
 ament_package()
 

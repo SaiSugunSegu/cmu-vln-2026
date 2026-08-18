@@ -1,0 +1,69 @@
+<launch>
+  <!-- eval_bag.launch — the AI module plus a recorded scene, for OFFLINE eval only.
+
+       This file exists so that smart_vlm.launch does not have to know bags exist.
+       smart_vlm.launch is the submission artifact: it consumes the six allowed topics
+       from whatever is publishing them and starts no scene source of its own. Here,
+       and only here, a rosbag plays that role instead of the simulator.
+
+         eval_bag.launch
+           ├── smart_vlm.launch   the AI module, unchanged and unaware
+           └── bag_replay.launch  the six allowed topics, from /data/bags/<bag>
+
+       Nothing in a submission should ever include this. eval_orchestrator spawns it
+       for scene_source:=bag, and spawns smart_vlm.launch directly for scene_source:=sim.
+
+         ros2 launch smart_vlm eval_bag.launch bag:=arabic_room speed:=0.5
+
+       Note that TARE still runs underneath, because smart_vlm.launch always starts it.
+       With no simulator listening its waypoints have no consumer, which is harmless —
+       and keeps the node set identical to the one that gets scored. The exception
+       worth remembering: if a sim happens to be up, TARE will drive the real robot
+       while the bag replays. Tear the sim down before an offline sweep. -->
+
+  <!-- Scene source -->
+  <arg name="bag"   default="scene_0"/> <!-- scene name under /data/bags -->
+  <arg name="speed" default="1.0"/>     <!-- rosbag playback rate multiplier -->
+
+  <!-- Pass-through: exactly the knobs eval_orchestrator.spawn_pipeline sets. Declared
+       here rather than inherited, because an XML include does not forward arguments
+       implicitly — an omission would silently fall back to the submission default and
+       the sweep would score a configuration nobody asked for. -->
+  <arg name="sam_config"        default="sam3_mecanum_sim.yaml"/>
+  <!-- Mirrors smart_vlm.launch's default rather than "auto": this wrapper forwards the
+       value unconditionally, so an "auto" here would override the submission default and
+       then derive local_vqa false — no server started, and a local reasoner hanging on
+       vqa_timeout_s waiting for one. eval_orchestrator overrides both explicitly. -->
+  <arg name="vlm_backend"       default="local"/>
+  <arg name="run_id"            default=""/>
+  <arg name="crops_only"        default="false"/>
+  <arg name="cat2_mode"         default="hybrid"/>
+  <!-- Derived from vlm_backend inside smart_vlm.launch, same as a submission run, so an
+       offline sweep starts its own Qwen server exactly when a local submission would.
+       Override only to pin the behaviour (eval_orchestrator does, because it resolves
+       backend:=auto against the environment before launching). -->
+  <arg name="local_vqa"
+       default="$(eval '&quot;$(var vlm_backend)&quot; == &quot;local&quot;')"/>
+
+  <!-- 1. The AI module, exactly as submitted. -->
+  <include file="$(find-pkg-share smart_vlm)/launch/smart_vlm.launch">
+    <arg name="sam_config"        value="$(var sam_config)"/>
+    <arg name="vlm_backend"       value="$(var vlm_backend)"/>
+    <arg name="run_id"            value="$(var run_id)"/>
+    <arg name="crops_only"        value="$(var crops_only)"/>
+    <arg name="cat2_mode"         value="$(var cat2_mode)"/>
+    <arg name="local_vqa"         value="$(var local_vqa)"/>
+  </include>
+
+  <!-- 2. The scene, held at the gate until SAM holds this question's prompts. Without
+          wait_for_armed the bag would stream while the detector was still loading
+          weights, so the run would only ever see the tail of the scene.
+       Output:  the 6 allowed sensor topics, + /tf -->
+  <include file="$(find-pkg-share smart_vlm)/launch/bag_replay.launch">
+    <arg name="scene"          value="$(var bag)"/>
+    <arg name="speed"          value="$(var speed)"/>
+    <arg name="loop"           value="false"/>
+    <arg name="wait_for_armed" value="true"/>
+  </include>
+
+</launch>

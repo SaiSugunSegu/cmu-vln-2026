@@ -10,6 +10,11 @@
 data/bags/*
 !data/bags/README.md
 !data/bags/scenes.yaml
+# Unity scene builds — ~300 MB each, lazily fetched by `scene_fetch` from the
+# organizers' Drive folder. Only the manifest and README are tracked.
+data/scenes/*
+!data/scenes/README.md
+!data/scenes/scenes.yaml
 data/crops/
 data/captions/
 data/runs/
@@ -45,7 +50,7 @@ __pycache__/
 .idea/
 .DS_Store
 
-# colcon build artifacts (created on host by compose_dev.yml mount)
+# colcon build artifacts.
 ai_module/build/
 ai_module/install/
 ai_module/log/

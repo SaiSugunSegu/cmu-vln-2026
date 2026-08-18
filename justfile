@@ -13,11 +13,11 @@
 #   free dev loop just vqa-up, then the same with `local` instead of `cloud`
 #   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
-#   live sim      just sim          | just vqa-up && just ai | just ask "How many …"
+#   live sim      just sim          | just ai | just ask "How many …"
 #   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
-# Container path (compose_dev mounts host ai_module here).
+# The workspace path inside the image.
 ai_src := "/home/docker/ai_module"
 # `bash -lc` does not source ~/.bashrc for non-interactive shells, so recipes that
 # invoke a captioner console script must put its install dir on PATH themselves.
@@ -28,7 +28,10 @@ capt_env := "source /home/docker/ai_module/install/setup.bash && export PATH=/ho
 default:
     @just --list --unsorted
 
-# Pure image — ai_module is NOT bind-mounted, so this matches the CI/eval path.
+# The only way to start the stack. ai_module is never bind-mounted: the container
+# always runs the source baked into the image, which is exactly what CI and the eval
+# harness run. The corollary is that an ai_module edit does nothing until you re-run
+# this — the rebuild IS how source lands in the container.
 [group('setup')]
 [doc('Build + start both containers (GPU)')]
 [working-directory: 'docker']
@@ -36,22 +39,10 @@ up:
     docker compose -f compose_gpu.yml up --build -d
 
 [group('setup')]
-[doc('Like up, but bind-mount host ai_module for live code edits (daily dev)')]
-[working-directory: 'docker']
-up-dev:
-    docker compose -f compose_gpu.yml -f compose_dev.yml up --build -d
-
-[group('setup')]
-[doc('Start containers if needed, without forcing an image rebuild')]
-[working-directory: 'docker']
-up-dev-fast:
-    docker compose -f compose_gpu.yml -f compose_dev.yml up -d
-
-[group('setup')]
 [doc('Stop and remove both containers')]
 [working-directory: 'docker']
 down:
-    docker compose -f compose_gpu.yml -f compose_dev.yml down
+    docker compose -f compose_gpu.yml down
 
 # Pre-seeds the HF cache so the first real run is not also a ~20 GB download, and warms
 # SAM 3's cv-utils kernel, whose absence silently disables mask NMS. Re-run on a new machine.
@@ -104,13 +95,37 @@ challenge sim_display=":1":
 bag-play scene="livingroom_1" speed="1.0" loop="false":
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
 
-# Needs the VQA server up first (`just vqa-up`): the numerical head is a client of it.
+# Self-contained: on the default local backend the launch starts its own Qwen server,
+# so `just vqa-up` is NOT a prerequisite -- and must not be running at the same time, or
+# two servers collide on the node name and the /qwen_vqa topics. Use vqa-up only to keep
 # Brings up sam_node too (unarmed until a question supplies prompts) -- no separate
 # `just run-sam` terminal needed for this flow.
 [group('run')]
 [doc('smart_vlm: SAM + supervisor + reasoner + TARE (blocks; terminal B)')]
 ai:
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+
+# Exploration on its own, with no perception or reasoning attached -- the way to tell a
+# TARE problem from a pipeline problem. Needs the sim already up in the other terminal
+# (`just challenge` for the firewalled 6-topic view, or `just sim` for everything).
+# Runs the real pipeline config, so the robot HOLDS STILL until the gate opens -- that
+# is cmu_challenge.yaml's kAutoStart: false, normally released by the supervisor.
+# Nothing here plays that role, so open it yourself from a third terminal:
+#   just tare      # terminal B: waits, logging "Waiting for start signal"
+#   just tare-go   # terminal C: the robot starts moving
+# Pass scenario=indoor_small instead for the upstream tuning, which auto-starts.
+[group('run')]
+[doc('TARE exploration alone (blocks; holds until `just tare-go`)')]
+tare scenario="cmu_challenge":
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch tare_planner explore.launch scenario:={{scenario}}"
+
+# Stands in for the supervisor, which publishes this alongside /pipeline/armed once SAM
+# holds the question's prompts. Only needed for a bare `just tare` -- in the full
+# pipeline (`just ai`) the supervisor sends it.
+[group('run')]
+[doc('Release the TARE start gate (supervisor stand-in; for a bare `just tare`)')]
+tare-go:
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic pub --once /start_exploration std_msgs/msg/Bool '{data: true}'"
 
 # /camera/image in -> /annotated_image, /sam3/instance_map, /sam3/detections out.
 [group('run')]
@@ -378,23 +393,25 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
 cat1-reasoner backend="auto" views="3":
     #!/usr/bin/env bash
     set -euo pipefail
-    # captioner too: smart_vlm imports captioner.paths / .text_utils / .ros_utils /
+    # Rebuild the image so this reasoner runs the current source: captioner counts
+    # too, since smart_vlm imports captioner.paths / .text_utils / .ros_utils /
     # .vlm_backends.
-    just build "captioner smart_vlm sam_mapper"
+    just up
     docker exec -it iros2026_ai_module bash -lc "
       source {{ai_src}}/install/setup.bash &&
       ros2 run smart_vlm numerical_reasoner --ros-args \
         -p backend:={{backend}} -p max_context_views:={{views}}
     "
 
-# Needs `just vqa-up` running first. The whole pipeline (SAM included) is relaunched per
-# question, so model load lands inside the measured budget exactly as it will on the real
-# evaluation -- a full sweep is 75 questions and takes hours. Use a scene + limit as the
-# dev loop:  just eval-cat1 arabic_room 2
+# The whole pipeline (SAM and, on the local backend, Qwen) is relaunched per question, so
+# model load lands inside the measured budget exactly as it will on the real evaluation --
+# a full sweep is 75 questions and takes hours. `just vqa-up` beforehand is an optional
+# speed-up: a resident server survives the relaunches and saves reloading 8.3 GB per
+# question. Use a scene + limit as the dev loop:  just eval-cat1 arabic_room 2
 # target_source=vlm exercises the model target-extraction path instead of benchmark GT.
 # backend=cloud is the scored configuration and spends credits at whatever VLM_PROVIDER
-# points at; backend=local runs the same sweep for free against the resident Qwen and
-# needs `just vqa-up` first. Give a separate report= when A/B-ing two configurations, or
+# points at; backend=local runs the same sweep for free against Qwen, which the pipeline
+# starts itself. Give a separate report= when A/B-ing two configurations, or
 # the second sweep overwrites the first.
 # Crops land in data/crops/<report name>/<scene>/<question id>-<question>/ and the report
 # records the directory, so any sweep's report doubles as the cache index that
@@ -419,6 +436,28 @@ eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" re
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
 eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" backend="auto" report="/data/runs/cat2_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p report_file:={{report}}"
+
+# The same two sweeps against the LIVE SIM instead of bags, with TARE driving. Unlike
+# the bag recipes these run on the HOST, not in a container: switching Unity scenes
+# means docker cp-ing a mesh into the system container and restarting the sim, which
+# nothing inside the AI module can do. The driver handles the scene loop, so `all`
+# works here the way it does for bags -- do NOT leave `just challenge` running, it
+# starts and stops the sim itself.
+#   just eval-cat1-sim arabic_room 2
+#   just eval-cat2-sim "arabic_room chinese_room"
+[group('eval')]
+[doc('Orchestrated category-1 eval against the live sim (TARE explores; host-side)')]
+eval-cat1-sim scene="all" limit="0" target_source="gt" backend="auto" report="/data/runs/challenge_report_sim_cat1.json":
+    python3 scripts/eval/run_sim_sweep.py --category 1 --scenes {{scene}} \
+      --limit {{limit}} --target-source {{target_source}} --backend {{backend}} \
+      --report "{{report}}"
+
+[group('eval')]
+[doc('Orchestrated category-2 eval against the live sim (TARE explores; host-side)')]
+eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="gt" backend="auto" report="/data/runs/challenge_report_sim_cat2.json":
+    python3 scripts/eval/run_sim_sweep.py --category 2 --scenes {{scene}} \
+      --limit {{limit}} --mode {{mode}} --target-source {{target_source}} \
+      --backend {{backend}} --report "{{report}}"
 
 # Phase 1 of the two-phase VLM comparison: eval-cat1 minus the counting call, so it
 # costs one cheap text-only extraction per question instead of a 3-image one.

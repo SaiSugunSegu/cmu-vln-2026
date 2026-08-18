@@ -48,7 +48,8 @@ void SensorCoveragePlanner3D::ReadParameters() {
   this->declare_parameter<std::string>("pub_runtime_breakdown_topic_",
                                        "runtime_breakdown");
   this->declare_parameter<std::string>("pub_runtime_topic_", "/runtime");
-  this->declare_parameter<std::string>("pub_waypoint_topic_", "/way_point");
+  this->declare_parameter<std::string>("pub_waypoint_topic_",
+                                       "/way_point_with_heading");
   this->declare_parameter<std::string>("pub_momentum_activation_count_topic_",
                                        "momentum_activation_count");
 
@@ -448,7 +449,7 @@ bool SensorCoveragePlanner3D::initialize() {
       this->create_publisher<nav_msgs::msg::Path>("local_path", 1);
   exploration_path_publisher_ =
       this->create_publisher<nav_msgs::msg::Path>("exploration_path", 1);
-  waypoint_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>(
+  waypoint_pub_ = this->create_publisher<geometry_msgs::msg::Pose2D>(
       pub_waypoint_topic_, 2);
   exploration_finish_pub_ = this->create_publisher<std_msgs::msg::Bool>(
       pub_exploration_finish_topic_, 2);
@@ -644,13 +645,7 @@ void SensorCoveragePlanner3D::JoystickCallback(
       reset_waypoint_ = true;
 
       // Set waypoint to the current robot position to stop the robot in place
-      geometry_msgs::msg::PointStamped waypoint;
-      waypoint.header.frame_id = "map";
-      waypoint.header.stamp = this->now();
-      waypoint.point.x = robot_position_.x;
-      waypoint.point.y = robot_position_.y;
-      waypoint.point.z = robot_position_.z;
-      waypoint_pub_->publish(waypoint);
+      SendWaypoint(robot_position_.x, robot_position_.y);
       std::cout << "reset waypoint" << std::endl;
     }
     reset_waypoint_joystick_axis_value_ =
@@ -663,13 +658,7 @@ void SensorCoveragePlanner3D::ResetWaypointCallback(
   reset_waypoint_ = true;
 
   // Set waypoint to the current robot position to stop the robot in place
-  geometry_msgs::msg::PointStamped waypoint;
-  waypoint.header.frame_id = "map";
-  waypoint.header.stamp = this->now();
-  waypoint.point.x = robot_position_.x;
-  waypoint.point.y = robot_position_.y;
-  waypoint.point.z = robot_position_.z;
-  waypoint_pub_->publish(waypoint);
+  SendWaypoint(robot_position_.x, robot_position_.y);
   std::cout << "reset waypoint" << std::endl;
 }
 
@@ -680,13 +669,7 @@ void SensorCoveragePlanner3D::SendInitialWaypoint() {
   double dx = cos(robot_yaw_) * lx - sin(robot_yaw_) * ly;
   double dy = sin(robot_yaw_) * lx + cos(robot_yaw_) * ly;
 
-  geometry_msgs::msg::PointStamped waypoint;
-  waypoint.header.frame_id = "map";
-  waypoint.header.stamp = this->now();
-  waypoint.point.x = robot_position_.x + dx;
-  waypoint.point.y = robot_position_.y + dy;
-  waypoint.point.z = robot_position_.z;
-  waypoint_pub_->publish(waypoint);
+  SendWaypoint(robot_position_.x + dx, robot_position_.y + dy);
 }
 
 void SensorCoveragePlanner3D::UpdateKeyposeGraph() {
@@ -1347,12 +1330,28 @@ bool SensorCoveragePlanner3D::GetLookAheadPoint(
   return true;
 }
 
+void SensorCoveragePlanner3D::SendWaypoint(double x, double y) {
+  // geometry_msgs/Pose2D on /way_point_with_heading — the challenge's waypoint
+  // interface (README "System Inputs"). It carries no header, so it cannot go
+  // through misc_utils_ns::Publish, which stamps one; the frame is implicitly
+  // kWorldFrameID ("map"), the same frame every other output here uses.
+  //
+  // Heading is nominally ignored this year, and the system's waypoint_converter
+  // ships yawConfig=-1 ("reach waypoint and stop"), which overwrites theta with the
+  // vehicle's current yaw. Filling in the bearing to the waypoint anyway keeps the
+  // message self-consistent and is what visualization_tools renders.
+  geometry_msgs::msg::Pose2D waypoint;
+  waypoint.x = x;
+  waypoint.y = y;
+  waypoint.theta = atan2(y - robot_position_.y, x - robot_position_.x);
+  waypoint_pub_->publish(waypoint);
+}
+
 void SensorCoveragePlanner3D::PublishWaypoint() {
-  geometry_msgs::msg::PointStamped waypoint;
+  double waypoint_x, waypoint_y;
   if (exploration_finished_ && near_home_ && kRushHome) {
-    waypoint.point.x = initial_position_.x();
-    waypoint.point.y = initial_position_.y();
-    waypoint.point.z = initial_position_.z();
+    waypoint_x = initial_position_.x();
+    waypoint_y = initial_position_.y();
   } else {
     double dx = lookahead_point_.x() - robot_position_.x;
     double dy = lookahead_point_.y() - robot_position_.y;
@@ -1364,12 +1363,12 @@ void SensorCoveragePlanner3D::PublishWaypoint() {
       dx = dx / r * extend_dist;
       dy = dy / r * extend_dist;
     }
-    waypoint.point.x = dx + robot_position_.x;
-    waypoint.point.y = dy + robot_position_.y;
-    waypoint.point.z = lookahead_point_.z();
+    waypoint_x = dx + robot_position_.x;
+    waypoint_y = dy + robot_position_.y;
   }
-  misc_utils_ns::Publish(shared_from_this(), waypoint_pub_, waypoint,
-                         kWorldFrameID);
+  // The z the upstream planner carried here (lookahead_point_.z()) is dropped by
+  // Pose2D. Nothing consumed it: waypoint_converter reads x, y and theta only.
+  SendWaypoint(waypoint_x, waypoint_y);
 }
 
 void SensorCoveragePlanner3D::PublishRuntime() {
