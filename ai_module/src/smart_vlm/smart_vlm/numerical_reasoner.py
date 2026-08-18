@@ -42,7 +42,7 @@ from typing import NamedTuple
 
 import rclpy
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-from rclpy.executors import MultiThreadedExecutor
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Int32, String
@@ -464,10 +464,11 @@ def main(args=None):
     executor.add_node(node)
     try:
         executor.spin()
-    except KeyboardInterrupt:
-        # The harness SIGINTs this pipeline after every question; that is the normal
-        # exit, not a crash. Without this it propagates as a traceback and exit -2.
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
+    except RuntimeError:
+        if rclpy.ok():
+            raise
     finally:
         executor.shutdown()
         node.destroy_node()

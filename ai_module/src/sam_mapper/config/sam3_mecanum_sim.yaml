@@ -8,7 +8,7 @@ detection_angular_state_time_bias: 0.0
 sam3:
   # hf_sam3      transformers Sam3VideoModel (the measured baseline)
   # native_sam31 facebookresearch/sam3 Object Multiplex. 
-  backend: native_sam31
+  backend: hf_sam3
   model_id: facebook/sam3
   device: cuda
   dtype: bfloat16
@@ -25,7 +25,8 @@ sam3:
   # Must be square: a reshape downstream of the ViT hardcodes a square token grid.
   # Valid sizes divide by patch 14 and give a grid divisible by window 24:
   #   [1008,1008] 5184 tokens (default) | [672,672] 0.44x | [336,336] 0.11x
-  image_size: [1008, 1008]
+  # image_size: [1008, 1008]
+  image_size: [672, 672]
 
   # Streaming disables SAM 3's hotstart heuristics, so these run stricter than the
   # model defaults to hold down duplicate tracks.
@@ -149,9 +150,7 @@ mapping:
   publish_oriented_box: false      # measured: oriented LOSES (cat2 0.473 -> 0.366)
 
 runtime:
-  # Read by both nodes. MultiThreadedExecutor defaults to cpu_count() threads, which all
-  # spin holding the GIL; keep it lean (the real fix was the process split, M2 3.6-split).
-  executor_threads: 16
+  executor_threads: 8
   publish_annotated: false
   log_every_n_frames: 5
   profile: false                    # per-stage breakdown in BOTH node logs, 

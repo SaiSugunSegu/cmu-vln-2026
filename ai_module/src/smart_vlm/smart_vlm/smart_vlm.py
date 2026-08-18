@@ -28,6 +28,7 @@ from typing import Optional
 
 import rclpy
 from nav_msgs.msg import Odometry
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Int32, String
@@ -397,8 +398,11 @@ def main(args=None):
     node = SmartVLM()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
+    except RuntimeError:
+        if rclpy.ok():
+            raise
     finally:
         node.destroy_node()
         if rclpy.ok():

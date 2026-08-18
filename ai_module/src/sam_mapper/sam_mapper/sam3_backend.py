@@ -125,6 +125,10 @@ class Sam3Backend:
 
         self.prompts: list[str] = []
         self.session = None
+        # One session must span a whole question — see the module header: ids are only
+        # stable within a session and the 3D mapper associates on them. This counter is how a
+        # run's log proves that held — expect #1 at boot and #2 when the prompts arrive.
+        self.session_epoch = 0
 
     # Flash attention is deliberately absent. Measured on SAM 3
     # kernels-community/flash-attn2 returns 0.0 objects/frame vs sdpa's 2.0 — Sam3Attention
@@ -185,6 +189,7 @@ class Sam3Backend:
 
     def reset(self) -> None:
         """Start a fresh session. Object ids restart, so callers must renumber."""
+        self.session_epoch += 1
         self.session = self.processor.init_video_session(
             inference_device=self.device, processing_device="cpu",
             video_storage_device="cpu", dtype=self.dtype,
@@ -192,6 +197,7 @@ class Sam3Backend:
         )
         if self.prompts:
             self.processor.add_text_prompt(self.session, self.prompts)
+        self.log(f"SAM 3 session #{self.session_epoch} (prompts={self.prompts})")
 
     def process_frame(self, rgb: np.ndarray) -> Sam3FrameResult:
         """rgb: (H, W, 3) uint8, RGB order."""
