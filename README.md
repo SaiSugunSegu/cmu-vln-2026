@@ -202,7 +202,7 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 | **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `caption` |
 | **cat1** | `cat1-reasoner` · `cat1-bag-bench <scene> [limit]` |
 | **cat2** | `gen-cat2` · `verify-cat2` · `pdf-assets` |
-| **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` |
+| **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` · `eval-target-extract [--backend cloud] [--category 3]` |
 | **map3d** | `map3d-record <scene> [stride]` · `map3d-replay <scene> [jobs]` · `map3d-score` · `map3d-determinism` · `map3d-audit` |
 
 Run `just` for this list with descriptions and default arguments.
