@@ -61,10 +61,9 @@ services:
     env_file:
       - path: ../.env
         required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
-    # The reasoner reads VLM_BACKEND (local | cloud) from here too, plus the provider
-    # variables (VLM_PROVIDER and its API key) when it is cloud. Unset means local, so an
-    # unconfigured container answers with the resident Qwen and spends no credits; a
-    # scored run sets VLM_BACKEND=cloud. See captioner/vlm_backends/constants.py.
+    # backend/provider/model are configured in ai_module/src/captioner/config/vqa.yaml,
+    # not here; .env only supplies each provider's API key (see PROVIDERS in
+    # captioner/vlm_backends/constants.py) plus HF_TOKEN.
     environment:
       # No privileged: true — the nvidia runtime reservation below is what grants
       # GPU access, and privileged would hand the container every host device.

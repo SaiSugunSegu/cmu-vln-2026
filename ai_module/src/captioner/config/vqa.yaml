@@ -1,0 +1,39 @@
+# captioner.vlm_backends VQA configuration. See captioner/vlm_backends/constants.py for
+# how each key is read, defaulted and validated. API keys are NOT here — this file is
+# committed to git and shipped in the submission image, so secrets stay in the
+# environment (.env / docker compose env_file); see PROVIDERS in constants.py for which
+# env var each provider's key comes from.
+
+# local (resident Qwen, served by vqa_server.launch) | cloud (a hosted model over its
+# OpenAI-compatible endpoint, picked with `provider` below). local costs nothing per
+# call and is the dev-loop default; a scored run sets this to cloud.
+backend: local
+
+# auto | local | cloud — backend for the text-only target-extraction call the reasoners
+# fire before SAM is armed. auto follows `backend` above; set explicitly to decouple
+# extraction cost from the main answering backend (e.g. keep counting on cloud but
+# extraction on the free local server).
+extract_backend: auto
+
+# gemini | anthropic | dashscope | openrouter | openai | <anything, via base_url/model
+# below>. Only supplies defaults — base_url/model/model_lite each override individually.
+provider: dashscope
+base_url: "https://ws-l7okjx3b70y42gso.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1"
+model: "qwen3.7-flash"
+# Cheaper model for the extraction call (lite=True); blank falls back to the provider's
+# own lite preset, then to `model` above.
+model_lite: ""
+
+# crop | silhouette — which image of a best-view crop the model sees. silhouette is the
+# mask-outline + label copy sam_node writes next to each crop (see sam_mapper's
+# save_silhouette_copy); crop is the plain, unannotated photo. Read by both category-1
+# (numerical_utils.select_context_views) and category-2 (cat2_utils.marked_views), live
+# reasoners and their offline benches alike.
+view_source: silhouette
+
+# How long a view_source: silhouette run waits for sam_node to finish writing the
+# finalized copy before falling back to the plain crop, and how often it polls while
+# waiting. Both reasoners fire on the same /pipeline/explore_done that starts the
+# finalize pass, so arriving a few hundred ms early is normal, not a fault.
+silhouette_wait_s: 5.0
+silhouette_poll_s: 0.25

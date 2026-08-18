@@ -12,7 +12,9 @@ captioner's `get_object_extraction_prompt()` for the same reason.
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
+from typing import Optional
 
 from captioner.paths import secure_path
 from captioner.prompts.object_extraction import get_object_extraction_prompt
@@ -20,6 +22,7 @@ from captioner.prompts.object_extraction import get_object_extraction_prompt
 # implementation with the VQA server: two of them drifted apart before (one
 # stripped thousands separators, the other did not).
 from captioner.text_utils import extract_integer
+from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, VIEW_SOURCE
 
 __all__ = [
     "ANSWER_SYSTEM",
@@ -46,7 +49,37 @@ ANSWER_SYSTEM = (
 )
 
 
-def select_context_views(run_dir: Path, manifest: dict, max_views: int) -> list[Path]:
+def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Path], bool]:
+    """(path to answer from, whether it is a finalized silhouette) for one crop filename.
+
+    Mirrors `cat2_utils._view_source`: one VIEW_SOURCE switch (see
+    captioner.vlm_backends.constants, backed by config/vqa.yaml) governs both categories,
+    so a change to it moves every eval script instead of drifting between the two
+    reasoners that each picked their own images. `crop` never looks at silhouette/, even
+    once one exists; `silhouette` (the default) waits out `deadline` for sam_node's
+    finalize pass before falling back to the plain crop, so a run with
+    save_silhouette_copy disabled still answers.
+
+    `name` comes from a manifest on disk, so it is untrusted as far as path building
+    goes; both candidates go through `secure_path` before any file check, which raises
+    on a traversal attempt rather than silently skipping it.
+    """
+    plain = secure_path(run_dir / name)
+    if VIEW_SOURCE != "silhouette":
+        return (plain, False) if plain.is_file() else (None, False)
+
+    silhouette = secure_path(run_dir / "silhouette" / name)
+    while True:
+        if silhouette.is_file():
+            return silhouette, True
+        if time.monotonic() >= deadline:
+            return (plain, False) if plain.is_file() else (None, False)
+        time.sleep(SILHOUETTE_POLL_S)
+
+
+def select_context_views(
+    run_dir: Path, manifest: dict, max_views: int, *, wait_s: Optional[float] = None,
+) -> list[Path]:
     """The best-view images to answer from, best-ranked first.
 
     More than one because rank 1 is the single frame SAM scored highest, not a frame
@@ -56,15 +89,25 @@ def select_context_views(run_dir: Path, manifest: dict, max_views: int) -> list[
 
     Entries come from a manifest on disk, so the filenames are untrusted as far as path
     building goes, and a rank whose image is missing is skipped rather than fatal.
+
+    Whether this is the raw crop or its finalized silhouette copy is governed by
+    VIEW_SOURCE (see captioner.vlm_backends.constants, backed by config/vqa.yaml) — the
+    same switch category-2 reads, not a flag threaded through every eval script. `wait_s`
+    bounds how long a VIEW_SOURCE="silhouette" call waits for sam_node to finish drawing
+    it, shared across every requested rank; omit it for the live reasoner's default
+    (SILHOUETTE_WAIT_S), or pass 0 for an offline replay (`cat1_bench`) against a cache
+    nothing is still writing to.
     """
+    budget = SILHOUETTE_WAIT_S if wait_s is None else max(0.0, wait_s)
+    deadline = time.monotonic() + budget
     paths: list[Path] = []
     for entry in (manifest.get("selected") or [])[:max(1, max_views)]:
         name = entry.get("file")
         if not name:
             continue
-        candidate = secure_path(Path(run_dir) / name)
-        if candidate.is_file():
-            paths.append(candidate)
+        source, _finalized = _view_source(Path(run_dir), name, deadline)
+        if source is not None:
+            paths.append(source)
     return paths
 
 

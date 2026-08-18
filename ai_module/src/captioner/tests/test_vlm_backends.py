@@ -5,9 +5,11 @@ and every one of those is a lost call if parsing is strict. These are the shapes
 actually observed from Qwen3-VL.
 """
 import json
+import os
 from types import SimpleNamespace
 
 import pytest
+import yaml
 
 from captioner.vlm_backends.base import VLMError, parse_json_object
 from captioner.vlm_backends.schemas import CountAnswer, TargetList, json_hint
@@ -225,24 +227,30 @@ def test_rejects_target_list_given_a_bare_string():
 
 
 @pytest.fixture
-def constants_with(monkeypatch):
-    """Re-import constants under a given environment, then put it back.
+def constants_with(tmp_path, monkeypatch):
+    """Re-import constants under a given vqa.yaml + environment, then put it back.
 
     Everything there resolves at import time, so the only honest way to test the
     provider fallbacks is to reload the module — and to reload it once more on the way
-    out, or every later test in the session sees the last one's environment.
+    out, or every later test in the session sees the last one's config/environment.
+    Non-secret settings (`provider`, `base_url`, `model`, ...) go in the YAML `config`
+    dict, exactly like the real vqa.yaml; only API keys are still environment vars,
+    since that is the one thing constants.py still reads from the environment.
     """
     import importlib
 
     from captioner.vlm_backends import constants
 
-    def load(**env):
-        for name in ("VLM_PROVIDER", "VLM_BASE_URL", "VLM_API_KEY", "VLM_MODEL",
-                     "VLM_MODEL_LITE", "GEMINI_API_KEY", "DASHSCOPE_API_KEY",
+    def load(config=None, **env):
+        for name in ("VLM_API_KEY", "GEMINI_API_KEY", "DASHSCOPE_API_KEY",
                      "ANTHROPIC_API_KEY"):
             monkeypatch.delenv(name, raising=False)
         for name, value in env.items():
             monkeypatch.setenv(name, value)
+
+        config_path = tmp_path / "vqa.yaml"
+        config_path.write_text(yaml.safe_dump(config or {}))
+        monkeypatch.setenv("CAPTIONER_VQA_CONFIG", str(config_path))
         return importlib.reload(constants)
 
     yield load
@@ -251,7 +259,7 @@ def constants_with(monkeypatch):
 
 
 def test_provider_preset_supplies_endpoint_and_key(constants_with):
-    consts = constants_with(VLM_PROVIDER="dashscope", DASHSCOPE_API_KEY="k")
+    consts = constants_with({"provider": "dashscope"}, DASHSCOPE_API_KEY="k")
     assert "dashscope" in consts.VLM_BASE_URL
     assert consts.VLM_API_KEY == "k"
     assert consts.MODEL_NAME
@@ -259,7 +267,7 @@ def test_provider_preset_supplies_endpoint_and_key(constants_with):
 
 def test_anthropic_preset_points_at_the_compatibility_layer(constants_with):
     """Claude is reachable with a key alone — /v1/ is the OpenAI-compatible path."""
-    consts = constants_with(VLM_PROVIDER="anthropic", ANTHROPIC_API_KEY="k")
+    consts = constants_with({"provider": "anthropic"}, ANTHROPIC_API_KEY="k")
     assert consts.VLM_BASE_URL == "https://api.anthropic.com/v1/"
     assert consts.VLM_API_KEY == "k"
     assert consts.MODEL_NAME.startswith("claude-")
@@ -267,11 +275,9 @@ def test_anthropic_preset_points_at_the_compatibility_layer(constants_with):
 
 def test_explicit_settings_beat_the_preset(constants_with):
     consts = constants_with(
-        VLM_PROVIDER="gemini",
+        {"provider": "gemini", "base_url": "https://example.test/v1", "model": "some-model"},
         GEMINI_API_KEY="preset-key",
-        VLM_BASE_URL="https://example.test/v1",
         VLM_API_KEY="explicit-key",
-        VLM_MODEL="some-model",
     )
     assert consts.VLM_BASE_URL == "https://example.test/v1"
     assert consts.VLM_API_KEY == "explicit-key"
@@ -280,14 +286,41 @@ def test_explicit_settings_beat_the_preset(constants_with):
 
 def test_unlisted_provider_needs_everything_spelled_out(constants_with):
     """An unknown name must not silently inherit Gemini's endpoint."""
-    consts = constants_with(VLM_PROVIDER="some-new-vendor")
+    consts = constants_with({"provider": "some-new-vendor"})
     assert consts.VLM_BASE_URL == ""
     assert consts.MODEL_NAME == ""
 
 
 def test_lite_model_falls_back_to_the_main_one(constants_with):
-    consts = constants_with(VLM_PROVIDER="openrouter", VLM_MODEL="vendor/model")
+    consts = constants_with({"provider": "openrouter", "model": "vendor/model"})
     assert consts.MODEL_NAME_LITE == "vendor/model"
+
+
+def test_invalid_extract_backend_falls_back_to_auto(constants_with):
+    """A typo in vqa.yaml must not fail import — auto is the documented fallback."""
+    consts = constants_with({"extract_backend": "bogus"})
+    assert consts.EXTRACT_BACKEND == "auto"
+
+
+def test_invalid_view_source_falls_back_to_silhouette(constants_with):
+    consts = constants_with({"view_source": "bogus"})
+    assert consts.VIEW_SOURCE == "silhouette"
+
+
+def test_valid_extract_backend_and_view_source_pass_through(constants_with):
+    consts = constants_with({"extract_backend": "local", "view_source": "crop"})
+    assert consts.EXTRACT_BACKEND == "local"
+    assert consts.VIEW_SOURCE == "crop"
+
+
+def test_resolve_config_path_defaults_to_the_bundled_file(monkeypatch):
+    """No CAPTIONER_VQA_CONFIG override -> the config/vqa.yaml shipped with the package."""
+    monkeypatch.delenv("CAPTIONER_VQA_CONFIG", raising=False)
+    from captioner.vlm_backends.config import resolve_config_path
+
+    path = resolve_config_path()
+    assert os.path.join("config", "vqa.yaml") in path
+    assert os.path.isfile(path)
 
 
 @pytest.mark.parametrize("url", [

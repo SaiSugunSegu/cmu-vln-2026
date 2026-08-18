@@ -18,9 +18,9 @@ byte-identical across models, which is the only way an A/B says anything about t
     ros2 run smart_vlm cat1_bench --cache /data/runs/views_cache.json \\
         --report /data/runs/bench_gemini.json
 
-The model is whatever the environment selects (VLM_PROVIDER / VLM_MODEL, see
+The model is whatever config/vqa.yaml selects (`provider` / `model`, see
 captioner/vlm_backends/constants.py), so comparing two providers is two runs of this
-with different variables and different --report paths.
+with vqa.yaml edited between them and different --report paths.
 
 What this does NOT cover: target extraction and everything downstream of it. The cached
 crops were produced from one particular set of SAM prompts, so a model that would have
@@ -44,7 +44,7 @@ from typing import Optional
 
 from captioner.paths import secure_path
 from captioner.vlm_backends import VLMError, make_backend
-from captioner.vlm_backends.constants import MODEL_NAME, VLM_PROVIDER
+from captioner.vlm_backends.constants import MODEL_NAME, VIEW_SOURCE, VLM_PROVIDER
 from captioner.vlm_backends.schemas import CountAnswer
 from smart_vlm.numerical_utils import ANSWER_SYSTEM, select_context_views
 from smart_vlm.report_utils import summarise, write_report
@@ -115,7 +115,10 @@ def answer_one(backend, row: dict, views: int) -> dict:
             with open(manifest_path, "r", encoding="utf-8") as handle:
                 manifest = json.load(handle)
 
-        images = select_context_views(resolved, manifest, views)
+        # wait_s=0: this is a replay over a cache nothing is still writing to, so a
+        # missing silhouette can only ever time out — waiting would just cost every
+        # question SILHOUETTE_WAIT_S for nothing.
+        images = select_context_views(resolved, manifest, views, wait_s=0.0)
         if not images:
             # SAM found nothing for this question. The live reasoner publishes 0 here,
             # so the bench has to as well or the two disagree on the same input.
@@ -165,12 +168,12 @@ def main(argv: Optional[list[str]] = None) -> None:
     # script exists to avoid, so a backend flag here would have exactly one valid value.
     backend = make_backend("cloud", log=log)
     log(f"{len(rows)} cached question(s), {args.views} view(s) each, backend "
-        f"{backend.name}")
+        f"{backend.name}, view_source {VIEW_SOURCE}")
 
     report_path = Path(args.report)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     extra = {"backend": backend.name, "model": MODEL_NAME, "provider": VLM_PROVIDER,
-             "views": args.views, "cache": str(cache_path)}
+             "view_source": VIEW_SOURCE, "views": args.views, "cache": str(cache_path)}
 
     results: list[dict] = []
     interrupted = False
