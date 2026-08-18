@@ -61,7 +61,14 @@ down:
 [group('setup')]
 [doc('ONE-TIME ~15-20 GB weight download (sam3, Qwen3-VL, CLIP) + SAM 3 kernels')]
 hf-fetch models="":
-    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
+    #!/usr/bin/env bash
+    set -euo pipefail
+    extra=()
+    env_file="{{ justfile_directory() }}/.env"
+    if [[ -f "$env_file" ]]; then
+      extra+=(--env-file "$env_file")
+    fi
+    docker exec -e PYTHONUTF8=1 "${extra[@]}" iros2026_ai_module bash -lc \
       "{{capt_env}} && fetch_weights {{models}}"
 
 # Runs in the container because sam_mapper/smart_vlm tests need cv2 + rclpy;
@@ -468,10 +475,13 @@ cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm"
 # Every row carries ceiling_score -- twice the best IoU reachable against the cached boxes --
 # so one run says whether a low score is selection or perception. Give a separate report=
 # when A/B-ing two modes, or the second run overwrites the first.
+# backend only matters for mode=vlm/hybrid (naive/solver never call a model): cloud is the
+# default; backend=local answers over the resident Qwen server instead, so `just vqa-up`
+# must already be running.
 [group('eval')]
 [doc('Score category-2 object selection over the cached maps (no SAM, no bag)')]
-bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}}"
+bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json" backend="cloud":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}} --backend {{backend}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3

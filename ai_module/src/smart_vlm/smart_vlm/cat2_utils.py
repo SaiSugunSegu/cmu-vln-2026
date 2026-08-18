@@ -19,14 +19,13 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
+from language_planner.prompts.object_extraction import get_object_extraction_prompt
+
 # ---------------------------------------------------------------- prompts
 
-EXTRACT_SYSTEM = (
-    "You list the objects a detector should look for in order to answer a question that "
-    "points at one specific object. Include EVERY referenced object: the thing being asked "
-    "for and every landmark it is described relative to, such as a window or a table. Bare "
-    "nouns only, no colours and no other adjectives."
-)
+# Same object-extraction system prompt the language planner uses for /challenge_question
+# target nouns. Shared with numerical_utils so cat1 and cat2 cannot drift apart.
+EXTRACT_SYSTEM = get_object_extraction_prompt()
 
 # The candidate list is data, not instruction — a question is user text and must never be
 # able to talk the model out of the format. Hence "copy an id from the list" rather than

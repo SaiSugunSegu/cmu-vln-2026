@@ -317,8 +317,41 @@ class Sam31Backend:
         self._id_base = 0            # keeps ids monotonic across internal session rollovers
         self._max_emitted = -1
         self._new_session()
+        self._warm_up()
 
     # -- setup -------------------------------------------------------------
+
+    def _warm_up(self) -> None:
+        """Run one throwaway frame through the full pipeline right after weight load, so CUDA
+        kernel compilation / cuDNN autotuning lands here instead of on the first REAL frame.
+
+        Measured (chinese_room, native_sam31): an un-warmed first call costs ~1165 ms against
+        a ~125-160 ms steady state — on its own enough to blow the 100 ms/frame budget the
+        10 Hz camera gives sam_node and start it dropping frames (sam_node.py:172-176) before
+        the run has even settled. `build_predictor` above passes upstream's own `warm_up=False`
+        (its warm-up path is single-concept and image-only); this is the multi-concept,
+        video-session replacement.
+
+        Runs with a dummy prompt so process_frame does not short-circuit on an empty prompt
+        list, then restores every piece of state a real set_prompts()/reset() would — this
+        always sees `self.prompts == []` here since sam_node calls set_prompts() only after
+        make_backend() returns (sam_node.py:116-119), but the save/restore holds regardless.
+        """
+        blank = np.zeros((self.image_size, self.image_size, 3), dtype=np.uint8)
+        saved_prompts = self.prompts
+        try:
+            self.prompts = ["warmup"]
+            self._new_session()
+            self.process_frame(blank)
+            self.log("[sam31] warm-up frame done")
+        except Exception as err:  # noqa: BLE001 — a failed warm-up must not block startup
+            self.log(f"[sam31] warm-up frame failed ({type(err).__name__}: {err}) — "
+                     f"first real frame will pay the compile cost instead")
+        finally:
+            self.prompts = saved_prompts
+            self._id_base = 0
+            self._max_emitted = -1
+            self._new_session()
 
     def _bf16(self):
         """The autocast the model assumes is always on.

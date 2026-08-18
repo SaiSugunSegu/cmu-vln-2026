@@ -35,7 +35,8 @@ sam3:
   det_nms_thresh: 0.1
   recondition_every_nth_frame: 16
 
-  # Read ONLY when backend: native_sam31.
+  # Read ONLY when backend: native_sam31 — ignored while backend: hf_sam3 above, kept here
+  # so switching back to native_sam31 does not lose this tuning.
   native_sam31:
     # session_frames slots of 1008x1008 fp16 are preallocated on the GPU (~6.1 MB each).
     # At the end the backend rolls to a new session and carries its own id offset, 

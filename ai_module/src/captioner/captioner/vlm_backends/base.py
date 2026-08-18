@@ -24,14 +24,14 @@ class VLMError(RuntimeError):
     """A backend could not produce a valid answer."""
 
 
-def _balanced_object(text: str) -> str | None:
-    """Extract the first brace-balanced {...} run, ignoring braces inside strings.
+def _balanced_span(text: str, open_char: str, close_char: str) -> str | None:
+    """Extract the first balanced open…close run, ignoring delimiters inside strings.
 
     A regex cannot do this: `reason` fields routinely contain braces and quotes,
-    and a non-greedy `\\{.*?\\}` truncates at the first inner brace while a greedy
+    and a non-greedy match truncates at the first inner delimiter while a greedy
     one swallows trailing prose.
     """
-    start = text.find("{")
+    start = text.find(open_char)
     if start < 0:
         return None
     depth = 0
@@ -49,21 +49,32 @@ def _balanced_object(text: str) -> str | None:
             continue
         if char == '"':
             in_string = True
-        elif char == "{":
+        elif char == open_char:
             depth += 1
-        elif char == "}":
+        elif char == close_char:
             depth -= 1
             if depth == 0:
                 return text[start:i + 1]
     return None
 
 
+def _balanced_object(text: str) -> str | None:
+    return _balanced_span(text, "{", "}")
+
+
+def _balanced_array(text: str) -> str | None:
+    return _balanced_span(text, "[", "]")
+
+
 def parse_json_object(text: str, schema: Type[T]) -> T:
     """Coerce model text into `schema`, or raise VLMError.
 
     Tries the raw text, then the contents of a code fence, then the first
-    brace-balanced object anywhere in the reply — which is what catches the
-    common "Sure, here is the JSON: {...}" preamble.
+    brace-balanced object or bracket-balanced array anywhere in the reply — which
+    catches both "Sure, here is the JSON: {...}" preambles and the bare
+    `["pillow", "couch"]` lists the language-planner extract prompt asks for.
+    A bare list is wrapped as `{"targets": [...]}` when `schema` has a `targets`
+    field (TargetList).
     """
     if not text or not text.strip():
         raise VLMError("empty reply")
@@ -76,6 +87,9 @@ def parse_json_object(text: str, schema: Type[T]) -> T:
     balanced = _balanced_object(stripped)
     if balanced:
         candidates.append(balanced)
+    array = _balanced_array(stripped)
+    if array:
+        candidates.append(array)
 
     last_error: Exception | None = None
     for candidate in candidates:
@@ -84,6 +98,8 @@ def parse_json_object(text: str, schema: Type[T]) -> T:
         except json.JSONDecodeError as exc:
             last_error = exc
             continue
+        if isinstance(payload, list) and "targets" in schema.model_fields:
+            payload = {"targets": payload}
         if not isinstance(payload, dict):
             last_error = TypeError(f"expected a JSON object, got {type(payload).__name__}")
             continue
