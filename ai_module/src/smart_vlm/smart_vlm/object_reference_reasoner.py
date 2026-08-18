@@ -48,6 +48,7 @@ from visualization_msgs.msg import Marker
 from captioner.paths import secure_path
 from captioner.qwen_vqa_protocol import vqa_image_fields
 from captioner.ros_utils import wait_for_subscriber
+from captioner.ros_utils import shutdown_guard
 from captioner.vlm_backends import VLMError, make_backend
 from captioner.vlm_backends.constants import VLM_BACKEND
 from captioner.vlm_backends.schemas import TargetList
@@ -487,10 +488,11 @@ def main(args=None):
         if rclpy.ok():
             raise
     finally:
-        executor.shutdown()
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        with shutdown_guard():
+            executor.shutdown()
+            node.destroy_node()
+            if rclpy.ok():
+                rclpy.shutdown()
 
 
 if __name__ == "__main__":

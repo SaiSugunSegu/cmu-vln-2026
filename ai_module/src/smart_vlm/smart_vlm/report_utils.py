@@ -75,6 +75,25 @@ def summarise(results: list[dict]) -> dict[str, Any]:
     }
 
 
+def previous_results(report_path: Path) -> list[dict]:
+    """Rows already in a report, so a later run can extend rather than replace them.
+
+    Unlike cached_rows this filters nothing: the caller wants the sweep's history intact,
+    including failed rows, because a report that silently dropped them would overstate
+    accuracy. A missing or unreadable file is an empty history, not an error — the first
+    scene of a sweep runs with no report there yet.
+    """
+    if not report_path.is_file():
+        return []
+    try:
+        with open(report_path, "r", encoding="utf-8") as handle:
+            rows = json.load(handle).get("results") or []
+    except (OSError, json.JSONDecodeError) as err:
+        print(f"[report] could not read {report_path} to append: {err}")
+        return []
+    return [r for r in rows if isinstance(r, dict)]
+
+
 def write_report(path: Path, results: list[dict], extra: dict | None = None) -> None:
     """Rewrite the whole report after every question, so an interrupted run is usable.
 

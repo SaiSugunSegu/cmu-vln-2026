@@ -27,11 +27,13 @@ import time
 from typing import Optional
 
 import rclpy
+
+from captioner.ros_utils import shutdown_guard
 from nav_msgs.msg import Odometry
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
-from std_msgs.msg import Int32, String
+from std_msgs.msg import Bool, Int32, String
 from visualization_msgs.msg import Marker
 
 from sam_mapper.challenge_marker import payload_from_map_object
@@ -126,6 +128,7 @@ class SmartVLM(Node):
         self.pub_ready = self.create_publisher(String, "/pipeline/ready", _latched())
         self.pub_armed = self.create_publisher(String, "/pipeline/armed", _latched())
         self.pub_explore_done = self.create_publisher(String, "/pipeline/explore_done", 10)
+        self.pub_start_exploration = self.create_publisher(Bool, "/start_exploration", _latched())
         self.pub_status = self.create_publisher(String, "/smart_vlm/status", _latched())
         # Second writer on each answer topic by design: the reasoners own the real answers,
         # these only fire as the T-30 fallback.
@@ -207,6 +210,7 @@ class SmartVLM(Node):
             "elapsed_s": round(self.clock.elapsed(time.monotonic()), 1),
         }
         self.pub_armed.publish(String(data=json.dumps(payload)))
+        self.pub_start_exploration.publish(Bool(data=True))
         self.get_logger().info(
             f"SAM armed with {self.armed_prompts} -> {ack.get('run_dir')}; "
             f"releasing the scene source")
@@ -250,10 +254,10 @@ class SmartVLM(Node):
         now = time.monotonic()
         self.odom_count += 1
         self.last_odom_t = now
-        if not self.clock.exploring_started:
+        if self.armed_published and not self.clock.exploring_started:
             self.clock.mark_exploring(now)
             self.get_logger().info(
-                f"sensor data flowing — exploring until "
+                f"armed and sensor data flowing — exploring until "
                 f"T+{self.clock.explore_deadline - self.clock.t0:.0f}s")
             self._publish_status()
 
@@ -404,9 +408,10 @@ def main(args=None):
         if rclpy.ok():
             raise
     finally:
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        with shutdown_guard():
+            node.destroy_node()
+            if rclpy.ok():
+                rclpy.shutdown()
 
 
 if __name__ == "__main__":

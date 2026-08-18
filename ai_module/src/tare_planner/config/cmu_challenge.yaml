@@ -1,0 +1,155 @@
+# The exploration config the CMU-VLN pipeline actually runs (smart_vlm.launch).
+#
+# Copied from indoor_small.yaml and ours to tune from here on: the three scenario
+# yamls beside it are vendored upstream tuning for generic worlds, so diverging from
+# them is the point rather than drift to be corrected. It is a full copy, not an
+# overlay, so a change to indoor_small.yaml will NOT propagate here.
+#
+# The one deliberate difference today is kAutoStart (see below).
+tare_planner_node:
+  ros__parameters:
+    sub_start_exploration_topic_ : /start_exploration
+    sub_terrain_map_topic_ : /terrain_map
+    sub_terrain_map_ext_topic_ : /terrain_map_ext
+    # /state_estimation, not upstream's /state_estimation_at_scan: only the six
+    # topics in docker/system/challenge_topics_bridge.yaml reach the AI module's ROS
+    # domain, and the scan-synchronised variant is not one of them. Safe swap --
+    # StateEstimationCallback only latches robot_position_/robot_yaw_ and does no
+    # time association with the registered scan.
+    sub_state_estimation_topic_ : /state_estimation
+    sub_registered_scan_topic_ : /registered_scan
+    sub_coverage_boundary_topic_ : /sensor_coverage_planner/coverage_boundary
+    sub_viewpoint_boundary_topic_ : /navigation_boundary
+    sub_nogo_boundary_topic_ : /sensor_coverage_planner/nogo_boundary
+    sub_joystick_topic_ : /joy
+    sub_reset_waypoint_topic_ : /reset_waypoint
+    pub_exploration_finish_topic_ : exploration_finish
+    pub_runtime_breakdown_topic_ : runtime_breakdown
+    pub_runtime_topic_ : /runtime
+    # Pose2D on /way_point_with_heading -- the challenge's waypoint interface and the
+    # only drive output bridged out of this domain. /way_point is the *system's*
+    # PointStamped topic, published by waypoint_converter downstream of us.
+    pub_waypoint_topic_ : /way_point_with_heading
+    pub_momentum_activation_count_topic_ : momentum_activation_count
+
+    # false: hold the robot until std_msgs/Bool(true) lands on
+    # sub_start_exploration_topic_. The supervisor publishes it the instant SAM holds
+    # the question's prompts, alongside /pipeline/armed -- so exploration and bag
+    # replay are released by the same event, and no ground is covered against a
+    # detector still loading weights. Enforced in execute(): nothing is published
+    # before the gate opens, not even the initial waypoint.
+    #
+    # This is what makes this file different from indoor_small.yaml. Set it true and
+    # the robot drives the moment it initialises, which is what `just tare` wants.
+    kAutoStart : false
+    kRushHome : true
+    kUseTerrainHeight : false
+    kCheckTerrainCollision : true
+    kExtendWayPoint : true
+    kUseLineOfSightLookAheadPoint : true
+    kNoExplorationReturnHome : false
+    kExtendWayPointDistanceBig : 4.0
+    kExtendWayPointDistanceSmall : 1.5
+    kKeyposeCloudDwzFilterLeafSize : 0.05
+    kRushHomeDist : 3.0
+    kAtHomeDistThreshold : 0.5
+    kTerrainCollisionThreshold : 0.3
+    kLookAheadDistance : 4.0
+    kUseMomentum : true 
+    kDirectionChangeCounterThr : 6
+    kDirectionNoChangeCounterThr : 5
+    kResetWaypointJoystickAxesID : 2
+
+    # PlanningEnv
+    kUseFrontier : true
+    kFrontierClusterTolerance : 1.0
+    kFrontierClusterMinSize : 8
+    kUseCoverageBoundaryOnFrontier : true
+    kUseCoverageBoundaryOnObjectSurface : false
+
+    # Rolling occupancy grid
+    rolling_occupancy_grid/resolution_x : 0.2
+    rolling_occupancy_grid/resolution_y : 0.2
+    rolling_occupancy_grid/resolution_z : 0.2
+
+    kSurfaceCloudDwzLeafSize : 0.4
+    kCollisionCloudDwzLeafSize : 0.05
+    kKeyposeGraphCollisionCheckRadius : 0.15
+    kKeyposeGraphCollisionCheckPointNumThr : 1
+    kKeyposeCloudStackNum : 5
+    kPointCloudRowNum : 50
+    kPointCloudColNum : 50
+    kPointCloudLevelNum : 30
+    kMaxCellPointNum : 100000
+    kPointCloudCellSize : 18.0
+    kPointCloudCellHeight : 1.8
+    kPointCloudManagerNeighborCellNum : 5
+    kCoverCloudZSqueezeRatio : 2.0
+
+    # KeyposeGraph
+    keypose_graph/kAddNodeMinDist : 0.3
+    keypose_graph/kAddNonKeyposeNodeMinDist : 0.3
+    keypose_graph/kAddEdgeConnectDistThr : 0.5
+    keypose_graph/kAddEdgeToLastKeyposeDistThr : 0.5
+    keypose_graph/kAddEdgeVerticalThreshold : 0.5
+    keypose_graph/kAddEdgeCollisionCheckResolution : 0.1
+    keypose_graph/kAddEdgeCollisionCheckRadius : 0.2
+    keypose_graph/kAddEdgeCollisionCheckPointNumThr : 1
+
+    # ViewPointManager
+    viewpoint_manager/number_x : 45
+    viewpoint_manager/number_y : 45
+    viewpoint_manager/number_z : 1
+    viewpoint_manager/resolution_x : 0.2
+    viewpoint_manager/resolution_y : 0.2
+    viewpoint_manager/resolution_z : 0.0
+    kConnectivityHeightDiffThr : 0.25
+    kGreedyViewPointSampleRange : 3
+    kLocalPathOptimizationItrMax : 10
+    kViewPointCollisionMargin : 0.35
+    kViewPointCollisionMarginZPlus : 0.25
+    kViewPointCollisionMarginZMinus : 0.25
+    kCollisionGridZScale : 1.0
+    kCollisionGridResolutionX : 0.02
+    kCollisionGridResolutionY : 0.02
+    kCollisionGridResolutionZ : 0.0
+    kCollisionPointThr : 1
+    kLineOfSightStopAtNearestObstacle : true 
+    kViewPointHeightFromTerrain : 0.75
+    kViewPointHeightFromTerrainChangeThreshold : 0.6
+    kCheckDynamicObstacleCollision : false
+    kCollisionFrameCountMax : 3
+
+    kSensorRange : 3.0
+    kNeighborRange : 1.5
+    kCoverageOcclusionThr : 0.2
+    kCoverageDilationRadius : 0.25
+
+    # Grid World
+    kGridWorldXNum : 121
+    kGridWorldYNum : 121
+    kGridWorldZNum : 121
+    kGridWorldCellHeight : 3.0
+    kGridWorldNearbyGridNum : 5
+    kMinAddPointNumSmall : 8
+    kMinAddPointNumBig : 16
+    kMinAddFrontierPointNum : 8
+    kCellExploringToCoveredThr : 1
+    kCellCoveredToExploringThr: 10
+    kCellExploringToAlmostCoveredThr: 10
+    kCellAlmostCoveredToExploringThr: 20
+    kCellUnknownToExploringThr: 1
+
+    # Visualization
+    kExploringSubspaceMarkerColorGradientAlpha : true
+    kExploringSubspaceMarkerColorMaxAlpha : 0.8
+    kExploringSubspaceMarkerColorR : 0.0
+    kExploringSubspaceMarkerColorG : 1.0
+    kExploringSubspaceMarkerColorB : 0.0
+    kExploringSubspaceMarkerColorA : 1.0
+    kLocalPlanningHorizonMarkerColorR : 0.0
+    kLocalPlanningHorizonMarkerColorG : 1.0
+    kLocalPlanningHorizonMarkerColorB : 0.0
+    kLocalPlanningHorizonMarkerColorA : 1.0
+    kLocalPlanningHorizonMarkerWidth : 0.15
+    kLocalPlanningHorizonHeight : 3.0

@@ -15,6 +15,11 @@ def launch_tare_node(context, scenario):
         name='tare_planner_node',
         output='screen',
         # namespace='sensor_coverage_planner',
+        # The scenario yaml is the whole configuration, start gate included -- see
+        # cmu_challenge.yaml, which is what smart_vlm.launch selects. Deliberately not
+        # layered with launch-level overrides: launch_ros emits `arguments=` and dict
+        # parameters BEFORE its own --params-file, and rcl applies overrides in
+        # command-line order, so anything passed that way loses to the yaml anyway.
         parameters=[get_package_share_directory('tare_planner')+'/' + scenario_str + '.yaml'])
     return [tare_planner_node]
 

@@ -1,0 +1,65 @@
+# Unity scene manifest — the source of truth for lazy per-scene download.
+#
+# Each scene is ONE zip in the ORGANIZERS' Drive folder, and a zip contains the whole
+# Unity build for that scene: environment/Model.x86_64 + UnityPlayer.so + Model_Data/,
+# plus map.ply, traversable_area.ply and object_list.txt. The scene IS the simulator —
+# system_simulation_noviz.sh runs mesh/unity/environment/Model.x86_64 — which is why
+# there is no simulator to fall back on when a scene is missing.
+#
+# `ros2 run smart_vlm scene_fetch <scene>` reads this file; scripts/eval/run_sim_sweep.py
+# calls it for any scene a sweep needs and does not find on disk.
+#
+# Organizers' Drive folder (the 15 training scenes + variants), from README.md:
+#  https://drive.google.com/drive/folders/1nki_xoFKX1bYr8m7qiGRQelwnQ7EKVYc?usp=drive_link
+#
+# To regenerate these ids after the organizers re-upload — no browsing needed:
+#  docker exec iros2026_ai_module python3 -c 'import gdown; \
+#    [print(f.path, f.id) for f in gdown.download_folder( \
+#      url="https://drive.google.com/drive/folders/1nki_xoFKX1bYr8m7qiGRQelwnQ7EKVYc", \
+#      skip_download=True, quiet=True)]'
+#
+# sha256 is optional and omitted: these zips are the organizers', so hashing them means
+# downloading them first. scene_fetch skips the integrity check when the field is absent
+# (same as bag_fetch). To pin one, run `sha256sum` on the downloaded zip and add it here.
+#
+# NOTE 3 zips exist upstream that are not benchmark scenes in their own right
+# (office_building_2_without_360_cam is a variant); they are listed so `scene_fetch` can
+# reach them, but nothing selects them automatically.
+
+scenes:
+  arabic_room:
+    drive_id: "1_lWkeZwvnUNeiCyCH83YU8XXq5uT1A7k"      # arabic_room.zip
+  chinese_room:
+    drive_id: "12hS_lR8bCLim19ofyWgHW6cB5kaGGssU"      # chinese_room.zip
+  home_building_1:
+    drive_id: "1i7lBSzAy97xYO5yD6LhI5J5fsAPsPa-S"      # home_building_1.zip
+  home_building_2:
+    drive_id: "1iMVo7021iziTPRwR-MugPfehWP1XGai0"      # home_building_2.zip
+  hotel_room_1:
+    drive_id: "1Aol07uFQf8cz2Q2fNJTW5DkvwnVZSKjY"      # hotel_room_1.zip
+  hotel_room_2:
+    drive_id: "1KoCPrhVfcDqTnk7ZJMJG4xJ570FEsX6h"      # hotel_room_2.zip
+  japanese_room:
+    drive_id: "11p9ymIuBPYTL8mgRcy3HE_7LNA6NUTNN"      # japanese_room.zip
+  livingroom_1:
+    drive_id: "1O0FW-nCAKDVr_mVobELJh66JsQe5OpIo"      # livingroom_1.zip
+  livingroom_2:
+    drive_id: "1dDLWYvQ23DifW95s9TsVUzzlBXVamHXy"      # livingroom_2.zip
+  livingroom_3:
+    drive_id: "1EwkQ5cw9P-7gf_g1NHAxL38rPVgof6X_"      # livingroom_3.zip
+  livingroom_4:
+    drive_id: "1sgJ3P2cWZcUThl_3GmRwN1CTCdsV_2Wq"      # livingroom_4.zip
+  loft:
+    drive_id: "1xEJtquiqa_xiOyqYBQmh10pvzF5gIzhJ"      # loft.zip
+  office_1:
+    drive_id: "1YSTWpVdzx53VHklquexgeymh2J0UvOH9"      # office_1.zip
+  office_2:
+    drive_id: "1VxTKjff-PdTJaN3IdmXpJaIbfP6dsg22"      # office_2.zip
+  office_building_1:
+    drive_id: "1XDvtheDg0NCPpsnosfSoVCb1hmMdHcJK"      # office_building_1.zip
+  office_building_2:
+    drive_id: "1VlFSObIXosY4gRkdoL86oHaBi2NqN-33"      # office_building_2.zip
+  office_building_2_without_360_cam:
+    drive_id: "1x3XVwoQvC-VrwwH5V7aMASNtfo4zE7yH"      # office_building_2_without_360_cam.zip
+  studio:
+    drive_id: "1M8QoY_Ht8LKfglKM160TqFdbLKxB4Ms3"      # studio.zip

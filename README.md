@@ -89,7 +89,7 @@ accepted once at <https://huggingface.co/facebook/sam3> with that same account.
 
 ```bash
 just sim                                     # A — or sim-noviz (Foxglove) / challenge (6-topic firewall)
-just vqa-up && just ai                       # B — vqa-up MUST come first: the numerical head is its client
+just ai                                      # B — starts its own Qwen server (local backend default)
 just ask "How many books are on the sofa"    # C — add `42` as a 2nd arg in challenge mode
 ```
 
@@ -115,7 +115,8 @@ load therefore counts against the same 10-minute budget it will on the real eval
 which makes the reported `time_taken_s` honest.
 
 ```bash
-just vqa-up                    # A — Qwen stays resident (too big to reload per question)
+just vqa-up                    # A — OPTIONAL: keeps Qwen resident so the per-question
+                               #     relaunch does not reload 8.3 GB each time
 just eval-cat1 arabic_room 2   # B — dev loop: one scene, two questions
 just eval-cat1 all 0           # B — full sweep (75 questions, several hours)
 ```
@@ -192,7 +193,7 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 
 | Group | Commands |
 |---|---|
-| **setup** | `up` · `up-dev` (live code edits) · `up-dev-fast` · `down` · `hf-fetch` · `build [pkg]` · `test` |
+| **setup** | `up` (build + start; also how source edits reach the container) · `down` · `hf-fetch` · `test` |
 | **sim** | `sim` · `sim-noviz` · `challenge` · `ask "…"` · `teleop` |
 | **bags** | `bag-play <scene>` · `bag <name>` (record) · `list-scenes` |
 | **run** | `ai` · `run-sam` · `run-map` |

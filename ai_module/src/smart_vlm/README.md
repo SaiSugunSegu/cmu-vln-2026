@@ -16,7 +16,8 @@ harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the v
 
 | File | Purpose |
 |---|---|
-| `launch/smart_vlm.launch` | **The per-question unit.** `sam_node` + supervisor + reasoner + scene source. The eval harness spawns it, waits for an answer, then SIGINTs the whole process group — so nothing carries over between questions. |
+| `launch/smart_vlm.launch` | **The per-question unit, and the submission artifact.** `sam_node` + supervisor + reasoners + TARE. Starts no scene source: it consumes the six allowed topics from whatever publishes them. The eval harness spawns it, waits for an answer, then SIGINTs the whole process group — so nothing carries over between questions. |
+| `launch/eval_bag.launch` | **Eval only, never submitted.** Wraps `smart_vlm.launch` and adds `bag_replay.launch` as the scene source, so offline sweeps do not require the launch under test to know bags exist. |
 | `launch/bag_replay.launch` | Replays a recorded scene. Included by the above with `wait_for_armed:=true` (held until SAM has the question's prompts); also usable standalone via `just bag-play`, where the gate is off. |
 
 ## Modules
@@ -56,9 +57,11 @@ python3 -m pytest ai_module/src/captioner/tests ai_module/src/smart_vlm/tests -q
 
 Nothing here loads a model checkpoint of its own.
 
-On the local backend, `captioner` must already be running (`just vqa-up`): every VQA
-request goes to that one resident server, so a single copy of the weights serves the
-reasoner, the target extractor and `just vqa-ask`. On the cloud backend nothing local is
+On the local backend `smart_vlm.launch` starts `captioner`'s VQA server itself, so
+nothing has to be running first — at evaluation there is nobody to start it. Every VQA
+request goes to that one server, so a single copy of the weights serves the reasoner and
+the target extractor. `just vqa-up` is an optional dev speed-up that keeps a server
+resident across the per-question relaunches; do not run it alongside the launch's own. On the cloud backend nothing local is
 needed — the reasoner posts the same views to whatever OpenAI-compatible endpoint
 `VLM_PROVIDER` names, and the harness drops the readiness wait on `/qwen_vqa/status`
 accordingly.

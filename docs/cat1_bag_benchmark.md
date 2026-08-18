@@ -106,7 +106,7 @@ Run from the repo root. Use **four terminals**.
 
 ```bash
 cd /home/ubuntu/myspace/cmu-vln-2026
-just up-dev-fast
+just up
 just vqa-up
 ```
 

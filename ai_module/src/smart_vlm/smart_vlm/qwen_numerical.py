@@ -48,6 +48,7 @@ from std_msgs.msg import Int32, String
 
 from captioner.qwen_vqa_protocol import REQUEST_TOPIC, RESPONSE_TOPIC, STATUS_TOPIC
 from captioner.ros_utils import wait_for_subscriber
+from captioner.ros_utils import shutdown_guard
 from smart_vlm.question import QuestionType, classify
 
 
@@ -278,10 +279,11 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        executor.shutdown()
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        with shutdown_guard():
+            executor.shutdown()
+            node.destroy_node()
+            if rclpy.ok():
+                rclpy.shutdown()
 
 
 if __name__ == "__main__":
