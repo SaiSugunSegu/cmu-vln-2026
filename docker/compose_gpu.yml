@@ -81,6 +81,16 @@ services:
       - ../data/benchmark:/data/benchmark:ro
       # Repo scripts (eval drivers) at a fixed container path.
       - ../scripts:/home/docker/scripts:ro
+      # VQA config, live: mounted over the INSTALLED share dir (not src/), because the
+      # Dockerfile's colcon build is a plain build, not --symlink-install, so
+      # install/captioner/share/captioner/config is a copy taken at image-build time, not
+      # a link back to src/. This mount is what makes it live instead. Every reader
+      # (captioner.vlm_backends.config.resolve_config_path via ament_index_python) reads
+      # from here, so an edit to ai_module/src/captioner/config/vqa.yaml on the host takes
+      # effect on the next `ros2 run`/`ros2 launch` inside the already-running container —
+      # no rebuild needed. A node that is already running still needs restarting: it read
+      # the file once, at import time.
+      - ../ai_module/src/captioner/config:/home/docker/ai_module/install/captioner/share/captioner/config:ro
       # Persist HF model weights across container rebuilds.
       - ${HOME}/.cache/huggingface:/home/docker/.cache/huggingface
     depends_on:
