@@ -66,6 +66,10 @@ class SamNode(WorkerNodeMixin, Node):
 
     HEARTBEAT_S = 5.0
     SLOW_STAGE_S = 5.0
+    # How long finalize() may wait for queued crop writes to land. The crops are written
+    # asynchronously now, so this is real waiting, not a formality.
+    FINALIZE_DRAIN_S = 30.0          # end of run: let every queued crop land
+    SHUTDOWN_DRAIN_S = 5.0           # bag loop / teardown: eval_orchestrator SIGKILLs at 45 s
     VERBOSE_FIRST = 3
     TIME_JUMP_TOLERANCE = 1.0        # seconds backwards before we call it a new lap
 
@@ -85,6 +89,9 @@ class SamNode(WorkerNodeMixin, Node):
 
         # `armed` == "has prompts worth spending inference on". Unarmed, the node holds
         # loaded weights and an empty session, and drops every frame.
+        # What the node is currently armed with. A repeat of the same pair is a duplicate
+        # request, not a re-arm -- see _on_set_prompts.
+        self.armed_run_id = None
         if self.wait_for_prompts:
             self.prompt_table = None
             self.armed = False
@@ -119,9 +126,14 @@ class SamNode(WorkerNodeMixin, Node):
 
         self.log("loading SAM 3 (first run downloads weights, this can take a while) ...")
         self.backend = make_backend(config['sam3'], log=self.log, profile=self.profile)
-        # Empty prompts are fine: both backends treat an empty prompt list as a valid,
-        # promptless session rather than an error.
-        self.backend.set_prompts(self.prompt_table.prompts if self.armed else [])
+        # Only when there is something to arm with. Unarmed, image_callback returns before it
+        # buffers and the worker just sleeps, so no frame can reach process_frame before
+        # /sam3/set_prompts — a promptless boot session would be dead state whose only effect
+        # is to make "one session per question" print as two. Both backends lazily create one
+        # on first use anyway (sam3_backend.process_frame, sam31_backend._run), and failing
+        # here would kill the node, where failing in _on_set_prompts rolls back and nacks.
+        if self.armed:
+            self.backend.set_prompts(self.prompt_table.prompts)
         self.log("SAM 3 ready" if self.armed else "SAM 3 weights loaded — awaiting prompts")
 
         # -- buffers ---------------------------------------------------------
@@ -180,7 +192,11 @@ class SamNode(WorkerNodeMixin, Node):
         with self.frame_lock:
             if self.latest_frame is not None:
                 self.frames_dropped += 1
-            self.latest_frame = msg
+            # Wall clock, not the header stamp: the header carries BAG time, which a replay
+            # rate scales. Only this tells us how long a frame really waited. time.time()
+            # rather than monotonic because map_node, a different process, differences
+            # against it (see _publish_detections).
+            self.latest_frame = (msg, time.time())
             self.frames_in += 1
 
     def _take_frame(self):
@@ -233,6 +249,39 @@ class SamNode(WorkerNodeMixin, Node):
             self._nack_prompts(str(err))
             return
 
+        # A duplicate request must not restart anything. Both reasoners publish
+        # /sam3/set_prompts and smart_vlm.launch hands them the SAME run_id, so a second arm
+        # would start a fresh SAM session (ids back to 0, max_seen_id back to -1) while
+        # map_node's prompts_ack_callback, seeing an unchanged run_id, keeps its map -- the
+        # new session's object 0 then merges into whatever held id 0 before, silently. It
+        # would also rebuild BestViewCollector, whose _clear_stale_crops() deletes the crops
+        # collected so far. Keyed on the PAIR: the bench loop re-arms with a new run_id per
+        # question and must still get its fresh session and run directory.
+        with self.prompt_lock:
+            duplicate = (self.armed and self.prompt_table is not None
+                         and list(self.prompt_table.prompts) == prompts
+                         and self.armed_run_id == run_id)
+            collector = self.best_view_collector
+        if duplicate:
+            self.log(f'set_prompts ignored: already armed with {prompts} (run {run_id})')
+            self.prompts_ack_pub.publish(String(data=json.dumps({
+                "ok": True, "error": None, "prompts": list(prompts),
+                "labels": [spec.label for spec in self.prompt_table.specs],
+                "run_id": run_id,
+                "run_dir": collector.run_dir if collector is not None else None,
+            })))
+            self._publish_status('ready')
+            return
+
+        # C3: a genuine re-arm after frames have flowed is a MID-QUESTION session restart.
+        # Legitimate only between questions (the persistent bench loop); inside one it breaks
+        # id continuity and therefore the 3D map.
+        if self.armed and self.frames_done:
+            self.get_logger().warning(
+                f'RE-ARMING mid-run after {self.frames_done} frames: {prompts} (run {run_id}) '
+                '— this starts a new SAM 3 session, so object ids restart and the '
+                '3D map loses continuity. Expected only between questions.')
+
         objects = [{"prompt": p, "instance": True} for p in prompts]
         self._publish_status('setting_prompts')
         with self.prompt_lock:
@@ -264,6 +313,7 @@ class SamNode(WorkerNodeMixin, Node):
                     self.best_view_collector = None
                 # Last, so a raise above can never leave us armed with a half-built table.
                 self.armed = True
+                self.armed_run_id = run_id
             except Exception as err:  # noqa: BLE001 — a bad request must not kill the node
                 # Roll back so the node keeps detecting with the prompts it had — or
                 # stays unarmed, if it never had any.
@@ -278,6 +328,16 @@ class SamNode(WorkerNodeMixin, Node):
                         f'could not restore previous prompts: {restore_err}')
                 self._nack_prompts(f'{type(err).__name__}: {err}')
                 return
+
+        # Past the rollback path, so the previous collector is genuinely retired rather
+        # than restored. Its writer thread would otherwise sit parked on its condition for
+        # the life of the process, one per question on a bench loop that re-arms in place.
+        if previous_collector is not None and previous_collector is not self.best_view_collector:
+            try:
+                previous_collector.stop()
+            except Exception:  # noqa: BLE001 — teardown of the old run must not fail the new one
+                self.get_logger().error(
+                    f'could not stop previous best-view writer:\n{traceback.format_exc()}')
 
         ack = {
             "ok": True,
@@ -317,11 +377,16 @@ class SamNode(WorkerNodeMixin, Node):
         path = os.path.join(collector.run_dir, 'obj_map.json')
         if wait_s is None:
             wait_s = collector.config.finalize_obj_map_wait_s
+        # wait_s == 0.0 is the caller saying "do not wait around" — bag loop and teardown.
+        # finalize() drains the pending crop writes first, so an unbounded wait here would
+        # spend the harness's whole SIGINT budget before it ever escalates.
+        drain_s = self.SHUTDOWN_DRAIN_S if wait_s == 0.0 else self.FINALIZE_DRAIN_S
         objects = self._read_obj_map(path, wait_s)
         try:
             # None, not {}: "no 3D map at all" makes the track id the only id there is,
             # while an empty map means every instance genuinely failed to reach a box.
-            rendered = collector.finalize(None if objects is None else track_to_map_id(objects))
+            rendered = collector.finalize(
+                None if objects is None else track_to_map_id(objects), drain_timeout=drain_s)
         except Exception:  # noqa: BLE001 — a render fault must not take the node down
             self.get_logger().error(f'best-view finalize failed:\n{traceback.format_exc()}')
             return
@@ -362,8 +427,13 @@ class SamNode(WorkerNodeMixin, Node):
             return
 
         jump = self.last_frame_stamp - stamp
-        self.log(f'time jumped backwards {jump:.1f}s (bag loop?) — resetting SAM 3 session; '
-                 f'new object ids offset by {self.max_seen_id + 1}')
+        # WARN, not INFO: correct for `bag-play --loop`, but inside one eval question the bag
+        # plays forward once, so this means stamps regressed and the session just restarted
+        # under the 3D map. Either way it ends the run's single-session guarantee.
+        self.get_logger().warning(
+            f'time jumped backwards {jump:.1f}s (bag loop?) — resetting SAM 3 session '
+            f'(was #{getattr(self.backend, "session_epoch", "?")}); '
+            f'new object ids offset by {self.max_seen_id + 1}')
         self.id_offset = self.max_seen_id + 1
         self.backend.reset()
         self.last_frame_stamp = stamp
@@ -391,17 +461,21 @@ class SamNode(WorkerNodeMixin, Node):
                 time.sleep(0.05)
                 continue
             self._set_stage('waiting')
-            msg = self._take_frame()
-            if msg is None:
+            taken = self._take_frame()
+            if taken is None:
                 time.sleep(0.005)
                 continue
+            msg, arrived_at = taken
+            # Every stage boundary from here is recorded into `timing`, which rides along
+            # in the published detections so map_node can close the loop end to end.
+            timing = {'t_arrival': arrived_at, 't_pickup': time.time()}
             image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             stamp = self._stamp_of(msg)
 
             with self.prompt_lock:
                 self._handle_time_jump(stamp)
                 try:
-                    self._process(image, stamp)
+                    self._process(image, stamp, timing)
                 except Exception as err:              # noqa: BLE001 — one bad frame must not kill the node
                     # A frame takes seconds (SAM3 inference), so SIGINT routinely lands
                     # mid-_process and the publish fails on a dead context. That is a
@@ -427,16 +501,22 @@ class SamNode(WorkerNodeMixin, Node):
         elif self.stage != 'waiting' and held >= self.SLOW_STAGE_S:
             self.log(f'stage: {self.stage} for {held:.0f}s (frame {self.frames_done + 1})')
 
-    def _process(self, image, stamp):
+    def _process(self, image, stamp, timing: dict | None = None):
         rgb = image[:, :, ::-1].copy()                # cv_bridge gives BGR; SAM 3 wants RGB
         # The backend's timer, so SAM stages and the node's own land in one table.
         timer = self.backend.timer
+        # Plain time.time(), never StageTimer: its stage boundaries each cost a
+        # torch.cuda.synchronize(), which would perturb the very frame time being measured
+        # and is why it stays behind runtime.profile. These are free, so they stay on.
+        timing = {} if timing is None else timing
 
         with timer.frame():
             self._set_stage('sam3 inference')
             start = time.perf_counter()
             result = self.backend.process_frame(rgb)
             infer_ms = (time.perf_counter() - start) * 1000.0
+
+            timing['t_sam_done'] = time.time()
 
             self._set_stage('detections')
             with timer.stage('node_to_detections'):
@@ -454,17 +534,22 @@ class SamNode(WorkerNodeMixin, Node):
             if self.best_view_collector:
                 with timer.stage('node_best_view'):
                     self.best_view_collector.consider(image, detections, stamp)
+            # Recorded whether or not a collector exists, so the term is always present and
+            # always means the same thing. After the move to _FlushWriter this is selection
+            # only -- if it is not near zero, something is back on the critical path.
+            timing['t_bestview_done'] = time.time()
 
             self._set_stage('publish')
             with timer.stage('node_publish'):
-                self._publish_detections(detections, stamp, image.shape[:2])
+                self._publish_detections(detections, stamp, image.shape[:2], timing)
                 if self.publish_annotated:
                     self._publish_annotated(image, detections, stamp)
 
         self.frames_done += 1
         if self.frames_done <= self.VERBOSE_FIRST or self.frames_done % self.log_every_n == 0:
             self.log(f'frame {self.frames_done}: {len(detections["ids"])} detections | '
-                     f'SAM3 {infer_ms:.0f} ms | dropped {self.frames_dropped}/{self.frames_in}')
+                     f'SAM3 {infer_ms:.0f} ms | dropped {self.frames_dropped}/{self.frames_in} | '
+                     f'session {getattr(self.backend, "session_epoch", "?")}')
         if self.profile and self.frames_done % self.log_every_n == 0:
             from sam_mapper.profiling import format_summary
 
@@ -481,7 +566,8 @@ class SamNode(WorkerNodeMixin, Node):
 
     # -- publishing -----------------------------------------------------------
 
-    def _publish_detections(self, detections: dict, stamp: float, hw: tuple) -> None:
+    def _publish_detections(self, detections: dict, stamp: float, hw: tuple,
+                            timing: dict | None = None) -> None:
         height, width = hw
         seconds = int(stamp)
         header_stamp = Time(seconds=seconds, nanoseconds=int((stamp - seconds) * 1e9)).to_msg()
@@ -504,6 +590,17 @@ class SamNode(WorkerNodeMixin, Node):
         # std_msgs/String has no header, so it can't carry a ROS stamp — embed one in the
         # payload instead, matching the instance map's, so map_node can pair the two.
         payload = {'stamp': {'sec': seconds, 'nanosec': int((stamp - seconds) * 1e9)}, 'entries': entries}
+        if timing is not None:
+            # The instance map goes out first and this String second, so t_published is the
+            # last thing sam_node does with the frame -- map_node's `link` term measures from
+            # here. Both processes share a clock (same container), which is what makes the
+            # subtraction meaningful; an NTP step mid-run would show up as one absurd frame.
+            timing['t_published'] = time.time()
+            # Carried so map_node can print both nodes' losses on one line; it has no other
+            # way to see how many frames never made it out of sam_node at all.
+            timing['sam_in'] = self.frames_in
+            timing['sam_dropped'] = self.frames_dropped
+            payload['timing'] = timing
         self.detections_pub.publish(String(data=json.dumps(payload)))
 
     def _publish_annotated(self, image, detections, stamp: float):
@@ -525,6 +622,15 @@ class SamNode(WorkerNodeMixin, Node):
             self._finalize_best_views(wait_s=0.0)
         except Exception:  # noqa: BLE001 — an exception here reads as a crashed node to
             pass           # the eval harness; teardown must stay clean
+        # After finalize, which drains it: stopping first would leave the overlays drawn
+        # over a selection the writer had not landed yet.
+        with self.prompt_lock:
+            collector = self.best_view_collector
+        if collector is not None:
+            try:
+                collector.stop(timeout=self.SHUTDOWN_DRAIN_S)
+            except Exception:  # noqa: BLE001
+                pass
         super().destroy_node()
 
 

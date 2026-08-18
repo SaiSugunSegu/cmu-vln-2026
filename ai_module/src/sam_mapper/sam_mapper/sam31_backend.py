@@ -385,9 +385,13 @@ class Sam31Backend:
     def reset(self) -> None:
         """Full restart: ids go back to zero, matching what callers expect from a reset
         (sam_node zeroes its own id_offset in _on_set_prompts)."""
+        # Counted for the same reason as Sam3Backend: one session per question is an
+        # invariant, and this is what makes a violation visible in the log.
+        self.session_epoch = getattr(self, "session_epoch", 0) + 1
         self._id_base = 0
         self._max_emitted = -1
         self._new_session()
+        self.log(f"SAM 3.1 session #{self.session_epoch} (prompts={self.prompts})")
 
     def _new_session(self) -> None:
         self.state = None

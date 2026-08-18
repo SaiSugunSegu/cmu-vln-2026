@@ -15,7 +15,7 @@ import time
 
 import rclpy
 import yaml
-from rclpy.executors import MultiThreadedExecutor
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
 
 
@@ -73,8 +73,11 @@ def run_node(node_cls, bootstrap_name: str, required_keys: tuple, launch_hint: s
     executor.add_node(node)
     try:
         executor.spin()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
+    except RuntimeError:
+        if rclpy.ok():
+            raise
     finally:
         node.destroy_node()
         # executor.spin() already tears the context down on SIGINT; calling shutdown a

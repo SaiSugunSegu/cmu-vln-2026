@@ -81,9 +81,6 @@ serialize_map_to_dict returns numpy arrays; json cannot encode those."""
     return str(value)
 
 
-# The sync arithmetic itself lives in frame_sync so the offline benchmark harness runs
-# the same code path this node does, rather than a reimplementation of it. What stays
-# here is the part that is genuinely this node's: locks, warn counters, buffer trimming.
 
 
 class MapNode(WorkerNodeMixin, Node):
@@ -151,6 +148,19 @@ class MapNode(WorkerNodeMixin, Node):
         self.frames_done = 0
         self.skipped_no_odom = 0
         self.skipped_no_cloud = 0
+        # End-to-end accounting. This node is the end of the chain, so it is the only place
+        # that can see a frame's whole life: sam_node stamps its own stages into the
+        # detections payload and this closes it out. Latency and throughput are tracked
+        # separately on purpose -- a completed map is ~600 ms old while a new one lands
+        # every ~445 ms, and conflating the two is exactly the mistake this line prevents.
+        self._last_done_at = None
+        self._completions = 0
+        self._first_done_at = None
+        # Hz is reported over the LOGGED window, not the gap between the last two
+        # completions: completions bunch when sam_node's frame time swings, and that gap
+        # once printed 17 Hz on a pipeline sustaining 2.2.
+        self._last_log_at = None
+        self._completions_at_last_log = 0
         # Bag-loop handling for THIS node's own state: the odom/cloud ring buffers.
         # (The SAM3 session / id namespace is sam_node's concern now, handled entirely
         # upstream — ids arriving here are already offset and never collide.)
@@ -194,6 +204,7 @@ class MapNode(WorkerNodeMixin, Node):
         # you need to be told.
         self._start_worker(self._worker_loop)
         self.log('map_node started')
+        # self.log(E2E_LEGEND)
 
     def log(self, msg):
         self.get_logger().info(str(msg))
@@ -206,6 +217,11 @@ class MapNode(WorkerNodeMixin, Node):
 
     def instance_map_callback(self, msg: Image):
         with self.frame_lock:
+            # frames_dropped existed but was never incremented, so this node's share of the
+            # losses was invisible and had to be inferred by differencing sam_node's frame
+            # counter against this one. Same accounting as sam_node.image_callback.
+            if self.latest_id_map_msg is not None:
+                self.frames_dropped += 1
             self.latest_id_map_msg = msg
             self.frames_in += 1
 
@@ -401,6 +417,8 @@ Both messages only ever advance together (published back-to-back by sam_node
                 time.sleep(0.005)
                 continue
             id_map_msg, detections_payload = pair
+            timing = dict(detections_payload.get('timing') or {})
+            timing['t_map_pickup'] = time.time()
             stamp = self._stamp_of(id_map_msg)
 
             self._handle_time_jump(stamp)
@@ -414,8 +432,10 @@ Both messages only ever advance together (published back-to-back by sam_node
                 continue
 
             try:
-                detections = self._reconstruct_detections(id_map_msg, detections_payload)
-                self._process(detections, stamp, odom, cloud)
+                with self.timer.stage('map_reconstruct'):
+                    detections = self._reconstruct_detections(id_map_msg, detections_payload)
+                timing['t_recon_done'] = time.time()
+                self._process(detections, stamp, odom, cloud, timing)
             except Exception as err:                  # noqa: BLE001 — one bad frame must not kill the node
                 # SIGINT can land mid-frame and kill the context under us; that is a
                 # normal shutdown, not a frame error (same guard as sam_node).
@@ -456,10 +476,14 @@ Report what the worker is doing. Runs on a ROS timer, not in the worker.
         elif self.stage != 'waiting' and held >= self.SLOW_STAGE_S:
             self.log(f'stage: {self.stage} for {held:.0f}s (frame {self.frames_done + 1})')
 
-    def _process(self, detections, stamp, odom, cloud):
+    def _process(self, detections, stamp, odom, cloud, timing: dict | None = None):
+        timing = {} if timing is None else timing
         if len(detections['ids']) == 0:
-            self.log(f'frame {stamp:.2f}: 0 detections received — nothing to map')
-            self._report(0.0, 0, 0)
+            # Deliberately silent: _report's periodic line already says `0 detections` at
+            # log_every_n_frames, while this fired on EVERY empty frame and buried the rest
+            # of the log through any stretch where SAM sees nothing.
+            timing['t_map_done'] = timing['t_publish_done'] = time.time()
+            self._report(0.0, 0, 0, timing)
             return
 
         with self.timer.frame():
@@ -468,23 +492,45 @@ Report what the worker is doing. Runs on a ROS timer, not in the worker.
             with self.timer.stage('map_update'):
                 self.obj_mapper.update_map(detections, stamp, odom, cloud, image=None)
             map_ms = (time.perf_counter() - start) * 1000.0
+            timing['t_map_done'] = time.time()
 
             self._set_stage('publish')
             objects_3d = self._publish_map(stamp)
+            timing['t_publish_done'] = time.time()
             # Detections drive update_map's cost, so they are the fit's x-axis here; the
             # second slot (sam_node's prompt count) carries the published-object count.
             self.timer.end_frame(map_ms, len(detections['ids']), len(objects_3d))
         if self.verbose_objects:
             self._log_verbose(detections, objects_3d)
 
-        self._report(map_ms, len(detections['ids']), len(objects_3d))
+        self._report(map_ms, len(detections['ids']), len(objects_3d), timing)
 
-    def _report(self, map_ms: float, detected: int, published: int):
+    def _report(self, map_ms: float, detected: int, published: int,
+                timing: dict | None = None):
         self.frames_done += 1
+        # Throughput is measured here, at the END of the chain: the rate at which finished
+        # maps appear is the pipeline's real Hz, and it is not 1/latency.
+        now = time.time()
+        if self._first_done_at is None:
+            self._first_done_at = now
+        self._last_done_at = now
+        self._completions += 1
+
         # Log the first few frames individually — waiting for the periodic report leaves
         # the node looking dead for a while otherwise.
         if self.frames_done > self.VERBOSE_FIRST and self.frames_done % self.log_every_n:
             return
+
+        # Rate over the window we are actually logging, NOT the gap between the last two
+        # completions. That gap is noisy — completions bunch whenever sam_node's frame time
+        completed = self._completions - self._completions_at_last_log
+        window_hz = None
+        if (self._last_log_at is not None and now > self._last_log_at
+                and completed >= self.log_every_n):
+            window_hz = completed / (now - self._last_log_at)
+        self._last_log_at = now
+        self._completions_at_last_log = self._completions
+
         tracked = len(self.obj_mapper.single_obj_list)
         # tracked vs published matters: an object only reaches the map once it has voxels
         # surviving regularization with non-zero observation weight, so infer_centroid can
@@ -494,11 +540,67 @@ Report what the worker is doing. Runs on a ROS timer, not in the worker.
             f'frame {self.frames_done}: {detected} detections | map {map_ms:.0f} ms | '
             f'{tracked} tracked, {published} published'
         )
+        if timing:
+            self.log(self._format_e2e(timing, window_hz))
         if self.profile:
             from sam_mapper.profiling import format_summary
 
             self.log(format_summary(self.timer.summary(),
                                     title=f'map_node frame {self.frames_done}'))
+
+    def _format_e2e(self, timing: dict, window_hz: float | None) -> str:
+        """One line: where a frame's wall clock went, across both processes.
+
+        Components are high level on purpose — enough to say which stage to open next,
+        not a profile. `queue` and `link` are the two that only exist here: time a frame
+        spent waiting rather than being worked on.
+        """
+        def span(a: str, b: str) -> float | None:
+            start, end = timing.get(a), timing.get(b)
+            if start is None or end is None:
+                return None          # a stage the publisher did not stamp
+            return (end - start) * 1000.0
+
+        def ms(value: float | None) -> str:
+            # Unit on every term: the line gets grepped out of context constantly, and a
+            # bare number next to a Hz figure is exactly the ambiguity worth spending
+            # two characters on.
+            return '--' if value is None else f'{value:.0f}ms'
+
+        def hz(value: float | None) -> str:
+            # `value != value` is the NaN test: avg_hz is a float, not None, when there is
+            # not yet an interval to divide by.
+            return '--' if value is None or value != value else f'{value:.2f}'
+
+        parts = [
+            ('queue', span('t_arrival', 't_pickup')),        # sat in sam_node's slot
+            ('sam3', span('t_pickup', 't_sam_done')),        # inference (plus the decode)
+            ('bestview', span('t_sam_done', 't_bestview_done')),
+            ('sampub', span('t_bestview_done', 't_published')),
+            ('link', span('t_published', 't_map_pickup')),   # DDS + this node's slot
+            ('recon', span('t_map_pickup', 't_recon_done')),
+            ('map', span('t_recon_done', 't_map_done')),
+            ('mappub', span('t_map_done', 't_publish_done')),
+        ]
+        total = span('t_arrival', 't_publish_done')
+        breakdown = ' | '.join(f'{name} {ms(value)}' for name, value in parts)
+
+        # The average is over the whole run, not a rolling window: the question it answers
+        # is "what rate did this run sustain". window_hz beside it is the recent rate, so a
+        # run that degrades (SAM 3 does, within one question) shows the two diverging.
+        avg_hz = None
+        if self._first_done_at is not None and self._completions > 1:
+            elapsed = self._last_done_at - self._first_done_at
+            if elapsed > 0:
+                avg_hz = (self._completions - 1) / elapsed
+
+        rate = f'{hz(window_hz)} Hz (avg {hz(avg_hz)})'
+        sam_in = timing.get('sam_in')
+        sam_dropped = timing.get('sam_dropped')
+        losses = (f'sam {sam_dropped}/{sam_in}' if sam_in is not None else 'sam n/a')
+        return (f'e2e frame {self.frames_done} | {breakdown} | TOTAL {ms(total)} | {rate} | '
+                f'dropped {losses}, map {self.frames_dropped}/{self.frames_in} | '
+                f'skipped {self.skipped_no_odom} no-odom / {self.skipped_no_cloud} no-cloud')
 
     def _log_verbose(self, detections: dict, objects_3d: dict) -> None:
         """

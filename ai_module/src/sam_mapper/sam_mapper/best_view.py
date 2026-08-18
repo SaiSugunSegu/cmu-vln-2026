@@ -12,8 +12,10 @@ coverage x confidence). The top-N are picked by greedy max-coverage: new-object 
 first, so several objects beat a sharper shot of fewer. Only objects inside the chosen
 cluster count as covered.
 
-Output is written through on every change, so killing the node mid-bag still leaves a
-correct selection on disk.
+Writes happen on a background thread, coalesced to the latest selection (see
+`_FlushWriter`): the encode is ~130 ms and used to run on sam_node's worker, between SAM 3
+inference and the publish. Killing the node mid-bag can therefore lose at most the one
+selection still in flight, falling back to the previous complete one on disk.
 
 The overlay copies are the exception: `finalize()` draws them once at the end of the run,
 because their labels carry map_node's object ids and world merges keep renaming those. That
@@ -31,7 +33,9 @@ import json
 import math
 import os
 import re
+import threading
 import time
+import traceback
 from dataclasses import dataclass
 
 import cv2
@@ -125,6 +129,77 @@ class _Inst:
     row: int             # index back into the frame's detections arrays
 
 
+class _FlushWriter:
+    """Single-slot, latest-wins writer thread for best-view flushes.
+
+    Two problems, one mechanism. The encode is expensive -- with save_full_views a flush
+    writes every rank's crop AND its uncropped frame, so top_n=3 is six PNGs, one pair of
+    them a full panorama -- and it used to run inline on sam_node's worker thread, where it
+    measured ~130 ms of a ~445 ms frame. And it runs far more often than it needs to: while
+    scores keep improving, the selection changes on nearly every frame, so the same images
+    were rewritten dozens of times per run.
+
+    Moving the write here takes it off the critical path; the single slot fixes the rest.
+    Same drop-to-latest shape as sam_node/map_node's frame slots, for the same reason --
+    a queue would grow without bound and spend the time writing selections nobody reads.
+    """
+
+    def __init__(self, write, log):
+        self._write = write
+        self._log = log
+        self._cond = threading.Condition()
+        self._pending = None            # latest selection awaiting a write, or None
+        self._writing = False
+        self._running = True
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def submit(self, selected: list) -> None:
+        """Replace whatever was queued. Dropping the previous one is the point."""
+        with self._cond:
+            self._pending = selected
+            self._cond.notify_all()
+
+    def _loop(self) -> None:
+        while True:
+            with self._cond:
+                while self._running and self._pending is None:
+                    self._cond.wait()
+                # Drain before exiting: a selection queued just before stop() still lands,
+                # so a clean shutdown loses nothing.
+                if self._pending is None:
+                    return
+                selected, self._pending = self._pending, None
+                self._writing = True
+            try:
+                self._write(selected)
+            except Exception:  # noqa: BLE001 -- a write fault must not kill the thread and
+                               # silently stop every later flush with it
+                self._log("best-view collector: flush failed:\n"
+                          f"{traceback.format_exc()}")
+            finally:
+                with self._cond:
+                    self._writing = False
+                    self._cond.notify_all()
+
+    def drain(self, timeout: float = 30.0) -> bool:
+        """Block until nothing is queued and nothing is being written. False on timeout."""
+        deadline = time.monotonic() + max(timeout, 0.0)
+        with self._cond:
+            while self._pending is not None or self._writing:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0.0:
+                    return False
+                self._cond.wait(remaining)
+            return True
+
+    def stop(self, timeout: float = 10.0) -> None:
+        with self._cond:
+            self._running = False
+            self._cond.notify_all()
+        self._thread.join(timeout=timeout)
+
+
 @dataclass
 class Candidate:
     """One spatial cluster of target objects, from one frame, already cropped.
@@ -208,11 +283,21 @@ class BestViewCollector:
         self._selected_key: tuple = ()   # seqs of the last-written selection
         self._seq = itertools.count()
         self._frozen = False
+        # _written / _rendered_with / _on_disk are set on the writer thread and read by
+        # finalize(), which runs on yet another thread (sam_node spawns it) -- one lock
+        # over all three. finalize() also drain()s first, so it never reads a half-flush.
+        self._state_lock = threading.Lock()
         # What is on disk right now, so finalize() can re-render exactly those ranks.
         self._written: list[tuple[int, Candidate]] = []
+        # rank -> Candidate.seq for images CONFIRMED on disk. _flush diffs against this
+        # rather than against the previous selection: coalescing means selections in
+        # between were never written, and diffing against one of those would skip a rank
+        # whose file is still two selections stale.
+        self._on_disk: dict[int, int] = {}
         # The id lookup the overlays currently show. `False`, not None, for "never
         # rendered": None is itself a valid lookup, meaning no 3D map at all.
         self._rendered_with: object = False
+        self._writer = _FlushWriter(self._flush, self.log)
 
         self.log(f"best-view collector: targets={sorted(self.targets)} "
                  f"top_n={config.top_n} -> {self.run_dir}")
@@ -470,25 +555,61 @@ class BestViewCollector:
         if selection_key == self._selected_key:
             return
         self._selected_key = selection_key
-        self._flush(selected)
+        # Off the caller's thread (sam_node's SAM worker) and coalesced -- see _FlushWriter.
+        self._writer.submit(selected)
+
+    # -- write lifecycle ------------------------------------------------------
+
+    def drain(self, timeout: float = 30.0) -> bool:
+        """Block until every submitted selection has reached disk. False on timeout.
+
+        Public because the write is asynchronous: finalize() needs it (it renders overlays
+        for whatever _flush last wrote), and so does any caller that inspects the run
+        directory straight after consider().
+        """
+        return self._writer.drain(timeout)
+
+    def stop(self, timeout: float = 10.0) -> None:
+        """Land any queued flush and retire the writer thread.
+
+        A collector is replaced per /sam3/set_prompts and dropped at shutdown; without this
+        each one leaves a thread parked on its condition for the life of the process.
+        """
+        self._writer.stop(timeout)
 
     def _flush(self, selected: list[tuple]) -> None:
+        """Runs on the writer thread. Postcondition: the run directory holds exactly this
+        selection — whatever it held before, and however many selections were coalesced
+        away getting here."""
         written: list[tuple] = []   # (rank, cand, new_count) -- only images on disk
+        encoded = 0
         for rank, (cand, new_count) in enumerate(selected, start=1):
             name = f"best_rank{rank}_{self._target_tag}.png"
+            # Skip only a rank whose file on disk is ALREADY this candidate. The filename
+            # carries the rank, so a candidate that merely moved rank still fails this test
+            # at both ranks and is rewritten at both — which is what a 1<->2 swap needs.
+            if self._on_disk.get(rank) == cand.seq:
+                written.append((rank, cand, new_count))
+                continue
             # A list, not all(...): short-circuiting would skip the remaining geometries and
             # leave the rank half written. A rank counts only if every geometry landed.
             ok = [cv2.imwrite(os.path.join(self.run_dir, geometry, name), image)
                   for geometry, image, _ in self._views(cand)]
             if not all(ok):
                 self.log(f"best-view collector: failed to write {name}")
+                # Half a rank is on disk at best, so forget it: the next flush must retry
+                # rather than trust this seq.
+                self._on_disk.pop(rank, None)
                 continue
+            self._on_disk[rank] = cand.seq
+            encoded += 1
             written.append((rank, cand, new_count))
 
         # No overlays here: they carry map ids, and obj_map.json is still moving while frames
         # arrive — see finalize(). Raw crops stay per-flush, so a kill mid-bag loses nothing.
-        self._written = [(rank, cand) for rank, cand, _ in written]
-        self._rendered_with = False
+        with self._state_lock:
+            self._written = [(rank, cand) for rank, cand, _ in written]
+            self._rendered_with = False
 
         # The pool can shrink (two ids' bests can converge on one cluster), so drop any
         # file past the current selection rather than leaving a stale rank behind.
@@ -498,6 +619,10 @@ class BestViewCollector:
                 rank = int(os.path.basename(stale).split("_")[1].removeprefix("rank"))
                 if rank > len(selected):
                     os.remove(stale)
+        # Forget them here too, or a later selection that grows back to this rank with the
+        # same candidate would be skipped as "already written" against a file just deleted.
+        for rank in [r for r in self._on_disk if r > len(selected)]:
+            del self._on_disk[rank]
 
         def _crop_relative_bbox(cand: Candidate, tid: int) -> list:
             rx0, ry0, _, _ = cand.roi
@@ -551,8 +676,12 @@ class BestViewCollector:
             json.dump(manifest, handle, indent=2)
 
         covered_ids = {tid for _, cand, _ in written for tid in cand.instance_scores}
-        self.log(f"best-view collector: wrote {len(written)}/{self.config.top_n} images, "
-                 f"covering {len(covered_ids)} instance(s) -> {self.run_dir}")
+        # "encoded" is the work this flush actually did; the ranks it skipped were already
+        # on disk carrying the right candidate. This used to fire once per frame, which is
+        # why it had been commented out — coalescing is what makes it readable again.
+        # self.log(f"best-view collector: wrote {len(written)}/{self.config.top_n} images "
+        #          f"({encoded} encoded), covering {len(covered_ids)} instance(s) "
+        #          f"-> {self.run_dir}")
 
     # -- finalize -------------------------------------------------------------
 
@@ -595,7 +724,7 @@ class BestViewCollector:
                 seen.add(map_id)
         return captions, ids
 
-    def finalize(self, track_to_map: dict | None) -> bool:
+    def finalize(self, track_to_map: dict | None, drain_timeout: float = 30.0) -> bool:
         """Render the overlay copies for the crops on disk. True if it drew anything.
 
         Deferred rather than per-flush because the ids are map_node's, and it rewrites
@@ -603,12 +732,19 @@ class BestViewCollector:
         bag loop, /pipeline/explore_done and shutdown all call it, and the last call with
         better data wins; an unchanged lookup does nothing.
         """
-        if not self._overlays or self._rendered_with == track_to_map:
-            return False
-        self._rendered_with = dict(track_to_map) if track_to_map is not None else None
+        # The raw crops are written asynchronously now, so without this the overlays would
+        # be drawn over whatever _flush happened to have finished — an older selection.
+        if not self._writer.drain(drain_timeout):
+            self.log("best-view collector: timed out waiting for pending crop writes; "
+                     "overlays may lag the final selection")
+        with self._state_lock:
+            if not self._overlays or self._rendered_with == track_to_map:
+                return False
+            self._rendered_with = dict(track_to_map) if track_to_map is not None else None
+            pending = list(self._written)
 
         names = set()
-        for rank, cand in self._written:
+        for rank, cand in pending:
             name = f"best_rank{rank}_{self._target_tag}.png"
             names.add(name)
             # Once per candidate, not per geometry: the crop and the full frame hold the same
@@ -632,8 +768,8 @@ class BestViewCollector:
                     if os.path.basename(stale) not in names:
                         os.remove(stale)
 
-        resolved = sum(1 for _, cand in self._written for tid in cand.crop_detections["ids"]
+        resolved = sum(1 for _, cand in pending for tid in cand.crop_detections["ids"]
                        if track_to_map is None or int(tid) in track_to_map)
-        self.log(f"best-view collector: finalized {len(self._written)} image(s), "
+        self.log(f"best-view collector: finalized {len(pending)} image(s), "
                  f"{resolved} instance label(s) carrying a map id -> {self.run_dir}")
         return True

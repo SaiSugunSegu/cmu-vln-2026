@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import threading
 
 import cv2
 import numpy as np
@@ -20,13 +21,13 @@ from sam_mapper.detections import PromptTable
 
 
 def _collector(tmp_path, run_id=None, save_silhouette_copy=False, save_full_views=False,
-               crop_to_roi=True):
+               crop_to_roi=True, top_n=1, roi_cluster_gap_px=1000):
     table = PromptTable([
         {"prompt": "cabinet", "instance": True},
         {"prompt": "tv", "instance": True},
     ])
     cfg = BestViewConfig.from_dict({
-        "top_n": 1,
+        "top_n": top_n,
         "output_dir": str(tmp_path),
         "save_annotated_copy": False,
         "save_silhouette_copy": save_silhouette_copy,
@@ -35,7 +36,7 @@ def _collector(tmp_path, run_id=None, save_silhouette_copy=False, save_full_view
         "crop_to_roi": crop_to_roi,
         "roi_padding_frac": 0.0,
         "roi_min_size_px": 1,
-        "roi_cluster_gap_px": 1000,
+        "roi_cluster_gap_px": roi_cluster_gap_px,
     }, table)
     return BestViewCollector(cfg, log=lambda *_: None, run_id=run_id)
 
@@ -55,8 +56,12 @@ def _capture(drawn, ids=None):
     return render
 
 
-def _consider_one_cabinet(collector):
-    """Feed one frame holding a single cabinet detection, away from the seam margins."""
+def _consider_one_cabinet(collector, drain=True):
+    """Feed one frame holding a single cabinet detection, away from the seam margins.
+
+    `drain=False` is for the tests that hold the writer open on purpose: waiting on a flush
+    they are deliberately blocking would deadlock.
+    """
     h, w = 200, 800
     image = np.zeros((h, w, 3), dtype=np.uint8)
     mask = np.zeros((h, w), dtype=bool)
@@ -69,6 +74,10 @@ def _consider_one_cabinet(collector):
         "bboxes": np.array([[300.0, 40.0, 420.0, 120.0]], dtype=float),
     }
     collector.consider(image, detections, stamp=1.0)
+    # The crop write is asynchronous now (see _FlushWriter), so "this frame was fully
+    # processed" means the flush landed too. Every assertion below reads the directory.
+    if drain:
+        collector.drain()
 
 
 def _consider_two_cabinets(collector, tids):
@@ -88,9 +97,10 @@ def _consider_two_cabinets(collector, tids):
         "confidences": np.array([0.9, 0.9], dtype=float),
         "bboxes": np.array([[x0, 40.0, x1, 120.0] for x0, x1 in boxes], dtype=float),
     }, stamp=1.0)
+    collector.drain()
 
 
-def _consider_bigger_cabinet(collector):
+def _consider_bigger_cabinet(collector, drain=True):
     """The same cabinet, more visible — a new best for that track id, so a new flush."""
     h, w = 200, 800
     image = np.zeros((h, w, 3), dtype=np.uint8)
@@ -104,6 +114,49 @@ def _consider_bigger_cabinet(collector):
         "bboxes": np.array([[250.0, 30.0, 520.0, 170.0]], dtype=float),
     }
     collector.consider(image, detections, stamp=2.0)
+    if drain:
+        collector.drain()
+
+
+def _consider_biggest_cabinet(collector, drain=True):
+    """The same cabinet again, more visible still — a third distinct crop size, so which
+    candidate reached disk can be read straight off the saved image's shape."""
+    h, w = 200, 800
+    image = np.zeros((h, w, 3), dtype=np.uint8)
+    mask = np.zeros((h, w), dtype=bool)
+    mask[20:180, 210:590] = True
+    collector.consider(image, {
+        "labels": np.array(["cabinet"], dtype=object),
+        "ids": np.array([7], dtype=int),
+        "masks": np.asarray([mask]),
+        "confidences": np.array([0.98], dtype=float),
+        "bboxes": np.array([[210.0, 20.0, 590.0, 180.0]], dtype=float),
+    }, stamp=3.0)
+    if drain:
+        collector.drain()
+
+
+def _rank_png(collector, rank=1):
+    return os.path.join(collector.run_dir, f"best_rank{rank}_cabinet+tv.png")
+
+
+def _hold_writer(collector):
+    """Block the writer inside its first write, so later submissions have to coalesce.
+
+    Returns (release_event, seen) where `seen` records the selection each write actually
+    received — the whole point being that not every submitted selection appears there.
+    """
+    release = threading.Event()
+    seen: list[tuple] = []
+    real = collector._flush
+
+    def gated(selected):
+        seen.append(tuple(c.seq for c, _ in selected))
+        release.wait(10.0)
+        real(selected)
+
+    collector._writer._write = gated
+    return release, seen
 
 
 def test_flush_keeps_keys_written_by_the_reasoner(tmp_path):
@@ -438,3 +491,164 @@ def test_leader_is_drawn_only_for_a_tab_that_left_its_anchor():
     _CaptionLayout._leader(canvas, (60, 20, 130, 36), (100, 100), tuple(int(c) for c in color))
     assert np.all(canvas[100, 100] == color)     # the dot
     assert np.all(canvas[70, 100] == color)      # the line, midway back to the tab
+
+
+# -- asynchronous, coalesced writes -----------------------------------------------
+#
+# The crop write moved off sam_node's worker thread and is coalesced to a single slot,
+# which is worth ~130 ms of a ~445 ms frame. These pin the property that makes that safe:
+# whatever gets dropped on the way, the directory ends up holding the LAST selection.
+
+
+def test_a_burst_of_improvements_costs_fewer_writes_than_changes(tmp_path):
+    collector = _collector(tmp_path)
+    release, seen = _hold_writer(collector)
+
+    _consider_one_cabinet(collector, drain=False)     # taken, then blocks in the gate
+    _consider_bigger_cabinet(collector, drain=False)  # queued
+    _consider_biggest_cabinet(collector, drain=False) # replaces the queued one
+
+    release.set()
+    assert collector.drain(timeout=10.0)
+    # Three selections, strictly fewer than three writes: the middle one never ran.
+    assert len(seen) < 3
+
+
+def test_a_coalesced_away_selection_still_reaches_disk(tmp_path):
+    """The failure this guards against: diffing against the previous SUBMISSION rather
+    than against what is on disk, which skips a rank whose file is two selections stale."""
+    collector = _collector(tmp_path)
+    release, _seen = _hold_writer(collector)
+
+    _consider_one_cabinet(collector, drain=False)     # 120x80 crop, held in the gate
+    _consider_bigger_cabinet(collector, drain=False)  # 270x140, queued
+    _consider_biggest_cabinet(collector, drain=False) # 380x160, replaces it
+
+    release.set()
+    assert collector.drain(timeout=10.0)
+
+    # The last selection is what is on disk, not the one that happened to be in flight.
+    assert cv2.imread(_rank_png(collector)).shape[:2] == (160, 380)
+
+
+def test_an_unchanged_rank_is_not_re_encoded(tmp_path):
+    collector = _collector(tmp_path)
+    _consider_one_cabinet(collector)
+
+    writes = []
+    real_imwrite = cv2.imwrite
+
+    def counting(path, image):
+        writes.append(os.path.basename(path))
+        return real_imwrite(path, image)
+
+    import sam_mapper.best_view as best_view
+    best_view.cv2.imwrite = counting
+    try:
+        # Same candidate, same rank: _select_and_flush short-circuits on the unchanged
+        # selection key, and even a forced flush finds the rank already on disk.
+        collector._flush([(collector.best_for_id[7], 1)])
+    finally:
+        best_view.cv2.imwrite = real_imwrite
+
+    assert writes == []
+
+
+def test_a_failed_write_is_retried_on_the_next_flush(tmp_path):
+    collector = _collector(tmp_path)
+    import sam_mapper.best_view as best_view
+    real_imwrite = cv2.imwrite
+
+    best_view.cv2.imwrite = lambda path, image: False
+    try:
+        _consider_one_cabinet(collector)
+    finally:
+        best_view.cv2.imwrite = real_imwrite
+
+    # Nothing landed, so nothing may be remembered as on disk -- otherwise the retry below
+    # is skipped and the rank stays missing for the rest of the run.
+    assert collector._on_disk == {}
+
+    writes = []
+
+    def counting(path, image):
+        writes.append(os.path.basename(path))
+        return real_imwrite(path, image)
+
+    best_view.cv2.imwrite = counting
+    try:
+        collector._flush([(collector.best_for_id[7], 1)])
+    finally:
+        best_view.cv2.imwrite = real_imwrite
+
+    assert writes == ["best_rank1_cabinet+tv.png"]
+    assert os.path.isfile(_rank_png(collector))
+
+
+def test_finalize_draws_the_last_selection_not_one_in_flight(tmp_path):
+    collector = _collector(tmp_path, save_silhouette_copy=True)
+    release, _seen = _hold_writer(collector)
+
+    _consider_one_cabinet(collector, drain=False)
+    _consider_biggest_cabinet(collector, drain=False)
+    release.set()
+
+    # finalize() drains first, so the overlay is drawn over the final crop rather than
+    # whichever one the writer had managed to finish.
+    collector.finalize(None)
+    overlay = cv2.imread(os.path.join(collector.run_dir, "silhouette",
+                                      "best_rank1_cabinet+tv.png"))
+    assert overlay.shape[:2] == (160, 380)
+
+
+def _consider_pair(collector, ids, boxes, confidences, stamp):
+    """One frame with two well-separated cabinets, each its own cluster (gap > 50 px).
+
+    Both stay inside [200, 600) so neither is rejected by the 200 px seam margin.
+    """
+    h, w = 200, 800
+    image = np.zeros((h, w, 3), dtype=np.uint8)
+    masks = []
+    for x0, y0, x1, y1 in boxes:
+        mask = np.zeros((h, w), dtype=bool)
+        mask[int(y0):int(y1), int(x0):int(x1)] = True
+        masks.append(mask)
+    collector.consider(image, {
+        "labels": np.array(["cabinet"] * len(boxes), dtype=object),
+        "ids": np.array(ids, dtype=int),
+        "masks": np.asarray(masks),
+        "confidences": np.array(confidences, dtype=float),
+        "bboxes": np.array(boxes, dtype=float),
+    }, stamp=stamp)
+    collector.drain()
+
+
+def test_a_rank_swap_rewrites_both_images(tmp_path):
+    """A candidate that only MOVES rank still has to be re-encoded: the rank is part of
+    the filename, so leaving rank 1 alone would leave the wrong object under it."""
+    collector = _collector(tmp_path, top_n=2, roi_cluster_gap_px=50)
+
+    # Object 1 is the more visible of the two, so it takes rank 1.
+    _consider_pair(collector, [1, 2], [(220, 40, 320, 140), (420, 80, 560, 120)],
+                   [0.9, 0.9], stamp=1.0)
+    assert list(collector._on_disk) == [1, 2]
+    rank1_before = cv2.imread(_rank_png(collector, 1)).shape[:2]
+
+    writes = []
+    real_imwrite = cv2.imwrite
+
+    def counting(path, image):
+        writes.append(os.path.basename(path))
+        return real_imwrite(path, image)
+
+    import sam_mapper.best_view as best_view
+    best_view.cv2.imwrite = counting
+    try:
+        # Object 2 becomes far more visible and takes rank 1 from object 1.
+        _consider_pair(collector, [2], [(420, 30, 560, 180)], [0.95], stamp=2.0)
+    finally:
+        best_view.cv2.imwrite = real_imwrite
+
+    assert sorted(set(writes)) == ["best_rank1_cabinet+tv.png", "best_rank2_cabinet+tv.png"]
+    # Rank 1 genuinely changed object, not just its seq.
+    assert cv2.imread(_rank_png(collector, 1)).shape[:2] != rank1_before

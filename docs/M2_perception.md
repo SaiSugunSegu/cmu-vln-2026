@@ -663,13 +663,30 @@ uses meanwhile.
   `backend.process_frame` → `detections.py` → `ObjMapper.update_map` → publish.
 - `MultiThreadedExecutor` with per-subscription callback groups, so the GPU worker never blocks
   callbacks. (Doing properly what `semantic_mapper` set up but left commented out — quirk #11.)
-  **Cap its thread count.** `MultiThreadedExecutor()` defaults to `cpu_count()` threads, and each
-  spins in rclpy's Python-level wait loop holding the GIL, starving the worker that feeds the GPU.
-  Measured on an L4: the offline probe (single-threaded, no ROS) ran inference at **7 s/frame with
-  the GPU at 100%**, while the node ran the same backend at **20–37 s/frame with the GPU at 0%**.
-  `runtime.executor_threads: 2` — there are four short subscriptions and one timer; the real work
-  is on the worker thread. **Update 2026-07-28: this alone was not enough** — see §3.6-split; the
-  actual fix was moving SAM3 to its own process.
+  **Thread count (corrected 2026-08-18).** This section used to say `MultiThreadedExecutor()`'s
+  threads "each spin in rclpy's Python-level wait loop holding the GIL" and to recommend
+  `runtime.executor_threads: 2` on that basis. **That mechanism is wrong for Jazzy's rclpy.**
+  Read `/opt/ros/jazzy/.../rclpy/executors.py`: `Executor.spin()` is `while ok: self.spin_once()`
+  on the *calling* thread, and `MultiThreadedExecutor._spin_once_impl` submits each ready callback
+  to a `ThreadPoolExecutor(num_threads)` whose idle workers block on a queue with the GIL released
+  (`spin_once`'s own docstring: "This method should not be called from multiple threads").
+  There is one wait-set loop no matter what `num_threads` is.
+
+  Consequence: **`num_threads` does not change total GIL demand** — callback work is fixed by
+  message arrival rates. It only decides whether ready callbacks run concurrently or queue. So
+  there is no throughput argument for a low value, and the risk is asymmetric at the low end
+  (rclpy warns at 1; at 2, `sam_node._on_set_prompts` holds half the pool for seconds while it
+  re-inits the SAM 3 session). Since every subscription/timer has its own
+  `MutuallyExclusiveCallbackGroup`, useful concurrency is capped by group count (sam_node 4,
+  map_node 7), and unused pool capacity is never instantiated. **Now `executor_threads: 8`** in
+  both configs. `map_node`'s `link` term (see the e2e line) is where executor queueing shows up,
+  so that is the number to read if you suspect starvation.
+
+  **The measurements that used to justify 2 are pre-split history**, kept because they are the
+  record of why the process split happened, not a live tuning argument: on an L4 the offline probe
+  (single-threaded, no ROS) ran inference at **7 s/frame with the GPU at 100%** while the *combined*
+  node ran the same backend at **20–37 s/frame with the GPU at 0%**. Capping threads did not fix
+  that; §3.6-split did, by giving SAM3 its own process and therefore its own GIL.
 - **Keep callbacks trivial.** The image callback stores the raw `sensor_msgs/Image` and defers
   `imgmsg_to_cv2` to the worker: ~99% of frames are dropped, so decoding on arrival burns CPU on
   images that are discarded (measured 565 decoded to use 8) and steals GIL time from inference.
@@ -907,7 +924,7 @@ more than 5% across a run.
 | 3D points bleed onto background | mask erosion iterations (currently 5) | `semantic_map.py:269` |
 | Objects at wrong 3D position | wrong `platform` extrinsics; `detection_*_time_bias`; odom interpolation | §2.5 |
 | Object drifts / smears across the map | `recondition_every_nth_frame` ↓ | sam3 config |
-| Too slow, GPU util low | `runtime.executor_threads` (GIL starvation — §3.6); fewer prompts | §3.6 |
+| Too slow, GPU util low | NOT `runtime.executor_threads` — it does not change total GIL demand (§3.6). Check `sam3` and `bestview` in map_node's e2e line, then prompt count | §3.6 |
 | Too slow, GPU util high | `image_size` ↓; confirm `attn_implementation` took effect; SAM 3.1 | §4.2 |
 | Inference time grows with object count | expected — per-object memory attention; cut prompts | §3.6 |
 | Track ids churn | `max_trk_keep_alive` ↑, `min_trk_keep_alive` | sam3 config |
