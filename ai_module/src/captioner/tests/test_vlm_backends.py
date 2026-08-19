@@ -208,7 +208,7 @@ def test_parses_target_list():
 
 
 def test_parses_bare_target_list():
-    """language_planner's extract prompt asks for a bracket list, not a JSON object."""
+    """The extract prompt asks for a bracket list, not a JSON object."""
     result = parse_json_object('["pillow with black stripes", "couch"]', TargetList)
     assert result.targets == ["pillow with black stripes", "couch"]
 
