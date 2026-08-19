@@ -527,7 +527,7 @@ bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json
 eval-target-extract *flags:
     docker exec -it iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && \
-       export PYTHONPATH={{ai_src}}/src/smart_vlm:{{ai_src}}/src/captioner:{{ai_src}}/src/language_planner:\$PYTHONPATH && \
+       export PYTHONPATH={{ai_src}}/src/smart_vlm:{{ai_src}}/src/captioner:\$PYTHONPATH && \
        python3 -m smart_vlm.extract_bench {{flags}}"
 
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.

@@ -34,7 +34,7 @@ def dexec(container, cmd, detach=False, display=None, check=True):
 
 def stop_all():
     for c, pat in [(SYS, "system_simulation|ros2|rviz|Unity|vehicleSimulator"),
-                   (AI, "ros2|qa_recorder|dummy_vlm")]:
+                   (AI, "ros2|qa_recorder|smart_vlm")]:
         dexec(c, f"pkill -9 -f '{pat}' || true", check=False)
     time.sleep(3)
 
@@ -57,7 +57,7 @@ def main():
     ap.add_argument("--smoke", action="store_true", help="first question per scene only")
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--display", default=":1")
-    ap.add_argument("--ai-launch", default="ros2 launch dummy_vlm dummy_vlm.launch",
+    ap.add_argument("--ai-launch", default="ros2 launch smart_vlm smart_vlm.launch",
                     help="command that starts the AI module under test")
     ap.add_argument("--settle", type=int, default=25, help="s to wait after system launch")
     args = ap.parse_args()

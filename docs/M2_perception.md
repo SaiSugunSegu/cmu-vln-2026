@@ -963,8 +963,8 @@ more than 5% across a run.
    relevant to `sam_mapper`, which dropped the dependency entirely on 2026-07-28 — §3.1). `spacy.load()`
    at `utils.py:59-60` and `from bytetrack... import BYTETracker` at `semantic_map.py:11` still run at
    module scope (§2.8) for anyone running `semantic_mapping.mapping_ros2_node` directly. Moving both
-   behind function-level imports would drop a ~500 MB model download for anyone who does not need
-   `language_planner`. Best fixed upstream.
+   behind function-level imports would drop a ~500 MB model download for anyone running that node
+   directly. Best fixed upstream.
 
 ---
 

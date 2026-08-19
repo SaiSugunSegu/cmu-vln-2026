@@ -296,7 +296,7 @@ class NumericalReasoner(Node):
         """The nouns SAM gets armed with. Never raises: an empty list is caught upstream."""
         reply: list[str] | None = None
         try:
-            # User turn is the raw query, matching language_planner's extract_chain.
+            # User turn is the raw query, kept plain so it stays pure candidate data.
             result = self.backend.ask(
                 EXTRACT_SYSTEM, question, [], TargetList, lite=True)
             reply = list(result.targets)

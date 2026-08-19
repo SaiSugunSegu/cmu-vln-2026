@@ -14,10 +14,9 @@
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>visualization_msgs</depend>
-  <!-- captioner and language_planner are imported; sam_mapper and tare_planner are
-       launch-time includes / topic peers of smart_vlm.launch. -->
+  <!-- captioner is imported; sam_mapper and tare_planner are launch-time includes /
+       topic peers of smart_vlm.launch. -->
   <exec_depend>captioner</exec_depend>
-  <exec_depend>language_planner</exec_depend>
   <exec_depend>sam_mapper</exec_depend>
   <exec_depend>tare_planner</exec_depend>
 

@@ -63,7 +63,7 @@ docker compose -f compose_gpu.yml up --build -d
 ```
 This starts two containers:
 - `iros2026_system` — the base autonomy system (simulator + autonomy stack)
-- `iros2026_ai_module` — the AI module development environment, with `dummy_vlm`, `smart_vlm`, and `captioner` built in
+- `iros2026_ai_module` — the AI module development environment, with `smart_vlm` and `captioner` built in
 
 plus a one-shot `init` container that fixes permissions on the bind mounts and then
 exits — `Exited (0)` is success, not an error.
@@ -124,39 +124,7 @@ vglrun -d egl ./system_simulation.sh              # ./system_simulation_noviz.sh
 ```
 See "GPU rendering" in the [repo README](../README.md) for details and how to verify.
 
-## Launch dummy VLM
-
-Access the AI module container.
-```bash
-docker exec -it iros2026_ai_module bash
-```
-Inside the container, launch the dummy VLM.
-```bash
-ros2 launch dummy_vlm dummy_vlm.launch
-```
-The dummy VLM listens on `/challenge_question` (std_msgs/String) and responds based on the question type:
-- Questions starting with **"Find"** or **"find"**: publishes a bounding box marker on `/selected_object_marker` and sends a waypoint to the object on `/way_point_with_heading`.
-- Questions starting with **"How many"** or **"how many"**: publishes a random integer (1–10) on `/numerical_response`.
-- All other questions (navigation): publishes a sequence of waypoints on `/way_point_with_heading`, advancing as the vehicle reaches each one.
-
-To send example questions, open a new terminal, exec into either container, and use `ros2 topic pub`. Both containers share the same ROS2 network via `--network=host`.
-
-Object reference question (triggers marker + object waypoint):
-```bash
-ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'Find teal pillow on the sofa farthest from the window'}"
-```
-Numerical question (triggers random integer response from dummy alone):
-```bash
-ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'How many books are on the sofa'}"
-```
-Navigation question (triggers sequential waypoint following):
-```bash
-ros2 topic pub --once /challenge_question std_msgs/msg/String "{data: 'Go to the potted plant closest to the pyramid candle holder and stop at the vase between the TV and the door.'}"
-```
-
-You should see the vehicle following waypoints and the selected object being highlighted in RVIZ.
-
-### Numerical answers (smart_vlm)
+## Numerical answers (smart_vlm)
 
 `ros2 launch smart_vlm smart_vlm.launch` brings up the whole per-question pipeline:
 `sam_node` (booted unarmed — it loads weights but detects nothing until the question
@@ -265,12 +233,3 @@ just up      # or: docker compose -f compose_gpu.yml up --build -d
 
 The ML wheels (torch, transformers, …) live in an earlier layer and stay cached, so
 only the source-copy and colcon layers re-run.
-
-## Integrate your AI model
-
-To replace the dummy VLM with your own model, modify `ai_module/src/dummy_vlm/src/dummyVLM.cpp` and rebuild the Docker image.
-```bash
-cd <path-to-repo>/docker
-docker compose -f compose.yml up --build -d
-```
-Your model must subscribe to `/challenge_question` (std_msgs/msg/String) and publish on the appropriate response topic based on the question type.

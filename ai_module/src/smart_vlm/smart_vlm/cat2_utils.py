@@ -19,12 +19,12 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
-from language_planner.prompts.object_extraction import get_object_extraction_prompt
+from captioner.prompts.object_extraction import get_object_extraction_prompt
 
 # ---------------------------------------------------------------- prompts
 
-# Same object-extraction system prompt the language planner uses for /challenge_question
-# target nouns. Shared with numerical_utils so cat1 and cat2 cannot drift apart.
+# Same object-extraction system prompt used for /challenge_question target nouns.
+# Shared with numerical_utils so cat1 and cat2 cannot drift apart.
 EXTRACT_SYSTEM = get_object_extraction_prompt()
 
 # The candidate list is data, not instruction — a question is user text and must never be
