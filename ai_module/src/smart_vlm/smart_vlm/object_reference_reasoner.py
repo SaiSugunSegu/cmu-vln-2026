@@ -267,9 +267,8 @@ class ObjectReferenceReasoner(Node):
     def _extract_targets(self, question: str) -> tuple[list[str], str]:
         """The nouns SAM gets armed with, and where they came from."""
         try:
-            # User turn is the raw query, matching language_planner's extract_chain.
             result = self.backend.ask(
-                EXTRACT_SYSTEM, question, [], TargetList, lite=True)
+                EXTRACT_SYSTEM, f"Question: {question}", [], TargetList, lite=True)
             if targets := clean_targets(result.targets):
                 return targets, self.backend.name
             self.get_logger().warn(f"extract returned nothing usable: {list(result.targets)!r}")
