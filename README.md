@@ -176,7 +176,7 @@ placeholder objects.
 python3 scripts/eval/run_bench.py --repo . --scenes-dir ~/vln_scenes --out ~/vln_eval/$(date +%Y%m%d_%H%M) --smoke
 python3 scripts/eval/score.py --results ~/vln_eval/<run> --gt scripts/eval/gt/gt.json
 ```
-`--ai-launch` still defaults to `dummy_vlm`. [scripts/eval/README.md](scripts/eval/README.md)
+`--ai-launch` defaults to `smart_vlm`. [scripts/eval/README.md](scripts/eval/README.md)
 
 ### 5 · Foxglove over SSH (camera + clouds on your laptop, no X11 lag)
 

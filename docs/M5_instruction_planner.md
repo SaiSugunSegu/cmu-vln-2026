@@ -31,7 +31,7 @@ Score based on: constraints achieved, in correct order, penalties for forbidden 
 - Base autonomy adjusts out-of-traversable waypoints — dense waypoints keep the executed path under OUR control, not the planner's.
 - "Path near the window" = the waypoint band along the window's traversable side; sample 2–3 waypoints there, not 1.
 - Avoid regions from "between the two tables": construct the polygon between anchor boxes, inflate by robot radius.
-- Wait-for-arrival logic: publish next waypoint when within r of current one (dummy VLM shows the pattern).
+- Wait-for-arrival logic: publish next waypoint when within r of current one.
 
 ## Progress checklist
 - [ ] Constraint spec schema agreed with M4

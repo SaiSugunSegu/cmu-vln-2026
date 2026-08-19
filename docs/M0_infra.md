@@ -109,24 +109,20 @@ docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/instal
 `smart_vlm.launch` = sam_node (unarmed until prompted) + supervisor (mission clock, readiness/arming gates, T-30 fallback) + numerical_reasoner + TARE exploration. It starts no scene source of its own (that is `eval_bag.launch`'s job offline). It is a disposable per-question unit: the eval harness spawns it, waits for the answer, then SIGINTs the whole process group. Watch the supervisor heartbeat — it reports the mission phase, odometry rate, and warns via `count_publishers` when an allowed topic has no source (it deliberately does not subscribe to the heavy image/cloud topics just to count them).
 Eval-realistic mode: `docker/system/challenge_simulation.sh` (baked into the system container at `/home/docker/autonomy_stack_mecanum_wheel_platform/`) runs the sim in ROS domain 42 with a domain-bridge firewall passing only the 6 allowed inputs + question in and 3 answers out; launch the AI side with `ROS_DOMAIN_ID=0`. Pass `--noviz` to skip RViz. `ros-jazzy-domain-bridge` is installed by `docker/system/Dockerfile`.
 
-### 4. Launch dummy VLM + send test questions
+### 4. Send a test question to smart_vlm
 ```bash
-docker exec -it iros2026_ai_module bash
-ros2 launch dummy_vlm dummy_vlm.launch
+docker exec -it iros2026_ai_module bash -lc \
+  "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm eval_bag.launch bag:=arabic_room"
 ```
 In another terminal (either container):
 ```bash
-# object reference → marker + waypoint
 ros2 topic pub --once /challenge_question std_msgs/msg/String \
-  "{data: 'Find teal pillow on the sofa farthest from the window'}"
-# numerical → random Int32
-ros2 topic pub --once /challenge_question std_msgs/msg/String \
-  "{data: 'How many books are on the sofa'}"
-# instruction following → waypoint sequence
-ros2 topic pub --once /challenge_question std_msgs/msg/String \
-  "{data: 'Go to the potted plant closest to the pyramid candle holder and stop at the vase between the TV and the door.'}"
+  "{data: 'How many pillows are on the bed?'}"
+ros2 topic echo /numerical_response --once
 ```
-Expected: vehicle follows waypoints, selected object highlighted in RViz.
+See "Numerical answers (smart_vlm)" in `docker/README.md` for the full pipeline
+(`sam_node` + supervisor + `numerical_reasoner` + TARE exploration) and how to point
+it at a live scene instead of a bag.
 
 ### 5. Verify subscriber data (checklist below)
 ```bash

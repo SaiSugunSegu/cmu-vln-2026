@@ -178,7 +178,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 USER docker
 
 # Copy and compile active dev packages (takes <5s and updates instantly on edit)
-COPY src/dummy_vlm /home/docker/ai_module/src/dummy_vlm
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm
 COPY src/sam_mapper /home/docker/ai_module/src/sam_mapper
 COPY src/captioner /home/docker/ai_module/src/captioner
@@ -186,7 +185,7 @@ RUN /bin/bash -c "\
     source /opt/ros/jazzy/setup.bash && \
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=Release \
-      --packages-select dummy_vlm smart_vlm sam_mapper captioner"
+      --packages-select smart_vlm sam_mapper captioner"
 
 # Ensure the updated install is sourced in every new shell
 RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc \
