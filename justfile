@@ -102,9 +102,9 @@ bag-play scene="livingroom_1" speed="1.0" loop="false":
 # Brings up sam_node too (unarmed until a question supplies prompts) -- no separate
 # `just run-sam` terminal needed for this flow.
 [group('run')]
-[doc('smart_vlm: SAM + supervisor + reasoner + TARE (blocks; terminal B)')]
+[doc('Official entry: dummy_vlm.launch → SAM + supervisor + reasoners + TARE')]
 ai:
-    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch dummy_vlm dummy_vlm.launch"
 
 # Exploration on its own, with no perception or reasoning attached -- the way to tell a
 # TARE problem from a pipeline problem. Needs the sim already up in the other terminal

@@ -160,6 +160,19 @@
     <param name="mode" value="$(var cat2_mode)"/>
   </node>
 
+  <!-- 3c. Instruction reasoner — question to targets to an ordered Pose2D sequence.
+       Arms SAM (so TARE can start), then after explore_done holds TARE and publishes
+       /way_point_with_heading toward each named object in prompt order.
+       Input:   /challenge_question, /gt_target_objects, /pipeline/explore_done,
+                /sam3/best_view_dir, /state_estimation
+       Output:  /sam3/set_prompts, /start_exploration (false), /way_point_with_heading -->
+  <node pkg="smart_vlm" exec="instruction_reasoner" name="instruction_reasoner"
+        output="screen">
+    <param name="backend" value="$(var vlm_backend)"/>
+    <param name="run_id" value="$(var run_id)"/>
+    <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
+  </node>
+
   <!-- 4. TARE exploration — drives the robot to cover the scene.
        Held until the supervisor publishes /start_exploration, which it does alongside
        /pipeline/armed the instant SAM holds this question's prompts. The wait is

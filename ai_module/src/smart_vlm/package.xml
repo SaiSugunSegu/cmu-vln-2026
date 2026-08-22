@@ -2,9 +2,9 @@
 <package format="3">
   <name>smart_vlm</name>
   <version>0.1.0</version>
-  <description>Team AI module: mission supervisor, numerical reasoner, and the
-  category-1 evaluation harness. Composes sam_mapper (perception), captioner (Qwen VQA)
-  and the vendored tare_planner (exploration) into one per-question launch.</description>
+  <description>Team AI module: mission supervisor, numerical / object-reference /
+  instruction reasoners, and the evaluation harness. Composes sam_mapper, captioner
+  and tare_planner into one per-question launch.</description>
   <maintainer email="team@example.com">CMU-VLN Team</maintainer>
   <license>MIT</license>
 
