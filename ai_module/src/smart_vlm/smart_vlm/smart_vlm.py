@@ -18,7 +18,7 @@ It supervises by publishing gates, never by managing processes:
   /pipeline/explore_done       exploration is closed — reasoner, answer now.
 
 Plus the safety net the score depends on: at T-30 it publishes a best guess rather than
-letting a question go unanswered.
+letting a question go unanswered (Int32, Marker, or a Pose2D toward a mapped object).
 """
 from __future__ import annotations
 
@@ -29,6 +29,8 @@ from typing import Optional
 import rclpy
 
 from captioner.ros_utils import shutdown_guard
+from captioner.vlm_backends.constants import NEED_LOCAL_VQA
+from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -85,7 +87,7 @@ class SmartVLM(Node):
         )
         self.fallback_count = int(self._param("fallback_count", 1))
         self.ready_timeout_s = self._param("ready_timeout_s", 300.0)
-        self.require_vqa_ready = bool(self._param("require_vqa_ready", True))
+        self.require_vqa_ready = NEED_LOCAL_VQA
         self.idle_stop_s = self._param("idle_stop_s", 5.0)
         self.startup_grace_s = self._param("startup_grace_s", 15.0)
 
@@ -122,6 +124,8 @@ class SmartVLM(Node):
         # a real answer already went out.
         self.create_subscription(Int32, "/numerical_response", self._on_numerical, 10)
         self.create_subscription(Marker, "/selected_object_marker", self._on_marker, 10)
+        self.create_subscription(String, "/instruction_reasoner/status",
+                                 self._on_instruction_status, _latched())
         self.create_subscription(String, "/obj_map_json", self._on_obj_map, 10)
 
         # -- outputs --------------------------------------------------------
@@ -134,6 +138,7 @@ class SmartVLM(Node):
         # these only fire as the T-30 fallback.
         self.pub_answer = self.create_publisher(Int32, "/numerical_response", 10)
         self.pub_marker = self.create_publisher(Marker, "/selected_object_marker", 10)
+        self.pub_waypoint = self.create_publisher(Pose2D, "/way_point_with_heading", 10)
 
         self.create_timer(self.TICK_S, self._tick)
         self.create_timer(self.HEARTBEAT_S, self._heartbeat)
@@ -240,6 +245,12 @@ class SmartVLM(Node):
             return  # our own fallback echoing back
         self.answered = True
 
+    def _on_instruction_status(self, msg: String) -> None:
+        if self.fallback_published:
+            return
+        if (msg.data or "").strip() == "answered":
+            self.answered = True
+
     def _on_obj_map(self, msg: String) -> None:
         try:
             payload = json.loads(msg.data)
@@ -315,6 +326,8 @@ class SmartVLM(Node):
                 f"publishing /numerical_response={self.fallback_count} as a guess")
         elif self.qtype is QuestionType.OBJECT_REFERENCE:
             self._publish_marker_fallback()
+        elif self.qtype is QuestionType.INSTRUCTION_FOLLOWING:
+            self._publish_waypoint_fallback()
         elif self.qtype is None:
             self.get_logger().error("FALLBACK: budget spent and no question ever arrived")
         else:
@@ -360,6 +373,28 @@ class SmartVLM(Node):
         self.get_logger().error(
             f"FALLBACK: no answer by {deadline} — publishing /selected_object_marker "
             f"id={marker.id} ({why}) as a guess")
+
+    def _publish_waypoint_fallback(self) -> None:
+        """Send the robot toward one mapped object rather than leaving it still.
+
+        Instruction score is the executed trajectory. A single Pose2D at a real
+        object centre can still pass a nearby/goal constraint; silence scores 0/6.
+        """
+        deadline = f"T-{self.clock.budget.fallback_reserve_s:.0f}s"
+        track_id, why = naive_from_raw(self.obj_map, self.question or "")
+        entry = self.obj_map.get(str(track_id)) if track_id else None
+        bbox = (entry or {}).get("bbox3d") or {}
+        center = bbox.get("center") or []
+        if len(center) < 2:
+            self.get_logger().error(
+                f"FALLBACK: no answer by {deadline} and no usable box ({why}) — "
+                "publishing nothing")
+            return
+        self.pub_start_exploration.publish(Bool(data=False))
+        self.pub_waypoint.publish(Pose2D(x=float(center[0]), y=float(center[1]), theta=0.0))
+        self.get_logger().error(
+            f"FALLBACK: no answer by {deadline} — publishing /way_point_with_heading "
+            f"({center[0]:.2f}, {center[1]:.2f}) ({why})")
 
     # ---- diagnostics -----------------------------------------------------
 
