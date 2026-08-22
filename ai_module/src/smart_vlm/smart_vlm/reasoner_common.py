@@ -160,7 +160,21 @@ class VqaBridge:
         return response.get("answer") or ""
 
 
-def save_manifest(manifest_path: Path, manifest: dict) -> None:
+def load_manifest(run_dir: Path) -> tuple[Path, dict]:
+    """(path, contents) of run_dir/manifest.json, or an empty one if sam_node wrote none."""
+    path = run_dir / "manifest.json"
+    if not path.is_file():
+        return path, {"selected": []}
+    with open(path, "r", encoding="utf-8") as handle:
+        return path, json.load(handle)
+
+
+def save_manifest(manifest_path: Path, manifest: dict,
+                  front: Optional[dict] = None) -> None:
+    """Write atomically. `front` keys lead the file so a run is readable at a glance."""
+    if front:
+        manifest = {**front,
+                    **{k: v for k, v in manifest.items() if k not in front}}
     tmp = manifest_path.with_suffix(".json.tmp")
     with open(tmp, "w", encoding="utf-8") as handle:
         json.dump(manifest, handle, indent=2)

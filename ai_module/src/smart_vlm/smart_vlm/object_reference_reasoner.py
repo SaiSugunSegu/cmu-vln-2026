@@ -17,7 +17,6 @@ a placeholder Marker so the cache can be built; a scored run must never set it.
 """
 from __future__ import annotations
 
-import json
 import threading
 from pathlib import Path
 from typing import Optional, Sequence
@@ -43,6 +42,7 @@ from smart_vlm.cat2_utils import (
 from smart_vlm.question import QuestionType
 from smart_vlm.reasoner_common import (
     ReasonerNode,
+    load_manifest,
     read_obj_map,
     save_manifest,
     spin_reasoner,
@@ -91,15 +91,10 @@ class ObjectReferenceReasoner(ReasonerNode):
         try:
             if not question:
                 raise RuntimeError("No question latched")
-            run_dir = secure_path(best_dir) if best_dir else None
-            if run_dir is None:
+            if not best_dir:
                 raise RuntimeError("No /sam3/best_view_dir available")
-
-            manifest_path = run_dir / "manifest.json"
-            manifest: dict = {"selected": []}
-            if manifest_path.is_file():
-                with open(manifest_path, "r", encoding="utf-8") as handle:
-                    manifest = json.load(handle)
+            run_dir = secure_path(best_dir)
+            manifest_path, manifest = load_manifest(run_dir)
 
             raw_map = read_obj_map(run_dir, self.get_logger().error)
             if self.crops_only:
@@ -111,12 +106,7 @@ class ObjectReferenceReasoner(ReasonerNode):
                     question, run_dir, manifest,
                     raw_map, prompts or manifest.get("sam_prompts") or [])
 
-            save_manifest(manifest_path, {
-                "question": question,
-                "sam_prompts": prompts or [],
-                "target_source": source,
-                **{k: v for k, v in manifest.items()
-                   if k not in ("question", "sam_prompts", "target_source")},
+            manifest.update({
                 "predicted_object_id": selection.object_id,
                 "selection_source": selection.source,
                 "selection_reason": selection.reason,
@@ -129,6 +119,11 @@ class ObjectReferenceReasoner(ReasonerNode):
                 "view_source": VIEW_SOURCE,
                 "crops_only": self.crops_only,
                 "n_map_objects": len(raw_map),
+            })
+            save_manifest(manifest_path, manifest, front={
+                "question": question,
+                "sam_prompts": prompts or [],
+                "target_source": source,
             })
 
             if self.crops_only:
