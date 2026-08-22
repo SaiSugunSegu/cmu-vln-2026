@@ -14,7 +14,8 @@ So this script owns the outer loop and calls the orchestrator once per scene:
         stop the sim
         docker cp <scenes-dir>/<scene>/  ->  the system container's mesh slot
         start challenge_simulation.sh --noviz   (domain 42 + topic firewall)
-        wait until /state_estimation has a publisher in domain 0
+        wait until /state_estimation, /camera/image and /registered_scan
+            have publishers in domain 0
         eval_orchestrator scene_source:=sim scene:=<scene>   (relaunches per question)
         stop the sim
     merge the per-scene reports
@@ -123,20 +124,25 @@ def start_sim(display: str) -> None:
 
 
 def wait_for_sim(timeout_s: float) -> bool:
-    """Block until the AI module's domain actually sees odometry.
+    """Block until domain 0 sees odom, camera, and lidar.
 
-    Publisher count on /state_estimation, not a fixed sleep: it is the one check that
-    proves BOTH halves are up — the simulator publishing in domain 42 and the domain
-    bridge relaying into domain 0. A sleep long enough to usually work still scores a
-    scene against a dead sim when it does not.
+    /state_estimation alone is not enough: vehicleSimulator publishes odometry even
+    when Unity is not producing /camera/image. SAM then explores the full budget
+    with zero frames and the reasoner answers 0.
     """
+    topics = ("/state_estimation", "/camera/image", "/registered_scan")
     deadline = time.monotonic() + timeout_s
-    probe = (f"source {AI_SRC}/install/setup.bash && "
-             f"ros2 topic info /state_estimation 2>/dev/null | grep -c 'Publisher count: [1-9]'")
+    probe = (
+        f"source {AI_SRC}/install/setup.bash && "
+        + " && ".join(
+            f"ros2 topic info {t} 2>/dev/null | grep -q 'Publisher count: [1-9]'"
+            for t in topics
+        )
+    )
     while time.monotonic() < deadline:
         out = sh(["docker", "exec", AI_CONTAINER, "bash", "-lc", probe],
                  check=False, capture=True)
-        if out.stdout.strip() == "1":
+        if out.returncode == 0:
             return True
         time.sleep(5)
     return False
@@ -160,6 +166,8 @@ def run_orchestrator(args, scene: str, report: str, append: bool) -> int:
         f"-p report_file:={report}",
         f"-p append:={'true' if append else 'false'}",
     ]
+    if args.question_id:
+        params.append(f"-p question_id:={args.question_id}")
     if args.category == 2:
         params.append(f"-p cat2_mode:={args.mode}")
     cmd = (f"source {AI_SRC}/install/setup.bash && "
@@ -223,6 +231,8 @@ def main() -> int:
     # those still play, they just cannot be auto-fetched (see fetch_scene).
     ap.add_argument("--scenes-dir", type=Path, default=REPO / "data" / "scenes")
     ap.add_argument("--limit", type=int, default=0, help="questions per scene; 0 = all")
+    ap.add_argument("--question-id", default="",
+                    help="run only this question id (e.g. Q01)")
     ap.add_argument("--target-source", default="gt")
     ap.add_argument("--mode", default="hybrid", help="cat2 selection mode")
     ap.add_argument("--report", default="")
