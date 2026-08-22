@@ -14,7 +14,8 @@ So this script owns the outer loop and calls the orchestrator once per scene:
         stop the sim
         docker cp <scenes-dir>/<scene>/  ->  the system container's mesh slot
         start challenge_simulation.sh --noviz   (domain 42 + topic firewall)
-        wait until /state_estimation has a publisher in domain 0
+        wait until /state_estimation, /camera/image and /registered_scan
+            have publishers in domain 0
         eval_orchestrator scene_source:=sim scene:=<scene>   (relaunches per question)
         stop the sim
     merge the per-scene reports
@@ -97,27 +98,51 @@ def swap_scene(scene_dir: Path) -> None:
     sh(["docker", "cp", f"{scene_dir}/.", f"{SYS_CONTAINER}:{MESH_SLOT}/"], capture=True)
 
 
+def resolve_display(requested: str) -> str:
+    """Use --display if given, otherwise start Xvfb :99 in the system container.
+
+    This machine has no monitor. Unity still needs a DISPLAY; Xvfb is the dummy
+    X, and vglrun -d egl renders on the NVIDIA GPU into it.
+    """
+    if requested:
+        return requested
+    out = sh([str(REPO / "scripts" / "eval" / "ensure_xvfb.sh")], capture=True)
+    display = out.stdout.strip() or ":99"
+    if out.stderr.strip():
+        log(out.stderr.strip())
+    return display
+
+
 def start_sim(display: str) -> None:
-    sh(["docker", "exec", "-d", "-e", f"DISPLAY={display}", SYS_CONTAINER, "bash", "-lc",
+    sh(["docker", "exec", "-d",
+        "-e", f"DISPLAY={display}",
+        "-e", "XDG_RUNTIME_DIR=/tmp/runtime-docker",
+        SYS_CONTAINER, "bash", "-lc",
+        f"mkdir -p /tmp/runtime-docker && chmod 700 /tmp/runtime-docker && "
         f"cd {STACK} && vglrun -d egl ./challenge_simulation.sh --noviz "
         f"> /tmp/challenge_sim.log 2>&1"], capture=True)
 
 
 def wait_for_sim(timeout_s: float) -> bool:
-    """Block until the AI module's domain actually sees odometry.
+    """Block until domain 0 sees odom, camera, and lidar.
 
-    Publisher count on /state_estimation, not a fixed sleep: it is the one check that
-    proves BOTH halves are up — the simulator publishing in domain 42 and the domain
-    bridge relaying into domain 0. A sleep long enough to usually work still scores a
-    scene against a dead sim when it does not.
+    /state_estimation alone is not enough: vehicleSimulator publishes odometry even
+    when Unity is not producing /camera/image. SAM then explores the full budget
+    with zero frames and the reasoner answers 0.
     """
+    topics = ("/state_estimation", "/camera/image", "/registered_scan")
     deadline = time.monotonic() + timeout_s
-    probe = (f"source {AI_SRC}/install/setup.bash && "
-             f"ros2 topic info /state_estimation 2>/dev/null | grep -c 'Publisher count: [1-9]'")
+    probe = (
+        f"source {AI_SRC}/install/setup.bash && "
+        + " && ".join(
+            f"ros2 topic info {t} 2>/dev/null | grep -q 'Publisher count: [1-9]'"
+            for t in topics
+        )
+    )
     while time.monotonic() < deadline:
         out = sh(["docker", "exec", AI_CONTAINER, "bash", "-lc", probe],
                  check=False, capture=True)
-        if out.stdout.strip() == "1":
+        if out.returncode == 0:
             return True
         time.sleep(5)
     return False
@@ -207,7 +232,9 @@ def main() -> int:
     ap.add_argument("--target-source", default="gt")
     ap.add_argument("--mode", default="hybrid", help="cat2 selection mode")
     ap.add_argument("--report", default="")
-    ap.add_argument("--display", default=":1")
+    ap.add_argument("--display", default="",
+                    help="X display. Empty starts Xvfb :99 in iros2026_system "
+                         "(headless EC2).")
     ap.add_argument("--sim-timeout", type=float, default=180.0,
                     help="seconds to wait for the sim + bridge per scene")
     args = ap.parse_args()
@@ -222,7 +249,8 @@ def main() -> int:
     if not scenes:
         log("no scenes to run — check --scenes / --scenes-dir", err=True)
         return 1
-    log(f"category {args.category}: {len(scenes)} scene(s): {scenes}")
+    display = resolve_display(args.display)
+    log(f"category {args.category}: {len(scenes)} scene(s): {scenes}  DISPLAY={display}")
 
     ran_any = False        # drives append: the first scene to run truncates
     failed: list[str] = []
@@ -233,10 +261,11 @@ def main() -> int:
                 failed.append(scene)
                 continue
 
-            log(f"[{i}/{len(scenes)}] {scene}: swapping mesh and restarting the sim")
+            log(f"[{i}/{len(scenes)}] {scene}: swapping mesh and restarting the sim "
+                f"(DISPLAY={display})")
             stop_sim()
             swap_scene(scene_dir)
-            start_sim(args.display)
+            start_sim(display)
 
             if not wait_for_sim(args.sim_timeout):
                 # One dead sim must not cost the rest of the sweep, exactly as one bad
