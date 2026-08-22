@@ -7,7 +7,7 @@
 # local (resident Qwen, served by vqa_server.launch) | cloud (a hosted model over its
 # OpenAI-compatible endpoint, picked with `provider` below). local costs nothing per
 # call and is the dev-loop default; a scored run sets this to cloud.
-backend: local
+backend: cloud
 
 # auto | local | cloud — backend for the text-only target-extraction call the reasoners
 # fire before SAM is armed. auto follows `backend` above; set explicitly to decouple
@@ -17,11 +17,25 @@ extract_backend: auto
 
 # gemini | anthropic | dashscope | openrouter | openai | <anything, via base_url/model
 # below>. Only supplies defaults — base_url/model/model_lite each override individually.
-provider: dashscope
-base_url: "https://ws-l7okjx3b70y42gso.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1"
-model: "qwen3.7-flash"
+# OpenRouter model ids are vendor-namespaced (google/...). Leave base_url blank to use
+# the preset in constants.py; a leftover DashScope URL here would override it.
+provider: openrouter
+base_url: ""
+model: "google/gemini-3.7-flash"
+
+
+# provider: dashscope
+# base_url: "https://ws-l7okjx3b70y42gso.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1"
+# model: "qwen3.7-flash"
+# # Cheaper model for the extraction call (lite=True); blank falls back to the provider's
+# # own lite preset, then to `model` above.
+
+
+
+
 # Cheaper model for the extraction call (lite=True); blank falls back to the provider's
-# own lite preset, then to `model` above.
+# own lite preset, then to `model` above. OpenRouter has no lite preset, so this is
+# the same Gemini Flash until a cheaper slug is set.
 model_lite: ""
 
 # crop | silhouette — which image of a best-view crop the model sees. silhouette is the
