@@ -55,12 +55,14 @@ OPTIONAL_MODELS: dict[str, dict] = {
         "why": "alternate captioning backend",
     },
     # Ships sam3.1_multiplex.pt (a NATIVE checkpoint) and no safetensors, so
-    # from_pretrained cannot load it directly — snapshot_download is only step one.
-    # `just sam31-convert` turns it into an HF directory. See docs/M2_perception.md 4.5.
+    # transformers' from_pretrained cannot load it. No conversion step: the native
+    # facebookresearch/sam3 package (pinned in ai_module/docker/Dockerfile) reads the
+    # .pt directly via build_sam3_multiplex_video_predictor. Converting it into an HF
+    # directory loses Object Multiplex entirely — see docs/M2_perception.md 4.5.
     "sam3.1": {
         "repo_id": "facebook/sam3.1",
         "gated": True,
-        "why": "sam_mapper Object Multiplex upgrade — needs `just sam31-convert` after this",
+        "why": "sam_mapper Object Multiplex upgrade (native sam3 package, not transformers)",
     },
 }
 
