@@ -15,7 +15,6 @@
 #   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
 #   live sim      just sim          | just ai | just ask "How many …"
-#   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
 #   submit        just trial-submission-image                 # arabic_room Q01 in live sim
 #                 just build-submission-image                 # bake AI image + checks
 #                 just push-submission-image USER/cmu-vln-ai:v1
@@ -135,11 +134,20 @@ _sim script sim_display="":
     docker exec -it -e DISPLAY="$d" -e XDG_RUNTIME_DIR=/tmp/runtime-docker \
       iros2026_system bash -c "{{vgl}} {{script}}"
 
-# Single pass by default; loop:=true to loop (e.g. just bag-play livingroom_1 1.0 true)
-[group('bags')]
-[doc('Replay a recorded scene bag instead of the live sim')]
-bag-play scene="livingroom_1" speed="1.0" loop="false":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
+# Challenge mode uses domain 42: just ask "…" 42
+[group('sim')]
+[doc('Publish a one-shot question on /challenge_question')]
+ask q domain="0":
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_odyssey bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: '{{q}}'}\""
+
+# Default domain 0 matches sim-noviz. Challenge mode: just teleop 42
+[group('sim')]
+[doc('Keyboard drive via /joy (needs TTY focus; domain must match sim)')]
+teleop domain="0":
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_system bash -lc \
+      'source /opt/ros/jazzy/setup.bash && \
+       source /home/docker/autonomy_stack_mecanum_wheel_platform/install/setup.bash && \
+       python3 /home/docker/scripts/keyboard_teleop.py'
 
 # Self-contained: when vqa.yaml has a local backend the launch starts its own Qwen
 # server, so `just vqa-up` is not a prerequisite — and must not be running at the
@@ -184,56 +192,17 @@ run-sam config="sam3_mecanum_sim.yaml":
 run-map config="sam3_mecanum_sim.yaml":
     docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper map_node.launch config:={{config}}"
 
-# Use out=/data/bags/_frames to see them on the host.
-[group('sam')]
-[doc('Dump /camera/image frames from a bag to PNGs, for the offline probe')]
-sam-frames scene="livingroom_1" out="/data/bags/_frames" limit="40":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.dump_frames --bag /data/bags/{{scene}} --out {{out}} --limit {{limit}}"
-
-# Are object IDs stable across frames, and which image_size is fastest?
-# Answers whether dropping ByteTrack was sound.
-[group('sam')]
-[doc('Offline SAM 3 probe on dumped frames: ID stability + image_size sweep')]
-sam-probe frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="--sweep-image-size":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.sam3_backend --frames {{frames}} --config /home/docker/ai_module/src/sam_mapper/config/{{config}} {{args}}"
-
-# Splits the frame into vision encoder / per-prompt detection / tracker / mask transfer, and
-# fits ms ~ fixed + per_object * N per stage. Dump frames first with `just sam-frames`.
-#   just sam-profile <frames> <cfg> "--prompts tv,cabinet,chair"   one prompt regime
-#   just sam-profile <frames> <cfg> --torch-profile                 when residual is >10%
-[group('sam')]
-[doc('Where does a SAM 3 frame actually go? Per-stage breakdown')]
-sam-profile frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="":
-    just sam-probe {{frames}} {{config}} "--profile {{args}}"
-
-# Profiles SAM 3.1 the way sam_node runs it: `just hf-fetch sam3.1` first.
-[group('sam')]
-[doc('SAM 3.1 benchmark: all concepts batched through one backbone pass')]
-sam31-probe args="--bench":
-    docker exec -it -e PYTHONUTF8=1 iros2026_odyssey bash -lc \
-      "source {{ai_src}}/install/setup.bash && \
-       python3 /home/docker/scripts/eval/sam31_probe.py {{args}}"
-
-# Challenge mode uses domain 42: just ask "…" 42
-[group('sim')]
-[doc('Publish a one-shot question on /challenge_question')]
-ask q domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_odyssey bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: '{{q}}'}\""
+# Single pass by default; loop:=true to loop (e.g. just bag-play livingroom_1 1.0 true)
+[group('bags')]
+[doc('Replay a recorded scene bag instead of the live sim')]
+bag-play scene="livingroom_1" speed="1.0" loop="false":
+    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
 
 # Default domain 0 matches sim-noviz. Challenge mode: just foxglove 42
 [group('debug')]
 [doc('Foxglove bridge on host port 8765 (blocks; tunnel from laptop)')]
 foxglove domain="0":
     docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_odyssey bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0"
-
-# Default domain 0 matches sim-noviz. Challenge mode: just teleop 42
-[group('sim')]
-[doc('Keyboard drive via /joy (needs TTY focus; domain must match sim)')]
-teleop domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_system bash -lc \
-      'source /opt/ros/jazzy/setup.bash && \
-       source /home/docker/autonomy_stack_mecanum_wheel_platform/install/setup.bash && \
-       python3 /home/docker/scripts/keyboard_teleop.py'
 
 [group('debug')]
 [doc('List all ROS topics visible in the AI container')]
@@ -273,87 +242,10 @@ shell-sys:
 shell-ai:
     docker exec -it iros2026_odyssey bash
 
-# ---------- 3D map benchmark (map3d) -----------------------------------
-# Record SAM 3 output once per scene on GPU, then replay the 3D mapper on CPU
-# deterministically in ~30 s/scene. Guide: docs/map3d_bench.md
-
-# The ONLY GPU step. stride=5 is still 2.6x denser than sam_node achieves in production.
-# Resume an interrupted sweep with:  just map3d-record all 5 "--skip-existing"
-[group('map3d')]
-[doc('Record companion /sam3/* bag for a scene (GPU, one-time). scene=all for every scene')]
-map3d-record scene="arabic_room" stride="5" args="":
-    docker exec -it -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.record_companion --scene {{scene}} --stride {{stride}} {{args}}"
-# Splits no-coverage-where-the-mask-sits (sensor geometry) from coverage-beside-it
-# (alignment). Opposite fixes.
-[group('map3d')]
-[doc('Why do masked detections receive zero lidar points?')]
-map3d-zeropoints scene="livingroom_1" variant="" args="":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/diagnose_zero_points.py --scene {{scene}} {{ if variant != '' { '--variant ' + variant } else { '' } }} {{args}}"
-
-# Writes /data/runs/map3d/<run-id>/<scene>.json. run-id is the HOST git sha (the container
-# has no .git), so A/B diffs are a git-keyed table.
-[group('map3d')]
-[doc('Replay the 3D mapper offline against recorded SAM 3 output (CPU, deterministic)')]
-map3d-replay scene="arabic_room" jobs="1" args="":
-    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/replay_map3d.py --scene {{scene}} --jobs {{jobs}} {{args}}"
-
-# Two replays must give an identical digest, or every later A/B is measuring noise.
-[group('map3d')]
-[doc('Assert the offline replay is byte-reproducible')]
-map3d-determinism scene="arabic_room":
-    just map3d-replay {{scene}} 1 "--determinism-check --quiet"
-
-# In the container so replay and score write /data/runs as the same uid. Defaults to the
-# newest run. Read A/Bs against bestIoU/claimed — precision-recall at a fixed IoU is a step
-# function and reads 0.00 until something crosses it.
-[group('map3d')]
-[doc('Score a replayed 3D map against IRef-VLA ground truth')]
-map3d-score run="" args="":
-    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_odyssey bash -c "python3 /home/docker/scripts/eval/score_map3d.py {{ if run != '' { '--run ' + run } else { '' } }} {{args}}"
-
-# A sloppy prompt->GT-label map silently invalidates every number above.
-[group('map3d')]
-[doc('Which prompts / predicted labels fail to resolve to a GT label?')]
-map3d-audit run="":
-    just map3d-score "{{run}}" --audit-labels
-
-# Regenerates sam_mapper/dimension_priors.json (D3 caps) from VLA-3D ground truth. Needed
-# only when new scene GT lands. Runs on the HOST — it reads ../IRef-VLA.
-[group('map3d')]
-[doc('Regenerate the per-class size caps from VLA-3D ground truth')]
-map3d-priors args="":
-    python3 scripts/eval/build_dimension_priors.py {{args}}
-
-# ---------- Category-3 (instruction following) benchmark -------------------
-# The GT is a reading of the organizers' demo trajectories in questions/<scene>/*.ply.
-# Both recipes run on the HOST — they read ../IRef-VLA, which no container mounts, same
-# reason as map3d-priors above. Guide: docs/cat3_benchmark.md
-#
-# cat3-verify is the gate: it replays every demo through score.py::score_instruction and
-# requires 6/6. If a radius, an order or an avoid zone is wrong, this is what says so.
-[group('bench')]
-[doc('Audit the category-3 GT: every demo trajectory must score 6/6')]
-cat3-verify args="":
-    python3 scripts/eval/verify_category3.py {{args}}
-
-# --dry-run reports without writing; --write regenerates all 15 files. Hand decisions live
-# in scripts/bench/category3_overrides.json, so a rerun reproduces them exactly.
-[group('bench')]
-[doc('Rebuild the category-3 QA files from the demo trajectories')]
-cat3-build args="--dry-run":
-    python3 scripts/bench/generate_category3_qa.py {{args}}
-
-[group('map3d')]
-[doc('One-shot JSON dump of every 3D instance the mapper has built')]
-sam-map-json:
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic echo /obj_map_json --once"
-
-# ---------- Persistent Qwen VQA (model stays loaded) --------------------
-#   just vqa-up
-#   just vqa-ask "How many pillows?" /data/img.png
-#   just vqa-down
-
-# Starts the Qwen VQA server process. Run it before `just ai` or the evaluation.
+# Optional resident Qwen server. `just ai` and the eval recipes start their own on
+# the local backend — do not run this at the same time as those, or two servers
+# collide on the node name and the /qwen_vqa topics. Use it to keep one server
+# loaded across per-question relaunches (~60s first time).
 [group('vqa')]
 [doc('Load Qwen once and keep it resident (~60s first time)')]
 vqa-up model="qwen3vl" quantization="int4":
@@ -361,6 +253,7 @@ vqa-up model="qwen3vl" quantization="int4":
       "source {{ai_src}}/install/setup.bash && ros2 launch captioner vqa_server.launch model:={{model}} quantization:={{quantization}}"
 
 # Image path: container-absolute under /data (host data/x is /data/x).
+# Needs `just vqa-up` already running in another terminal.
 [group('vqa')]
 [doc('Ask the running server a question about an image (fast; no reload)')]
 vqa-ask q image:
@@ -422,30 +315,6 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
         --captioning_model '${model}' \
         --quantization '${quantization}' \
         --batch_size ${batch_size}
-    "
-
-# ---------- Category-1 bag bench (SAM best-views + Qwen VQA) ---------------
-# Terminals: just vqa-up | just run-sam | just cat1-reasoner | just cat1-bag-bench
-# Bench waits for /sam3/status=ready before (and after) prompts, then starts the bag.
-#
-# Which model answers is pinned in ai_module/src/captioner/config/vqa.yaml
-# (`vlm_backend` / `provider` / `model`), not passed here -- see
-# captioner/vlm_backends/constants.py.
-# views is how many best-view ranks it answers from at once (the VQA server caps at 4).
-# Which image of a best-view crop the model sees (silhouette, the mask-outline + label
-# copy, vs. the plain crop) is vqa.yaml's `view_source`.
-[group('cat1')]
-[doc('Rebuild smart_vlm/sam_mapper and launch the category-1 reasoner (blocks)')]
-cat1-reasoner views="3":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Rebuild the image so this reasoner runs the current source: captioner counts
-    # too, since smart_vlm imports captioner.paths / .text_utils / .ros_utils /
-    # .vlm_backends.
-    just up
-    docker exec -it iros2026_odyssey bash -lc "
-      source {{ai_src}}/install/setup.bash &&
-      ros2 run smart_vlm numerical_reasoner --ros-args -p max_context_views:={{views}}
     "
 
 # The whole pipeline (SAM and, when either vqa.yaml backend is local, Qwen) is relaunched
@@ -583,6 +452,119 @@ eval-target-extract *flags:
        export PYTHONPATH={{ai_src}}/src/smart_vlm:{{ai_src}}/src/captioner:\$PYTHONPATH && \
        python3 -m smart_vlm.extract_bench {{flags}}"
 
+# ---------- SAM 3 offline probes ---------------------------------------
+
+# Use out=/data/bags/_frames to see them on the host.
+[group('sam')]
+[doc('Dump /camera/image frames from a bag to PNGs, for the offline probe')]
+sam-frames scene="livingroom_1" out="/data/bags/_frames" limit="40":
+    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.dump_frames --bag /data/bags/{{scene}} --out {{out}} --limit {{limit}}"
+
+# Are object IDs stable across frames, and which image_size is fastest?
+# Answers whether dropping ByteTrack was sound.
+[group('sam')]
+[doc('Offline SAM 3 probe on dumped frames: ID stability + image_size sweep')]
+sam-probe frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="--sweep-image-size":
+    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.sam3_backend --frames {{frames}} --config /home/docker/ai_module/src/sam_mapper/config/{{config}} {{args}}"
+
+# Splits the frame into vision encoder / per-prompt detection / tracker / mask transfer, and
+# fits ms ~ fixed + per_object * N per stage. Dump frames first with `just sam-frames`.
+#   just sam-profile <frames> <cfg> "--prompts tv,cabinet,chair"   one prompt regime
+#   just sam-profile <frames> <cfg> --torch-profile                 when residual is >10%
+[group('sam')]
+[doc('Where does a SAM 3 frame actually go? Per-stage breakdown')]
+sam-profile frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="":
+    just sam-probe {{frames}} {{config}} "--profile {{args}}"
+
+# Profiles SAM 3.1 the way sam_node runs it: `just hf-fetch sam3.1` first.
+[group('sam')]
+[doc('SAM 3.1 benchmark: all concepts batched through one backbone pass')]
+sam31-probe args="--bench":
+    docker exec -it -e PYTHONUTF8=1 iros2026_odyssey bash -lc \
+      "source {{ai_src}}/install/setup.bash && \
+       python3 /home/docker/scripts/eval/sam31_probe.py {{args}}"
+
+# ---------- 3D map benchmark (map3d) -----------------------------------
+# Record SAM 3 output once per scene on GPU, then replay the 3D mapper on CPU
+# deterministically in ~30 s/scene. Guide: docs/map3d_bench.md
+
+# The ONLY GPU step. stride=5 is still 2.6x denser than sam_node achieves in production.
+# Resume an interrupted sweep with:  just map3d-record all 5 "--skip-existing"
+[group('map3d')]
+[doc('Record companion /sam3/* bag for a scene (GPU, one-time). scene=all for every scene')]
+map3d-record scene="arabic_room" stride="5" args="":
+    docker exec -it -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.record_companion --scene {{scene}} --stride {{stride}} {{args}}"
+
+# Splits no-coverage-where-the-mask-sits (sensor geometry) from coverage-beside-it
+# (alignment). Opposite fixes.
+[group('map3d')]
+[doc('Why do masked detections receive zero lidar points?')]
+map3d-zeropoints scene="livingroom_1" variant="" args="":
+    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/diagnose_zero_points.py --scene {{scene}} {{ if variant != '' { '--variant ' + variant } else { '' } }} {{args}}"
+
+# Writes /data/runs/map3d/<run-id>/<scene>.json. run-id is the HOST git sha (the container
+# has no .git), so A/B diffs are a git-keyed table.
+[group('map3d')]
+[doc('Replay the 3D mapper offline against recorded SAM 3 output (CPU, deterministic)')]
+map3d-replay scene="arabic_room" jobs="1" args="":
+    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/replay_map3d.py --scene {{scene}} --jobs {{jobs}} {{args}}"
+
+# Two replays must give an identical digest, or every later A/B is measuring noise.
+[group('map3d')]
+[doc('Assert the offline replay is byte-reproducible')]
+map3d-determinism scene="arabic_room":
+    just map3d-replay {{scene}} 1 "--determinism-check --quiet"
+
+# In the container so replay and score write /data/runs as the same uid. Defaults to the
+# newest run. Read A/Bs against bestIoU/claimed — precision-recall at a fixed IoU is a step
+# function and reads 0.00 until something crosses it.
+[group('map3d')]
+[doc('Score a replayed 3D map against IRef-VLA ground truth')]
+map3d-score run="" args="":
+    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_odyssey bash -c "python3 /home/docker/scripts/eval/score_map3d.py {{ if run != '' { '--run ' + run } else { '' } }} {{args}}"
+
+# A sloppy prompt->GT-label map silently invalidates every number above.
+[group('map3d')]
+[doc('Which prompts / predicted labels fail to resolve to a GT label?')]
+map3d-audit run="":
+    just map3d-score "{{run}}" --audit-labels
+
+# Regenerates sam_mapper/dimension_priors.json (D3 caps) from VLA-3D ground truth. Needed
+# only when new scene GT lands. Runs on the HOST — it reads ../IRef-VLA.
+[group('map3d')]
+[doc('Regenerate the per-class size caps from VLA-3D ground truth')]
+map3d-priors args="":
+    python3 scripts/eval/build_dimension_priors.py {{args}}
+
+[group('map3d')]
+[doc('One-shot JSON dump of every 3D instance the mapper has built')]
+sam-map-json:
+    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic echo /obj_map_json --once"
+
+# ---------- Category-1 bag bench (SAM best-views + Qwen VQA) ---------------
+# Terminals: just vqa-up | just run-sam | just cat1-reasoner | just cat1-bag-bench
+# Bench waits for /sam3/status=ready before (and after) prompts, then starts the bag.
+#
+# Which model answers is pinned in ai_module/src/captioner/config/vqa.yaml
+# (`vlm_backend` / `provider` / `model`), not passed here -- see
+# captioner/vlm_backends/constants.py.
+# views is how many best-view ranks it answers from at once (the VQA server caps at 4).
+# Which image of a best-view crop the model sees (silhouette, the mask-outline + label
+# copy, vs. the plain crop) is vqa.yaml's `view_source`.
+[group('cat1')]
+[doc('Rebuild smart_vlm/sam_mapper and launch the category-1 reasoner (blocks)')]
+cat1-reasoner views="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Rebuild the image so this reasoner runs the current source: captioner counts
+    # too, since smart_vlm imports captioner.paths / .text_utils / .ros_utils /
+    # .vlm_backends.
+    just up
+    docker exec -it iros2026_odyssey bash -lc "
+      source {{ai_src}}/install/setup.bash &&
+      ros2 run smart_vlm numerical_reasoner --ros-args -p max_context_views:={{views}}
+    "
+
 # Requires vqa-up + run-sam + cat1-reasoner already running in other terminals.
 #   just cat1-bag-bench arabic_room 3
 #   just cat1-bag-bench arabic_room 0 "Q01 Q02 Q03"
@@ -694,3 +676,22 @@ check-bboxes scene="arabic_room" args="":
 [doc('Build a scene mcap + GT-box MarkerArray to open in Foxglove')]
 bbox-mcap scene="arabic_room" args="":
     python3 scripts/eval/make_bbox_mcap.py --scene {{scene}} {{args}}
+
+# ---------- Category-3 (instruction following) benchmark -------------------
+# The GT is a reading of the organizers' demo trajectories in questions/<scene>/*.ply.
+# Both recipes run on the HOST — they read ../IRef-VLA, which no container mounts, same
+# reason as map3d-priors above. Guide: docs/cat3_benchmark.md
+#
+# cat3-verify is the gate: it replays every demo through score.py::score_instruction and
+# requires 6/6. If a radius, an order or an avoid zone is wrong, this is what says so.
+[group('bench')]
+[doc('Audit the category-3 GT: every demo trajectory must score 6/6')]
+cat3-verify args="":
+    python3 scripts/eval/verify_category3.py {{args}}
+
+# --dry-run reports without writing; --write regenerates all 15 files. Hand decisions live
+# in scripts/bench/category3_overrides.json, so a rerun reproduces them exactly.
+[group('bench')]
+[doc('Rebuild the category-3 QA files from the demo trajectories')]
+cat3-build args="--dry-run":
+    python3 scripts/bench/generate_category3_qa.py {{args}}

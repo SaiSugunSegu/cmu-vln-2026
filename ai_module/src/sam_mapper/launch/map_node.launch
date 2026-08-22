@@ -3,8 +3,8 @@
 
 /sam3/instance_map + /sam3/detections + /registered_scan + /state_estimation in ->
 /obj_points, /obj_boxes, /obj_labels, /obj_map_json out. Needs sam_node.launch running
-alongside it (separate process) for detections to actually arrive; `just sam_node` +
-`just map_node` in two terminals does both.
+alongside it (separate process) for detections to actually arrive; `just run-sam` +
+`just run-map` in two terminals does both.
 
   ros2 launch sam_mapper map_node.launch
   ros2 launch sam_mapper map_node.launch config:=sam3_mecanum_real.yaml
