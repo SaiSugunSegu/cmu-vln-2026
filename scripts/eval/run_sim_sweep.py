@@ -97,8 +97,27 @@ def swap_scene(scene_dir: Path) -> None:
     sh(["docker", "cp", f"{scene_dir}/.", f"{SYS_CONTAINER}:{MESH_SLOT}/"], capture=True)
 
 
+def resolve_display(requested: str) -> str:
+    """Use --display if given, otherwise start Xvfb :99 in the system container.
+
+    This machine has no monitor. Unity still needs a DISPLAY; Xvfb is the dummy
+    X, and vglrun -d egl renders on the NVIDIA GPU into it.
+    """
+    if requested:
+        return requested
+    out = sh([str(REPO / "scripts" / "eval" / "ensure_xvfb.sh")], capture=True)
+    display = out.stdout.strip() or ":99"
+    if out.stderr.strip():
+        log(out.stderr.strip())
+    return display
+
+
 def start_sim(display: str) -> None:
-    sh(["docker", "exec", "-d", "-e", f"DISPLAY={display}", SYS_CONTAINER, "bash", "-lc",
+    sh(["docker", "exec", "-d",
+        "-e", f"DISPLAY={display}",
+        "-e", "XDG_RUNTIME_DIR=/tmp/runtime-docker",
+        SYS_CONTAINER, "bash", "-lc",
+        f"mkdir -p /tmp/runtime-docker && chmod 700 /tmp/runtime-docker && "
         f"cd {STACK} && vglrun -d egl ./challenge_simulation.sh --noviz "
         f"> /tmp/challenge_sim.log 2>&1"], capture=True)
 
@@ -207,7 +226,9 @@ def main() -> int:
     ap.add_argument("--target-source", default="gt")
     ap.add_argument("--mode", default="hybrid", help="cat2 selection mode")
     ap.add_argument("--report", default="")
-    ap.add_argument("--display", default=":1")
+    ap.add_argument("--display", default="",
+                    help="X display. Empty starts Xvfb :99 in iros2026_system "
+                         "(headless EC2).")
     ap.add_argument("--sim-timeout", type=float, default=180.0,
                     help="seconds to wait for the sim + bridge per scene")
     args = ap.parse_args()
@@ -222,7 +243,8 @@ def main() -> int:
     if not scenes:
         log("no scenes to run — check --scenes / --scenes-dir", err=True)
         return 1
-    log(f"category {args.category}: {len(scenes)} scene(s): {scenes}")
+    display = resolve_display(args.display)
+    log(f"category {args.category}: {len(scenes)} scene(s): {scenes}  DISPLAY={display}")
 
     ran_any = False        # drives append: the first scene to run truncates
     failed: list[str] = []
@@ -233,10 +255,11 @@ def main() -> int:
                 failed.append(scene)
                 continue
 
-            log(f"[{i}/{len(scenes)}] {scene}: swapping mesh and restarting the sim")
+            log(f"[{i}/{len(scenes)}] {scene}: swapping mesh and restarting the sim "
+                f"(DISPLAY={display})")
             stop_sim()
             swap_scene(scene_dir)
-            start_sim(args.display)
+            start_sim(display)
 
             if not wait_for_sim(args.sim_timeout):
                 # One dead sim must not cost the rest of the sweep, exactly as one bad

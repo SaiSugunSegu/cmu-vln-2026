@@ -1,10 +1,12 @@
 FROM zhangjicmu/ubuntu24_ros:cmu_vla_challenge_simulation
 USER root
-RUN apt-get update && apt-get install -y ros-jazzy-domain-bridge && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-domain-bridge xvfb \
+    && rm -rf /var/lib/apt/lists/*
 
-# VirtualGL lets Unity render on the NVIDIA GPU via EGL and blit the result to a
-# software X server (Xvnc), which has no GL acceleration of its own. mesa-utils
-# provides glxinfo for checking which renderer you actually got.
+# VirtualGL lets Unity render on the NVIDIA GPU via EGL and blit the result to
+# Xvfb, which has no GL acceleration of its own. mesa-utils provides glxinfo
+# for checking which renderer you actually got.
 ARG VIRTUALGL_VERSION=3.1.4
 # sha256 of virtualgl_${VIRTUALGL_VERSION}_amd64.deb from the official GitHub
 # release. Verified before install so a changed/MITM'd asset fails the build.

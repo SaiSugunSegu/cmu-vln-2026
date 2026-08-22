@@ -10,6 +10,8 @@
 # Then pick a flow:
 #   scored eval   just eval-cat1 arabic_room 2                # one command, per-question relaunch
 #                 just eval-cat2 chinese_room 2               # the same for object reference
+#   live-sim eval just eval-cat1-sim arabic_room 2            # TARE explores; host-side
+#                 just eval-cat2-sim chinese_room 2
 #   switch VLM    edit vqa.yaml `vlm_backend` / `target_extract_backend`  # then just up
 #   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
@@ -73,21 +75,32 @@ test pkgs="captioner sam_mapper smart_vlm":
       python3 -m pytest $dirs -q -p no:cacheprovider
     "
 
-# Override display: just sim :0
+# Headless default: Xvfb :99 inside iros2026_system. Override: just sim :0
 [group('sim')]
 [doc('Simulator + base autonomy + rviz2 (blocks; terminal A)')]
-sim sim_display=":1":
-    docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./system_simulation.sh"
+sim sim_display="":
+    @just _sim ./system_simulation.sh "{{sim_display}}"
 
 [group('sim')]
 [doc('Simulator without rviz2 — pair with `just foxglove`')]
-sim-noviz sim_display=":1":
-    docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./system_simulation_noviz.sh"
+sim-noviz sim_display="":
+    @just _sim ./system_simulation_noviz.sh "{{sim_display}}"
 
 [group('sim')]
 [doc('Simulator behind the 6-topic eval firewall (domain 42, no rviz)')]
-challenge sim_display=":1":
-    docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./challenge_simulation.sh --noviz"
+challenge sim_display="":
+    @just _sim "./challenge_simulation.sh --noviz" "{{sim_display}}"
+
+# Shared body of sim / sim-noviz / challenge: resolve a DISPLAY (starting Xvfb in
+# the system container when none was given), then run the script under VirtualGL.
+[private]
+_sim script sim_display="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    d="{{sim_display}}"
+    if [ -z "$d" ]; then d="$(scripts/eval/ensure_xvfb.sh)"; fi
+    docker exec -it -e DISPLAY="$d" -e XDG_RUNTIME_DIR=/tmp/runtime-docker \
+      iros2026_system bash -c "{{vgl}} {{script}}"
 
 # Single pass by default; loop:=true to loop (e.g. just bag-play livingroom_1 1.0 true)
 [group('bags')]
