@@ -19,7 +19,7 @@ from captioner.paths import secure_path
 from captioner.qwen_vqa_protocol import vqa_image_fields
 from captioner.ros_utils import shutdown_guard, wait_for_subscriber
 from captioner.vlm_backends import VLMError, make_backend
-from captioner.vlm_backends.constants import EXTRACT_BACKEND, VLM_BACKEND
+from captioner.vlm_backends.constants import TARGET_EXTRACT_BACKEND, VLM_BACKEND
 from captioner.vlm_backends.schemas import TargetList
 from sam_mapper.best_view import sanitize_run_id
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM, clean_targets
@@ -203,15 +203,12 @@ class ReasonerNode(Node):
         super().__init__(node_name)
         self.declare_parameter("run_id", "")
         self.declare_parameter("vqa_timeout_s", 120.0)
-        self.declare_parameter("backend", "auto")
         for name, default in (extra_params or {}).items():
             self.declare_parameter(name, default)
 
         self.fixed_run_id = str(self.get_parameter("run_id").value).strip()
         self.vqa_timeout_s = float(self.get_parameter("vqa_timeout_s").value)
-        backend_param = str(self.get_parameter("backend").value).strip().lower()
-        self.backend_name = (
-            VLM_BACKEND if backend_param in ("", "auto") else backend_param)
+        self.backend_name = VLM_BACKEND
 
         self._lock = threading.Lock()
         self._phase = self.PHASE_IDLE
@@ -245,7 +242,7 @@ class ReasonerNode(Node):
         self.create_subscription(String, "/qwen_vqa/status", self.vqa.on_status,
                                  self._qos, callback_group=self._cb)
 
-        extract_name = self.backend_name if EXTRACT_BACKEND == "auto" else EXTRACT_BACKEND
+        extract_name = TARGET_EXTRACT_BACKEND
         if self.ANSWER_BACKEND:
             self.backend = make_backend(
                 self.backend_name, ask_vqa=self.vqa.ask, log=self.get_logger().info)

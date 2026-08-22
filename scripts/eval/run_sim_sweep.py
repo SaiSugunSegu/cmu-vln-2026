@@ -138,7 +138,6 @@ def run_orchestrator(args, scene: str, report: str, append: bool) -> int:
         f"-p category:={args.category}",
         f"-p question_limit:={args.limit}",
         f"-p target_source:={args.target_source}",
-        f"-p vlm_backend:={args.backend}",
         f"-p report_file:={report}",
         f"-p append:={'true' if append else 'false'}",
     ]
@@ -206,7 +205,6 @@ def main() -> int:
     ap.add_argument("--scenes-dir", type=Path, default=REPO / "data" / "scenes")
     ap.add_argument("--limit", type=int, default=0, help="questions per scene; 0 = all")
     ap.add_argument("--target-source", default="gt")
-    ap.add_argument("--backend", default="auto")
     ap.add_argument("--mode", default="hybrid", help="cat2 selection mode")
     ap.add_argument("--report", default="")
     ap.add_argument("--display", default=":1")
