@@ -62,14 +62,14 @@ exits — `Exited (0)` is success, not an error.
 
 ## First run: bake the AI image
 
-`just up` builds `iros2026_odyssey:submission`, bakes `facebook/sam3` and Qwen3-VL
+`just up` builds `iros2026_odyssey:submission`, bakes `facebook/sam3` (~6.5 GB)
 into a layer, and writes `HF_TOKEN` plus the vqa.yaml provider key (OpenRouter)
-into image ENV. First build is 15–20 GB; later `just up` only rebuilds layers
-that changed. `init` makes `/data` writable (`Exited (0)` is success).
+into image ENV. Local Qwen3-VL is the host HF cache — `just vqa-up` bind-mounts
+it (and recreates odyssey). `init` makes `/data` writable (`Exited (0)` is success).
 
 ```bash
 just up          # build + start; weights and keys come from .env
-just vqa-up      # OPTIONAL: keeps Qwen resident across relaunches; the
+just vqa-up      # OPTIONAL: host Qwen + resident server across relaunches; the
                  # pipeline starts its own server if you skip this
 ```
 
@@ -124,9 +124,9 @@ ros2 launch dummy_vlm dummy_vlm.launch
 ```
 
 That includes `smart_vlm.launch`: SAM 3, the 3D mapper, the supervisor, the numerical /
-object-reference / instruction reasoners, TARE, and the local Qwen server. `just ai`
-runs the same launch. `just up` bakes `facebook/sam3` and Qwen3-VL (and the API keys)
-into `iros2026_odyssey:submission` from the repo-root `.env`.
+object-reference / instruction reasoners, and TARE. `just ai` runs the same launch.
+`just up` bakes `facebook/sam3` and the API keys into `iros2026_odyssey:submission`
+from the repo-root `.env`.
 
 ## Numerical answers (smart_vlm)
 

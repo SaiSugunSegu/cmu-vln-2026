@@ -184,17 +184,18 @@ RUN --mount=type=cache,target=/root/.cache/pip \
  && python3 -m spacy download en_core_web_sm
 USER docker
 
-# Bake SAM 3 + Qwen3-VL into HF_HOME BEFORE the package COPYs so a code edit does
-# not re-download 15–20 GB. fetch_weights.py is stdlib + huggingface_hub +
-# transformers (already installed above); it does not need the captioner colcon
-# install. Cache mount lets a retry of this layer skip files already pulled.
-# Empty HF_TOKEN skips the download; runtime from_pretrained still reads ENV.
+# Bake SAM 3 into HF_HOME BEFORE the package COPYs so a code edit does not
+# re-download ~6.5 GB. Qwen3-VL is the host HF cache; `just vqa-up` bind-mounts it.
+# fetch_weights.py is stdlib + huggingface_hub + transformers (already installed
+# above); it does not need the captioner colcon install. Cache mount lets a retry
+# of this layer skip files already pulled. Empty HF_TOKEN skips the download;
+# runtime from_pretrained still reads ENV.
 ARG HF_TOKEN=""
 ENV HF_TOKEN=${HF_TOKEN}
 COPY --chown=docker:docker src/captioner/captioner/tools/fetch_weights.py /tmp/fetch_weights.py
 RUN --mount=type=cache,target=/tmp/hf-build-cache,uid=1001,gid=1001 \
     if [ -n "$HF_TOKEN" ]; then \
-      HF_HOME=/tmp/hf-build-cache python3 /tmp/fetch_weights.py sam3 qwen3vl && \
+      HF_HOME=/tmp/hf-build-cache python3 /tmp/fetch_weights.py sam3 && \
       mkdir -p /home/docker/.cache/huggingface && \
       cp -a /tmp/hf-build-cache/. /home/docker/.cache/huggingface/; \
     else \
