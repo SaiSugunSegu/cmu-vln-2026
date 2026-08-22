@@ -166,6 +166,8 @@ def run_orchestrator(args, scene: str, report: str, append: bool) -> int:
         f"-p report_file:={report}",
         f"-p append:={'true' if append else 'false'}",
     ]
+    if args.question_id:
+        params.append(f"-p question_id:={args.question_id}")
     if args.category == 2:
         params.append(f"-p cat2_mode:={args.mode}")
     cmd = (f"source {AI_SRC}/install/setup.bash && "
@@ -229,6 +231,8 @@ def main() -> int:
     # those still play, they just cannot be auto-fetched (see fetch_scene).
     ap.add_argument("--scenes-dir", type=Path, default=REPO / "data" / "scenes")
     ap.add_argument("--limit", type=int, default=0, help="questions per scene; 0 = all")
+    ap.add_argument("--question-id", default="",
+                    help="run only this question id (e.g. Q01)")
     ap.add_argument("--target-source", default="gt")
     ap.add_argument("--mode", default="hybrid", help="cat2 selection mode")
     ap.add_argument("--report", default="")

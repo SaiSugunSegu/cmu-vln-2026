@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Check the AI-module image the organizers will run the way eval will:
 # no source mount, no /data mount, no host HF cache. Weights and API keys have to
-# live in the image. `just up` is what bakes them.
+# live in the image. This script bakes iros2026_odyssey:submission (compose
+# service odyssey) and checks it; `just up` also starts the two containers.
 #
 #   just up
 #   just build-submission-image
@@ -32,7 +33,7 @@ declare -A PROVIDER_KEY=(
 
 usage() {
   cat <<'EOF'
-Check the submission AI image (weights and keys baked by `just up`).
+Bake and check the submission AI image (iros2026_odyssey:submission).
 
 Usage:
   just up
@@ -248,8 +249,10 @@ preflight() {
     ok ".env is not staged"
   fi
   local hits
-  hits="$(git -C "$ROOT" grep -nE 'sk-or-|sk-ant-|AIza[0-9A-Za-z_-]{20,}|hf_[A-Za-z0-9]{20,}' \
-    -- ':!.env' ':!*.md' 2>/dev/null || true)"
+  # Prefixes are printf'd so this file is not itself a match.
+  local pat
+  pat="$(printf '%s-|%s-|AIza[0-9A-Za-z_-]{20,}|%s_[A-Za-z0-9]{20,}' 'sk-or' 'sk-ant' 'hf')"
+  hits="$(git -C "$ROOT" grep -nE "$pat" -- ':!.env' ':!*.md' 2>/dev/null || true)"
   if [[ -n "$hits" ]]; then
     fail "tracked file looks like it contains a live token prefix"
     echo "$hits" | sed 's/^/         /'
@@ -265,13 +268,13 @@ preflight() {
 }
 
 build_image() {
-  step "compose build + key wrap (same path as just up)"
+  step "compose build odyssey + key wrap"
   info "image   $TAG"
-  info "this is the eval image: ai_module is COPY'd, not bind-mounted"
+  info "builds the AI image only; does not start containers (that is just up)"
   echo
   local extra=()
   if [[ -f "$ROOT/.env" ]]; then extra+=(--env-file "$ROOT/.env"); fi
-  (cd "$ROOT/docker" && docker compose "${extra[@]}" -f compose_gpu.yml build)
+  (cd "$ROOT/docker" && docker compose "${extra[@]}" -f compose_gpu.yml build odyssey)
   "$ROOT/scripts/submit/wrap_image_keys.sh" --tag "$TAG"
   ok "bake finished → $TAG"
 }

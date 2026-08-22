@@ -15,8 +15,8 @@
 #   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
 #   live sim      just sim          | just ai | just ask "How many …"
-#   submit        just trial-submission-image                 # arabic_room Q01
-#                 just build-submission-image                 # just up + image checks
+#   submit        just trial-submission-image                 # arabic_room Q01 in live sim
+#                 just build-submission-image                 # bake AI image + checks
 #                 just push-submission-image USER/cmu-vln-ai:v1
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
@@ -86,16 +86,18 @@ test pkgs="captioner sam_mapper smart_vlm":
       python3 -m pytest $dirs -q -p no:cacheprovider
     "
 
+# Bakes iros2026_odyssey:submission only (compose service odyssey). Does not
+# build cmu-vln-system or start containers — that is `just up`.
 [group('submit')]
-[doc('just up + preflight checks on the baked image')]
+[doc('Bake the AI image and run preflight checks (no compose up)')]
 build-submission-image:
-    just up
-    ./scripts/submit/build_submission_image.sh --tag {{submit_image}} --skip-build
+    ./scripts/submit/build_submission_image.sh --tag {{submit_image}}
 
-# arabic_room Q01: "How many sofas are below a window?" (GT 2). Bag replay on
-# the running iros2026_odyssey container (just up).
+# arabic_room Q01: "How many sofas are below a window?" (GT 2). Live sim with
+# TARE exploring. Fetches the Unity mesh only if data/scenes/arabic_room is
+# missing. just up first.
 [group('submit')]
-[doc('arabic_room Q01 on the running AI container')]
+[doc('arabic_room Q01 in the live sim (TARE explores)')]
 trial-submission-image:
     ./scripts/submit/trial_submission_image.sh --tag {{submit_image}}
 
