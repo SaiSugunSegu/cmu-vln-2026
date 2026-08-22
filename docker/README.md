@@ -49,58 +49,49 @@ Allow remote X connection.
 ```
 xhost +
 ```
-Go inside the docker folder.
-```
-cd docker
-```
-For computers **without a Nvidia GPU**, build and start both containers.
+From the repo root (GPU). `.env` must contain `HF_TOKEN` and the VLM key:
 ```bash
-docker compose -f compose.yml up --build -d
+just up
 ```
-For computers **with Nvidia GPUs**, use the GPU compose file instead.
-```bash
-docker compose -f compose_gpu.yml up --build -d
-```
-This starts two containers:
+This builds `cmu-vln-odyssey:submission` (weights + keys) and starts two containers:
 - `iros2026_system` — the base autonomy system (simulator + autonomy stack)
 - `iros2026_ai_module` — the AI module development environment, with `smart_vlm` and `captioner` built in
 
 plus a one-shot `init` container that fixes permissions on the bind mounts and then
 exits — `Exited (0)` is success, not an error.
 
-## First run: download model weights
+## First run: bake the AI image
 
-Nothing forces offline mode, so a load can always fetch what it needs. Seed the cache
-anyway, so your first real run is not also a ~15-20 GB download:
+`just up` builds `cmu-vln-odyssey:submission`, bakes `facebook/sam3` and Qwen3-VL
+into a layer, and writes `HF_TOKEN` plus the vqa.yaml provider key (OpenRouter)
+into image ENV. First build is 15–20 GB; later `just up` only rebuilds layers
+that changed. `init` makes `/data` writable (`Exited (0)` is success).
 
 ```bash
-
-just up          # build + start; `init` makes /data and the HF cache writable
-just hf-fetch    # one-time download: facebook/sam3, Qwen3-VL-4B, DFN5B-CLIP
+just up          # build + start; weights and keys come from .env
 just vqa-up      # OPTIONAL: keeps Qwen resident across relaunches; the
                  # pipeline starts its own server if you skip this
 ```
 
-`just hf-fetch --list` shows what will be pulled; `just hf-fetch "qwen3vl sam3"`
-pulls a subset. It resumes and skips what is already cached, so re-running is cheap.
-
-**You do not need `hf auth login`.** Put your token in the repo-root `.env`:
+**You do not need `hf auth login`.** Put the tokens in the repo-root `.env`:
 
 ```
 HF_TOKEN=hf_...
+OPENROUTER_API_KEY=sk-or-...
 ```
 
 `huggingface_hub` reads `HF_TOKEN` automatically on every `from_pretrained()`.
 `facebook/sam3` is a **gated** repo, so besides a valid token you must accept its
-licence once at <https://huggingface.co/facebook/sam3> with the same account —
-otherwise `hf-fetch` reports `GATED` and tells you which of the two is missing.
+licence once at <https://huggingface.co/facebook/sam3> with the same account.
 
-`just hf-fetch` also warms SAM 3's `cv-utils` kernel, which does mask **NMS** as well as
-hole filling. It is fetched lazily on first use and its absence degrades **silently** —
-NMS is skipped entirely, so duplicate detections are never suppressed and `det_nms_thresh`
-does nothing. Re-run `just hf-fetch` on any new machine and confirm with
-`just sam-profile /data/bags/_frames`, which prints `cv-utils kernel: ...`,
-`[sam3] attn effective: ...` and the thresholds actually in force.
+`just hf-fetch` is optional: it pulls a new checkpoint or warms SAM 3's `cv-utils`
+kernel in the running container. A checkpoint you want in the Hub image has to
+land via `just up`. The kernel does mask **NMS** as well as hole filling; it is
+fetched lazily on first use and its absence degrades **silently** — NMS is skipped
+entirely, so duplicate detections are never suppressed and `det_nms_thresh` does
+nothing. Confirm with `just sam-profile /data/bags/_frames`, which prints
+`cv-utils kernel: ...`, `[sam3] attn effective: ...` and the thresholds actually
+in force.
 
 Flash attention is deliberately **not** used: on SAM 3 it returns zero detections.
 Re-check with `just sam-probe <frames> <cfg> "--attn kernels-community/flash-attn2"`.
@@ -134,9 +125,8 @@ ros2 launch dummy_vlm dummy_vlm.launch
 
 That includes `smart_vlm.launch`: SAM 3, the 3D mapper, the supervisor, the numerical /
 object-reference / instruction reasoners, TARE, and the local Qwen server. `just ai`
-runs the same launch. Bake `facebook/sam3` and Qwen3-VL into the image with
-`--build-arg HF_TOKEN=hf_...` (or `HF_TOKEN` in the repo-root `.env` plus `just up`)
-so the first question is not also a 15–20 GB download.
+runs the same launch. `just up` bakes `facebook/sam3` and Qwen3-VL (and the API keys)
+into `cmu-vln-odyssey:submission` from the repo-root `.env`.
 
 ## Numerical answers (smart_vlm)
 
@@ -160,7 +150,8 @@ deliberate: at evaluation nobody runs a setup step for you.
 `just vqa-up` is therefore optional. It keeps one server resident *across* relaunches,
 which saves the ~8.3 GB reload each question costs — useful in a long sweep, but do not
 run it while the launch is also starting one, or the two collide on the node name and
-the `/qwen_vqa` topics. With `vlm_backend:=cloud` no server is started or waited for.
+the `/qwen_vqa` topics. With both `vlm_backend` and `target_extract_backend` set to
+`cloud` in vqa.yaml no server is started or waited for.
 
 ```bash
 # after colcon build --packages-select captioner smart_vlm sam_mapper
@@ -179,8 +170,7 @@ relaunches the pipeline per question (README §3.5).
 ## Run the captioner (offline crop CLI)
 
 The AI image installs CUDA PyTorch, transformers, and the `captioner` ROS package.
-Host folder `data/` is mounted at `/data`, and your Hugging Face cache is
-mounted so model weights persist across rebuilds.
+Host folder `data/` is mounted at `/data`. Model weights live in the image.
 
 Put instance-crop folders (each with `crop.png` or `rgb.png`) under `data/crops`, then:
 
@@ -242,7 +232,7 @@ After editing captioner Python sources, rebuild the image — `ai_module` is nev
 bind-mounted, so that is what carries the edit into the container:
 
 ```bash
-just up      # or: docker compose -f compose_gpu.yml up --build -d
+just up
 ```
 
 The ML wheels (torch, transformers, …) live in an earlier layer and stay cached, so

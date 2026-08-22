@@ -4,8 +4,7 @@
 # Run `just` with no arguments for the grouped recipe list.
 #
 # First run, in order:
-#   just up          # build + start containers
-#   just hf-fetch    # ONE-TIME ~15-20 GB weight download (needs HF_TOKEN in .env)
+#   just up          # build + start; bakes weights, HF_TOKEN, OpenRouter key
 #
 # Then pick a flow:
 #   scored eval   just eval-cat1 arabic_room 2                # one command, per-question relaunch
@@ -16,6 +15,9 @@
 #   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
 #   live sim      just sim          | just ai | just ask "How many …"
+#   submit        just trial-submission-image                 # arabic_room Q01
+#                 just build-submission-image                 # just up + image checks
+#                 just push-submission-image USER/cmu-vln-ai:v1
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
 # The workspace path inside the image.
@@ -23,6 +25,8 @@ ai_src := "/home/docker/ai_module"
 # `bash -lc` does not source ~/.bashrc for non-interactive shells, so recipes that
 # invoke a captioner console script must put its install dir on PATH themselves.
 capt_env := "source /home/docker/ai_module/install/setup.bash && export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH"
+# just up writes this tag. just push-submission-image USER/name:tag retags and pushes.
+submit_image := "cmu-vln-odyssey:submission"
 
 # --unsorted keeps groups in justfile order (setup first, then the flows) instead
 # of alphabetical, which would bury [setup] in the middle.
@@ -33,15 +37,19 @@ default:
 # always runs the source baked into the image, which is exactly what CI and the eval
 # harness run. The corollary is that an ai_module edit does nothing until you re-run
 # this — the rebuild IS how source lands in the container.
+# Tags cmu-vln-odyssey:submission and bakes HF_TOKEN + the vqa.yaml provider key
+# into image ENV so the running container is the Hub artifact.
 [group('setup')]
-[doc('Build + start both containers (GPU)')]
+[doc('Build + start both containers (GPU); bake weights and API keys')]
 [working-directory: 'docker']
 up:
     #!/usr/bin/env bash
     set -euo pipefail
     extra=()
     if [ -f ../.env ]; then extra+=(--env-file ../.env); fi
-    docker compose "${extra[@]}" -f compose_gpu.yml up --build -d
+    docker compose "${extra[@]}" -f compose_gpu.yml build
+    ../scripts/submit/wrap_image_keys.sh --tag {{submit_image}}
+    docker compose "${extra[@]}" -f compose_gpu.yml up -d
 
 [group('setup')]
 [doc('Stop and remove both containers')]
@@ -49,13 +57,13 @@ up:
 down:
     docker compose -f compose_gpu.yml down
 
-# Pre-seeds the HF cache so the first real run is not also a ~20 GB download, and warms
-# SAM 3's cv-utils kernel, whose absence silently disables mask NMS. Re-run on a new machine.
-# Gated sam3 needs HF_TOKEN in .env and the licence accepted on the model page.
+# Optional: pull a new checkpoint or warm SAM 3's cv-utils kernel in the running
+# container. Setup itself is `just up` (HF_TOKEN in .env bakes sam3 / Qwen into
+# the image). A checkpoint you want in the Hub image has to land via just up.
 #   just hf-fetch                # all defaults
 #   just hf-fetch "qwen3vl sam3" # a subset;  just hf-fetch --list  to see them
 [group('setup')]
-[doc('ONE-TIME ~15-20 GB weight download (sam3, Qwen3-VL, CLIP) + SAM 3 kernels')]
+[doc('Refresh weights / SAM 3 kernels in the running container')]
 hf-fetch models="":
     docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "{{capt_env}} && fetch_weights {{models}}"
@@ -77,6 +85,25 @@ test pkgs="captioner sam_mapper smart_vlm":
       source {{ai_src}}/install/setup.bash &&
       python3 -m pytest $dirs -q -p no:cacheprovider
     "
+
+[group('submit')]
+[doc('just up + preflight checks on the baked image')]
+build-submission-image:
+    just up
+    ./scripts/submit/build_submission_image.sh --tag {{submit_image}} --skip-build
+
+# arabic_room Q01: "How many sofas are below a window?" (GT 2). Bag replay on
+# the running iros2026_ai_module container (just up).
+[group('submit')]
+[doc('arabic_room Q01 on the running AI container')]
+trial-submission-image:
+    ./scripts/submit/trial_submission_image.sh --tag {{submit_image}}
+
+[group('submit')]
+[doc('Tag the local image and push to a registry (no rebuild)')]
+push-submission-image tag:
+    docker tag {{submit_image}} {{tag}}
+    docker push {{tag}}
 
 # Override display: just sim :0
 [group('sim')]

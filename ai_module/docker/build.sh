@@ -1,7 +1,7 @@
 #!/bin/bash
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-# Build context is ai_module/ so COPY src/ works correctly
-cd $SCRIPT_DIR/..
-docker build -t iros2026/ai_module:latest -f docker/Dockerfile .
+# Bake cmu-vln-odyssey:submission (weights + keys) and start the stack.
+# Same entry as `just up` from the repo root.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT"
+exec just up

@@ -75,8 +75,7 @@ xhost +local:                # allow container GUI (RViz); safer than bare 'xhos
 # Fix per-run:  docker exec -it -e DISPLAY=:1 iros2026_system bash
 # Fix for good: re-run 'docker compose ... up -d' from a shell with DISPLAY set.
 # If GNOME logged into Wayland (echo $XDG_SESSION_TYPE), pick "Ubuntu on Xorg" at login.
-cd docker
-docker compose -f compose_gpu.yml up --build -d   # (compose.yml if no GPU)
+just up   # from repo root; bakes cmu-vln-odyssey:submission (weights + keys)
 ```
 Two containers start (shared host network):
 - `iros2026_system` — simulator + base autonomy
@@ -99,12 +98,11 @@ RViz should open with the scene. To change scenes: drop scene files into
 Workspace path in the ai container: `/home/docker/ai_module`.
 We use a **Pure Docker workflow** to guarantee our code runs exactly as it will at evaluation time.
 ```bash
-# after every git pull or code change, rebuild the container:
-cd docker
-docker compose -f compose_gpu.yml up --build -d
+# after every git pull or code change, rebuild the image:
+just up
 
 # run it:
-docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+just ai
 ```
 `smart_vlm.launch` = sam_node (unarmed until prompted) + supervisor (mission clock, readiness/arming gates, T-30 fallback) + numerical_reasoner + TARE exploration. It starts no scene source of its own (that is `eval_bag.launch`'s job offline). It is a disposable per-question unit: the eval harness spawns it, waits for the answer, then SIGINTs the whole process group. Watch the supervisor heartbeat — it reports the mission phase, odometry rate, and warns via `count_publishers` when an allowed topic has no source (it deliberately does not subscribe to the heavy image/cloud topics just to count them).
 Eval-realistic mode: `docker/system/challenge_simulation.sh` (baked into the system container at `/home/docker/autonomy_stack_mecanum_wheel_platform/`) runs the sim in ROS domain 42 with a domain-bridge firewall passing only the 6 allowed inputs + question in and 3 answers out; launch the AI side with `ROS_DOMAIN_ID=0`. Pass `--noviz` to skip RViz. `ros-jazzy-domain-bridge` is installed by `docker/system/Dockerfile`.

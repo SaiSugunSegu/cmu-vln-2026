@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Bulk pre-seed of the Hugging Face cache.
 
-Nothing forces offline mode — the deployment always has connectivity. This exists so the
-first real run is not also a ~20 GB download, and to warm SAM 3's cv-utils kernel, which is
-otherwise fetched lazily and fails silently (see warm_kernels).
+Nothing forces offline mode — the deployment always has connectivity. `just up`
+bakes sam3 + qwen3vl into the image (this script, above the package COPYs).
+`just hf-fetch` refreshes a running container; a checkpoint that must ship in
+the Hub image has to land via `just up`.
 
-Run it once after `just up`, and again on any new machine:
+Also warms SAM 3's cv-utils kernel, which is otherwise fetched lazily and fails
+silently (see warm_kernels).
 
     just hf-fetch                 # all models + kernels
     just hf-fetch qwen3vl sam3    # a subset
