@@ -189,7 +189,7 @@ docker exec -it iros2026_odyssey bash -lc '
 Or with the helper script from the repo root:
 
 ```bash
-./ai_module/docker/run_captioner.sh /data/crops /data/captions
+./ai_module/docker/run_tool.sh caption /data/crops /data/captions
 ```
 
 ## Run Qwen VQA (offline image + question CLI)
@@ -211,7 +211,7 @@ mount are rejected (`captioner/paths.py`) — copy the file into `data/` first.
 One-shot CLI (reloads weights every call — slow):
 
 ```bash
-./ai_module/docker/run_qwen_vqa.sh /data/pillow_bed.png \
+./ai_module/docker/run_tool.sh vqa /data/pillow_bed.png \
   "How many pillows are on the bed?"
 ```
 
