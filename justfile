@@ -191,7 +191,7 @@ ask q domain="0":
 [group('debug')]
 [doc('Foxglove bridge on host port 8765 (blocks; tunnel from laptop)')]
 foxglove domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8090 address:=0.0.0.0"
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0"
 
 # Default domain 0 matches sim-noviz. Challenge mode: just teleop 42
 [group('sim')]

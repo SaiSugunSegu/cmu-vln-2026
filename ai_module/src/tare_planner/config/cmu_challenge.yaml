@@ -36,8 +36,10 @@ tare_planner_node:
     # sub_start_exploration_topic_. The supervisor publishes it the instant SAM holds
     # the question's prompts, alongside /pipeline/armed -- so exploration and bag
     # replay are released by the same event, and no ground is covered against a
-    # detector still loading weights. Enforced in execute(): nothing is published
-    # before the gate opens, not even the initial waypoint.
+    # detector still loading weights. Bool(false) pauses waypoint publishing so the
+    # instruction reasoner can take /way_point_with_heading after explore_done.
+    # Enforced in execute(): nothing is published before the gate opens, not even
+    # the initial waypoint.
     #
     # This is what makes this file different from indoor_small.yaml. Set it true and
     # the robot drives the moment it initialises, which is what `just tare` wants.
