@@ -1,8 +1,8 @@
 # `smart_vlm`
 
-The team AI module: mission supervision, the category-1 answer head, and the evaluation
-harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the vendored
-`tare_planner` (exploration) — it does not reimplement any of them.
+The team AI module: mission supervision, the three category answer heads, and the
+evaluation harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and
+the vendored `tare_planner` (exploration) — it does not reimplement any of them.
 
 **Where the flow is documented** — deliberately in two places, not repeated here:
 
@@ -35,10 +35,12 @@ harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the v
 
 | Module | Role |
 |---|---|
-| `question.py` | `QuestionType` enum + `classify()`. Lives apart from the nodes so both heads can route a question without importing rclpy. |
+| `question.py` | `QuestionType` enum + `classify()`. Lives apart from the nodes so the heads can route a question without importing rclpy. |
 | `mission_clock.py` | The 10-minute budget as arithmetic: `MissionBudget`, `MissionClock`, `Phase`. All deadline decisions live here so they can be tested without a ROS graph. |
-| `numerical_utils.py` | Target-noun cleanup and integer parsing. Re-exports `extract_integer` from `captioner.text_utils` so the two implementations cannot drift. |
+| `numerical_utils.py` | Target-noun cleanup, integer parsing, and the shared extract prompt. Re-exports `extract_integer` from `captioner.text_utils`. |
+| `cat2_utils.py` | Object-reference selection (`select_object`) shared with `cat2_bench`. |
 | `cat3_utils.py` | Instruction waypoint list from `obj_map.json` + SAM prompts. |
+| `reasoner_common.py` | Shared VQA transport, noun extract, obj-map wait, and the extract → arm-SAM lifecycle for the three reasoners. |
 
 Covered by `tests/test_question.py`, `tests/test_mission_clock.py`,
 `tests/test_numerical_reasoner.py`, `tests/test_cat3_utils.py` — these run on a bare

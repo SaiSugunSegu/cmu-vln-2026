@@ -19,14 +19,10 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
-from captioner.prompts.object_extraction import get_object_extraction_prompt
 from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, VIEW_SOURCE
+from smart_vlm.numerical_utils import EXTRACT_SYSTEM
 
 # ---------------------------------------------------------------- prompts
-
-# Same object-extraction system prompt used for /challenge_question target nouns.
-# Shared with numerical_utils so cat1 and cat2 cannot drift apart.
-EXTRACT_SYSTEM = get_object_extraction_prompt()
 
 # The candidate list is data, not instruction — a question is user text and must never be
 # able to talk the model out of the format. Hence "copy an id from the list" rather than

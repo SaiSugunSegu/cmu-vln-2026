@@ -1,40 +1,4 @@
 <launch>
-  <!-- Official evaluation entry point (docker/README: ros2 launch dummy_vlm dummy_vlm.launch).
-       Forwards every smart_vlm.launch argument so a scored run and a local `just ai`
-       are the same graph. -->
-  <arg name="sam_config"         default="sam3_mecanum_sim.yaml"/>
-  <arg name="tare_scenario"      default="cmu_challenge"/>
-  <arg name="question_budget_s"  default="600.0"/>
-  <arg name="explore_timeout_s"  default="120.0"/>
-  <arg name="answer_reserve_s"   default="90.0"/>
-  <arg name="fallback_reserve_s" default="30.0"/>
-  <arg name="fallback_count"     default="1"/>
-  <arg name="ready_timeout_s"    default="300.0"/>
-  <arg name="vqa_timeout_s"      default="180.0"/>
-  <arg name="vlm_backend"        default="local"/>
-  <arg name="vqa_model"          default="qwen3vl"/>
-  <arg name="vqa_quantization"   default="int4"/>
-  <arg name="max_context_views"  default="3"/>
-  <arg name="run_id"             default=""/>
-  <arg name="crops_only"         default="false"/>
-  <arg name="cat2_mode"          default="hybrid"/>
-
-  <include file="$(find-pkg-share smart_vlm)/launch/smart_vlm.launch">
-    <arg name="sam_config"         value="$(var sam_config)"/>
-    <arg name="tare_scenario"      value="$(var tare_scenario)"/>
-    <arg name="question_budget_s"  value="$(var question_budget_s)"/>
-    <arg name="explore_timeout_s"  value="$(var explore_timeout_s)"/>
-    <arg name="answer_reserve_s"   value="$(var answer_reserve_s)"/>
-    <arg name="fallback_reserve_s" value="$(var fallback_reserve_s)"/>
-    <arg name="fallback_count"     value="$(var fallback_count)"/>
-    <arg name="ready_timeout_s"    value="$(var ready_timeout_s)"/>
-    <arg name="vqa_timeout_s"      value="$(var vqa_timeout_s)"/>
-    <arg name="vlm_backend"        value="$(var vlm_backend)"/>
-    <arg name="vqa_model"          value="$(var vqa_model)"/>
-    <arg name="vqa_quantization"   value="$(var vqa_quantization)"/>
-    <arg name="max_context_views"  value="$(var max_context_views)"/>
-    <arg name="run_id"             value="$(var run_id)"/>
-    <arg name="crops_only"         value="$(var crops_only)"/>
-    <arg name="cat2_mode"          value="$(var cat2_mode)"/>
-  </include>
+  <!-- Official evaluation entry: ros2 launch dummy_vlm dummy_vlm.launch -->
+  <include file="$(find-pkg-share smart_vlm)/launch/smart_vlm.launch"/>
 </launch>
