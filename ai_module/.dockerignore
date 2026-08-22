@@ -1,0 +1,22 @@
+# Build context for the odyssey service (context: ../ai_module in docker/compose_gpu.yml).
+# Docker does not read .gitignore, so gitignored colcon output would otherwise be
+# uploaded to the daemon on every `just up` — ~140 MB the image never uses, since
+# the Dockerfile copies individual src/<pkg> trees rather than the whole context.
+#
+# Patterns are matched against the path relative to this directory and are NOT
+# recursive on their own: `build/` is the top-level colcon dir only, while the
+# bytecode rules need an explicit `**/` to reach inside src/.
+
+# colcon output from a host-side build.
+build/
+install/
+log/
+
+# Host bytecode lands *inside* src/, which the Dockerfile does COPY. It is useless
+# in the image (host CPython differs from the container's) and, worse, changes the
+# checksum of the COPY layers: running pytest on the host would otherwise force a
+# full colcon rebuild on the next image build.
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/*.egg-info/
