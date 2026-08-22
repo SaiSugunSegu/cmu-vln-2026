@@ -59,10 +59,10 @@ down:
     docker compose -f compose_gpu.yml down
 
 # Optional: pull a new checkpoint or warm SAM 3's cv-utils kernel in the running
-# container. Setup itself is `just up` (HF_TOKEN in .env bakes sam3 / Qwen into
-# the image). A checkpoint you want in the Hub image has to land via just up.
-#   just hf-fetch                # all defaults
-#   just hf-fetch "qwen3vl sam3" # a subset;  just hf-fetch --list  to see them
+# container. Setup itself is `just up` (HF_TOKEN in .env bakes sam3 into the
+# image). A checkpoint you want in the Hub image has to land via just up.
+#   just hf-fetch                # all defaults (sam3 + clip)
+#   just hf-fetch --list         # names and repos
 [group('setup')]
 [doc('Refresh weights / SAM 3 kernels in the running container')]
 hf-fetch models="":
@@ -354,9 +354,20 @@ sam-map-json:
 #   just vqa-down
 
 # Starts the Qwen VQA server process. Run it before `just ai` or the evaluation.
+# Bind-mounts host Qwen3-VL ($HF_HOME or ~/.cache/huggingface) then starts the
+# resident server. Recreates odyssey — mounts are create-time.
 [group('vqa')]
-[doc('Load Qwen once and keep it resident (~60s first time)')]
+[doc('Mount host Qwen weights and keep a resident VQA server')]
 vqa-up model="qwen3vl" quantization="int4":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    host="${HF_HOME:-$HOME/.cache/huggingface}/hub/models--Qwen--Qwen3-VL-4B-Instruct"
+    [[ -d $host/snapshots ]] || {
+      echo "Qwen3-VL missing at $host — huggingface-cli download Qwen/Qwen3-VL-4B-Instruct" >&2
+      exit 1
+    }
+    QWEN_HOST_DIR=$host docker compose -f docker/compose_gpu.yml -f docker/compose_qwen.yml \
+      up -d odyssey
     docker exec -it -e PYTHONUTF8=1 iros2026_odyssey bash -lc \
       "source {{ai_src}}/install/setup.bash && ros2 launch captioner vqa_server.launch model:={{model}} quantization:={{quantization}}"
 

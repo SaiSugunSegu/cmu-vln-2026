@@ -81,8 +81,8 @@ just up          # build + start; bakes weights, HF_TOKEN, and the OpenRouter ke
 
 `just up` needs `HF_TOKEN=hf_…` and `OPENROUTER_API_KEY=…` in the repo-root `.env`
 (**not** `hf auth login`), plus the gated `facebook/sam3` licence accepted once at
-<https://huggingface.co/facebook/sam3> with that same account. First build is
-15–20 GB (weight layer); later rebuilds only the layers that changed.
+<https://huggingface.co/facebook/sam3> with that same account. The weight layer is
+`facebook/sam3` (~6.5 GB). Later rebuilds only the layers that changed.
 [docker/README.md](docker/README.md) · troubleshooting [docs/M0_infra.md](docs/M0_infra.md)
 
 ### 2 · Live sim — three terminals
