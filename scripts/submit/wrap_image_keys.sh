@@ -5,16 +5,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-TAG="iros2026_odyssey:submission"
+# shellcheck source=scripts/submit/lib.sh
+source "$ROOT/scripts/submit/lib.sh"
 
-# provider -> env var that constants.py reads (keep in sync with PROVIDERS there)
-declare -A PROVIDER_KEY=(
-  [gemini]=GEMINI_API_KEY
-  [anthropic]=ANTHROPIC_API_KEY
-  [dashscope]=DASHSCOPE_API_KEY
-  [openrouter]=OPENROUTER_API_KEY
-  [openai]=OPENAI_API_KEY
-)
+TAG="iros2026_odyssey:submission"
 
 usage() {
   cat <<'EOF'
@@ -38,39 +32,18 @@ if ! docker image inspect "$TAG" >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ ! -f "$ROOT/.env" ]]; then
-  echo "repo-root .env is missing (need HF_TOKEN and the VLM provider key)" >&2
-  exit 1
-fi
-set -a
-# shellcheck disable=SC1091
-source "$ROOT/.env"
-set +a
+load_env
+read_vqa
+resolve_key "$VQA_PROVIDER"
+key_env="$KEY_ENV"
+key_val="$KEY_VAL"
 
-provider="$(python3 - "$ROOT/ai_module/src/captioner/config/vqa.yaml" <<'PY'
-import sys, yaml
-cfg = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}
-print(cfg.get("provider") or "")
-PY
-)"
-vlm_backend="$(python3 - "$ROOT/ai_module/src/captioner/config/vqa.yaml" <<'PY'
-import sys, yaml
-cfg = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}
-print(cfg.get("vlm_backend") or "cloud")
-print(cfg.get("target_extract_backend") or "cloud")
-PY
-)"
+# constants.py reads a missing or unknown backend as cloud, so an unset key here
+# still means a key is required.
 need_cloud=0
-while IFS= read -r line; do
-  if [[ "$line" == "cloud" ]]; then need_cloud=1; fi
-done <<< "$vlm_backend"
-
-key_env="${PROVIDER_KEY[$provider]:-VLM_API_KEY}"
-key_val="${!key_env-}"
-if [[ -z "$key_val" && -n "${VLM_API_KEY-}" ]]; then
-  key_env="VLM_API_KEY"
-  key_val="$VLM_API_KEY"
-fi
+for backend in "${VQA_VLM_BACKEND:-cloud}" "${VQA_TARGET_EXTRACT_BACKEND:-cloud}"; do
+  if [[ "$backend" != "local" ]]; then need_cloud=1; fi
+done
 
 if [[ -z "${HF_TOKEN-}" ]]; then
   echo "HF_TOKEN missing in .env — gated facebook/sam3 cannot be baked without it" >&2

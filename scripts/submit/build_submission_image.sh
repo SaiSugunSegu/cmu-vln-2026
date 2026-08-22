@@ -14,6 +14,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+# shellcheck source=scripts/submit/lib.sh
+source "$ROOT/scripts/submit/lib.sh"
 
 TAG="iros2026_odyssey:submission"
 PLATFORM="linux/amd64"
@@ -21,15 +23,6 @@ DO_BUILD=1
 DO_PUSH=0
 DO_TRIAL=1
 DRY_RUN=0
-
-# provider -> env var that constants.py reads (keep in sync with PROVIDERS there)
-declare -A PROVIDER_KEY=(
-  [gemini]=GEMINI_API_KEY
-  [anthropic]=ANTHROPIC_API_KEY
-  [dashscope]=DASHSCOPE_API_KEY
-  [openrouter]=OPENROUTER_API_KEY
-  [openai]=OPENAI_API_KEY
-)
 
 usage() {
   cat <<'EOF'
@@ -135,32 +128,6 @@ mask() {
   fi
 }
 
-# -- .env --------------------------------------------------------------------
-
-load_env() {
-  if [[ ! -f "$ROOT/.env" ]]; then
-    die "repo-root .env is missing (need HF_TOKEN and the VLM provider key)"
-  fi
-  set -a
-  # shellcheck disable=SC1091
-  source "$ROOT/.env"
-  set +a
-}
-
-# -- host-side parsers -------------------------------------------------------
-
-parse_vqa() {
-  python3 - "$ROOT/ai_module/src/captioner/config/vqa.yaml" <<'PY'
-import sys, yaml
-cfg = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}
-for key in ("vlm_backend", "target_extract_backend", "provider", "model",
-            "model_lite", "base_url"):
-    value = cfg.get(key, "")
-    print(f"{key}={'' if value is None else value}")
-PY
-}
-
-
 # -- checks ------------------------------------------------------------------
 
 preflight() {
@@ -176,17 +143,10 @@ preflight() {
   python3 -c "import yaml" 2>/dev/null && ok "PyYAML available" || fail "python3 -c 'import yaml' failed (need PyYAML for vqa.yaml)"
 
   step "vqa.yaml (what the image will ship)"
-  local line vlm_backend="" target_extract_backend="" provider="" model="" model_lite="" base_url=""
-  while IFS= read -r line; do
-    case "$line" in
-      vlm_backend=*) vlm_backend="${line#vlm_backend=}" ;;
-      target_extract_backend=*) target_extract_backend="${line#target_extract_backend=}" ;;
-      provider=*) provider="${line#provider=}" ;;
-      model=*) model="${line#model=}" ;;
-      model_lite=*) model_lite="${line#model_lite=}" ;;
-      base_url=*) base_url="${line#base_url=}" ;;
-    esac
-  done < <(parse_vqa)
+  read_vqa
+  local vlm_backend="$VQA_VLM_BACKEND" target_extract_backend="$VQA_TARGET_EXTRACT_BACKEND"
+  local provider="$VQA_PROVIDER" model="$VQA_MODEL"
+  local model_lite="$VQA_MODEL_LITE" base_url="$VQA_BASE_URL"
   info "vlm_backend=$vlm_backend  target_extract_backend=$target_extract_backend"
   info "provider=$provider  model=$model"
   info "model_lite=${model_lite:-<same as model>}  base_url=${base_url:-<provider preset>}"
@@ -209,12 +169,8 @@ preflight() {
 
   step "Secrets in .env (values masked)"
   load_env
-  local key_env="${PROVIDER_KEY[$provider]:-VLM_API_KEY}"
-  local key_val="${!key_env-}"
-  if [[ -z "$key_val" && -n "${VLM_API_KEY-}" ]]; then
-    key_env="VLM_API_KEY"
-    key_val="$VLM_API_KEY"
-  fi
+  resolve_key "$provider"
+  local key_env="$KEY_ENV" key_val="$KEY_VAL"
   if [[ -n "${HF_TOKEN-}" ]]; then
     ok "HF_TOKEN is set  $(mask "$HF_TOKEN")"
   else
