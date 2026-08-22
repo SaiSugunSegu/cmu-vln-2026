@@ -75,12 +75,11 @@ xhost +local:                # allow container GUI (RViz); safer than bare 'xhos
 # Fix per-run:  docker exec -it -e DISPLAY=:1 iros2026_system bash
 # Fix for good: re-run 'docker compose ... up -d' from a shell with DISPLAY set.
 # If GNOME logged into Wayland (echo $XDG_SESSION_TYPE), pick "Ubuntu on Xorg" at login.
-cd docker
-docker compose -f compose_gpu.yml up --build -d   # (compose.yml if no GPU)
+just up   # from repo root; bakes iros2026_odyssey:submission (weights + keys)
 ```
 Two containers start (shared host network):
 - `iros2026_system` — simulator + base autonomy
-- `iros2026_ai_module` — our dev environment (smart_vlm inside)
+- `iros2026_odyssey` — submission image (`iros2026_odyssey:submission`)
 
 ### 3. Launch sim + visualization
 ```bash
@@ -99,19 +98,18 @@ RViz should open with the scene. To change scenes: drop scene files into
 Workspace path in the ai container: `/home/docker/ai_module`.
 We use a **Pure Docker workflow** to guarantee our code runs exactly as it will at evaluation time.
 ```bash
-# after every git pull or code change, rebuild the container:
-cd docker
-docker compose -f compose_gpu.yml up --build -d
+# after every git pull or code change, rebuild the image:
+just up
 
 # run it:
-docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm smart_vlm.launch"
+just ai
 ```
 `smart_vlm.launch` = sam_node (unarmed until prompted) + supervisor (mission clock, readiness/arming gates, T-30 fallback) + numerical_reasoner + TARE exploration. It starts no scene source of its own (that is `eval_bag.launch`'s job offline). It is a disposable per-question unit: the eval harness spawns it, waits for the answer, then SIGINTs the whole process group. Watch the supervisor heartbeat — it reports the mission phase, odometry rate, and warns via `count_publishers` when an allowed topic has no source (it deliberately does not subscribe to the heavy image/cloud topics just to count them).
 Eval-realistic mode: `docker/system/challenge_simulation.sh` (baked into the system container at `/home/docker/autonomy_stack_mecanum_wheel_platform/`) runs the sim in ROS domain 42 with a domain-bridge firewall passing only the 6 allowed inputs + question in and 3 answers out; launch the AI side with `ROS_DOMAIN_ID=0`. Pass `--noviz` to skip RViz. `ros-jazzy-domain-bridge` is installed by `docker/system/Dockerfile`.
 
 ### 4. Send a test question to smart_vlm
 ```bash
-docker exec -it iros2026_ai_module bash -lc \
+docker exec -it iros2026_odyssey bash -lc \
   "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm eval_bag.launch bag:=arabic_room"
 ```
 In another terminal (either container):
@@ -164,7 +162,7 @@ blits the result to Xvnc. Two things in this repo make that possible:
   container toolkit injects `libEGL_nvidia.so.0` but not this vendor config, so libglvnd
   would only ever find Mesa. Without it `vglrun` still yields `llvmpipe`.
 
-No extra GPU settings are needed in the compose files — the base image already ships
+No extra GPU settings are needed in `compose_gpu.yml` — the base image already ships
 `NVIDIA_DRIVER_CAPABILITIES=graphics`, so `capabilities: [gpu]` is enough.
 
 Check which renderer you actually got:
@@ -174,7 +172,7 @@ docker exec -e DISPLAY=:1 iros2026_system vglrun -d egl glxinfo | grep "OpenGL r
 ```
 Unity records the same thing at startup in `~/.config/unity3d/UnityRobotics/cmu_vla_challenge_unity/Player.log`.
 
-Rates on an A10G with GPU rendering, measured from inside `iros2026_ai_module`:
+Rates on an A10G with GPU rendering, measured from inside `iros2026_odyssey`:
 
 | Topic | Rate | Spec |
 |-|-|-|
@@ -187,11 +185,11 @@ The camera still trails spec because the 360° image is re-encoded on the CPU.
 
 ## Troubleshooting: topics list but no messages
 
-If `ros2 topic list` inside `iros2026_ai_module` shows every topic but `ros2 topic hz /state_estimation` reports nothing, the two containers are not sharing an IPC namespace. FastDDS discovers peers over the host network but moves payloads over shared memory for same-host peers, and a private `/dev/shm` per container silently drops all of it. This breaks the whole AI module, not just visualization.
+If `ros2 topic list` inside `iros2026_odyssey` shows every topic but `ros2 topic hz /state_estimation` reports nothing, the two containers are not sharing an IPC namespace. FastDDS discovers peers over the host network but moves payloads over shared memory for same-host peers, and a private `/dev/shm` per container silently drops all of it. This breaks the whole AI module, not just visualization.
 
-Both compose files set `ipc: host` on both services, so `docker compose -f compose_gpu.yml up -d` handles this. To unblock a container that is already running (no simulator restart needed), force UDP transport instead:
+`compose_gpu.yml` sets `ipc: host` on both the `system` and `odyssey` services, so `docker compose -f compose_gpu.yml up -d` handles this. To unblock a container that is already running (no simulator restart needed), force UDP transport instead:
 ```bash
-docker exec -it -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 iros2026_ai_module bash
+docker exec -it -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 iros2026_odyssey bash
 ```
 
 ---
@@ -202,7 +200,7 @@ The L4 box has a GUI — RViz runs natively per the runbook. This section is onl
 
 **Foxglove:** run a websocket bridge on the sim box, connect from the Foxglove desktop app. `ros-jazzy-foxglove-bridge` is already installed by `ai_module/docker/Dockerfile` — no apt step needed:
 ```bash
-docker exec -it -e ROS_DOMAIN_ID=42 iros2026_ai_module bash   # 42 in challenge mode, 0 in standard
+docker exec -it -e ROS_DOMAIN_ID=42 iros2026_odyssey bash   # 42 in challenge mode, 0 in standard
 ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0
 # laptop: ssh -N -L 8765:localhost:8765 <user>@<box>, then Foxglove → Open connection → ws://localhost:8765
 ```

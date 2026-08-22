@@ -296,10 +296,19 @@ def test_lite_model_falls_back_to_the_main_one(constants_with):
     assert consts.MODEL_NAME_LITE == "vendor/model"
 
 
-def test_invalid_extract_backend_falls_back_to_auto(constants_with):
-    """A typo in vqa.yaml must not fail import — auto is the documented fallback."""
-    consts = constants_with({"extract_backend": "bogus"})
-    assert consts.EXTRACT_BACKEND == "auto"
+def test_invalid_backends_default_to_cloud_independently(constants_with):
+    consts = constants_with({})
+    assert consts.VLM_BACKEND == "cloud"
+    assert consts.TARGET_EXTRACT_BACKEND == "cloud"
+    assert consts.NEED_LOCAL_VQA is False
+    consts = constants_with({"vlm_backend": "bogus", "target_extract_backend": "bogus"})
+    assert consts.VLM_BACKEND == "cloud"
+    assert consts.TARGET_EXTRACT_BACKEND == "cloud"
+    consts = constants_with({"vlm_backend": "cloud", "target_extract_backend": "local"})
+    assert consts.VLM_BACKEND == "cloud"
+    assert consts.TARGET_EXTRACT_BACKEND == "local"
+    assert consts.NEED_LOCAL_VQA is True
+    assert consts.local_vqa_launch_flag() == "true"
 
 
 def test_invalid_view_source_falls_back_to_silhouette(constants_with):
@@ -307,9 +316,9 @@ def test_invalid_view_source_falls_back_to_silhouette(constants_with):
     assert consts.VIEW_SOURCE == "silhouette"
 
 
-def test_valid_extract_backend_and_view_source_pass_through(constants_with):
-    consts = constants_with({"extract_backend": "local", "view_source": "crop"})
-    assert consts.EXTRACT_BACKEND == "local"
+def test_valid_target_extract_backend_and_view_source_pass_through(constants_with):
+    consts = constants_with({"target_extract_backend": "local", "view_source": "crop"})
+    assert consts.TARGET_EXTRACT_BACKEND == "local"
     assert consts.VIEW_SOURCE == "crop"
 
 

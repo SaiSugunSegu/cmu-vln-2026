@@ -28,20 +28,37 @@ RUN { python3 -c "import numpy; print('numpy==' + numpy.__version__)" || true; }
  && chmod 0644 /etc/pip-constraints.txt \
  && echo "pip constraints: $(cat /etc/pip-constraints.txt)"
 ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
+# Applies to every pip layer below, this one included — the defaults are too tight
+# for the multi-GB torch wheel that requirements_captioner.txt pulls next.
+# PIP_BREAK_SYSTEM_PACKAGES replaces a --break-system-packages flag per invocation.
+ENV PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10 \
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# `pip-install` = pip install with an --ignore-installed retry; see the script.
+COPY --chmod=0755 docker/pip-install.sh /usr/local/bin/pip-install
+
 # --ignore-installed: base image ships some Debian Python pkgs (e.g. psutil)
 # without pip RECORD metadata, which otherwise breaks upgrades.
-RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
-      -r /tmp/requirements_captioner.txt \
-    && python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed gdown \
+# Cache mount rather than --no-cache-dir so a network failure part-way through
+# torch resumes on the next attempt instead of re-downloading from zero. The
+# cache lives outside the layer either way, so the image is no larger.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m pip install --ignore-installed -r /tmp/requirements_captioner.txt \
     && rm -f /tmp/requirements_captioner.txt
 
-# Hugging Face cache lives under the docker user home (compose bind-mounts it).
+# Hugging Face cache lives under the docker user home. just up bakes weights here.
 # HF_HUB_OFFLINE deliberately NOT set: this deployment always has connectivity, and the
 # cv-utils kernel downloads on first use (its absence silently disables mask NMS).
 # HUGGINGFACE_HUB_CACHE is not set: HF derives $HF_HOME/hub by default.
 # TRANSFORMERS_CACHE / TRANSFORMERS_OFFLINE are deprecated aliases; don't add them.
 ENV HF_HOME=/home/docker/.cache/huggingface
-RUN mkdir -p /home/docker/.cache/huggingface && chown -R docker:docker /home/docker/.cache
+# Official compose has no ipc: host. FastDDS otherwise moves image/cloud payloads
+# over shared memory that never arrives. UDP works with network_mode: host alone.
+ENV FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+RUN mkdir -p /home/docker/.cache/huggingface /home/docker/crops \
+ && chown -R docker:docker /home/docker/.cache /home/docker/crops
 
 USER docker
 
@@ -59,17 +76,12 @@ RUN /bin/bash -c "\
 # code edits, and split into small layers so a network timeout loses only that layer.
 # Cache mounts (not --no-cache-dir) let a retry resume; re-run `just up` if one fails.
 USER root
-ENV PIP_DEFAULT_TIMEOUT=120 \
-    PIP_RETRIES=10 \
-    PIP_BREAK_SYSTEM_PACKAGES=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Debian-packaged Python modules have no RECORD file, so pip cannot uninstall them
-# ("Cannot uninstall psutil 5.9.8, RECORD file not found") and any dependency wanting a
-# different version kills the layer. --ignore-installed writes pip-managed copies with
-# proper RECORD files into dist-packages, shadowing the dpkg ones.
-# Excluded on purpose: numpy (pinned below — rclpy/cv_bridge use its ABI) and
-# setuptools (colcon's ament_python builds break if it moves).
+# Bulk pre-empt of the Debian-packaged modules that have no pip RECORD file (see
+# /usr/local/bin/pip-install for why that matters), so the layers below do not each
+# have to fall back. Excluded on purpose: numpy (PIP_CONSTRAINT pins it —
+# rclpy/cv_bridge use its ABI) and setuptools (colcon's ament_python builds break
+# if it moves).
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --ignore-installed \
       psutil PyYAML cryptography \
@@ -91,11 +103,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # Unpinned: guessing which release carries SAM 3 would either be wrong or hold back a
 # newer wheel; the import check at the bottom is what proves Sam3VideoModel exists.
-# The `|| --ignore-installed` retry here and below catches any apt-shipped transitive
-# dep not pre-empted above, instead of failing the build.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --upgrade transformers \
-    || python3 -m pip install --ignore-installed --upgrade transformers
+    pip-install --upgrade transformers
 
 # `kernels` delivers kernels-community/cv-utils (no pip package exists), which SAM 3 uses
 # for two jobs: generic_nms (mask NMS — skipped entirely without it, making det_nms_thresh
@@ -157,11 +166,9 @@ print(f'sam3 OK — ftfy {ftfy.__version__}, numpy {numpy.__version__}, torch {t
 
 # semantic_mapping's 3D stage: open3d is the big one (~400 MB), hence its own layer.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install open3d \
-    || python3 -m pip install --ignore-installed open3d
+    pip-install open3d
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install "scipy==1.13.1" scikit-learn line_profiler \
-    || python3 -m pip install --ignore-installed "scipy==1.13.1" scikit-learn line_profiler
+    pip-install "scipy==1.13.1" scikit-learn line_profiler
 
 # cv2 normally arrives with cv_bridge in the ROS base image; only install if missing.
 # Pin <5: opencv 5.x requires numpy>=2, which breaks cv_bridge.
@@ -173,19 +180,37 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # scope, reached via semantic_map.py:16, so ObjMapper fails without it. SAM 3 does not
 # use it. Retry covers setuptools/click/pydantic possibly being apt-installed.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    { python3 -m pip install spacy || python3 -m pip install --ignore-installed spacy; } \
+    pip-install spacy \
  && python3 -m spacy download en_core_web_sm
 USER docker
+
+# Bake SAM 3 + Qwen3-VL into HF_HOME BEFORE the package COPYs so a code edit does
+# not re-download 15–20 GB. fetch_weights.py is stdlib + huggingface_hub +
+# transformers (already installed above); it does not need the captioner colcon
+# install. Cache mount lets a retry of this layer skip files already pulled.
+# Empty HF_TOKEN skips the download; runtime from_pretrained still reads ENV.
+ARG HF_TOKEN=""
+ENV HF_TOKEN=${HF_TOKEN}
+COPY --chown=docker:docker src/captioner/captioner/tools/fetch_weights.py /tmp/fetch_weights.py
+RUN --mount=type=cache,target=/tmp/hf-build-cache,uid=1001,gid=1001 \
+    if [ -n "$HF_TOKEN" ]; then \
+      HF_HOME=/tmp/hf-build-cache python3 /tmp/fetch_weights.py sam3 qwen3vl && \
+      mkdir -p /home/docker/.cache/huggingface && \
+      cp -a /tmp/hf-build-cache/. /home/docker/.cache/huggingface/; \
+    else \
+      echo "HF_TOKEN empty — skipping weight bake"; \
+    fi
 
 # Copy and compile active dev packages (takes <5s and updates instantly on edit)
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm
 COPY src/sam_mapper /home/docker/ai_module/src/sam_mapper
 COPY src/captioner /home/docker/ai_module/src/captioner
+COPY src/dummy_vlm /home/docker/ai_module/src/dummy_vlm
 RUN /bin/bash -c "\
     source /opt/ros/jazzy/setup.bash && \
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=Release \
-      --packages-select smart_vlm sam_mapper captioner"
+      --packages-select dummy_vlm smart_vlm sam_mapper captioner"
 
 # Ensure the updated install is sourced in every new shell
 RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc \
@@ -210,12 +235,6 @@ from captioner.vlm_backends.schemas import CountAnswer, TargetList; \
 from captioner.vlm_backends.openai_backend import OpenAIBackend; \
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM; \
 from smart_vlm.cat2_utils import EXTRACT_SYSTEM as CAT2_EXTRACT; \
+from smart_vlm.cat3_utils import waypoints_from_map; \
 import openai; \
 print('import check OK: transformers', transformers.__version__)\""
-
-# No weights are baked into this image — they are fetched into the mounted HF cache. Seed
-# it once with `just hf-fetch` (see docker/README.md) so the first real run is not also a
-# ~20 GB download; nothing forces offline mode. No `hf auth login` is needed: put
-# HF_TOKEN in the repo-root .env (docker/compose*.yml reads it via env_file) and
-# huggingface_hub picks it up on every from_pretrained(). SAM 3 is additionally
-# gated — accept its licence once on the model page with the same account.

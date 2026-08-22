@@ -471,9 +471,7 @@ bool SensorCoveragePlanner3D::initialize() {
 
 void SensorCoveragePlanner3D::ExplorationStartCallback(
     const std_msgs::msg::Bool::ConstSharedPtr start_msg) {
-  if (start_msg->data) {
-    start_exploration_ = true;
-  }
+  start_exploration_ = start_msg->data;
 }
 
 void SensorCoveragePlanner3D::StateEstimationCallback(

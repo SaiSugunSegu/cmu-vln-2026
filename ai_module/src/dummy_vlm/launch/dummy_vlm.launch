@@ -1,0 +1,4 @@
+<launch>
+  <!-- Official evaluation entry: ros2 launch dummy_vlm dummy_vlm.launch -->
+  <include file="$(find-pkg-share smart_vlm)/launch/smart_vlm.launch"/>
+</launch>

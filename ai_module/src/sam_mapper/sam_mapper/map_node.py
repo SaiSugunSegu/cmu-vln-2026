@@ -643,7 +643,7 @@ Every 2D detection and every 3D map object, one line each — validation only.""
                 self.obj_text_pub.publish(MarkerArray(markers=[clear] + list(text_msgs)))
 
         # Published unconditionally, even when empty — an empty map is itself the answer
-        # when nothing else is coming out. `just sam-status` decodes it.
+        # when nothing else is coming out. `python -m sam_mapper.tools.status` decodes it.
         with self.timer.stage('map_serialize'):
             objects = self.obj_mapper.serialize_map_to_dict()
             self.map_json_pub.publish(String(data=json.dumps(objects, default=_jsonable)))

@@ -11,7 +11,7 @@ byte-identical across models, which is the only way an A/B says anything about t
     # once: the expensive half. Extraction still runs on a real model, so SAM is armed
     # exactly as it would be on a scored run; only the counting call is skipped.
     ros2 run smart_vlm eval_orchestrator --ros-args -p crops_only:=true \\
-        -p target_source:=vlm -p vlm_backend:=cloud \\
+        -p target_source:=vlm \\
         -p report_file:=/data/runs/views_cache.json
 
     # then, per model, as often as you like
@@ -31,7 +31,8 @@ eval_orchestrator saves its crops under the same layout and records the director
 `crops_only` only skips paying for an answer nobody asked for.
 
 Cloud backends only. The local Qwen path answers over ROS topics, which is exactly the
-graph this script exists to avoid; benchmark it with a normal `backend:=local` sweep.
+graph this script exists to avoid; benchmark it with a sweep after setting
+`vlm_backend: local` in vqa.yaml.
 """
 from __future__ import annotations
 

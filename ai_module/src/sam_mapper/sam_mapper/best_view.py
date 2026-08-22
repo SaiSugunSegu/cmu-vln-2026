@@ -70,6 +70,26 @@ def sanitize_run_id(run_id: str, fallback: str = "run") -> str:
     return "/".join(parts) or fallback
 
 
+def resolve_output_dir(configured: str = "/data/crops") -> str:
+    """First writable crops root. Official compose has no /data mount."""
+    candidates = []
+    if configured:
+        candidates.append(configured)
+    candidates.extend(("/data/crops", "/home/docker/crops", "/tmp/crops"))
+    seen: set[str] = set()
+    for path in candidates:
+        if path in seen:
+            continue
+        seen.add(path)
+        try:
+            os.makedirs(path, exist_ok=True)
+            if os.access(path, os.W_OK):
+                return path
+        except OSError:
+            continue
+    return "/tmp/crops"
+
+
 @dataclass(frozen=True)
 class BestViewConfig:
     targets: tuple[str, ...]
@@ -102,7 +122,7 @@ class BestViewConfig:
         return BestViewConfig(
             targets=targets,
             top_n=top_n,
-            output_dir=raw.get("output_dir", "/data/crops"),
+            output_dir=resolve_output_dir(raw.get("output_dir", "/data/crops")),
             save_annotated_copy=bool(raw.get("save_annotated_copy", True)),
             save_silhouette_copy=bool(raw.get("save_silhouette_copy", False)),
             # Opt-in: it roughly doubles the images on disk, and every overlay with them.
@@ -115,7 +135,7 @@ class BestViewConfig:
             roi_min_size_px=int(raw.get("roi_min_size_px", 300)),
             roi_cluster_gap_px=float(raw.get("roi_cluster_gap_px", 250)),
             # finalize()'s wait for map_node's obj_map.json. Same file, same settling time
-            # as object_reference_reasoner.MAP_WAIT_S.
+            # as smart_vlm.reasoner_common.MAP_WAIT_S.
             finalize_obj_map_wait_s=float(raw.get("finalize_obj_map_wait_s", 5.0)),
         )
 
@@ -675,10 +695,10 @@ class BestViewCollector:
         with open(path, "w") as handle:
             json.dump(manifest, handle, indent=2)
 
-        covered_ids = {tid for _, cand, _ in written for tid in cand.instance_scores}
         # "encoded" is the work this flush actually did; the ranks it skipped were already
         # on disk carrying the right candidate. This used to fire once per frame, which is
         # why it had been commented out — coalescing is what makes it readable again.
+        # covered_ids = {tid for _, cand, _ in written for tid in cand.instance_scores}
         # self.log(f"best-view collector: wrote {len(written)}/{self.config.top_n} images "
         #          f"({encoded} encoded), covering {len(covered_ids)} instance(s) "
         #          f"-> {self.run_dir}")

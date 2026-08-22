@@ -27,11 +27,12 @@
        that is why TARE is held at /start_exploration, and why the bag in
        eval_bag.launch waits on /pipeline/armed.
 
-       It is self-contained in either inference mode — see vlm_backend below. Nothing
-       has to be started by hand first, because at eval there is nobody to start it:
-       the organizers build the image and run this launch, and that is the whole
-       procedure. `just vqa-up` remains only as a dev convenience for keeping a server
-       resident ACROSS relaunches, which is a speed-up, not a requirement. -->
+       Inference backend is config/vqa.yaml (`vlm_backend` / `target_extract_backend`), not a
+       launch argument. Nothing has to be started by hand first, because at eval
+       there is nobody to start it: the organizers build the image and run this
+       launch, and that is the whole procedure. `just vqa-up` remains only as a
+       dev convenience for keeping a server resident ACROSS relaunches, which is
+       a speed-up, not a requirement. -->
 
   <!-- Perception -->
   <arg name="sam_config" default="sam3_mecanum_sim.yaml"/> <!-- sam_mapper config file name -->
@@ -55,23 +56,16 @@
   <!-- Reasoning -->
   <arg name="vqa_timeout_s" default="180.0"/>            <!-- max wait for a VLM reply -->
 
-  <!-- Where the reasoner runs inference, through captioner.vlm_backends.
-       local (default) = Qwen, served by the node this launch starts below
-       cloud           = a hosted model over its OpenAI-compatible endpoint, picked
-                         with VLM_PROVIDER and needing that provider's API key -->
-  <arg name="vlm_backend"  default="local"/>
+  <!-- Qwen server + /pipeline/ready gate: follows vqa.yaml `vlm_backend` /
+       `target_extract_backend` (NEED_LOCAL_VQA). true when either call is local. -->
   <arg name="local_vqa"
-       default="$(eval '&quot;$(var vlm_backend)&quot; == &quot;local&quot;')"/>
+       default="$(eval &quot;__import__('captioner.vlm_backends.constants', fromlist=['local_vqa_launch_flag']).local_vqa_launch_flag()&quot;)"/>
   <arg name="vqa_model"        default="qwen3vl"/>
   <arg name="vqa_quantization" default="int4"/>
   <!-- How many best-view ranks the reasoner answers from at once. Rank 1 alone misses
        objects it does not happen to frame; each extra view costs a full image of
        visual tokens. -->
   <arg name="max_context_views" default="3"/>
-  <!-- A cloud run never calls /qwen_vqa, so waiting on it would burn ready_timeout_s
-       (300 s of a 600 s question) waiting for a model nobody started. Derived rather
-       than defaulted, so it can only ever be true when there is actually a server. -->
-  <arg name="require_vqa_ready" default="$(var local_vqa)"/>
   <!-- Where this question's best-view crops are saved, under the crops root from the
        sam config. The eval harness passes "<sweep>/<scene>/<question id>-<question>";
        empty falls back to a run name with a random id in it, fine for a one-off. -->
@@ -127,7 +121,6 @@
     <param name="fallback_reserve_s" value="$(var fallback_reserve_s)"/>
     <param name="fallback_count"     value="$(var fallback_count)"/>
     <param name="ready_timeout_s"    value="$(var ready_timeout_s)"/>
-    <param name="require_vqa_ready"  value="$(var require_vqa_ready)"/>
   </node>
 
   <!-- 3. Numerical reasoner — question to targets to one count question asked of the
@@ -136,7 +129,6 @@
                 /sam3/best_view_dir, /qwen_vqa/response
        Output:  /sam3/set_prompts, /qwen_vqa/request, /numerical_response -->
   <node pkg="smart_vlm" exec="numerical_reasoner" name="numerical_reasoner" output="screen">
-    <param name="backend" value="$(var vlm_backend)"/>
     <param name="run_id" value="$(var run_id)"/>
     <param name="crops_only" value="$(var crops_only)"/>
     <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
@@ -152,12 +144,23 @@
        Output:  /sam3/set_prompts, /qwen_vqa/request, /selected_object_marker -->
   <node pkg="smart_vlm" exec="object_reference_reasoner" name="object_reference_reasoner"
         output="screen">
-    <param name="backend" value="$(var vlm_backend)"/>
     <param name="run_id" value="$(var run_id)"/>
     <param name="crops_only" value="$(var crops_only)"/>
     <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
     <param name="max_context_views" value="$(var max_context_views)"/>
     <param name="mode" value="$(var cat2_mode)"/>
+  </node>
+
+  <!-- 3c. Instruction reasoner — question to targets to an ordered Pose2D sequence.
+       Arms SAM (so TARE can start), then after explore_done holds TARE and publishes
+       /way_point_with_heading toward each named object in prompt order.
+       Input:   /challenge_question, /gt_target_objects, /pipeline/explore_done,
+                /sam3/best_view_dir, /state_estimation
+       Output:  /sam3/set_prompts, /start_exploration (false), /way_point_with_heading -->
+  <node pkg="smart_vlm" exec="instruction_reasoner" name="instruction_reasoner"
+        output="screen">
+    <param name="run_id" value="$(var run_id)"/>
+    <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
   </node>
 
   <!-- 4. TARE exploration — drives the robot to cover the scene.

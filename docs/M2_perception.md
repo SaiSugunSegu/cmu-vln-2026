@@ -65,7 +65,7 @@ revisiting.
 
 ## Suggestions (still current)
 - **Read the organizer's panorama+lidar→RGB-D bridge**: [Navigation-Physical-Experiment](https://github.com/Yuxin916/Navigation-Physical-Experiment) converts pano images + lidar into registered RGB-D — a working reference for image↔lidar projection plumbing. Dev tip: `without_360_camera` env variant renders faster for non-perception work.
-- **Checking it works.** `just sam-status` reports the rate on every output topic and summarises the 3D map (object count by class, plus centroids — obviously-wrong positions show up immediately). For visuals, `just foxglove` and watch `/annotated_image` (masks labelled `label#id score`, coloured per SAM 3 id so an id switch shows as a colour flip) alongside `/obj_boxes` and `/obj_points` in 3D.
+- **Checking it works.** `python -m sam_mapper.tools.status`, run inside the AI container, reports the rate on every output topic and summarises the 3D map (object count by class, plus centroids — obviously-wrong positions show up immediately). For visuals, `just foxglove` and watch `/annotated_image` (masks labelled `label#id score`, coloured per SAM 3 id so an id switch shows as a colour flip) alongside `/obj_boxes` and `/obj_points` in 3D.
 - Keep a per-instance "best crop" (largest, most frontal) — M4 uses it for VLM verification of borderline attributes.
 - Color words: use VLA-3D's exact 15-color LAB/CSS3 mapping (`3d_data_preprocess/utils/dominant_colors_new_lab.py`) — the questions' color vocabulary comes from it; sample interior 70% of mask. VLA-3D was extended/filtered as IRef-VLA — download data from there.
 
@@ -620,7 +620,7 @@ PROMPT (`modeling_sam3_video.py:588`), so prompt count is a separate linear cost
    `is_valid`, keeping every detection) and hole filling was off. Two causes: torch 2.5.1 had no
    matching prebuilt variant, and transformers' `is_kernels_available()` window moved with an
    unpinned transformers bump. The torch pin and the `kernels` version are now both derived from what
-   the kernel and transformers actually require — see `docker/requirements_captioner.txt`.
+   the kernel and transformers actually require — see `ai_module/docker/requirements_captioner.txt`.
 
 **Every map3d bench number predating 2026-08-11 was therefore produced by a different detector than
 its config describes.**
@@ -733,7 +733,7 @@ remove this — only a separate process (separate GIL) can.
 | `sam_node` | `sam_node` | `sam_node.launch` | `/camera/image` | `/annotated_image`, `/sam3/instance_map`, `/sam3/detections` |
 | `map_node` | `map_node` | `map_node.launch` | `/sam3/instance_map`, `/sam3/detections`, `/registered_scan`, `/state_estimation` | `/obj_points`, `/obj_boxes`, `/obj_labels`, `/obj_map_json` |
 
-Both take the same `config:=` arg. `just sam_node` and `just map_node` run them in two terminals
+Both take the same `config:=` arg. `just run-sam` and `just run-map` run them in two terminals
 (replaces the old single `just sam-map`).
 
 **Wire format.** Sending `(N, 640, 1920)` bool masks separately was the original one-node design's

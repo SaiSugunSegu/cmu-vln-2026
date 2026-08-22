@@ -31,7 +31,7 @@ instead.
 
 ```bash
 just up                                                    # creates + chmods /data/scenes
-docker exec iros2026_ai_module ros2 run smart_vlm scene_fetch arabic_room
+docker exec iros2026_odyssey ros2 run smart_vlm scene_fetch arabic_room
 ```
 
 Idempotent — a second run says "already present". `just eval-cat1-sim <scene>` calls it for
