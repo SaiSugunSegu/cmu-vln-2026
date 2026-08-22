@@ -136,6 +136,11 @@ foxglove domain="0":
 topics:
     docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic list"
 
+[group('bags')]
+[doc('Record the 6 allowed topics + tf into data/bags/<name>')]
+bag name:
+    docker exec -it iros2026_ai_module bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /tf /tf_static /challenge_question -o /data/bags/{{name}}"
+
 [group('debug')]
 [doc('Interactive shell in the system container')]
 shell-sys:
