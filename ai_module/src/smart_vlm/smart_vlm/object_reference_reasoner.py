@@ -50,7 +50,7 @@ from captioner.qwen_vqa_protocol import vqa_image_fields
 from captioner.ros_utils import wait_for_subscriber
 from captioner.ros_utils import shutdown_guard
 from captioner.vlm_backends import VLMError, make_backend
-from captioner.vlm_backends.constants import VLM_BACKEND
+from captioner.vlm_backends.constants import EXTRACT_BACKEND, VIEW_SOURCE, VLM_BACKEND
 from captioner.vlm_backends.schemas import TargetList
 from sam_mapper.best_view import sanitize_run_id
 from sam_mapper.challenge_marker import payload_from_map_object
@@ -148,12 +148,26 @@ class ObjectReferenceReasoner(Node):
 
         self.backend = make_backend(
             self.backend_name, ask_vqa=self._ask_vqa_text, log=self.get_logger().info)
+        # EXTRACT_BACKEND=auto follows *this run's* backend (which may itself have been
+        # overridden by -p backend:=...), not the config's `backend` field directly — a
+        # second backend instance is only built when the two names actually differ, so
+        # the common case pays no extra cost.
+        self.extract_backend_name = (
+            self.backend_name if EXTRACT_BACKEND == "auto" else EXTRACT_BACKEND)
+        self.extract_backend = (
+            self.backend if self.extract_backend_name == self.backend_name
+            else make_backend(
+                self.extract_backend_name, ask_vqa=self._ask_vqa_text,
+                log=self.get_logger().info)
+        )
 
         self._publish_status("idle")
         if not SOLVER_AVAILABLE:
             self.get_logger().error(solver_status())
         self.get_logger().info(
-            f"object_reference_reasoner ready (backend={self.backend.name}, mode={self.mode}, "
+            f"object_reference_reasoner ready (backend={self.backend.name}, "
+            f"extract_backend={self.extract_backend.name}, mode={self.mode}, "
+            f"view_source={VIEW_SOURCE}, "
             f"max_context_views={self.max_context_views}"
             f"{', crops_only' if self.crops_only else ''}) — waiting for Find / The questions")
 
@@ -268,10 +282,10 @@ class ObjectReferenceReasoner(Node):
         """The nouns SAM gets armed with, and where they came from."""
         try:
             # User turn is the raw query, kept plain so it stays pure candidate data.
-            result = self.backend.ask(
+            result = self.extract_backend.ask(
                 EXTRACT_SYSTEM, question, [], TargetList, lite=True)
             if targets := clean_targets(result.targets):
-                return targets, self.backend.name
+                return targets, self.extract_backend.name
             self.get_logger().warn(f"extract returned nothing usable: {list(result.targets)!r}")
         except VLMError as exc:
             self.get_logger().warn(f"extract failed: {exc}")
@@ -354,6 +368,8 @@ class ObjectReferenceReasoner(Node):
                 "vlm_calls": selection.vlm_calls,
                 "mode": self.mode,
                 "backend": self.backend.name,
+                "extract_backend": self.extract_backend.name,
+                "view_source": VIEW_SOURCE,
                 "crops_only": self.crops_only,
                 "n_map_objects": len(raw_map),
             })

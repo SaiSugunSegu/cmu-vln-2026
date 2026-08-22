@@ -22,8 +22,8 @@ step over the saved images afterwards, once per model instead of once per sweep.
 
 Both model steps go through `captioner.vlm_backends`, so the same pipeline runs against
 a hosted model over its OpenAI-compatible endpoint (`backend:=cloud`, the scored path,
-provider chosen by VLM_PROVIDER) or the resident Qwen server (`backend:=local`, which
-costs nothing and is the development loop).
+provider chosen by config/vqa.yaml's `provider`) or the resident Qwen server
+(`backend:=local`, which costs nothing and is the development loop).
 
 The answer is published before the manifest is written: the harness tears this pipeline
 down the instant it sees /numerical_response, so anything queued after the publish may
@@ -52,7 +52,7 @@ from captioner.qwen_vqa_protocol import vqa_image_fields
 from captioner.ros_utils import wait_for_subscriber
 from captioner.ros_utils import shutdown_guard
 from captioner.vlm_backends import VLMError, make_backend
-from captioner.vlm_backends.constants import VLM_BACKEND
+from captioner.vlm_backends.constants import EXTRACT_BACKEND, VIEW_SOURCE, VLM_BACKEND
 from captioner.vlm_backends.schemas import CountAnswer, TargetList
 from sam_mapper.best_view import sanitize_run_id
 from smart_vlm.numerical_utils import (
@@ -163,10 +163,26 @@ class NumericalReasoner(Node):
             ask_vqa=self._ask_vqa_text,
             log=self.get_logger().info,
         )
+        # EXTRACT_BACKEND=auto follows *this run's* backend (which may itself have been
+        # overridden by -p backend:=...), not the config's `backend` field directly — a
+        # second backend instance is only built when the two names actually differ, so
+        # the common case pays no extra cost.
+        self.extract_backend_name = (
+            self.backend_name if EXTRACT_BACKEND == "auto" else EXTRACT_BACKEND)
+        self.extract_backend = (
+            self.backend if self.extract_backend_name == self.backend_name
+            else make_backend(
+                self.extract_backend_name,
+                ask_vqa=self._ask_vqa_text,
+                log=self.get_logger().info,
+            )
+        )
 
         self._publish_status("idle")
         self.get_logger().info(
             f"numerical_reasoner ready (backend={self.backend.name}, "
+            f"extract_backend={self.extract_backend.name}, "
+            f"view_source={VIEW_SOURCE}, "
             f"max_context_views={self.max_context_views}"
             f"{', crops_only' if self.crops_only else ''}) — waiting for "
             "How many / Count questions")
@@ -297,12 +313,12 @@ class NumericalReasoner(Node):
         reply: list[str] | None = None
         try:
             # User turn is the raw query, kept plain so it stays pure candidate data.
-            result = self.backend.ask(
+            result = self.extract_backend.ask(
                 EXTRACT_SYSTEM, question, [], TargetList, lite=True)
             reply = list(result.targets)
             targets = clean_targets(result.targets)
             if targets:
-                return TargetChoice(targets, self.backend.name, reply)
+                return TargetChoice(targets, self.extract_backend.name, reply)
             self.get_logger().warn(f"extract returned nothing usable: {reply!r}")
         except VLMError as exc:
             self.get_logger().warn(f"extract failed: {exc}")
@@ -419,6 +435,8 @@ class NumericalReasoner(Node):
             manifest["answer_reason"] = reason
             manifest["context_views"] = [p.name for p in image_paths]
             manifest["backend"] = self.backend.name
+            manifest["extract_backend"] = self.extract_backend.name
+            manifest["view_source"] = VIEW_SOURCE
             manifest["crops_only"] = self.crops_only
             self._save_manifest(manifest_path, manifest)
 

@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
 from captioner.prompts.object_extraction import get_object_extraction_prompt
+from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, VIEW_SOURCE
 
 # ---------------------------------------------------------------- prompts
 
@@ -104,18 +105,20 @@ def solver_status() -> str:
 # ---------------------------------------------------------------- views
 
 
-# sam_node renders the silhouettes once, on the same /pipeline/explore_done that starts this
-# reasoner, so we can arrive a few hundred ms early. Worth waiting out: the bare crop has
-# neither the outlines nor the ids.
-SILHOUETTE_WAIT_S = 5.0
-SILHOUETTE_POLL_S = 0.25
-
-
 def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Path], bool]:
-    """(path to draw on, whether it is a finalized silhouette)."""
+    """(path to draw on, whether it is a finalized silhouette).
+
+    Gated by VIEW_SOURCE (see captioner.vlm_backends.constants, backed by
+    config/vqa.yaml): `crop` never looks at silhouette/, even once one exists;
+    `silhouette` (the default) waits out `deadline` for sam_node's finalize pass — the
+    bare crop has neither the outlines nor the ids — before falling back to the plain
+    crop, so a run with save_silhouette_copy disabled still answers.
+    """
     import time
 
     silhouette, plain = run_dir / "silhouette" / name, run_dir / name
+    if VIEW_SOURCE != "silhouette":
+        return (plain, False) if plain.is_file() else (None, False)
     while True:
         if silhouette.is_file():
             return silhouette, True
@@ -130,6 +133,8 @@ def marked_views(
     ids: Sequence[str],
     max_views: int,
     labels: Optional[dict[str, str]] = None,
+    *,
+    wait_s: Optional[float] = None,
 ) -> list[Path]:
     """Best views with the candidate objects marked, best-ranked first.
 
@@ -148,6 +153,11 @@ def marked_views(
     A finalized silhouette already prints `label [map id]`, so marking it adds a box and no
     text — two tabs for one object is worse than one. The `[id] label` tab is drawn only on
     the bare-crop fallback, which carries no ids at all.
+
+    `wait_s` bounds how long a VIEW_SOURCE="silhouette" caller waits for sam_node to
+    finish the finalize pass, shared across every requested rank; omit it for the live
+    reasoner's default (SILHOUETTE_WAIT_S), or pass 0 for an offline replay against a
+    cache nothing is still writing to.
     """
     import json
     import time
@@ -166,7 +176,8 @@ def marked_views(
         track_to_map = {}
 
     wanted = {str(i) for i in ids}
-    deadline = time.monotonic() + SILHOUETTE_WAIT_S
+    budget = SILHOUETTE_WAIT_S if wait_s is None else max(0.0, wait_s)
+    deadline = time.monotonic() + budget
     out_dir = run_dir / "marked"
     marked: list[Path] = []
     for entry in (manifest.get("selected") or [])[: max(1, max_views)]:

@@ -384,11 +384,15 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
 # Bench waits for /sam3/status=ready before (and after) prompts, then starts the bag.
 #
 # backend=cloud answers with a hosted model over its OpenAI-compatible endpoint and is
-# the scored path; pick which one with VLM_PROVIDER + its API key in .env (gemini by
-# default -- see captioner/vlm_backends/constants.py). backend=local uses the resident
-# Qwen server, which costs nothing per call and is the dev loop. auto follows
-# $VLM_BACKEND from .env (default local).
+# the scored path; pick which one with `provider` + its API key in
+# ai_module/src/captioner/config/vqa.yaml (dashscope by default -- see
+# captioner/vlm_backends/constants.py). backend=local uses the resident Qwen server,
+# which costs nothing per call and is the dev loop. auto follows vqa.yaml's `backend`
+# (default local).
 # views is how many best-view ranks it answers from at once (the VQA server caps at 4).
+# Which image of a best-view crop the model sees (silhouette, the mask-outline + label
+# copy, vs. the plain crop) is set once in vqa.yaml's `view_source`, not per-invocation
+# here. See captioner/vlm_backends/constants.py.
 [group('cat1')]
 [doc('Rebuild smart_vlm/sam_mapper and launch the category-1 reasoner (blocks)')]
 cat1-reasoner backend="auto" views="3":
@@ -418,6 +422,10 @@ cat1-reasoner backend="auto" views="3":
 # records the directory, so any sweep's report doubles as the cache index that
 # `just bench-cat1` replays from -- and a second sweep with its own report= keeps its
 # own crops rather than overwriting the first one's question by question.
+# Which image of a best-view crop the model sees (silhouette vs. plain crop) is set once
+# in ai_module/src/captioner/config/vqa.yaml's `view_source`, the same switch category-2
+# and the offline benches read -- edit it there rather than per-invocation here. See
+# captioner/vlm_backends/constants.py.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
 eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" report="/data/runs/challenge_report.json":
@@ -433,6 +441,7 @@ eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" re
 # is not decisive), solver (no model call), vlm, naive. See cat2_utils.select_object.
 # A row records the score, not what was reachable: whether a zero is selection or perception
 # takes the run's obj_map.json against the answer's box. bench-cat2 carries that ceiling.
+# view_source is the same vqa.yaml setting category-1 reads -- see eval-cat1 above.
 [group('eval')]
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
 eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" backend="auto" report="/data/runs/cat2_report.json":
@@ -469,6 +478,9 @@ eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="gt" backend="au
 # Resumable: re-running keeps every question whose crops are already on disk, so an
 # interruption costs one question rather than the whole sweep. To force a full rebuild,
 # delete the cache= report first.
+# vqa.yaml's view_source only matters here insofar as it decides what lands under
+# crops/silhouette/ for bench-cat1 to later replay against; crops_only skips the
+# answering call either way.
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
 cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
@@ -478,12 +490,16 @@ cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm"
 # model instead of hours, and every model sees byte-identical images, which is what
 # makes the comparison about the model. cache= is any sweep's report, cache-cat1 or not.
 #   just bench-cat1 /data/runs/views_cache.json 3 all 0 /data/runs/bench_gemini.json
-# Which model answers comes from VLM_PROVIDER / VLM_MODEL in .env, so comparing two
-# providers is: edit .env, re-run with a different report=. The summary records which
-# model produced the numbers. Only the counting step is replayed -- a model that would
-# have extracted different SAM targets needs a full `just cache-cat1` of its own.
+# Which model answers comes from `provider` / `model` in
+# ai_module/src/captioner/config/vqa.yaml, so comparing two providers is: edit vqa.yaml,
+# re-run with a different report=. The summary records which model produced the numbers.
+# Only the counting step is replayed -- a model that would have extracted different SAM
+# targets needs a full `just cache-cat1` of its own.
 # The cache paths still say `views`: they name crops already on disk from earlier sweeps,
 # and renaming the default would hide 14 scenes of them from the recipe that reads them.
+# vqa.yaml's view_source picks which of the crop's saved copies is replayed -- silhouette
+# (default) or the plain crop -- independent of which one the original cache-cat1 sweep
+# answered with, since crops_only never calls the model either way.
 [group('eval')]
 [doc('Benchmark a VLM against the cached best views (no SAM, no bag)')]
 bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/cat1_bench_report.json":
