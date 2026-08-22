@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
 from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, VIEW_SOURCE
+# Re-exported, not used in this module: the Dockerfile's build-time import check
+# reads smart_vlm.cat2_utils.EXTRACT_SYSTEM. Linters flag it as unused; it is not.
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM
 
 # ---------------------------------------------------------------- prompts
