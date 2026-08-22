@@ -5,7 +5,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-TAG="cmu-vln-odyssey:submission"
+TAG="iros2026_odyssey:submission"
 
 # provider -> env var that constants.py reads (keep in sync with PROVIDERS there)
 declare -A PROVIDER_KEY=(

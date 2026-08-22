@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Helper to caption crops inside iros2026_ai_module.
+# Helper to caption crops inside iros2026_odyssey.
 # Usage:
 #   ./ai_module/docker/run_captioner.sh /data/crops /data/captions
 # Paths are container paths (host ./data is mounted at /data).
@@ -16,7 +16,7 @@ MODEL=${CAPTIONING_MODEL:-qwen3vl}
 
 # printf %q, not '...': a path containing a quote or space would otherwise end
 # the quoted string and hand the rest to the container's shell.
-docker exec -it iros2026_ai_module bash -lc "
+docker exec -it iros2026_odyssey bash -lc "
   source /home/docker/ai_module/install/setup.bash &&
   export PATH=/home/docker/ai_module/install/captioner/lib/captioner:\$PATH &&
   mkdir -p $(printf '%q' "${OUTPUT_DIR}") &&

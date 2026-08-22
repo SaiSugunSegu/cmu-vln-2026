@@ -75,11 +75,11 @@ xhost +local:                # allow container GUI (RViz); safer than bare 'xhos
 # Fix per-run:  docker exec -it -e DISPLAY=:1 iros2026_system bash
 # Fix for good: re-run 'docker compose ... up -d' from a shell with DISPLAY set.
 # If GNOME logged into Wayland (echo $XDG_SESSION_TYPE), pick "Ubuntu on Xorg" at login.
-just up   # from repo root; bakes cmu-vln-odyssey:submission (weights + keys)
+just up   # from repo root; bakes iros2026_odyssey:submission (weights + keys)
 ```
 Two containers start (shared host network):
 - `iros2026_system` — simulator + base autonomy
-- `iros2026_ai_module` — our dev environment (smart_vlm inside)
+- `iros2026_odyssey` — submission image (`iros2026_odyssey:submission`)
 
 ### 3. Launch sim + visualization
 ```bash
@@ -109,7 +109,7 @@ Eval-realistic mode: `docker/system/challenge_simulation.sh` (baked into the sys
 
 ### 4. Send a test question to smart_vlm
 ```bash
-docker exec -it iros2026_ai_module bash -lc \
+docker exec -it iros2026_odyssey bash -lc \
   "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm eval_bag.launch bag:=arabic_room"
 ```
 In another terminal (either container):
@@ -172,7 +172,7 @@ docker exec -e DISPLAY=:1 iros2026_system vglrun -d egl glxinfo | grep "OpenGL r
 ```
 Unity records the same thing at startup in `~/.config/unity3d/UnityRobotics/cmu_vla_challenge_unity/Player.log`.
 
-Rates on an A10G with GPU rendering, measured from inside `iros2026_ai_module`:
+Rates on an A10G with GPU rendering, measured from inside `iros2026_odyssey`:
 
 | Topic | Rate | Spec |
 |-|-|-|
@@ -185,11 +185,11 @@ The camera still trails spec because the 360° image is re-encoded on the CPU.
 
 ## Troubleshooting: topics list but no messages
 
-If `ros2 topic list` inside `iros2026_ai_module` shows every topic but `ros2 topic hz /state_estimation` reports nothing, the two containers are not sharing an IPC namespace. FastDDS discovers peers over the host network but moves payloads over shared memory for same-host peers, and a private `/dev/shm` per container silently drops all of it. This breaks the whole AI module, not just visualization.
+If `ros2 topic list` inside `iros2026_odyssey` shows every topic but `ros2 topic hz /state_estimation` reports nothing, the two containers are not sharing an IPC namespace. FastDDS discovers peers over the host network but moves payloads over shared memory for same-host peers, and a private `/dev/shm` per container silently drops all of it. This breaks the whole AI module, not just visualization.
 
 Both compose files set `ipc: host` on both services, so `docker compose -f compose_gpu.yml up -d` handles this. To unblock a container that is already running (no simulator restart needed), force UDP transport instead:
 ```bash
-docker exec -it -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 iros2026_ai_module bash
+docker exec -it -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 iros2026_odyssey bash
 ```
 
 ---
@@ -200,7 +200,7 @@ The L4 box has a GUI — RViz runs natively per the runbook. This section is onl
 
 **Foxglove:** run a websocket bridge on the sim box, connect from the Foxglove desktop app. `ros-jazzy-foxglove-bridge` is already installed by `ai_module/docker/Dockerfile` — no apt step needed:
 ```bash
-docker exec -it -e ROS_DOMAIN_ID=42 iros2026_ai_module bash   # 42 in challenge mode, 0 in standard
+docker exec -it -e ROS_DOMAIN_ID=42 iros2026_odyssey bash   # 42 in challenge mode, 0 in standard
 ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0
 # laptop: ssh -N -L 8765:localhost:8765 <user>@<box>, then Foxglove → Open connection → ws://localhost:8765
 ```

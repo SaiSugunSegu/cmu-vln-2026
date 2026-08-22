@@ -5,7 +5,7 @@ Goal: choose a default for robot deploy where the captioner shares a 24 GB GPU
 with other models (e.g. SAM3).
 
 **Date:** 2026-07-29
-**Hardware:** NVIDIA A10G 23 GB (CUDA 12.2), measured in `iros2026_ai_module`
+**Hardware:** NVIDIA A10G 23 GB (CUDA 12.2), measured in `iros2026_odyssey`
 **Stack:** torch 2.5.1+cu121, transformers 5.14.1, bitsandbytes 0.50
 **Workload:** 72 crops from
 `SORT3D/data/captions/Scannet/scene0000_01/instance_crops`,
@@ -26,7 +26,7 @@ SORT3D/data/captions/Scannet/scene0000_01/
 Reproduce with:
 
 ```bash
-# inside iros2026_ai_module
+# inside iros2026_odyssey
 python3 -m captioner.models.captioning <crops_dir> \
   --captioning_model {qwen2_5vl|qwen3vl} \
   --quantization {int4|none} \

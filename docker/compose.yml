@@ -40,14 +40,14 @@ services:
       chmod -R a+w /data"
     restart: "no"
 
-  ai_module:
-    image: cmu-vln-odyssey:submission
+  odyssey:
+    image: iros2026_odyssey:submission
     build:
       context: ../ai_module
       dockerfile: docker/Dockerfile
       args:
         HF_TOKEN: ${HF_TOKEN:-}
-    container_name: iros2026_ai_module
+    container_name: iros2026_odyssey
     network_mode: host
     ipc: host
     env_file:

@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-NAME="iros2026_ai_module"
+NAME="iros2026_odyssey"
 
 # Hardcoded trial item (benchmark_2 arabic_room category 1).
 TRIAL_SCENE="arabic_room"

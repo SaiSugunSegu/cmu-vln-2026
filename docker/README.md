@@ -53,16 +53,16 @@ From the repo root (GPU). `.env` must contain `HF_TOKEN` and the VLM key:
 ```bash
 just up
 ```
-This builds `cmu-vln-odyssey:submission` (weights + keys) and starts two containers:
+This builds `iros2026_odyssey:submission` (weights + keys) and starts two containers:
 - `iros2026_system` — the base autonomy system (simulator + autonomy stack)
-- `iros2026_ai_module` — the AI module development environment, with `smart_vlm` and `captioner` built in
+- `iros2026_odyssey` — the submission image (`iros2026_odyssey:submission`)
 
 plus a one-shot `init` container that fixes permissions on the bind mounts and then
 exits — `Exited (0)` is success, not an error.
 
 ## First run: bake the AI image
 
-`just up` builds `cmu-vln-odyssey:submission`, bakes `facebook/sam3` and Qwen3-VL
+`just up` builds `iros2026_odyssey:submission`, bakes `facebook/sam3` and Qwen3-VL
 into a layer, and writes `HF_TOKEN` plus the vqa.yaml provider key (OpenRouter)
 into image ENV. First build is 15–20 GB; later `just up` only rebuilds layers
 that changed. `init` makes `/data` writable (`Exited (0)` is success).
@@ -117,7 +117,7 @@ See "GPU rendering" in the [repo README](../README.md) for details and how to ve
 
 ## Launch the AI module
 
-Official evaluation starts the module with this command inside `iros2026_ai_module`:
+Official evaluation starts the module with this command inside `iros2026_odyssey`:
 
 ```bash
 ros2 launch dummy_vlm dummy_vlm.launch
@@ -126,7 +126,7 @@ ros2 launch dummy_vlm dummy_vlm.launch
 That includes `smart_vlm.launch`: SAM 3, the 3D mapper, the supervisor, the numerical /
 object-reference / instruction reasoners, TARE, and the local Qwen server. `just ai`
 runs the same launch. `just up` bakes `facebook/sam3` and Qwen3-VL (and the API keys)
-into `cmu-vln-odyssey:submission` from the repo-root `.env`.
+into `iros2026_odyssey:submission` from the repo-root `.env`.
 
 ## Numerical answers (smart_vlm)
 
@@ -175,7 +175,7 @@ Host folder `data/` is mounted at `/data`. Model weights live in the image.
 Put instance-crop folders (each with `crop.png` or `rgb.png`) under `data/crops`, then:
 
 ```bash
-docker exec -it iros2026_ai_module bash -lc '
+docker exec -it iros2026_odyssey bash -lc '
   source /home/docker/ai_module/install/setup.bash &&
   export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH &&
   caption_crops /data/crops \
@@ -221,7 +221,7 @@ the container's uid, so no host-side `mkdir`/`chmod` is needed):
 
 ```bash
 # copy/symlink a scene of crops into data/crops on the host, then:
-docker exec -it iros2026_ai_module bash -lc '
+docker exec -it iros2026_odyssey bash -lc '
   source /home/docker/ai_module/install/setup.bash &&
   export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH &&
   caption_crops /data/crops --output_dir /data/captions

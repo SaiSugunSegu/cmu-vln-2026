@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Ask Qwen-VL a question about an image inside iros2026_ai_module.
+# Ask Qwen-VL a question about an image inside iros2026_odyssey.
 # Usage:
 #   ./ai_module/docker/run_qwen_vqa.sh /data/img.png \
 #       "How many pillows are on the bed?"
@@ -17,7 +17,7 @@ MODEL=${CAPTIONING_MODEL:-qwen3vl}
 
 # printf %q, not '...': a question containing an apostrophe would otherwise end
 # the quoted string and hand the rest to the container's shell.
-docker exec -it iros2026_ai_module bash -lc "
+docker exec -it iros2026_odyssey bash -lc "
   source /home/docker/ai_module/install/setup.bash &&
   export PATH=/home/docker/ai_module/install/captioner/lib/captioner:\$PATH &&
   qwen_vqa $(printf '%q' "${IMAGE}") \

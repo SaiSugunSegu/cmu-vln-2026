@@ -14,7 +14,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-TAG="cmu-vln-odyssey:submission"
+TAG="iros2026_odyssey:submission"
 PLATFORM="linux/amd64"
 DO_BUILD=1
 DO_PUSH=0
@@ -43,7 +43,7 @@ Usage:
   scripts/submit/build_submission_image.sh [options]
 
 Options:
-  --tag NAME          Image tag (default: cmu-vln-odyssey:submission)
+  --tag NAME          Image tag (default: iros2026_odyssey:submission)
   --platform NAME     docker build --platform (default: linux/amd64)
   --skip-build        Check an image that already exists; do not rebuild
   --no-trial          Skip the live OpenRouter / provider trial call
