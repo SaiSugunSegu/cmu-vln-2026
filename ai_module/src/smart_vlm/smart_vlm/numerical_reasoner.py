@@ -17,7 +17,6 @@ can replay the count later. A scored run must never set it.
 """
 from __future__ import annotations
 
-import json
 import threading
 from pathlib import Path
 from typing import NamedTuple, Optional
@@ -30,7 +29,12 @@ from captioner.vlm_backends.constants import VIEW_SOURCE
 from captioner.vlm_backends.schemas import CountAnswer
 from smart_vlm.numerical_utils import ANSWER_SYSTEM, heuristic_targets, select_context_views
 from smart_vlm.question import QuestionType
-from smart_vlm.reasoner_common import ReasonerNode, save_manifest, spin_reasoner
+from smart_vlm.reasoner_common import (
+    ReasonerNode,
+    load_manifest,
+    save_manifest,
+    spin_reasoner,
+)
 
 
 class TargetChoice(NamedTuple):
@@ -85,11 +89,7 @@ class NumericalReasoner(ReasonerNode):
             if not question:
                 raise RuntimeError("No question latched")
             run_dir = self._resolve_crop_dir(best_dir)
-            manifest_path = run_dir / "manifest.json"
-            manifest: dict = {"selected": []}
-            if manifest_path.is_file():
-                with open(manifest_path, "r", encoding="utf-8") as handle:
-                    manifest = json.load(handle)
+            manifest_path, manifest = load_manifest(run_dir)
 
             image_paths = select_context_views(run_dir, manifest, self.max_context_views)
             reason = None
@@ -106,23 +106,21 @@ class NumericalReasoner(ReasonerNode):
 
             # Record first, publish second: the harness tears the pipeline down the
             # moment it sees /numerical_response.
-            manifest = {
+            manifest.update({
+                "predicted_answer": None if self.crops_only else answer,
+                "answer_reason": reason,
+                "context_views": [p.name for p in image_paths],
+                "backend": self.backend.name,
+                "extract_backend": self.extract_backend.name,
+                "view_source": VIEW_SOURCE,
+                "crops_only": self.crops_only,
+            })
+            save_manifest(manifest_path, manifest, front={
                 "question": question,
                 "sam_prompts": targets.prompts,
                 "target_source": targets.source,
                 "extract_reply": targets.extract_reply,
-                **{k: v for k, v in manifest.items()
-                   if k not in ("question", "sam_prompts", "target_source",
-                                "extract_reply")},
-            }
-            manifest["predicted_answer"] = None if self.crops_only else answer
-            manifest["answer_reason"] = reason
-            manifest["context_views"] = [p.name for p in image_paths]
-            manifest["backend"] = self.backend.name
-            manifest["extract_backend"] = self.extract_backend.name
-            manifest["view_source"] = VIEW_SOURCE
-            manifest["crops_only"] = self.crops_only
-            save_manifest(manifest_path, manifest)
+            })
 
             self.pub_answer.publish(Int32(data=answer))
             self.get_logger().info(f"Published /numerical_response={answer}")
