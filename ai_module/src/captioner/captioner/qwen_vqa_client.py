@@ -47,7 +47,7 @@ class VQAClient(Node):
         if self._response is None:
             raise TimeoutError(
                 f"No response on {RESPONSE_TOPIC} within {timeout_s:.0f}s "
-                f"(is qwen_vqa_server running? try `just vqa-status`)")
+                f"(is qwen_vqa_server running? start it with `just vqa-up`)")
         return self._response
 
 

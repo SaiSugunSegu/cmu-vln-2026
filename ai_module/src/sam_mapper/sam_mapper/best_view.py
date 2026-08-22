@@ -135,7 +135,7 @@ class BestViewConfig:
             roi_min_size_px=int(raw.get("roi_min_size_px", 300)),
             roi_cluster_gap_px=float(raw.get("roi_cluster_gap_px", 250)),
             # finalize()'s wait for map_node's obj_map.json. Same file, same settling time
-            # as object_reference_reasoner.MAP_WAIT_S.
+            # as smart_vlm.reasoner_common.MAP_WAIT_S.
             finalize_obj_map_wait_s=float(raw.get("finalize_obj_map_wait_s", 5.0)),
         )
 
@@ -695,10 +695,10 @@ class BestViewCollector:
         with open(path, "w") as handle:
             json.dump(manifest, handle, indent=2)
 
-        covered_ids = {tid for _, cand, _ in written for tid in cand.instance_scores}
         # "encoded" is the work this flush actually did; the ranks it skipped were already
         # on disk carrying the right candidate. This used to fire once per frame, which is
         # why it had been commented out — coalescing is what makes it readable again.
+        # covered_ids = {tid for _, cand, _ in written for tid in cand.instance_scores}
         # self.log(f"best-view collector: wrote {len(written)}/{self.config.top_n} images "
         #          f"({encoded} encoded), covering {len(covered_ids)} instance(s) "
         #          f"-> {self.run_dir}")
