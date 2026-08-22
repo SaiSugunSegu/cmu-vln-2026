@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>dummy_vlm</name>
+  <version>0.0.1</version>
+  <description>Official AI-module launch name. Includes smart_vlm.launch so
+    `ros2 launch dummy_vlm dummy_vlm.launch` starts the submission stack.</description>
+  <maintainer email="team@example.com">CMU-VLN Team</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>smart_vlm</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

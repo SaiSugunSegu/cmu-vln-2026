@@ -124,11 +124,25 @@ vglrun -d egl ./system_simulation.sh              # ./system_simulation_noviz.sh
 ```
 See "GPU rendering" in the [repo README](../README.md) for details and how to verify.
 
+## Launch the AI module
+
+Official evaluation starts the module with this command inside `iros2026_ai_module`:
+
+```bash
+ros2 launch dummy_vlm dummy_vlm.launch
+```
+
+That includes `smart_vlm.launch`: SAM 3, the 3D mapper, the supervisor, the numerical /
+object-reference / instruction reasoners, TARE, and the local Qwen server. `just ai`
+runs the same launch. Bake `facebook/sam3` and Qwen3-VL into the image with
+`--build-arg HF_TOKEN=hf_...` (or `HF_TOKEN` in the repo-root `.env` plus `just up`)
+so the first question is not also a 15–20 GB download.
+
 ## Numerical answers (smart_vlm)
 
-`ros2 launch smart_vlm smart_vlm.launch` brings up the whole per-question pipeline:
+`ros2 launch dummy_vlm dummy_vlm.launch` brings up the whole per-question pipeline:
 `sam_node` (booted unarmed — it loads weights but detects nothing until the question
-supplies prompts), the `smart_vlm` supervisor, `numerical_reasoner`, and TARE
+supplies prompts), the `smart_vlm` supervisor, the three reasoners, and TARE
 exploration. It starts **no scene source** — it is the submission artifact, and consumes
 the six allowed topics from whatever is publishing them. For offline replay use
 `eval_bag.launch`, which wraps it and adds a bag.

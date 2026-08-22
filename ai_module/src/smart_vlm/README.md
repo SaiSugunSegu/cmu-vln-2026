@@ -16,7 +16,7 @@ harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the v
 
 | File | Purpose |
 |---|---|
-| `launch/smart_vlm.launch` | **The per-question unit, and the submission artifact.** `sam_node` + supervisor + reasoners + TARE. Starts no scene source: it consumes the six allowed topics from whatever publishes them. The eval harness spawns it, waits for an answer, then SIGINTs the whole process group — so nothing carries over between questions. |
+| `launch/smart_vlm.launch` | **The per-question unit.** `sam_node` + supervisor + three reasoners + TARE. Starts no scene source: it consumes the six allowed topics from whatever publishes them. Official eval starts this via `ros2 launch dummy_vlm dummy_vlm.launch`. |
 | `launch/eval_bag.launch` | **Eval only, never submitted.** Wraps `smart_vlm.launch` and adds `bag_replay.launch` as the scene source, so offline sweeps do not require the launch under test to know bags exist. |
 | `launch/bag_replay.launch` | Replays a recorded scene. Included by the above with `wait_for_armed:=true` (held until SAM has the question's prompts); also usable standalone via `just bag-play`, where the gate is off. |
 
@@ -27,7 +27,9 @@ harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the v
 | Module | Executable | Role |
 |---|---|---|
 | `smart_vlm.py` | `smart_vlm` | Supervisor. Owns the mission clock, publishes the `/pipeline/{ready,armed,explore_done}` gates, and guarantees an answer at T-30. Spawns no processes and writes no files. |
-| `numerical_reasoner.py` | `numerical_reasoner` | Category-1 answer head: question → target nouns → `/sam3/set_prompts` → wait for `explore_done` → count from SAM's top few best-view crops. Its `set_prompts` publish is the only thing that arms `sam_node`. Both model steps go through `captioner.vlm_backends`, so `backend:=cloud\|local` swaps the model without touching the pipeline. |
+| `numerical_reasoner.py` | `numerical_reasoner` | Category-1 answer head: question → target nouns → `/sam3/set_prompts` → wait for `explore_done` → count from SAM's top few best-view crops. Both model steps go through `captioner.vlm_backends`. |
+| `object_reference_reasoner.py` | `object_reference_reasoner` | Category-2 answer head: same arming chain → pick one 3D box → `/selected_object_marker`. |
+| `instruction_reasoner.py` | `instruction_reasoner` | Category-3 answer head: same arming chain → hold TARE → ordered `/way_point_with_heading` toward each named object. |
 
 ### Pure logic — no ROS imports, unit-tested on the host
 
@@ -36,9 +38,11 @@ harness. It composes `sam_mapper` (perception), `captioner` (Qwen VQA) and the v
 | `question.py` | `QuestionType` enum + `classify()`. Lives apart from the nodes so both heads can route a question without importing rclpy. |
 | `mission_clock.py` | The 10-minute budget as arithmetic: `MissionBudget`, `MissionClock`, `Phase`. All deadline decisions live here so they can be tested without a ROS graph. |
 | `numerical_utils.py` | Target-noun cleanup and integer parsing. Re-exports `extract_integer` from `captioner.text_utils` so the two implementations cannot drift. |
+| `cat3_utils.py` | Instruction waypoint list from `obj_map.json` + SAM prompts. |
 
 Covered by `tests/test_question.py`, `tests/test_mission_clock.py`,
-`tests/test_numerical_reasoner.py` — these run on a bare host, no container needed:
+`tests/test_numerical_reasoner.py`, `tests/test_cat3_utils.py` — these run on a bare
+host, no container needed:
 
 ```bash
 python3 -m pytest ai_module/src/captioner/tests ai_module/src/smart_vlm/tests -q

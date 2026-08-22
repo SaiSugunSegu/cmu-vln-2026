@@ -48,6 +48,8 @@ services:
     build:
       context: ../ai_module
       dockerfile: docker/Dockerfile
+      args:
+        HF_TOKEN: ${HF_TOKEN:-}
     container_name: iros2026_ai_module
     network_mode: host
     ipc: host

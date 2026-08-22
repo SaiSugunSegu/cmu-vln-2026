@@ -41,7 +41,11 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
 # HUGGINGFACE_HUB_CACHE is not set: HF derives $HF_HOME/hub by default.
 # TRANSFORMERS_CACHE / TRANSFORMERS_OFFLINE are deprecated aliases; don't add them.
 ENV HF_HOME=/home/docker/.cache/huggingface
-RUN mkdir -p /home/docker/.cache/huggingface && chown -R docker:docker /home/docker/.cache
+# Official compose has no ipc: host. FastDDS otherwise moves image/cloud payloads
+# over shared memory that never arrives. UDP works with network_mode: host alone.
+ENV FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+RUN mkdir -p /home/docker/.cache/huggingface /home/docker/crops \
+ && chown -R docker:docker /home/docker/.cache /home/docker/crops
 
 USER docker
 
@@ -181,11 +185,12 @@ USER docker
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm
 COPY src/sam_mapper /home/docker/ai_module/src/sam_mapper
 COPY src/captioner /home/docker/ai_module/src/captioner
+COPY src/dummy_vlm /home/docker/ai_module/src/dummy_vlm
 RUN /bin/bash -c "\
     source /opt/ros/jazzy/setup.bash && \
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=Release \
-      --packages-select smart_vlm sam_mapper captioner"
+      --packages-select dummy_vlm smart_vlm sam_mapper captioner"
 
 # Ensure the updated install is sourced in every new shell
 RUN echo "source /home/docker/ai_module/install/setup.bash" >> /home/docker/.bashrc \
@@ -210,12 +215,20 @@ from captioner.vlm_backends.schemas import CountAnswer, TargetList; \
 from captioner.vlm_backends.openai_backend import OpenAIBackend; \
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM; \
 from smart_vlm.cat2_utils import EXTRACT_SYSTEM as CAT2_EXTRACT; \
+from smart_vlm.cat3_utils import waypoints_from_map; \
 import openai; \
 print('import check OK: transformers', transformers.__version__)\""
 
-# No weights are baked into this image — they are fetched into the mounted HF cache. Seed
-# it once with `just hf-fetch` (see docker/README.md) so the first real run is not also a
-# ~20 GB download; nothing forces offline mode. No `hf auth login` is needed: put
-# HF_TOKEN in the repo-root .env (docker/compose*.yml reads it via env_file) and
-# huggingface_hub picks it up on every from_pretrained(). SAM 3 is additionally
-# gated — accept its licence once on the model page with the same account.
+# Official compose has no HF cache mount. Pass --build-arg HF_TOKEN=hf_... (gated
+# facebook/sam3) to bake SAM 3 + Qwen3-VL into the image. Empty token skips the
+# download so a cache-only rebuild stays fast; runtime from_pretrained still reads
+# HF_TOKEN from the environment.
+ARG HF_TOKEN=""
+ENV HF_TOKEN=${HF_TOKEN}
+RUN /bin/bash -c '\
+    source /home/docker/ai_module/install/setup.bash && \
+    if [ -n "$HF_TOKEN" ]; then \
+      fetch_weights sam3 qwen3vl; \
+    else \
+      echo "HF_TOKEN empty — skipping weight bake"; \
+    fi'
