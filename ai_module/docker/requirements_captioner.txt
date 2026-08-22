@@ -36,3 +36,7 @@ open3d
 # path — so this is a hard requirement, not an optional extra.
 pydantic>=2
 openai>=1.40
+# Not a captioner dep: bag_fetch / scene_fetch pull Unity scenes and recorded bags
+# from the organizers' public Drive folder. Kept here so the image needs one pip
+# resolution pass rather than two.
+gdown

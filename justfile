@@ -414,7 +414,7 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
     [[ "$out" == /* ]] || out="/data/${out}"
     in="${in/#$PWD\/data//data}"
     out="${out/#$PWD\/data//data}"
-    # No host-side mkdir/chmod: the init one-shot in docker/compose.yml makes
+    # No host-side mkdir/chmod: the init one-shot in docker/compose_gpu.yml makes
     # /data writable by the container's uid 1001, and these are container paths —
     # creating them on the host would make a root-level /data.
     # PYTHONUTF8: native libs loaded during model init can reset the C locale, which
@@ -618,7 +618,7 @@ cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
     qa="/data/benchmark/${scene}/category_1/${scene}_category1_qa.json"
     out="/data/runs/cat1_${scene}${tag:+_$tag}"
     # Repo scripts/ is bind-mounted read-only at /home/docker/scripts; /data/runs
-    # is created and made writable by the init one-shot (docker/compose.yml).
+    # is created and made writable by the init one-shot (docker/compose_gpu.yml).
     script="/home/docker/scripts/eval/run_cat1_bag_bench.py"
     extra=""
     if [[ -n "$ids" ]]; then
