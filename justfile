@@ -202,7 +202,7 @@ bag-play scene="livingroom_1" speed="1.0" loop="false":
 [group('debug')]
 [doc('Foxglove bridge on host port 8765 (blocks; tunnel from laptop)')]
 foxglove domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_odyssey bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8090 address:=0.0.0.0"
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_odyssey bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0"
 
 [group('debug')]
 [doc('List all ROS topics visible in the AI container')]
