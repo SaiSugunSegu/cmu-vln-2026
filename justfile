@@ -111,32 +111,28 @@ push-submission-image tag:
 [group('sim')]
 [doc('Simulator + base autonomy + rviz2 (blocks; terminal A)')]
 sim sim_display="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    d="{{sim_display}}"
-    if [ -z "$d" ]; then d="$(scripts/eval/ensure_xvfb.sh)"; fi
-    docker exec -it -e DISPLAY="$d" -e XDG_RUNTIME_DIR=/tmp/runtime-docker \
-      iros2026_system bash -c "{{vgl}} ./system_simulation.sh"
+    @just _sim ./system_simulation.sh "{{sim_display}}"
 
 [group('sim')]
 [doc('Simulator without rviz2 — pair with `just foxglove`')]
 sim-noviz sim_display="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    d="{{sim_display}}"
-    if [ -z "$d" ]; then d="$(scripts/eval/ensure_xvfb.sh)"; fi
-    docker exec -it -e DISPLAY="$d" -e XDG_RUNTIME_DIR=/tmp/runtime-docker \
-      iros2026_system bash -c "{{vgl}} ./system_simulation_noviz.sh"
+    @just _sim ./system_simulation_noviz.sh "{{sim_display}}"
 
 [group('sim')]
 [doc('Simulator behind the 6-topic eval firewall (domain 42, no rviz)')]
 challenge sim_display="":
+    @just _sim "./challenge_simulation.sh --noviz" "{{sim_display}}"
+
+# Shared body of sim / sim-noviz / challenge: resolve a DISPLAY (starting Xvfb in
+# the system container when none was given), then run the script under VirtualGL.
+[private]
+_sim script sim_display="":
     #!/usr/bin/env bash
     set -euo pipefail
     d="{{sim_display}}"
     if [ -z "$d" ]; then d="$(scripts/eval/ensure_xvfb.sh)"; fi
     docker exec -it -e DISPLAY="$d" -e XDG_RUNTIME_DIR=/tmp/runtime-docker \
-      iros2026_system bash -c "{{vgl}} ./challenge_simulation.sh --noviz"
+      iros2026_system bash -c "{{vgl}} {{script}}"
 
 # Challenge mode uses domain 42: just ask "…" 42
 [group('sim')]
