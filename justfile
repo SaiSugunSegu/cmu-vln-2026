@@ -8,11 +8,11 @@
 #   just hf-fetch    # ONE-TIME ~15-20 GB weight download (needs HF_TOKEN in .env)
 #
 # Then pick a flow:
-#   scored eval   just eval-cat1 arabic_room 2 gt 0.1 cloud   # one command, per-question relaunch
+#   scored eval   just eval-cat1 arabic_room 2                # one command, per-question relaunch
 #                 just eval-cat2 chinese_room 2               # the same for object reference
 #   live-sim eval just eval-cat1-sim arabic_room 2            # TARE explores; host-side
 #                 just eval-cat2-sim chinese_room 2
-#   free dev loop just vqa-up, then the same with `local` instead of `cloud`
+#   switch VLM    edit vqa.yaml `vlm_backend` / `target_extract_backend`  # then just up
 #   compare VLMs  just cache-cat1   (once, hours) then just bench-cat1  (per model, minutes)
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
 #   live sim      just sim          | just ai | just ask "How many …"
@@ -109,11 +109,11 @@ teleop domain="0":
        source /home/docker/autonomy_stack_mecanum_wheel_platform/install/setup.bash && \
        python3 /home/docker/scripts/keyboard_teleop.py'
 
-# Self-contained: on the default local backend the launch starts its own Qwen server,
-# so `just vqa-up` is not a prerequisite — and must not be running at the same time, or
-# two servers collide on the node name and the /qwen_vqa topics. Use vqa-up only to keep
-# a server resident across per-question relaunches. Brings up sam_node too (unarmed
-# until a question supplies prompts).
+# Self-contained: when vqa.yaml has a local backend the launch starts its own Qwen
+# server, so `just vqa-up` is not a prerequisite — and must not be running at the
+# same time, or two servers collide on the node name and the /qwen_vqa topics.
+# Use vqa-up only to keep a server resident across per-question relaunches.
+# Brings up sam_node too (unarmed until a question supplies prompts).
 [group('run')]
 [doc('Official entry: dummy_vlm.launch → SAM + supervisor + reasoners + TARE')]
 ai:
@@ -161,16 +161,15 @@ vqa-up model="qwen3vl" quantization="int4":
     docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && ros2 launch captioner vqa_server.launch model:={{model}} quantization:={{quantization}}"
 
-# The whole pipeline (SAM and, on the local backend, Qwen) is relaunched per question, so
-# model load lands inside the measured budget exactly as it will on the real evaluation --
-# a full sweep is 75 questions and takes hours. `just vqa-up` beforehand is an optional
-# speed-up: a resident server survives the relaunches and saves reloading 8.3 GB per
-# question. Use a scene + limit as the dev loop:  just eval-cat1 arabic_room 2
+# The whole pipeline (SAM and, when either vqa.yaml backend is local, Qwen) is relaunched
+# per question, so model load lands inside the measured budget exactly as it will on
+# the real evaluation -- a full sweep is 75 questions and takes hours. `just vqa-up`
+# beforehand is an optional speed-up: a resident server survives the relaunches and
+# saves reloading 8.3 GB per question. Use a scene + limit as the dev loop:
+#   just eval-cat1 arabic_room 2
 # target_source=vlm exercises the model target-extraction path instead of benchmark GT.
-# backend=cloud is the scored configuration and spends credits at whatever VLM_PROVIDER
-# points at; backend=local runs the same sweep for free against Qwen, which the pipeline
-# starts itself. Give a separate report= when A/B-ing two configurations, or
-# the second sweep overwrites the first.
+# Cloud vs local is `vlm_backend` / `target_extract_backend` in vqa.yaml. Give a separate report=
+# when A/B-ing two configurations, or the second sweep overwrites the first.
 # Crops land in data/crops/<report name>/<scene>/<question id>-<question>/ and the report
 # records the directory, so any sweep's report doubles as the cache index that
 # `just bench-cat1` replays from -- and a second sweep with its own report= keeps its
@@ -181,8 +180,8 @@ vqa-up model="qwen3vl" quantization="int4":
 # captioner/vlm_backends/constants.py.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
-eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" report="/data/runs/challenge_report.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p report_file:={{report}}"
+eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" report="/data/runs/challenge_report.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
 
 # The same driver against the object-reference questions: same per-question relaunch, same
 # gates, but the answer arrives as a Marker on /selected_object_marker and is graded on
@@ -197,8 +196,8 @@ eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" backend="auto" re
 # view_source is the same vqa.yaml setting category-1 reads -- see eval-cat1 above.
 [group('eval')]
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
-eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" backend="auto" report="/data/runs/cat2_report.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p report_file:={{report}}"
+eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" report="/data/runs/cat2_report.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
 
 # The same two sweeps against the LIVE SIM instead of bags, with TARE driving. Unlike
 # the bag recipes these run on the HOST, not in a container: switching Unity scenes
@@ -210,17 +209,17 @@ eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" bac
 #   just eval-cat2-sim "arabic_room chinese_room"
 [group('eval')]
 [doc('Orchestrated category-1 eval against the live sim (TARE explores; host-side)')]
-eval-cat1-sim scene="all" limit="0" target_source="gt" backend="auto" report="/data/runs/challenge_report_sim_cat1.json":
+eval-cat1-sim scene="all" limit="0" target_source="gt" report="/data/runs/challenge_report_sim_cat1.json":
     python3 scripts/eval/run_sim_sweep.py --category 1 --scenes {{scene}} \
-      --limit {{limit}} --target-source {{target_source}} --backend {{backend}} \
+      --limit {{limit}} --target-source {{target_source}} \
       --report "{{report}}"
 
 [group('eval')]
 [doc('Orchestrated category-2 eval against the live sim (TARE explores; host-side)')]
-eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="gt" backend="auto" report="/data/runs/challenge_report_sim_cat2.json":
+eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="gt" report="/data/runs/challenge_report_sim_cat2.json":
     python3 scripts/eval/run_sim_sweep.py --category 2 --scenes {{scene}} \
       --limit {{limit}} --mode {{mode}} --target-source {{target_source}} \
-      --backend {{backend}} --report "{{report}}"
+      --report "{{report}}"
 
 # Phase 1 of the two-phase VLM comparison: eval-cat1 minus the counting call, so it
 # costs one cheap text-only extraction per question instead of a 3-image one.
@@ -236,8 +235,8 @@ eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="gt" backend="au
 # answering call either way.
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
-cache-cat1 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/views_cache.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+cache-cat1 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/runs/views_cache.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
 
 # Phase 2: answer-only replay over those crops. No TARE, no SAM, no bag -- minutes per
 # model instead of hours, and every model sees byte-identical images, which is what
@@ -265,8 +264,8 @@ bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" r
 # in the cache and gets replayed rather than counted as done.
 [group('eval')]
 [doc('Cache maps + crops for every category-2 question, without answering')]
-cache-cat2 scene="all" limit="0" speed="0.1" backend="cloud" target_source="vlm" cache="/data/runs/cat2_cache.json":
-    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p vlm_backend:={{backend}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+cache-cat2 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/runs/cat2_cache.json":
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
 
 # Phase 2 for category 2, the same shape as bench-cat1: replay the selection step over
 # those cached maps and crops. Seconds per mode for solver and naive, which ask no model,

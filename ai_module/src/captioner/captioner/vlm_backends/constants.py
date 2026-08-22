@@ -1,32 +1,22 @@
 """VLM configuration, read from config/vqa.yaml plus API keys from the environment.
 
-VLM_BACKEND = cloud | local — WHERE inference runs.
+vqa.yaml is the only switch for WHERE inference runs. Launch files, reasoners, the
+supervisor, and the eval harness all import these names — there is no ROS override.
 
-`cloud` is the scored path: a submission may use an externally hosted model, and any
-OpenAI-compatible endpoint will do. `local` runs the resident Qwen server instead,
-which costs nothing per call, so it is the development loop and the default here —
-a stray run should never bill credits.
+  vlm_backend              cloud | local   answering / counting
+  target_extract_backend   cloud | local   noun extraction before SAM is armed
+  provider                 gemini | anthropic | dashscope | openrouter | openai | <custom>
+  base_url                 OpenAI-compatible URL (blank = the provider preset)
+  model / model_lite
+  view_source              crop | silhouette
+  silhouette_wait_s / silhouette_poll_s
 
-Pick a hosted provider with `provider` in vqa.yaml (see PROVIDERS below); that only
-supplies defaults, and each one is individually overridable there too:
+`cloud` is a hosted OpenAI-compatible endpoint. `local` is the in-image Qwen server.
+Both backend keys are independent and must be set; a missing or unknown value
+falls back to `cloud`.
 
-  provider     gemini | anthropic | dashscope | openrouter | openai | <anything, below>
-  base_url     OpenAI-compatible base URL
-  model        model id
-  model_lite   cheaper model for the `lite=True` calls; falls back to `model`
-
-So a provider nobody has listed here needs no code change — set base_url and model in
-vqa.yaml and it works. Nothing is validated at import time: a local-only run must not
-fail because a cloud setting is malformed.
-
-API keys are the one thing NOT read from vqa.yaml: that file is committed to git and
-shipped in the submission image, so GEMINI_API_KEY / DASHSCOPE_API_KEY / etc. (or the
-generic VLM_API_KEY override) stay in the environment (.env / docker compose env_file).
-
-Everything else here — backend, extract_backend, provider, base_url, model, model_lite,
-view_source, the silhouette wait/poll timings — lives in
-ai_module/src/captioner/config/vqa.yaml. See captioner/vlm_backends/config.py for how
-that file is found and loaded.
+API keys stay in the environment (.env / compose env_file / baked image ENV), not
+in vqa.yaml. See captioner/vlm_backends/config.py for how that file is loaded.
 """
 import os
 from urllib.parse import urlparse
@@ -35,18 +25,21 @@ from captioner.vlm_backends.config import load_vqa_config
 
 _CONFIG = load_vqa_config()
 
-VLM_BACKEND = str(_CONFIG.get("backend", "local")).strip().lower()
-if VLM_BACKEND not in ("local", "cloud"):
-    VLM_BACKEND = "local"
 
-# auto | local | cloud — backend for the text-only target-extraction call the reasoners
-# fire before SAM is armed. Left unresolved here on purpose: "auto" means "whatever this
-# run's main backend is", and only the reasoner (which may have that overridden by its
-# own `backend` ROS parameter) knows what that is. See numerical_reasoner.py /
-# object_reference_reasoner.py for the resolution.
-EXTRACT_BACKEND = str(_CONFIG.get("extract_backend", "auto")).strip().lower()
-if EXTRACT_BACKEND not in ("auto", "local", "cloud"):
-    EXTRACT_BACKEND = "auto"
+def _backend(value, fallback: str) -> str:
+    name = str(value or "").strip().lower()
+    return name if name in ("local", "cloud") else fallback
+
+
+VLM_BACKEND = _backend(_CONFIG.get("vlm_backend"), "cloud")
+TARGET_EXTRACT_BACKEND = _backend(_CONFIG.get("target_extract_backend"), "cloud")
+# Qwen must be running if either call is local.
+NEED_LOCAL_VQA = VLM_BACKEND == "local" or TARGET_EXTRACT_BACKEND == "local"
+
+
+def local_vqa_launch_flag() -> str:
+    """'true' / 'false' for smart_vlm.launch's `if=` — XML needs a string."""
+    return "true" if NEED_LOCAL_VQA else "false"
 
 # Which image of a best-view crop the model sees: `silhouette` is the mask-outline +
 # label copy sam_node writes next to each crop (see sam_mapper's `save_silhouette_copy`);

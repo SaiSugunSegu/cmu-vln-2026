@@ -1,19 +1,13 @@
 # captioner.vlm_backends VQA configuration. See captioner/vlm_backends/constants.py for
 # how each key is read, defaulted and validated. API keys are NOT here — this file is
-# committed to git and shipped in the submission image, so secrets stay in the
-# environment (.env / docker compose env_file); see PROVIDERS in constants.py for which
-# env var each provider's key comes from.
+# committed to git and shipped in the submission image. `just up` bakes each
+# provider's key from .env into image ENV (see PROVIDERS in constants.py).
 
-# local (resident Qwen, served by vqa_server.launch) | cloud (a hosted model over its
-# OpenAI-compatible endpoint, picked with `provider` below). local costs nothing per
-# call and is the dev-loop default; a scored run sets this to cloud.
-backend: cloud
-
-# auto | local | cloud — backend for the text-only target-extraction call the reasoners
-# fire before SAM is armed. auto follows `backend` above; set explicitly to decouple
-# extraction cost from the main answering backend (e.g. keep counting on cloud but
-# extraction on the free local server).
-extract_backend: auto
+# local | cloud — two independent switches. Set both. A missing/unknown value
+# is read as cloud. local = in-image Qwen (launch starts vqa_server). cloud =
+# the hosted model named by `provider` / `model` below.
+vlm_backend: cloud                    # answering / counting
+target_extract_backend: cloud         # noun extraction before SAM is armed
 
 # gemini | anthropic | dashscope | openrouter | openai | <anything, via base_url/model
 # below>. Only supplies defaults — base_url/model/model_lite each override individually.

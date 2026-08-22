@@ -37,9 +37,8 @@ question's targets ever reached it.
 
   ros2 run smart_vlm eval_orchestrator --ros-args -p scene:=all -p question_limit:=0
 
-`vlm_backend` picks where the reasoner runs inference (a hosted model, whichever
-VLM_PROVIDER names, or the resident local Qwen). The report format is identical either
-way, so a local sweep and a cloud sweep are directly comparable.
+Where inference runs is `vlm_backend` in config/vqa.yaml (imported as VLM_BACKEND). The
+report records that value so a local sweep and a cloud sweep stay comparable.
 
 Which image of a best-view crop the reasoner is shown (crop | silhouette, default
 silhouette) is set once in `config/vqa.yaml`'s `view_source`, not per-invocation here —
@@ -123,18 +122,14 @@ class EvalOrchestratorNode(Node):
         # named alike is what stops a cache from being paired with the wrong crops.
         self.run_id = str(self._param("run_id", "")).strip() or Path(self.report_file).stem
         self.question_limit = int(self._param("question_limit", 0))
+        # Pin one benchmark id (e.g. Q01). When set, question_limit is ignored.
+        self.question_id = str(self._param("question_id", "")).strip()
         self.target_source = str(self._param("target_source", "gt"))
         # A real double, like every other numeric param here. ROS matches override types
         # against the declared one, so pass it with a decimal point: speed:=2.0, not 2.
         self.speed = float(self._param("speed", 1.0))
         self.sam_config = str(self._param("sam_config", "sam3_mecanum_sim.yaml"))
-        # cloud | local; "auto" leaves it on $VLM_BACKEND. Not "": rcl rejects an empty
-        # parameter override and launch rejects a bare `name:=`, so the sentinel has to
-        # be a real word to survive both hops. The resolved name is what decides whether
-        # the pipeline has to wait for the local VQA server.
-        self.vlm_backend = str(self._param("vlm_backend", "auto"))
-        self.resolved_backend = (
-            VLM_BACKEND if self.vlm_backend in ("", "auto") else self.vlm_backend)
+        self.resolved_backend = VLM_BACKEND
         # Build the best-view cache: run the expensive perception half and skip the
         # counting call. Accuracy in the resulting report is meaningless by design —
         # it exists to record where each question's crops went.
@@ -282,15 +277,9 @@ def spawn_pipeline(node: EvalOrchestratorNode, scene: str, run_id: str) -> subpr
         cmd = ["ros2", "launch", "smart_vlm", "smart_vlm.launch"]
     cmd += [
         f"sam_config:={node.sam_config}",
-        f"vlm_backend:={node.vlm_backend}",
         f"run_id:={run_id}",
         f"crops_only:={'true' if node.crops_only else 'false'}",
         f"cat2_mode:={node.cat2_mode}",
-        # The launch derives this from vlm_backend, but only we know what "auto"
-        # resolved to against the environment — so pin it. true makes the pipeline start
-        # its own Qwen server per question, which is why a local sweep needs no
-        # `just vqa-up`; require_vqa_ready follows from it inside the launch.
-        f"local_vqa:={'true' if node.resolved_backend == 'local' else 'false'}",
     ]
     log(f"launching: {' '.join(cmd)}")
     # Own process group, so one killpg reclaims every node it started — including the
@@ -385,7 +374,13 @@ def discover_questions(node: EvalOrchestratorNode) -> Iterator[tuple[str, dict]]
             continue
         with open(qa_file, "r", encoding="utf-8") as handle:
             questions = json.load(handle).get("questions") or []
-        if node.question_limit > 0:
+        if node.question_id:
+            questions = [q for q in questions if str(q.get("id", "")) == node.question_id]
+            if not questions:
+                log(f"skipping {scene}: no question {node.question_id} in {qa_file}",
+                    err=True)
+                continue
+        elif node.question_limit > 0:
             questions = questions[:node.question_limit]
         for entry in questions:
             yield scene, entry

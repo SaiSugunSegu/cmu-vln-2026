@@ -29,6 +29,7 @@ from typing import Optional
 import rclpy
 
 from captioner.ros_utils import shutdown_guard
+from captioner.vlm_backends.constants import NEED_LOCAL_VQA
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
 from rclpy.executors import ExternalShutdownException
@@ -86,7 +87,7 @@ class SmartVLM(Node):
         )
         self.fallback_count = int(self._param("fallback_count", 1))
         self.ready_timeout_s = self._param("ready_timeout_s", 300.0)
-        self.require_vqa_ready = bool(self._param("require_vqa_ready", True))
+        self.require_vqa_ready = NEED_LOCAL_VQA
         self.idle_stop_s = self._param("idle_stop_s", 5.0)
         self.startup_grace_s = self._param("startup_grace_s", 15.0)
 
