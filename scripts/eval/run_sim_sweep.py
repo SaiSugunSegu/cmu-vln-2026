@@ -62,7 +62,7 @@ def host_path(container_path: str) -> Path:
 
     This script straddles both sides: the orchestrator runs inside the AI container and
     must be given /data/..., while the merge at the end reads and writes the same files
-    from out here. docker/compose.yml bind-mounts <repo>/data to /data, so the mapping
+    from out here. docker/compose_gpu.yml bind-mounts <repo>/data to /data, so the mapping
     is a prefix swap.
     """
     if container_path.startswith("/data/"):

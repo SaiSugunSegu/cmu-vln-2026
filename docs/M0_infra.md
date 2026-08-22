@@ -162,7 +162,7 @@ blits the result to Xvnc. Two things in this repo make that possible:
   container toolkit injects `libEGL_nvidia.so.0` but not this vendor config, so libglvnd
   would only ever find Mesa. Without it `vglrun` still yields `llvmpipe`.
 
-No extra GPU settings are needed in the compose files — the base image already ships
+No extra GPU settings are needed in `compose_gpu.yml` — the base image already ships
 `NVIDIA_DRIVER_CAPABILITIES=graphics`, so `capabilities: [gpu]` is enough.
 
 Check which renderer you actually got:
@@ -187,7 +187,7 @@ The camera still trails spec because the 360° image is re-encoded on the CPU.
 
 If `ros2 topic list` inside `iros2026_odyssey` shows every topic but `ros2 topic hz /state_estimation` reports nothing, the two containers are not sharing an IPC namespace. FastDDS discovers peers over the host network but moves payloads over shared memory for same-host peers, and a private `/dev/shm` per container silently drops all of it. This breaks the whole AI module, not just visualization.
 
-Both compose files set `ipc: host` on both services, so `docker compose -f compose_gpu.yml up -d` handles this. To unblock a container that is already running (no simulator restart needed), force UDP transport instead:
+`compose_gpu.yml` sets `ipc: host` on both the `system` and `odyssey` services, so `docker compose -f compose_gpu.yml up -d` handles this. To unblock a container that is already running (no simulator restart needed), force UDP transport instead:
 ```bash
 docker exec -it -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 iros2026_odyssey bash
 ```

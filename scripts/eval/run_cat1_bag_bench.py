@@ -41,7 +41,7 @@ from std_msgs.msg import Int32, String
 
 # Paths this script may read/write. Host data/ is bind-mounted 1:1 at /data, so
 # a container path is just the host path with the repo prefix removed — no
-# guessing required (see docker/compose.yml).
+# guessing required (see docker/compose_gpu.yml).
 _CONTAINER_ROOTS = ("/data", "/home/docker")
 
 

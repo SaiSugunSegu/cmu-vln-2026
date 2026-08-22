@@ -216,7 +216,7 @@ One-shot CLI (reloads weights every call — slow):
 ```
 
 Or directly, with paths under the `data/` mount (the `init` one-shot in
-`compose.yml` creates `crops/`, `captions/`, `runs/` and makes them writable by
+`compose_gpu.yml` creates `crops/`, `captions/`, `runs/` and makes them writable by
 the container's uid, so no host-side `mkdir`/`chmod` is needed):
 
 ```bash

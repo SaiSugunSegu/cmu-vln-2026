@@ -145,7 +145,7 @@ def fetch(name: str, spec: dict, token: Optional[str]) -> bool:
         return False
     except OSError as exc:
         # Covers the permission case: a root-owned cache dir the container's uid
-        # cannot write. The init one-shot in docker/compose.yml is what fixes it.
+        # cannot write. The init one-shot in docker/compose_gpu.yml is what fixes it.
         print(f"[hf-fetch] {repo_id} failed writing the cache: {exc}\n"
               f"           If this is a permission error, run `just up` so the init\n"
               f"           container can chown {os.environ.get('HF_HOME', '~/.cache/huggingface')}.",
