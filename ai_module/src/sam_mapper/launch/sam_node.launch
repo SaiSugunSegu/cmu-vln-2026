@@ -3,7 +3,7 @@
 
 /camera/image in -> /annotated_image, /sam3/instance_map, /sam3/detections out. Run
 map_node.launch alongside this (separate process — that's the point) for the full
-lidar-fusion / 3D pipeline; `just sam_node` + `just map_node` in two terminals does both.
+lidar-fusion / 3D pipeline; `just run-sam` + `just run-map` in two terminals does both.
 
   ros2 launch sam_mapper sam_node.launch
   ros2 launch sam_mapper sam_node.launch config:=sam3_mecanum_real.yaml

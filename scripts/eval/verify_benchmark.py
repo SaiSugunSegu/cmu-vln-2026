@@ -35,9 +35,9 @@ Relations (``rel``), each satisfied when ANY object in ``target`` matches:
 
 Usage::
 
-    python3 scripts/eval/verify_benchmark2.py                # all scenes
-    python3 scripts/eval/verify_benchmark2.py arabic_room
-    python3 scripts/eval/verify_benchmark2.py --verbose
+    python3 scripts/eval/verify_benchmark.py                 # all scenes
+    python3 scripts/eval/verify_benchmark.py arabic_room
+    python3 scripts/eval/verify_benchmark.py --verbose
 """
 
 from __future__ import annotations

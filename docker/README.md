@@ -197,12 +197,14 @@ Or with the helper script from the repo root:
 **Preferred (persistent server — load once, ask many):** from the repo root:
 
 ```bash
-just vqa-up          # compose + load Qwen int4; blocks until ready
-just vqa-ask "How many pillows are on the bed?" /data/pillow_bed.png
-just vqa-ask "How many lamps are there?" /data/pillow_bed.png   # fast
-just vqa-status
-just vqa-down
+just vqa-up          # terminal 1: loads Qwen int4 (~60s first time), then blocks serving
+just vqa-ask "How many pillows are on the bed?" /data/pillow_bed.png   # terminal 2
+just vqa-ask "How many lamps are there?" /data/pillow_bed.png          # fast, stays loaded
 ```
+
+`vqa-up` runs in the foreground; Ctrl-C in that terminal stops the server. Do not
+run it alongside `just ai` or the eval recipes — those start their own server, and
+two of them collide on the node name and the `/qwen_vqa` topics.
 
 Image paths must be under `/data/…`. Host `data/` is bind-mounted 1:1, so host
 `data/pillow_bed.png` is container `/data/pillow_bed.png`. Paths outside the
