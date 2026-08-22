@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Bulk pre-seed of the Hugging Face cache.
 
-Nothing forces offline mode — the deployment always has connectivity. This exists so the
-first real run is not also a ~20 GB download, and to warm SAM 3's cv-utils kernel, which is
-otherwise fetched lazily and fails silently (see warm_kernels).
+Nothing forces offline mode — the deployment always has connectivity. `just up`
+bakes sam3 + qwen3vl into the image (this script, above the package COPYs).
+`just hf-fetch` refreshes a running container; a checkpoint that must ship in
+the Hub image has to land via `just up`.
 
-Run it once after `just up`, and again on any new machine:
+Also warms SAM 3's cv-utils kernel, which is otherwise fetched lazily and fails
+silently (see warm_kernels).
 
     just hf-fetch                 # all models + kernels
     just hf-fetch qwen3vl sam3    # a subset
@@ -53,12 +55,14 @@ OPTIONAL_MODELS: dict[str, dict] = {
         "why": "alternate captioning backend",
     },
     # Ships sam3.1_multiplex.pt (a NATIVE checkpoint) and no safetensors, so
-    # from_pretrained cannot load it directly — snapshot_download is only step one.
-    # `just sam31-convert` turns it into an HF directory. See docs/M2_perception.md 4.5.
+    # transformers' from_pretrained cannot load it. No conversion step: the native
+    # facebookresearch/sam3 package (pinned in ai_module/docker/Dockerfile) reads the
+    # .pt directly via build_sam3_multiplex_video_predictor. Converting it into an HF
+    # directory loses Object Multiplex entirely — see docs/M2_perception.md 4.5.
     "sam3.1": {
         "repo_id": "facebook/sam3.1",
         "gated": True,
-        "why": "sam_mapper Object Multiplex upgrade — needs `just sam31-convert` after this",
+        "why": "sam_mapper Object Multiplex upgrade (native sam3 package, not transformers)",
     },
 }
 
