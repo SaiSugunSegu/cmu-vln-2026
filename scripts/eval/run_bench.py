@@ -17,7 +17,7 @@ Assumptions to verify on first run (see docs/M6_eval_harness.md):
 """
 import argparse, json, pathlib, subprocess, sys, time
 
-SYS, AI = "iros2026_system", "iros2026_odyssey"
+SYS, AI = "iros2026_system", "iros2026_ai_module"
 MESH_SUBDIR = "autonomy_stack_mecanum_wheel_platform/src/base_autonomy/vehicle_simulator/mesh/unity"
 
 

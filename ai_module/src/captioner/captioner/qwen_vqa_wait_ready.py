@@ -48,7 +48,7 @@ def main(argv=None):
             file=sys.stderr,
         )
         print(
-            "See: docker exec iros2026_odyssey tail -n 50 /tmp/qwen_vqa_server.log",
+            "See: docker exec iros2026_ai_module tail -n 50 /tmp/qwen_vqa_server.log",
             file=sys.stderr,
         )
         return 1

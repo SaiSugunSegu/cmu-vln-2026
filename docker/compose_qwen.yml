@@ -1,7 +1,0 @@
-# Overlay used by `just vqa-up`. Recreates odyssey with the host Qwen3-VL hub
-# repo bind-mounted at the path from_pretrained looks up.
-# QWEN_HOST_DIR is the host models--Qwen--Qwen3-VL-4B-Instruct directory.
-services:
-  odyssey:
-    volumes:
-      - ${QWEN_HOST_DIR}:/home/docker/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct:ro
