@@ -13,6 +13,17 @@ from smart_vlm.cat2_utils import marked_views
 NAME = "best_rank1_chair.png"
 
 
+@pytest.fixture
+def wants_silhouette(monkeypatch):
+    """Pin VIEW_SOURCE for the tests that are about the silhouette path.
+
+    It is a config default (vqa.yaml), and the shipped value is now `crop`, under which
+    `_view_source` never looks at silhouette/ at all — so a test that inherits it measures
+    the default rather than the branch it names.
+    """
+    monkeypatch.setattr("smart_vlm.cat2_utils.VIEW_SOURCE", "silhouette")
+
+
 def _run_dir(tmp_path, obj_map=None, silhouette=False):
     """A crop directory as sam_node leaves it, with or without the finalize pass having run."""
     crop = np.full((80, 120, 3), 30, dtype=np.uint8)
@@ -48,7 +59,8 @@ def test_skips_a_view_holding_no_candidate(tmp_path):
     assert marked_views(run_dir, _manifest(99), ["3"], 1) == []
 
 
-def test_marks_on_the_finalized_silhouette_without_repeating_its_labels(tmp_path):
+def test_marks_on_the_finalized_silhouette_without_repeating_its_labels(
+        tmp_path, wants_silhouette):
     # The silhouette already prints `chair [3]`; a tab would be a second name for it.
     run_dir = _run_dir(tmp_path, obj_map={"3": {"label": "chair", "id": [3]}}, silhouette=True)
 
@@ -60,7 +72,8 @@ def test_marks_on_the_finalized_silhouette_without_repeating_its_labels(tmp_path
     assert np.all(interior == 200), "something was drawn inside the box — a tab, most likely"
 
 
-def test_falls_back_to_the_bare_crop_and_labels_it_itself(tmp_path, monkeypatch):
+def test_falls_back_to_the_bare_crop_and_labels_it_itself(
+        tmp_path, monkeypatch, wants_silhouette):
     # finalize never ran, so the pixels carry no ids and the mark has to supply one.
     monkeypatch.setattr("smart_vlm.cat2_utils.SILHOUETTE_WAIT_S", 0.0)   # no point waiting
     run_dir = _run_dir(tmp_path, obj_map={"3": {"label": "chair", "id": [3, 12]}})
@@ -72,7 +85,7 @@ def test_falls_back_to_the_bare_crop_and_labels_it_itself(tmp_path, monkeypatch)
     assert not np.all(out == 30)                     # a tab and a box were drawn
 
 
-def test_waits_for_a_silhouette_that_arrives_late(tmp_path, monkeypatch):
+def test_waits_for_a_silhouette_that_arrives_late(tmp_path, monkeypatch, wants_silhouette):
     """finalize() and this reasoner both fire on explore_done, so we can arrive first.
 
     Giving up on the first miss would cost the outlines and the ids over a few ms of
