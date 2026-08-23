@@ -405,6 +405,20 @@ def test_fragments_of_one_object_become_one_goal_at_their_weighted_centre():
     assert only_goal(m).center[0] == pytest.approx(3.1)
 
 
+def test_the_clustering_radius_does_not_follow_the_mappers_merge_distance():
+    """It used to read `world_merge.absolute_distance`, and then that was cut 0.5 -> 0.25.
+
+    The two decisions are asymmetric: world merge publishes one box, so fusing two real
+    objects loses a question, while this layer only chooses where to look, so failing to fuse
+    two fragments costs a second inspection tour of an object already inspected. Reading one
+    knob for both meant a mapper fix silently split every fragment pair 0.25-0.5 m apart.
+    """
+    from sam_mapper.mapping_config import MappingConfig
+
+    assert default_params()["cluster_distance_m"] == 0.5
+    assert MappingConfig().world_merge.absolute_distance < 0.5
+
+
 def test_clustering_unions_the_bins_of_a_short_fragment():
     """zip_longest, not zip: a fragment carrying a shorter bin vector would truncate the union
     to [], leaving a goal that yields no viewpoint and can never be satisfied."""

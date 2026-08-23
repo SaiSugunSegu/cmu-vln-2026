@@ -479,7 +479,11 @@ class CoverageModel:
         return [bool(b) for b in bins]
 
     def _merge_threshold(self, ext_a, ext_b) -> float:
-        """The mapper's own rule (object_mapper world-merge test), same two branches."""
+        """The mapper's world-merge rule, same two branches, on this layer's own distance.
+
+        The shape is borrowed; the distance is not. See `cluster_distance_m` in
+        `default_params` for why the two thresholds want different values.
+        """
         half = [(a / 2 + b / 2) / 2 for a, b in zip_longest(ext_a[:3], ext_b[:3], fillvalue=0.0)]
         scaled = math.sqrt(sum(h * h for h in half)) * self.p["cluster_extent_scale"]
         return max(scaled, self.p["cluster_distance_m"])
@@ -993,7 +997,8 @@ def default_params() -> dict:
     """Every knob, with the reason it has the value it has.
 
     Sourced from the mapper's own configuration wherever one exists, so the planner clusters
-    and ranges on the rules the mapper would have used had it been able to.
+    and ranges on the rules the mapper would have used had it been able to — except where a
+    mapper threshold is tuned against a cost this layer does not pay, which is noted inline.
     """
     config = MappingConfig()
     merge = config.world_merge
@@ -1001,7 +1006,18 @@ def default_params() -> dict:
         # Fragment clustering. The mapper cannot do this itself: world merge needs a non-None
         # centroid on BOTH sides, and an under-observed object has none — which is exactly the
         # object we are chasing.
-        "cluster_distance_m": merge.absolute_distance,
+        #
+        # The distance is this layer's own rather than `merge.absolute_distance`, which it used
+        # to read, because the two decisions are not symmetric in what they cost. World merge
+        # publishes ONE BOX, so fusing two real objects produces a box that is neither of them
+        # and loses the question — it was cut to 0.25 m for exactly that reason (0.44 m-spaced
+        # pillows). This layer only decides where to send the robot to look, so over-fusing
+        # costs a viewpoint that sees both fragments anyway, while under-fusing costs a whole
+        # second inspection tour of an object already inspected. Cheap in one direction and
+        # expensive in the other, so it keeps the looser threshold.
+        "cluster_distance_m": 0.5,
+        # Shape still borrowed from the mapper: a threshold that grows with the boxes it is
+        # comparing, so a sofa's fragments cluster at a distance a bowl's would not.
         "cluster_extent_scale": merge.extent_scale,
         # Admission. Below these an unpublished entry is noise, and chasing noise costs the
         # whole window.
