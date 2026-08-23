@@ -137,6 +137,12 @@ class DimensionPriorsConfig(_FromDict):
     #: MERGED over the derived table, not a replacement — naming three classes must not
     #: silently revert the other 260 to `default`.
     priors: dict = field(default_factory=dict)
+    #: D3b - apply the same cap to INCOMING points at merge time, not just to whole clusters
+    #: after the fact. `enabled` above can only accept or reject a cluster entire, so a bled
+    #: object is either kept whole or thrown away whole; this drops the individual points that
+    #: would push the object past what its class can physically be, and keeps the rest.
+    #: Bounds an object's growth to its class cap no matter how long the run goes on.
+    gate_merge: bool = True
 
     def __post_init__(self):
         merged = {"default": DEFAULT_PRIOR, **DERIVED_PRIORS}

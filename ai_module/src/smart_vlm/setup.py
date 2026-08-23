@@ -27,6 +27,7 @@ setup(
             'qwen_numerical = smart_vlm.qwen_numerical:main',
             'numerical_reasoner = smart_vlm.numerical_reasoner:main',
             'object_reference_reasoner = smart_vlm.object_reference_reasoner:main',
+            'target_explorer = smart_vlm.target_explorer:main',
             'instruction_reasoner = smart_vlm.instruction_reasoner:main',
             'eval_orchestrator = smart_vlm.eval_orchestrator:main',
             'cat1_bench = smart_vlm.cat1_bench:main',

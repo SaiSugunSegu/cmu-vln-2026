@@ -127,6 +127,7 @@ runtime:
   profile: false                    # per-stage breakdown in BOTH node logs, 
   cloud_window_before: 0.5         # gather clouds in [stamp - before, stamp + after]
   cloud_window_after: 0.1
+  reset_session_on_time_jump: false
   verbose_objects: false           # print every 2D detection + 3D map object per frame
   save_obj_map: true               # dump the final 3D map as readable JSON on shutdown
   obj_map_dir: ""                  # empty = follow sam_node's run dir (/sam3/best_view_dir),

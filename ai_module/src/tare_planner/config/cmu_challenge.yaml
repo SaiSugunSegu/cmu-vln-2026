@@ -23,6 +23,22 @@ tare_planner_node:
     sub_nogo_boundary_topic_ : /sensor_coverage_planner/nogo_boundary
     sub_joystick_topic_ : /joy
     sub_reset_waypoint_topic_ : /reset_waypoint
+    # Where target_explorer (smart_vlm) asks the robot to stand so an under-observed target
+    # object gets seen from a direction it has not been seen from. Requests, not commands:
+    # each is snapped to the nearest candidate viewpoint -- already collision-free, in line
+    # of sight and graph-connected -- and dropped if none is within
+    # kTargetViewPointSnapMaxDist. TARE remains the only writer of /way_point_with_heading.
+    sub_target_viewpoints_topic_ : /exploration/target_viewpoints
+    # Which requested positions were placed and which the local horizon refused. Only the
+    # refusals are a statement about the world -- a target the robot has not walked to yet
+    # is reported as neither, so it is never written off as impossible.
+    pub_target_feedback_topic_ : /exploration/target_viewpoint_feedback
+    # May targets preempt frontier exploration. target_explorer holds this false until EVERY
+    # target label has at least one instance -- an undiscovered label can only be found by
+    # ordinary exploration, and preempting early would guarantee it stays undiscovered.
+    # While true, the global tour is offered only the subspaces holding a target, and the
+    # lookahead is aimed at the nearest one. Silent or stale => stock TARE.
+    sub_target_preempt_topic_ : /exploration/target_preempt
     pub_exploration_finish_topic_ : exploration_finish
     pub_runtime_breakdown_topic_ : runtime_breakdown
     pub_runtime_topic_ : /runtime
@@ -58,6 +74,42 @@ tare_planner_node:
     kTerrainCollisionThreshold : 0.3
     kLookAheadDistance : 4.0
     kUseMomentum : true 
+    # Semantic steering. false here is exactly stock TARE, which is also what happens on its
+    # own if target_explorer is absent or silent for kTargetViewPointTimeout -- so this is a
+    # kill switch for A/B runs, not the thing keeping the feature safe.
+    kUseTargetViewPoints : true
+    kTargetViewPointTimeout : 5.0
+    kTargetViewPointSnapMaxDist : 0.5
+    # Deliberately small. Must-visit viewpoints have their covered points marked covered
+    # before EnqueueViewpointCandidates scores anything, so every one of them shaves a little
+    # off the marginal gain of genuine coverage viewpoints. At 8 that is negligible; at a few
+    # tens it would visibly suppress frontier exploration.
+    kMaxTargetViewPointNum : 8
+    # Waypoint stall watchdog. PublishWaypoint() only runs inside `if (keypose_cloud_update_)`
+    # -- set on every 5th registered scan, and returned out of before reaching it when the
+    # start gate is shut or no candidate viewpoints exist. waypoint_converter ships
+    # yawConfig -1 ("reach waypoint and stop"), so a single skipped round leaves the robot
+    # parked at a waypoint nothing will replace.
+    #
+    # No progress for kWaypointStallTimeout -> force a planning round and re-send the
+    # waypoint. Still nothing by kWaypointStallEscalateTimeout -> the waypoint is not late,
+    # it is unreachable: retire that viewpoint and remember the spot. Re-arms after each
+    # escalation, so a second blocking viewpoint gets retired too.
+    #
+    # Both are sampled by execute()'s 1000 ms wall timer, so a threshold of T actually fires
+    # somewhere in [T, T+1): the escalate value read 6.0 and the log said "stalled 7.0s".
+    # The gap between the two is load-bearing and must stay at least one tick wide -- set
+    # them equal and the blacklist lands on the same tick as the re-send, so the recovery
+    # step never gets a chance to work and becomes dead code. The node clamps it if they
+    # ever cross.
+    kUseWaypointStallWatchdog : true
+    kWaypointStallTimeout : 3.0
+    kWaypointStallEscalateTimeout : 5.0
+    # Above odometry jitter: too small and a parked robot looks like it is creeping, and the
+    # watchdog never fires at all.
+    kStallProgressDist : 0.3
+    kStallBlacklistRadius : 0.5
+    kMaxStallBlacklistNum : 32
     kDirectionChangeCounterThr : 6
     kDirectionNoChangeCounterThr : 5
     kResetWaypointJoystickAxesID : 2

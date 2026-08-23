@@ -124,27 +124,25 @@ def start_sim(display: str) -> None:
 
 
 def wait_for_sim(timeout_s: float) -> bool:
-    """Block until domain 0 sees odom, camera, and lidar.
+    """Block until the AI module's domain actually sees odometry and sensor data.
 
-    /state_estimation alone is not enough: vehicleSimulator publishes odometry even
-    when Unity is not producing /camera/image. SAM then explores the full budget
-    with zero frames and the reasoner answers 0.
+    Publisher count on /state_estimation, /registered_scan, and /camera/image: proves
+    that BOTH the base autonomy stack (vehicleSimulator) AND the Unity simulator
+    (Model.x86_64) are running and bridged into domain 0.
     """
-    topics = ("/state_estimation", "/camera/image", "/registered_scan")
     deadline = time.monotonic() + timeout_s
     probe = (
         f"source {AI_SRC}/install/setup.bash && "
-        + " && ".join(
-            f"ros2 topic info {t} 2>/dev/null | grep -q 'Publisher count: [1-9]'"
-            for t in topics
-        )
+        f"ros2 topic info /state_estimation 2>/dev/null | grep -q 'Publisher count: [1-9]' && "
+        f"ros2 topic info /registered_scan 2>/dev/null | grep -q 'Publisher count: [1-9]' && "
+        f"ros2 topic info /camera/image 2>/dev/null | grep -q 'Publisher count: [1-9]'"
     )
     while time.monotonic() < deadline:
         out = sh(["docker", "exec", AI_CONTAINER, "bash", "-lc", probe],
                  check=False, capture=True)
         if out.returncode == 0:
             return True
-        time.sleep(5)
+        time.sleep(3)
     return False
 
 

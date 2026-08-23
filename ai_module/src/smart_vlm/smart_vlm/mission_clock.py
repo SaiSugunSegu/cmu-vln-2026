@@ -33,7 +33,12 @@ class MissionBudget:
     """
 
     question_budget_s: float = 600.0    # challenge hard limit, includes model load
-    explore_timeout_s: float = 120.0    # exploration window, measured from first data
+    #: Exploration window, measured from first data. A CAP, not a target: exploration also
+    #: ends the moment target_explorer reports every target label found and covered, which is
+    #: the normal exit on a small scene. 120 s was not enough to circle three objects, and
+    #: since explore_deadline is clamped to answer_deadline anyway, raising it cannot eat the
+    #: answer path -- it only stops the clock being the thing that decides coverage.
+    explore_timeout_s: float = 300.0
     answer_reserve_s: float = 90.0      # T-90: stop exploring no matter what
     fallback_reserve_s: float = 30.0    # T-30: publish a best guess
 
@@ -77,6 +82,13 @@ class MissionClock:
 
     def elapsed(self, now: float) -> float:
         return now - self.t0
+
+    def exploring_elapsed(self, now: float) -> float:
+        """Seconds actually spent exploring, which is NOT elapsed(): the window opens on the
+        first sensor data after arming, so model load time sits outside it. 0.0 before then."""
+        if self._t_exploring is None:
+            return 0.0
+        return now - self._t_exploring
 
     # -- deadlines ---------------------------------------------------------
 

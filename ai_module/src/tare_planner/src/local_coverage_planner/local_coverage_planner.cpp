@@ -80,6 +80,14 @@ void LocalCoveragePlanner::GetNavigationViewPointIndices(
   navigation_viewpoint_indices.push_back(end_viewpoint_ind_);
   navigation_viewpoint_indices.push_back(robot_viewpoint_ind_);
   navigation_viewpoint_indices.push_back(lookahead_viewpoint_ind_);
+  // Target inspection viewpoints ride the same must-visit channel as the four above: they
+  // enter the TSP without going through the coverage utility, so an object worth a second
+  // look is visited even where it adds no new surface. Already snapped to real candidates
+  // and bounded by kMaxTargetViewPointNum by the caller.
+  for (const auto& target_viewpoint_ind : target_viewpoint_indices_)
+  {
+    navigation_viewpoint_indices.push_back(target_viewpoint_ind);
+  }
 }
 
 void LocalCoveragePlanner::UpdateViewPointCoveredPoint(
@@ -693,7 +701,10 @@ LocalCoveragePlanner::SolveLocalCoverageProblem(
     SelectViewPointFromFrontierQueue(frontier_queue, frontier_covered,
                                      selected_viewpoint_indices_itr);
 
-    if (selected_viewpoint_indices_itr.empty()) {
+    // Pending targets mean the local job is not done, whatever the coverage queues say.
+    // Otherwise IsLocalCoverageComplete() combines with IsReturningHome() and TARE declares
+    // exploration finished while a target object is still under-observed.
+    if (selected_viewpoint_indices_itr.empty() && !HasTargetViewPoints()) {
       local_coverage_complete_ = true;
     }
 

@@ -43,6 +43,12 @@ void SensorCoveragePlanner3D::ReadParameters() {
   this->declare_parameter<std::string>("sub_joystick_topic_", "/joy");
   this->declare_parameter<std::string>("sub_reset_waypoint_topic_",
                                        "/reset_waypoint");
+  this->declare_parameter<std::string>("sub_target_viewpoints_topic_",
+                                       "/exploration/target_viewpoints");
+  this->declare_parameter<std::string>("pub_target_feedback_topic_",
+                                       "/exploration/target_viewpoint_feedback");
+  this->declare_parameter<std::string>("sub_target_preempt_topic_",
+                                       "/exploration/target_preempt");
   this->declare_parameter<std::string>("pub_exploration_finish_topic_",
                                        "exploration_finish");
   this->declare_parameter<std::string>("pub_runtime_breakdown_topic_",
@@ -62,6 +68,8 @@ void SensorCoveragePlanner3D::ReadParameters() {
   this->declare_parameter<bool>("kUseLineOfSightLookAheadPoint", true);
   this->declare_parameter<bool>("kNoExplorationReturnHome", true);
   this->declare_parameter<bool>("kUseMomentum", false);
+  this->declare_parameter<bool>("kUseTargetViewPoints", false);
+  this->declare_parameter<bool>("kUseWaypointStallWatchdog", false);
 
   // Double
   this->declare_parameter<double>("kKeyposeCloudDwzFilterLeafSize", 0.2);
@@ -71,11 +79,26 @@ void SensorCoveragePlanner3D::ReadParameters() {
   this->declare_parameter<double>("kLookAheadDistance", 5.0);
   this->declare_parameter<double>("kExtendWayPointDistanceBig", 8.0);
   this->declare_parameter<double>("kExtendWayPointDistanceSmall", 3.0);
+  this->declare_parameter<double>("kTargetViewPointTimeout", 5.0);
+  // Matches cmu_challenge.yaml, which is the only scenario that sets it. It used to read 1.5
+  // here and 0.5 there -- a 3x divergence on a TUNING value (not an on/off fallback like the
+  // kUse* flags above), so anyone reading this file got the wrong snap radius. Keep the two
+  // equal: the yaml is authoritative, this is what applies when a scenario omits it.
+  this->declare_parameter<double>("kTargetViewPointSnapMaxDist", 0.5);
+  this->declare_parameter<double>("kWaypointStallTimeout", 3.0);
+  // Must stay at least one execute() period above kWaypointStallTimeout; ReadParameters
+  // clamps it if a scenario yaml ever sets them the other way round. Matches
+  // cmu_challenge.yaml, the only scenario that sets it.
+  this->declare_parameter<double>("kWaypointStallEscalateTimeout", 5.0);
+  this->declare_parameter<double>("kStallProgressDist", 0.3);
+  this->declare_parameter<double>("kStallBlacklistRadius", 0.5);
 
   // Int
   this->declare_parameter<int>("kDirectionChangeCounterThr", 4);
   this->declare_parameter<int>("kDirectionNoChangeCounterThr", 5);
   this->declare_parameter<int>("kResetWaypointJoystickAxesID", 0);
+  this->declare_parameter<int>("kMaxTargetViewPointNum", 8);
+  this->declare_parameter<int>("kMaxStallBlacklistNum", 32);
 
   // grid_world
   this->declare_parameter<int>("kGridWorldXNum", 121);
@@ -197,6 +220,10 @@ void SensorCoveragePlanner3D::ReadParameters() {
   this->get_parameter("sub_nogo_boundary_topic_", sub_nogo_boundary_topic_);
   this->get_parameter("sub_joystick_topic_", sub_joystick_topic_);
   this->get_parameter("sub_reset_waypoint_topic_", sub_reset_waypoint_topic_);
+  this->get_parameter("sub_target_viewpoints_topic_",
+                      sub_target_viewpoints_topic_);
+  this->get_parameter("pub_target_feedback_topic_", pub_target_feedback_topic_);
+  this->get_parameter("sub_target_preempt_topic_", sub_target_preempt_topic_);
   this->get_parameter("pub_exploration_finish_topic_",
                       pub_exploration_finish_topic_);
   this->get_parameter("pub_runtime_breakdown_topic_",
@@ -218,6 +245,8 @@ void SensorCoveragePlanner3D::ReadParameters() {
                       kUseLineOfSightLookAheadPoint);
   this->get_parameter("kNoExplorationReturnHome", kNoExplorationReturnHome);
   this->get_parameter("kUseMomentum", kUseMomentum);
+  this->get_parameter("kUseTargetViewPoints", kUseTargetViewPoints);
+  this->get_parameter("kUseWaypointStallWatchdog", kUseWaypointStallWatchdog);
 
   this->get_parameter("kKeyposeCloudDwzFilterLeafSize",
                       kKeyposeCloudDwzFilterLeafSize);
@@ -234,6 +263,32 @@ void SensorCoveragePlanner3D::ReadParameters() {
                       kDirectionNoChangeCounterThr);
   this->get_parameter("kResetWaypointJoystickAxesID",
                       kResetWaypointJoystickAxesID);
+  this->get_parameter("kTargetViewPointTimeout", kTargetViewPointTimeout);
+  this->get_parameter("kTargetViewPointSnapMaxDist", kTargetViewPointSnapMaxDist);
+  this->get_parameter("kMaxTargetViewPointNum", kMaxTargetViewPointNum);
+  this->get_parameter("kWaypointStallTimeout", kWaypointStallTimeout);
+  this->get_parameter("kWaypointStallEscalateTimeout",
+                      kWaypointStallEscalateTimeout);
+  this->get_parameter("kStallProgressDist", kStallProgressDist);
+  this->get_parameter("kStallBlacklistRadius", kStallBlacklistRadius);
+  this->get_parameter("kMaxStallBlacklistNum", kMaxStallBlacklistNum);
+
+  // The two stall thresholds are a ladder, and the rungs must not touch. Level 1 re-sends the
+  // waypoint at kWaypointStallTimeout; level 2 retires the viewpoint at the escalate value.
+  // Set them equal and both land on the same execute() tick, so the viewpoint is blacklisted
+  // before the re-send has had a single tick to work -- the recovery step becomes dead code
+  // and the planner throws away viewpoints it never actually retried. Nothing about that is
+  // visible in a log, which is why it is clamped here rather than left to the yaml.
+  const double kMinStallLadderGap = 1.0;   // one execute() period; execution_timer_ is 1000ms
+  if (kWaypointStallEscalateTimeout < kWaypointStallTimeout + kMinStallLadderGap) {
+    double clamped = kWaypointStallTimeout + kMinStallLadderGap;
+    RCLCPP_WARN(this->get_logger(),
+                "kWaypointStallEscalateTimeout (%.1f) must be at least %.1fs above "
+                "kWaypointStallTimeout (%.1f) or the re-send never gets a tick -- using %.1f",
+                kWaypointStallEscalateTimeout, kMinStallLadderGap, kWaypointStallTimeout,
+                clamped);
+    kWaypointStallEscalateTimeout = clamped;
+  }
 }
 
 // PlannerData::PlannerData()
@@ -360,12 +415,21 @@ void SensorCoveragePlanner3D::InitializeData() {
 
 SensorCoveragePlanner3D::SensorCoveragePlanner3D()
     : Node("tare_planner_node"), keypose_cloud_update_(false),
-      initialized_(false), lookahead_point_update_(false), relocation_(false),
+      initialized_(false), has_registered_scan_(false),
+      lookahead_point_update_(false), relocation_(false),
       start_exploration_(false), exploration_finished_(false),
       near_home_(false), at_home_(false), stopped_(false),
       test_point_update_(false), viewpoint_ind_update_(false), step_(false),
       use_momentum_(false), lookahead_point_in_line_of_sight_(true),
-      reset_waypoint_(false), registered_cloud_count_(0), keypose_count_(0),
+      reset_waypoint_(false), target_viewpoints_receive_time_(-1.0),
+      stall_reference_position_(Eigen::Vector3d::Zero()),
+      stall_reference_time_(-1.0), last_waypoint_publish_time_(-1.0),
+      waypoint_refresh_count_(0),
+      lookahead_point_valid_(false),
+      target_preempt_(false), target_preempt_receive_time_(-1.0),
+      preempt_target_position_(Eigen::Vector3d::Zero()),
+      preempt_target_valid_(false),
+      registered_cloud_count_(0), keypose_count_(0),
       direction_change_count_(0), direction_no_change_count_(0),
       momentum_activation_count_(0), reset_waypoint_joystick_axis_value_(-1.0) {
   std::cout << "finished constructor" << std::endl;
@@ -435,6 +499,15 @@ bool SensorCoveragePlanner3D::initialize() {
       sub_reset_waypoint_topic_, 1,
       std::bind(&SensorCoveragePlanner3D::ResetWaypointCallback, this,
                 std::placeholders::_1));
+  target_viewpoints_sub_ =
+      this->create_subscription<geometry_msgs::msg::PoseArray>(
+          sub_target_viewpoints_topic_, 2,
+          std::bind(&SensorCoveragePlanner3D::TargetViewPointsCallback, this,
+                    std::placeholders::_1));
+  target_preempt_sub_ = this->create_subscription<std_msgs::msg::Bool>(
+      sub_target_preempt_topic_, 2,
+      std::bind(&SensorCoveragePlanner3D::TargetPreemptCallback, this,
+                std::placeholders::_1));
 
   global_path_full_publisher_ =
       this->create_publisher<nav_msgs::msg::Path>("global_path_full", 1);
@@ -451,6 +524,8 @@ bool SensorCoveragePlanner3D::initialize() {
       this->create_publisher<nav_msgs::msg::Path>("exploration_path", 1);
   waypoint_pub_ = this->create_publisher<geometry_msgs::msg::Pose2D>(
       pub_waypoint_topic_, 2);
+  target_feedback_pub_ =
+      this->create_publisher<std_msgs::msg::String>(pub_target_feedback_topic_, 2);
   exploration_finish_pub_ = this->create_publisher<std_msgs::msg::Bool>(
       pub_exploration_finish_topic_, 2);
   runtime_breakdown_pub_ =
@@ -513,6 +588,7 @@ void SensorCoveragePlanner3D::RegisteredScanCallback(
   if (registered_scan_tmp->points.empty()) {
     return;
   }
+  has_registered_scan_ = true;
   *(registered_scan_stack_->cloud_) += *(registered_scan_tmp);
   pointcloud_downsizer_.Downsize(
       registered_scan_tmp, kKeyposeCloudDwzFilterLeafSize,
@@ -658,6 +734,330 @@ void SensorCoveragePlanner3D::ResetWaypointCallback(
   // Set waypoint to the current robot position to stop the robot in place
   SendWaypoint(robot_position_.x, robot_position_.y);
   std::cout << "reset waypoint" << std::endl;
+}
+
+namespace {
+/** Append "[x, y]" to a comma-separated JSON array body, tracking how many are in it.
+ *
+ * std::to_string, not a stream: an ostringstream defaults to six SIGNIFICANT digits, which at
+ * room-scale coordinates is fine but degrades with magnitude. The consumer matches a verdict
+ * back to the pose that asked for it by nearest-point within a centimetre, so the round trip
+ * has to stay well inside that. std::to_string gives six DECIMAL places regardless of scale.
+ */
+void AppendPoint(std::string &out, int &count, double x, double y) {
+  if (count > 0) {
+    out += ", ";
+  }
+  out += "[" + std::to_string(x) + ", " + std::to_string(y) + "]";
+  count++;
+}
+}  // namespace
+
+void SensorCoveragePlanner3D::TargetViewPointsCallback(
+    const geometry_msgs::msg::PoseArray::ConstSharedPtr pose_array_msg) {
+  // Positions only. The challenge camera is a 360-degree equirectangular panorama, so which
+  // way the robot faces does not change what it sees -- orientation carries no information
+  // here and is deliberately ignored rather than turned into a heading.
+  target_viewpoint_positions_.clear();
+  for (const auto &pose : pose_array_msg->poses) {
+    target_viewpoint_positions_.push_back(
+        Eigen::Vector3d(pose.position.x, pose.position.y, pose.position.z));
+  }
+  target_viewpoints_receive_time_ = this->now().seconds();
+}
+
+void SensorCoveragePlanner3D::TargetPreemptCallback(
+    const std_msgs::msg::Bool::ConstSharedPtr preempt_msg) {
+  target_preempt_ = preempt_msg->data;
+  target_preempt_receive_time_ = this->now().seconds();
+}
+
+bool SensorCoveragePlanner3D::TargetPreemptActive() const {
+  // Shares kTargetViewPointTimeout with the viewpoints themselves: a target_explorer that
+  // died must not leave TARE permanently locked out of frontier exploration.
+  return kUseTargetViewPoints && target_preempt_ &&
+         target_preempt_receive_time_ >= 0.0 &&
+         (this->now().seconds() - target_preempt_receive_time_) <=
+             kTargetViewPointTimeout;
+}
+
+bool SensorCoveragePlanner3D::TargetWorkOutstanding() const {
+  // Same freshness rule as the viewpoints and the preempt flag: a target_explorer that died
+  // must not pin TARE in exploring forever.
+  return kUseTargetViewPoints && !target_viewpoint_positions_.empty() &&
+         target_viewpoints_receive_time_ >= 0.0 &&
+         (this->now().seconds() - target_viewpoints_receive_time_) <=
+             kTargetViewPointTimeout;
+}
+
+int SensorCoveragePlanner3D::PreferredTargetViewPointInd() const {
+  // Deliberately NOT the nearest one. Nearest is recomputed every cycle from a moving robot,
+  // so with two roughly equidistant objects it oscillates: drive at A, B becomes nearer,
+  // switch to B, A becomes nearer, switch back -- observed flipping targets within 1 s and
+  // covering neither. Distance is also the wrong authority: target_explorer already decided
+  // which object to commit to and sends its poses first, and that commitment (its dwell, its
+  // stall rotation) is invisible here.
+  //
+  // 1) Stay on the target we are already driving at for as long as it is still accepted, so
+  //    re-ordering *within* a goal cannot make us switch mid-approach.
+  if (preempt_target_valid_) {
+    for (const auto &viewpoint_ind : accepted_target_viewpoint_indices_) {
+      geometry_msgs::msg::Point position =
+          viewpoint_manager_->GetViewPointPosition(viewpoint_ind);
+      double dx = position.x - preempt_target_position_.x();
+      double dy = position.y - preempt_target_position_.y();
+      if (dx * dx + dy * dy <=
+          kTargetViewPointSnapMaxDist * kTargetViewPointSnapMaxDist) {
+        return viewpoint_ind;
+      }
+    }
+  }
+  // 2) Otherwise take the highest-priority reachable one. The list is built by walking
+  //    target_viewpoint_positions_ in the order target_explorer sent them -- active goal
+  //    first -- so front() is its choice, not ours.
+  return accepted_target_viewpoint_indices_.empty()
+             ? -1
+             : accepted_target_viewpoint_indices_.front();
+}
+
+void SensorCoveragePlanner3D::UpdateTargetViewPoints() {
+  // Two ways to end up with nothing to do, and both must leave TARE bit-for-bit stock:
+  // the feature switched off, and a target_explorer that has died or gone quiet. Clearing
+  // unconditionally first is what guarantees the second one.
+  std::vector<int> target_viewpoint_indices;
+  grid_world_->ClearPriorityCells();
+  grid_world_->SetTargetPreempt(TargetPreemptActive());
+  accepted_target_viewpoint_indices_.clear();
+  if (!kUseTargetViewPoints || target_viewpoints_receive_time_ < 0.0 ||
+      this->now().seconds() - target_viewpoints_receive_time_ >
+          kTargetViewPointTimeout) {
+    local_coverage_planner_->SetTargetViewPointIndices(target_viewpoint_indices);
+    return;
+  }
+
+  // Verdict per request, echoed back so the semantic side can tell a direction it has merely
+  // not walked to yet from one where nothing can physically stand. Only the latter is a
+  // statement about the world; "far" says nothing and is deliberately not reported.
+  std::string accepted_json;
+  std::string unreachable_json;
+  int accepted_count = 0;
+  int unreachable_count = 0;
+  int far_count = 0;
+  int unstandable_count = 0;
+
+  for (const auto &position : target_viewpoint_positions_) {
+    if (static_cast<int>(target_viewpoint_indices.size()) >=
+        kMaxTargetViewPointNum) {
+      break;
+    }
+    if (!viewpoint_manager_->InLocalPlanningHorizon(position)) {
+      // InLocalPlanningHorizon conflates two verdicts that deserve opposite answers, and
+      // reporting both as `far` is what left wall-mounted objects outstanding for whole runs.
+      //
+      //   outside the lattice   -- a distance statement. Driving closer fixes it, so say
+      //                            nothing and pin the subspace EXPLORING (below).
+      //   inside, not a candidate -- the robot is already within 4.5 m and STILL cannot stand
+      //                            there: no line of sight, not graph-connected, or solid.
+      //                            Two of a wall-mounted object's four sectors are behind the
+      //                            wall and land here every single cycle. Time cannot fix it,
+      //                            and reporting `far` meant target_explorer never heard, so
+      //                            the sector stayed OPEN, the goal never closed, coverage
+      //                            never completed, and `preempt` (which needs every pending
+      //                            goal in-horizon) stayed off for the whole run.
+      //
+      // Measured over the 13-scene sweep, acceptance rate tracks exactly this: japanese_room's
+      // free-standing vases 55%, livingroom_4's wall pictures 3%, hotel_room_1's window 1%.
+      //
+      // `unreachable` is the honest verdict for the second, and it is not a death sentence:
+      // target_explorer answers it by retrying the sector from further out, and only writes
+      // the sector off once those retries are spent. A transient (the lattice still filling in
+      // at startup) therefore costs one wider retry, not a lost sector.
+      if (viewpoint_manager_->InRange(viewpoint_manager_->GetViewPointInd(position))) {
+        unstandable_count++;
+        AppendPoint(unreachable_json, unreachable_count, position.x(), position.y());
+        continue;
+      }
+      far_count++;
+      // Too far to stand on this cycle. Pin the subspace EXPLORING instead, so the global
+      // TSP routes there over its own keypose graph and the local layer can pick it up on
+      // arrival -- rather than the cell going COVERED on a drive-past and never coming back.
+      grid_world_->AddPriorityCell(
+          grid_world_->GetCellInd(position.x(), position.y(), position.z()));
+      continue;
+    }
+    int viewpoint_ind =
+        viewpoint_manager_->GetNearestCandidateViewPointInd(position);
+    if (!viewpoint_manager_->InRange(viewpoint_ind)) {
+      AppendPoint(unreachable_json, unreachable_count, position.x(), position.y());
+      continue;
+    }
+    // A candidate is already collision-free, in line of sight and graph-connected, so the
+    // only question left is whether one lies where we were actually asked to stand. If the
+    // nearest is far away, the request was unreachable (a viewing direction that points into
+    // the wall behind the object) and honouring it would send the robot somewhere useless.
+    geometry_msgs::msg::Point viewpoint_position =
+        viewpoint_manager_->GetViewPointPosition(viewpoint_ind);
+    double dx = viewpoint_position.x - position.x();
+    double dy = viewpoint_position.y - position.y();
+    if (dx * dx + dy * dy >
+        kTargetViewPointSnapMaxDist * kTargetViewPointSnapMaxDist) {
+      AppendPoint(unreachable_json, unreachable_count, position.x(), position.y());
+      continue;
+    }
+    // The watchdog retires viewpoints the robot demonstrably could not reach. Target
+    // injection clears `visited` every cycle, so without this check the two would fight:
+    // the watchdog would blacklist a viewpoint and this would hand it straight back.
+    if (IsStallBlacklisted(Eigen::Vector3d(viewpoint_position.x,
+                                           viewpoint_position.y,
+                                           viewpoint_position.z))) {
+      AppendPoint(unreachable_json, unreachable_count, position.x(), position.y());
+      continue;
+    }
+    // Without this an object the robot drove past earlier can never be re-inspected:
+    // EnqueueViewpointCandidates skips every visited viewpoint, and visited is permanent.
+    viewpoint_manager_->SetViewPointVisited(viewpoint_ind, false);
+    target_viewpoint_indices.push_back(viewpoint_ind);
+    AppendPoint(accepted_json, accepted_count, position.x(), position.y());
+  }
+  local_coverage_planner_->SetTargetViewPointIndices(target_viewpoint_indices);
+  accepted_target_viewpoint_indices_ = target_viewpoint_indices;
+
+  std_msgs::msg::String feedback;
+  feedback.data = "{\"stamp\": " + std::to_string(this->now().seconds()) +
+                  ", \"accepted\": [" + accepted_json +
+                  "], \"unreachable\": [" + unreachable_json + "]}";
+  target_feedback_pub_->publish(feedback);
+
+  RCLCPP_INFO_THROTTLE(
+      this->get_logger(), *this->get_clock(), 5000,
+      "target viewpoints: %d requested -> %d accepted, %d unreachable "
+      "(%d of them in-reach but unstandable), %d far",
+      static_cast<int>(target_viewpoint_positions_.size()), accepted_count,
+      unreachable_count, unstandable_count, far_count);
+}
+
+bool SensorCoveragePlanner3D::IsStallBlacklisted(
+    const Eigen::Vector3d &position) const {
+  for (const auto &blacklisted : stall_blacklist_) {
+    double dx = position.x() - blacklisted.x();
+    double dy = position.y() - blacklisted.y();
+    if (dx * dx + dy * dy < kStallBlacklistRadius * kStallBlacklistRadius) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void SensorCoveragePlanner3D::CheckWaypointStall() {
+  // `stopped_` normally means the mission is over and a parked robot is correct, so watching
+  // it would be pure noise. While target work is outstanding it means the opposite -- the
+  // robot is parked with places left to visit, which is the single failure this watchdog
+  // exists to catch -- so the mute does not apply.
+  if (!kUseWaypointStallWatchdog || (stopped_ && !TargetWorkOutstanding())) {
+    return;
+  }
+  double now_s = this->now().seconds();
+
+  // ---- Freshness: is the TOPIC stale? Deliberately independent of robot motion. ----
+  //
+  // PublishWaypoint() sits at the very end of the `if (keypose_cloud_update_)` block, so a
+  // tick that never enters it (the flag is set on every 5th /registered_scan while execute()
+  // ticks at 1 Hz) or one that returns early at "Cannot get candidate viewpoints" emits
+  // nothing at all. waypoint_converter ships yawConfig -1 ("reach waypoint and stop"), so the
+  // robot drives to whatever it last received and parks there.
+  //
+  // The check below used to be the ONLY one, and it measures robot motion -- so a robot still
+  // coasting toward a stale goal reset the alarm on every tick and the waypoint aged without
+  // limit. That is the bug: a motion watchdog cannot see a stale topic, because the two are
+  // only correlated after the robot has already arrived and stopped.
+  //
+  // Re-sending is not a no-op even when lookahead_point_ has not changed: PublishWaypoint()
+  // re-extends it by kExtendWayPointDistance* from the robot's CURRENT position, so the carrot
+  // moves forward as the robot advances.
+  if (lookahead_point_valid_ &&
+      now_s - last_waypoint_publish_time_ > kWaypointStallTimeout) {
+    double stale_s = now_s - last_waypoint_publish_time_;
+    keypose_cloud_update_ = true;   // give this same tick a chance at a fresh plan
+    PublishWaypoint();              // but do not depend on that round succeeding
+    // Say so. This half used to re-send in complete silence, which made a sweep's logs unable
+    // to answer "did the waypoint topic ever go stale, and how often" -- the exact question a
+    // stale-waypoint watchdog exists to answer. Throttled, because a genuinely wedged planning
+    // round trips it on every tick.
+    waypoint_refresh_count_++;
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+                         "/way_point stale %.1fs -- re-sent (%d so far this run)",
+                         stale_s, waypoint_refresh_count_);
+  }
+
+  // ---- Progress: is the ROBOT stuck? Only this half may retire a viewpoint. ----
+  Eigen::Vector3d robot(robot_position_.x, robot_position_.y, robot_position_.z);
+  if (stall_reference_time_ < 0.0) {
+    stall_reference_position_ = robot;
+    stall_reference_time_ = now_s;
+    return;
+  }
+  // Any real movement clears the alarm. kStallProgressDist has to sit above odometry
+  // jitter, or a stationary robot looks like it is creeping and never trips the watchdog.
+  double moved_x = robot.x() - stall_reference_position_.x();
+  double moved_y = robot.y() - stall_reference_position_.y();
+  if (moved_x * moved_x + moved_y * moved_y >
+      kStallProgressDist * kStallProgressDist) {
+    stall_reference_position_ = robot;
+    stall_reference_time_ = now_s;
+    return;
+  }
+  double stalled_s = now_s - stall_reference_time_;
+  if (stalled_s < kWaypointStallTimeout) {
+    return;
+  }
+
+  // Level 1 -- the robot is not moving. Force a planning round: the waypoint it is sitting
+  // on may be fine and the PLAN stale. Re-sending is handled by the freshness check above,
+  // which fires on the same kWaypointStallTimeout and covers this case too.
+  keypose_cloud_update_ = true;
+
+  if (stalled_s < kWaypointStallEscalateTimeout) {
+    return;
+  }
+  if (!lookahead_point_valid_) {
+    // No round has ever produced a lookahead, so lookahead_point_ is uninitialised Eigen
+    // memory and blacklisting it would poison a random spot. Forcing the round is the whole
+    // of what is useful here.
+    return;
+  }
+
+  // Level 2 -- still nowhere after twice the timeout, so the waypoint is not merely late,
+  // it is unreachable. Retire the viewpoint behind it so the planner has to pick something
+  // else, and remember the place: the lattice rolls with the robot, so a viewpoint index
+  // means nothing a few metres later, but the obstacle that blocked it does not move.
+  int viewpoint_ind =
+      viewpoint_manager_->GetNearestCandidateViewPointInd(lookahead_point_);
+  if (viewpoint_manager_->InRange(viewpoint_ind)) {
+    viewpoint_manager_->SetViewPointVisited(viewpoint_ind, true);
+  }
+  if (!IsStallBlacklisted(lookahead_point_) &&
+      static_cast<int>(stall_blacklist_.size()) < kMaxStallBlacklistNum) {
+    stall_blacklist_.push_back(lookahead_point_);
+    RCLCPP_WARN(this->get_logger(),
+                "waypoint stalled %.1fs at (%.2f, %.2f) -- abandoning it",
+                stalled_s, lookahead_point_.x(), lookahead_point_.y());
+  }
+  // Retire the TARGET too, not just the waypoint in front of it. The waypoint is the extended
+  // lookahead a few metres from the robot; the thing pinning us is the target itself, and
+  // blacklisting only the former leaves the target "accepted" so it is re-adopted next cycle.
+  // That is what cost ~60 s of one run on a single unreachable viewpoint. Once blacklisted,
+  // UpdateTargetViewPoints reports it `unreachable`, target_explorer retries that sector from
+  // further out, and the goal moves on by itself.
+  if (preempt_target_valid_ && !IsStallBlacklisted(preempt_target_position_) &&
+      static_cast<int>(stall_blacklist_.size()) < kMaxStallBlacklistNum) {
+    stall_blacklist_.push_back(preempt_target_position_);
+    RCLCPP_WARN(this->get_logger(),
+                "target viewpoint (%.2f, %.2f) unreachable after %.1fs -- retiring it",
+                preempt_target_position_.x(), preempt_target_position_.y(), stalled_s);
+    preempt_target_valid_ = false;
+  }
+  // Re-arm rather than latch, so a second blocking viewpoint gets retired too.
+  stall_reference_time_ = now_s;
 }
 
 void SensorCoveragePlanner3D::SendInitialWaypoint() {
@@ -934,6 +1334,46 @@ void SensorCoveragePlanner3D::LocalPlanning(
     exploration_path_ns::ExplorationPath &local_path) {
   misc_utils_ns::Timer local_tsp_timer("Local planning");
   local_tsp_timer.Start();
+  // While targets preempt, aim the lookahead at the nearest snapped target BEFORE the local
+  // planner reads it. GetNavigationViewPointIndices then resolves lookahead_viewpoint_ind_ to
+  // that target, and SolveTSP's existing robot/lookahead dummy -- cost 0 to the robot and the
+  // lookahead, 9999 to everything else -- forces the target to sit immediately after the robot
+  // once the dummies are stripped. Being a must-visit node only guaranteed the target was
+  // somewhere in the tour; this is what puts it first.
+  int preempt_target_ind =
+      TargetPreemptActive() ? PreferredTargetViewPointInd() : -1;
+  if (preempt_target_ind >= 0) {
+    geometry_msgs::msg::Point target_position =
+        viewpoint_manager_->GetViewPointPosition(preempt_target_ind);
+    Eigen::Vector3d target(target_position.x, target_position.y,
+                           target_position.z);
+    // Compared against the previously ADOPTED target, not against lookahead_point_:
+    // GetLookAheadPoint overwrites the lookahead every cycle, so testing that made this look
+    // like a new adoption on every single tick and logged the same target eleven times.
+    if (!preempt_target_valid_ ||
+        (target - preempt_target_position_).norm() > kTargetViewPointSnapMaxDist) {
+      // Adopting a different target: re-aim the direction hysteresis AT it. GetLookAheadPoint
+      // scores candidates by dot(lookahead_point_direction_, unit vector to candidate), and
+      // the momentum latch reuses that score, so leaving the old heading in place makes both
+      // actively resist turning toward the new target. Resetting to the robot's current
+      // heading (what /reset_waypoint does) is not enough here -- it is neutral, not helpful.
+      Eigen::Vector3d to_target(target.x() - robot_position_.x,
+                                target.y() - robot_position_.y, 0.0);
+      if (to_target.norm() > 1e-3) {
+        lookahead_point_direction_ = to_target.normalized();
+      }
+      RCLCPP_INFO(this->get_logger(),
+                  "target preempt: driving to target viewpoint (%.2f, %.2f)",
+                  target.x(), target.y());
+    }
+    preempt_target_position_ = target;
+    preempt_target_valid_ = true;
+    lookahead_point_ = target;
+    lookahead_point_update_ = true;
+    lookahead_point_valid_ = true;
+  } else {
+    preempt_target_valid_ = false;
+  }
   if (lookahead_point_update_) {
     local_coverage_planner_->SetLookAheadPoint(lookahead_point_);
   }
@@ -1343,6 +1783,10 @@ void SensorCoveragePlanner3D::SendWaypoint(double x, double y) {
   waypoint.y = y;
   waypoint.theta = atan2(y - robot_position_.y, x - robot_position_.x);
   waypoint_pub_->publish(waypoint);
+  // Every waypoint in the node goes out through here -- the planning round, the stall
+  // watchdog and SendInitialWaypoint alike -- so this is the one place that can record the
+  // topic's true age. Stamping it at any caller would drift the moment a new one is added.
+  last_waypoint_publish_time_ = this->now().seconds();
 }
 
 void SensorCoveragePlanner3D::PublishWaypoint() {
@@ -1357,9 +1801,19 @@ void SensorCoveragePlanner3D::PublishWaypoint() {
     double extend_dist = lookahead_point_in_line_of_sight_
                              ? kExtendWayPointDistanceBig
                              : kExtendWayPointDistanceSmall;
+    // The guard on r matters now that the stall watchdog re-sends on a timer: the robot can
+    // be sitting ON its lookahead, where r -> 0 makes dx/r either NaN (r == 0 exactly) or a
+    // full extend_dist throw in whatever direction odometry noise happened to point. Below
+    // the threshold there is no meaningful bearing to extend along, so keep the robot's
+    // heading and push the carrot out that way instead.
     if (r < extend_dist && kExtendWayPoint) {
-      dx = dx / r * extend_dist;
-      dy = dy / r * extend_dist;
+      if (r > 1e-3) {
+        dx = dx / r * extend_dist;
+        dy = dy / r * extend_dist;
+      } else {
+        dx = cos(robot_yaw_) * extend_dist;
+        dy = sin(robot_yaw_) * extend_dist;
+      }
     }
     waypoint_x = dx + robot_position_.x;
     waypoint_y = dy + robot_position_.y;
@@ -1478,6 +1932,19 @@ void SensorCoveragePlanner3D::execute() {
     return;
   }
 
+  if (!has_registered_scan_) {
+    RCLCPP_INFO_THROTTLE(
+        this->get_logger(), *this->get_clock(), 2000,
+        "tare_planner: waiting for /registered_scan point cloud data...");
+    start_time_ = this->now().seconds();
+    stall_reference_time_ = -1.0;
+    return;
+  }
+
+  // Before the planning block, so it still runs on the ticks that never reach
+  // PublishWaypoint -- which are exactly the ticks that strand the robot.
+  CheckWaypointStall();
+
   overall_processing_timer.Start();
   if (keypose_cloud_update_) {
     keypose_cloud_update_ = false;
@@ -1498,6 +1965,10 @@ void SensorCoveragePlanner3D::execute() {
     }
 
     UpdateKeyposeGraph();
+
+    // After UpdateViewPoints, which rebuilds the candidate set this snaps onto, and before
+    // GlobalPlanning, whose UpdateCellStatus honours the priority cells it marks.
+    UpdateTargetViewPoints();
 
     int uncovered_point_num = 0;
     int uncovered_frontier_point_num = 0;
@@ -1528,11 +1999,46 @@ void SensorCoveragePlanner3D::execute() {
     double current_time = this->now().seconds();
     double delta_time = current_time - start_time_;
 
-    if (grid_world_->IsReturningHome() &&
+    // Never declare exploration finished while targets are outstanding. The
+    // IsLocalCoverageComplete() guard alone is not enough: it is held false by
+    // HasTargetViewPoints(), which counts only *accepted* targets, so a robot whose targets
+    // are all still `far` -- i.e. has not reached any of them yet -- sails straight through
+    // it, parks at home, and burns the rest of the window. That is exactly what happened at
+    // t+56.5s with nine goals pending.
+    // Un-latch. `exploration_finished_` gates UpdateViewPointCoverage (the else branch above
+    // resets coverage every tick) and, with kNoExplorationReturnHome, parks the robot at home
+    // -- so once it latches, accepted target viewpoints are handed to a local planner that has
+    // nothing left to cover and the robot never moves again. Measured: chinese_room latched at
+    // t+16.5s with eight outstanding requests and sat still for the remaining 134s of its
+    // window, and the stall watchdog could not report it because `stopped_` had switched the
+    // watchdog off. Outstanding target work re-opens exploration.
+    if ((exploration_finished_ || stopped_) && TargetWorkOutstanding()) {
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 10000,
+                           "%d target viewpoint(s) still outstanding -- resuming exploration",
+                           static_cast<int>(target_viewpoint_positions_.size()));
+      exploration_finished_ = false;
+      stopped_ = false;
+    }
+
+    // `!TargetWorkOutstanding()` rather than `!TargetPreemptActive()`: preempt is a policy
+    // flag (may targets restrict the global tour), and target_explorer holds it false while
+    // any label is still undiscovered so the frontier tour is not starved. That left the
+    // latch open in the one case it was written to close -- every request still `far` -- so
+    // gate on the fact instead.
+    if (has_registered_scan_ &&
+        grid_world_->IsReturningHome() &&
         local_coverage_planner_->IsLocalCoverageComplete() &&
-        (current_time - start_time_) > 5) {
+        !TargetWorkOutstanding() && (current_time - start_time_) > 5) {
       if (!exploration_finished_) {
-        PrintExplorationStatus("Exploration completed, returning home", false);
+        // PrintExplorationStatus("Exploration completed, returning home", false);
+        // Distinct from smart_vlm's EXPLORATION END, which is the mission clock closing the
+        // window. This is TARE's own verdict. Three things now keep it from landing while
+        // targets are outstanding, and it took all three: HasTargetViewPoints() for accepted
+        // targets, !TargetPreemptActive() above for ones still `far`, and the priority-cell
+        // seeding in SolveGlobalTSP so return_home_ is not latched underneath us.
+        RCLCPP_INFO(this->get_logger(),
+                    "TARE EXPLORATION FINISHED at t+%.1fs (returning home)",
+                    delta_time);
       }
       exploration_finished_ = true;
     }
@@ -1548,6 +2054,7 @@ void SensorCoveragePlanner3D::execute() {
 
     lookahead_point_update_ =
         GetLookAheadPoint(exploration_path_, global_path, lookahead_point_);
+    lookahead_point_valid_ = lookahead_point_valid_ || lookahead_point_update_;
     PublishWaypoint();
 
     overall_processing_timer.Stop(false);

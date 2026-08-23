@@ -194,6 +194,13 @@ class MapNode(WorkerNodeMixin, Node):
         self.obj_box_pub = self.create_publisher(MarkerArray, '/obj_boxes', 10)
         self.obj_text_pub = self.create_publisher(MarkerArray, '/obj_labels', 10)
         self.map_json_pub = self.create_publisher(String, '/obj_map_json', 2)
+        # Exploration's view of the map: every TRACKED object, including the ones
+        # /obj_map_json cannot carry because infer_centroid returned None. Those are
+        # exactly the under-observed objects a planner needs to go look at again, so a
+        # separate topic rather than a wider /obj_map_json -- the answer path parses
+        # that shape in three places and must not move for an exploration change.
+        self.exploration_pub = self.create_publisher(
+            String, '/exploration/object_targets', 2)
 
         # Own callback group so the executor can run it while other callbacks are busy.
         self.create_timer(self.HEARTBEAT_S, self._heartbeat, callback_group=group())
@@ -648,6 +655,12 @@ Every 2D detection and every 3D map object, one line each — validation only.""
             objects = self.obj_mapper.serialize_map_to_dict()
             self.map_json_pub.publish(String(data=json.dumps(objects, default=_jsonable)))
         self.latest_objects = objects
+        # Same cadence as /obj_map_json, and likewise published even when empty so a
+        # consumer can tell "nothing tracked yet" from "node is not running".
+        with self.timer.stage('map_exploration'):
+            self.exploration_pub.publish(String(data=json.dumps(
+                {'stamp': stamp, 'objects': self.obj_mapper.describe_objects()},
+                default=_jsonable)))
         # Disk write on EVERY publish, on the worker thread — a prime suspect if map_ms
         # spikes without the detection count changing.
         with self.timer.stage('map_write_json'):

@@ -75,32 +75,21 @@ test pkgs="captioner sam_mapper smart_vlm":
       python3 -m pytest $dirs -q -p no:cacheprovider
     "
 
-# Headless default: Xvfb :99 inside iros2026_system. Override: just sim :0
+# Headless default: Override: just sim :0
 [group('sim')]
 [doc('Simulator + base autonomy + rviz2 (blocks; terminal A)')]
-sim sim_display="":
-    @just _sim ./system_simulation.sh "{{sim_display}}"
+sim sim_display=":0":
+    docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./system_simulation.sh"
 
 [group('sim')]
 [doc('Simulator without rviz2 — pair with `just foxglove`')]
-sim-noviz sim_display="":
-    @just _sim ./system_simulation_noviz.sh "{{sim_display}}"
+sim-noviz sim_display=":0":
+    docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./system_simulation_noviz.sh"
 
 [group('sim')]
 [doc('Simulator behind the 6-topic eval firewall (domain 42, no rviz)')]
-challenge sim_display="":
-    @just _sim "./challenge_simulation.sh --noviz" "{{sim_display}}"
-
-# Shared body of sim / sim-noviz / challenge: resolve a DISPLAY (starting Xvfb in
-# the system container when none was given), then run the script under VirtualGL.
-[private]
-_sim script sim_display="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    d="{{sim_display}}"
-    if [ -z "$d" ]; then d="$(scripts/eval/ensure_xvfb.sh)"; fi
-    docker exec -it -e DISPLAY="$d" -e XDG_RUNTIME_DIR=/tmp/runtime-docker \
-      iros2026_system bash -c "{{vgl}} {{script}}"
+challenge sim_display=":0":
+    docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash -c "{{vgl}} ./challenge_simulation.sh --noviz"
 
 # Single pass by default; loop:=true to loop (e.g. just bag-play livingroom_1 1.0 true)
 [group('bags')]
@@ -191,7 +180,7 @@ ask q domain="0":
 [group('debug')]
 [doc('Foxglove bridge on host port 8765 (blocks; tunnel from laptop)')]
 foxglove domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0"
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8090 address:=0.0.0.0"
 
 # Default domain 0 matches sim-noviz. Challenge mode: just teleop 42
 [group('sim')]
@@ -232,8 +221,8 @@ list-scenes:
 
 [group('debug')]
 [doc('Interactive shell in the system container')]
-shell-sys:
-    docker exec -it iros2026_system bash
+shell-sys sim_display=":0":
+    docker exec -it -e DISPLAY={{sim_display}} iros2026_system bash
 
 [group('debug')]
 [doc('Interactive shell in the AI module container')]
@@ -434,7 +423,7 @@ cat1-reasoner views="3":
 # captioner/vlm_backends/constants.py.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
-eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" report="/data/runs/challenge_report.json":
+eval-cat1 scene="all" limit="0" target_source="vlm" speed="0.1" report="/data/runs/challenge_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
 
 # The same driver against the object-reference questions: same per-question relaunch, same
@@ -450,7 +439,7 @@ eval-cat1 scene="all" limit="0" target_source="gt" speed="0.1" report="/data/run
 # view_source is the same vqa.yaml setting category-1 reads -- see eval-cat1 above.
 [group('eval')]
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
-eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" report="/data/runs/cat2_report.json":
+eval-cat2 scene="all" limit="0" mode="hybrid" target_source="vlm" speed="0.1" report="/data/runs/cat2_report.json":
     docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
 
 # The same two sweeps against the LIVE SIM instead of bags, with TARE driving. Unlike
@@ -463,14 +452,14 @@ eval-cat2 scene="all" limit="0" mode="hybrid" target_source="gt" speed="0.1" rep
 #   just eval-cat2-sim "arabic_room chinese_room"
 [group('eval')]
 [doc('Orchestrated category-1 eval against the live sim (TARE explores; host-side)')]
-eval-cat1-sim scene="all" limit="0" target_source="gt" report="/data/runs/challenge_report_sim_cat1.json":
+eval-cat1-sim scene="all" limit="0" target_source="vlm" report="/data/runs/challenge_report_sim_cat1.json":
     python3 scripts/eval/run_sim_sweep.py --category 1 --scenes {{scene}} \
       --limit {{limit}} --target-source {{target_source}} \
       --report "{{report}}"
 
 [group('eval')]
 [doc('Orchestrated category-2 eval against the live sim (TARE explores; host-side)')]
-eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="gt" report="/data/runs/challenge_report_sim_cat2.json":
+eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="vlm" report="/data/runs/challenge_report_sim_cat2.json":
     python3 scripts/eval/run_sim_sweep.py --category 2 --scenes {{scene}} \
       --limit {{limit}} --mode {{mode}} --target-source {{target_source}} \
       --report "{{report}}"

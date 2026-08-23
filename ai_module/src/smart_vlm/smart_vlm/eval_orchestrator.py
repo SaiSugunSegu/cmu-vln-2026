@@ -419,6 +419,32 @@ def answer_rationale(best_view_dir: Optional[str], category: int) -> tuple:
     return manifest.get(key), (len(views) if isinstance(views, list) else None)
 
 
+def coverage_summary(best_view_dir: Optional[str]) -> Optional[dict]:
+    """What target_explorer achieved, from the run directory's target_coverage.json.
+
+    Read here for the same reason `answer_rationale` is: the score alone cannot tell you
+    whether a zero was selection, perception, or the robot simply never walking round the
+    object. `labels_unseen` and `goals_unpublished` separate those three, and without this
+    the only trace is launch stdout, which nothing captures.
+
+    Missing yields None — a question that failed before arming has no coverage report, and
+    losing the row over that would be a bad trade.
+    """
+    if not best_view_dir:
+        return None
+    path = Path(best_view_dir) / "target_coverage.json"
+    if not path.is_file():
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except (OSError, json.JSONDecodeError) as err:
+        log(f"could not read {path} for the coverage summary: {err}", err=True)
+        return None
+    summary = payload.get("summary") if isinstance(payload, dict) else None
+    return summary if isinstance(summary, dict) else None
+
+
 # -- one question -----------------------------------------------------------
 
 def grade(node: EvalOrchestratorNode, entry: dict) -> dict:
@@ -555,6 +581,10 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         # you a row is wrong; these tell you whether perception or reasoning was at fault.
         "reason": reason,
         "n_context_views": n_views,
+        # Did exploration deliver what the answer path needed? `labels_unseen` non-empty
+        # means SAM never found a target at all; `goals_unpublished` means it was found but
+        # never circled enough to earn a centroid, so it is absent from obj_map.json.
+        "target_coverage": coverage_summary(node.best_view_dir),
         "error": error,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
     }

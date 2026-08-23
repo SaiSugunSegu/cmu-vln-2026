@@ -19,6 +19,7 @@
 #include <geometry_msgs/msg/polygon_stamped.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/pose2_d.hpp>
+#include <geometry_msgs/msg/pose_array.hpp>
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/time_synchronizer.h>
@@ -28,6 +29,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/empty.hpp>
+#include <std_msgs/msg/string.hpp>
 #include <std_msgs/msg/float32.hpp>
 #include <std_msgs/msg/int32.hpp>
 #include <std_msgs/msg/int32_multi_array.hpp>
@@ -86,6 +88,15 @@ private:
   std::string sub_nogo_boundary_topic_;
   std::string sub_joystick_topic_;
   std::string sub_reset_waypoint_topic_;
+  // Semantic steering input: places the perception side wants the robot to stand, so an
+  // under-observed target object gets seen from a direction it has not been seen from.
+  std::string sub_target_viewpoints_topic_;
+  // Which requested standing positions were placed and which the local horizon refused, so
+  // the semantic side can tell "not there yet" from "nothing can stand there".
+  std::string pub_target_feedback_topic_;
+  // Bool: may targets preempt frontier exploration right now. Owned by target_explorer,
+  // which is the only thing that knows whether every target label has been found yet.
+  std::string sub_target_preempt_topic_;
 
   std::string pub_exploration_finish_topic_;
   std::string pub_runtime_breakdown_topic_;
@@ -102,6 +113,8 @@ private:
   bool kUseLineOfSightLookAheadPoint;
   bool kNoExplorationReturnHome;
   bool kUseMomentum;
+  bool kUseTargetViewPoints;
+  bool kUseWaypointStallWatchdog;
 
   // Double
   double kKeyposeCloudDwzFilterLeafSize;
@@ -111,11 +124,31 @@ private:
   double kLookAheadDistance;
   double kExtendWayPointDistanceBig;
   double kExtendWayPointDistanceSmall;
+  // Poses older than this are ignored, so a dead target_explorer reverts TARE to stock
+  // coverage instead of pinning it to the last thing it happened to ask for.
+  double kTargetViewPointTimeout;
+  // A request is honoured only if a real candidate viewpoint sits within this of it. This
+  // is what makes an unreachable request (a bin pointing into the wall behind a window)
+  // cost nothing: no candidate is near it, so it is simply dropped.
+  double kTargetViewPointSnapMaxDist;
+  // Stall watchdog. PublishWaypoint() only runs inside `if (keypose_cloud_update_)`, which
+  // is set on every 5th registered scan and which two paths return out of before reaching
+  // it -- and waypoint_converter ships yawConfig -1 ("reach waypoint and stop"), so a
+  // skipped round leaves the robot coasting to a halt at a waypoint nobody will replace.
+  double kWaypointStallTimeout;
+  double kWaypointStallEscalateTimeout;
+  double kStallProgressDist;
+  double kStallBlacklistRadius;
 
   // Int
   int kDirectionChangeCounterThr;
   int kDirectionNoChangeCounterThr;
   int kResetWaypointJoystickAxesID;
+  // Kept small on purpose: must-visit viewpoints have their covered points marked covered
+  // before EnqueueViewpointCandidates runs, so each one slightly depresses the marginal
+  // gain of genuine coverage viewpoints. A few tens would suppress frontier selection.
+  int kMaxTargetViewPointNum;
+  int kMaxStallBlacklistNum;
 
   std::shared_ptr<pointcloud_utils_ns::PCLCloud<PlannerCloudPointType>>
       keypose_cloud_;
@@ -181,6 +214,7 @@ private:
 
   bool keypose_cloud_update_;
   bool initialized_;
+  bool has_registered_scan_;
   bool lookahead_point_update_;
   bool relocation_;
   bool start_exploration_;
@@ -194,6 +228,42 @@ private:
   bool use_momentum_;
   bool lookahead_point_in_line_of_sight_;
   bool reset_waypoint_;
+  // Requested standing positions and when they arrived, in map frame.
+  std::vector<Eigen::Vector3d> target_viewpoint_positions_;
+  double target_viewpoints_receive_time_;
+  // Where the robot was when it last made real progress, and how long ago that was.
+  Eigen::Vector3d stall_reference_position_;
+  double stall_reference_time_;
+  // When a waypoint last actually went out on the wire. Stamped in SendWaypoint(), which
+  // every publisher funnels through, so this cannot disagree with what the topic saw.
+  // Distinct from stall_reference_time_ on purpose: that one tracks the ROBOT, this one
+  // tracks the TOPIC, and a robot still coasting toward a stale goal keeps the first fresh
+  // while the second ages without limit.
+  double last_waypoint_publish_time_;
+  // How many times the freshness half has had to re-send. Reported, not acted on: a run with
+  // a high count had a planning round that kept failing to publish, which is a different bug
+  // from the robot being physically stuck, and the two were previously indistinguishable in
+  // the logs because this half was silent.
+  int waypoint_refresh_count_;
+  // Latches once any planning round produces a lookahead. Distinct from
+  // lookahead_point_update_, which is re-derived every round and goes false again whenever
+  // a round finds none -- which is exactly when the watchdog most wants to re-send the last
+  // good one. Before this latches, lookahead_point_ is uninitialised Eigen memory.
+  bool lookahead_point_valid_;
+  // Latest value of /exploration/target_preempt, and when it arrived. Stale means stock.
+  bool target_preempt_;
+  double target_preempt_receive_time_;
+  // The target the lookahead is currently pinned to. Held so the stall watchdog can retire
+  // the TARGET when the robot cannot reach it -- blacklisting the waypoint alone leaves the
+  // pin in place and the robot re-adopts the same unreachable target every cycle.
+  Eigen::Vector3d preempt_target_position_;
+  bool preempt_target_valid_;
+  // Places the robot demonstrably could not reach. Kept as world positions, not viewpoint
+  // indices, because the viewpoint lattice rolls with the robot and indices do not survive.
+  std::vector<Eigen::Vector3d> stall_blacklist_;
+  // Target viewpoints TARE actually snapped this cycle, so the lookahead can be pointed at
+  // the nearest one. Rebuilt every cycle alongside the local planner's copy.
+  std::vector<int> accepted_target_viewpoint_indices_;
   pointcloud_utils_ns::PointCloudDownsizer<pcl::PointXYZ> pointcloud_downsizer_;
 
   int update_representation_runtime_;
@@ -232,6 +302,10 @@ private:
       nogo_boundary_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joystick_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr reset_waypoint_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr
+      target_viewpoints_sub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr target_feedback_pub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr target_preempt_sub_;
 
   // ROS publishers
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr global_path_full_publisher_;
@@ -279,6 +353,28 @@ private:
   void JoystickCallback(const sensor_msgs::msg::Joy::ConstSharedPtr joy_msg);
   void
   ResetWaypointCallback(const std_msgs::msg::Empty::ConstSharedPtr empty_msg);
+  void TargetViewPointsCallback(
+      const geometry_msgs::msg::PoseArray::ConstSharedPtr pose_array_msg);
+  // Snap the requested positions onto real candidate viewpoints and hand them to the local
+  // planner as must-visit. Returns the cells of the requests that fell outside the local
+  // horizon, so the global layer can keep those subspaces EXPLORING.
+  void UpdateTargetViewPoints();
+  void TargetPreemptCallback(const std_msgs::msg::Bool::ConstSharedPtr preempt_msg);
+  /** Is target preemption active AND fresh? Stale or false leaves TARE bit-for-bit stock. */
+  bool TargetPreemptActive() const;
+  /** Does the semantic layer still have places it wants visited?
+   *
+   * A FACT about outstanding work, unlike TargetPreemptActive() which is a policy flag about
+   * whether targets may restrict the global tour. The two diverge exactly where it hurt: a
+   * run whose requests are all still `far` has preempt off yet eight outstanding requests, so
+   * the finish latch sailed through and the robot parked at home for the rest of the window.
+   */
+  bool TargetWorkOutstanding() const;
+  /** Which accepted target to drive at, or -1. Order, not distance -- see the definition. */
+  int PreferredTargetViewPointInd() const;
+  // Runs on every tick, including the ones that never reach PublishWaypoint.
+  void CheckWaypointStall();
+  bool IsStallBlacklisted(const Eigen::Vector3d &position) const;
 
   void SendInitialWaypoint();
   void UpdateKeyposeGraph();
