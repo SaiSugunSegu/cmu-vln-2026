@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Category-1 bag benchmark driver (runs INSIDE iros2026_ai_module).
+"""Category-1 bag benchmark driver (runs INSIDE iros2026_odyssey).
 
 Challenge-like loop per QA entry:
   0. Wait for /sam3/status == ready (SAM weights loaded)
@@ -41,7 +41,7 @@ from std_msgs.msg import Int32, String
 
 # Paths this script may read/write. Host data/ is bind-mounted 1:1 at /data, so
 # a container path is just the host path with the repo prefix removed — no
-# guessing required (see docker/compose.yml).
+# guessing required (see docker/compose_gpu.yml).
 _CONTAINER_ROOTS = ("/data", "/home/docker")
 
 
@@ -51,7 +51,7 @@ def _require_container_path(path: Path, flag: str) -> Path:
     if not any(text == root or text.startswith(root + "/") for root in _CONTAINER_ROOTS):
         raise SystemExit(
             f"{flag}={text} is not a container path. This script runs inside "
-            f"iros2026_ai_module; use a path under {' or '.join(_CONTAINER_ROOTS)} "
+            f"iros2026_odyssey; use a path under {' or '.join(_CONTAINER_ROOTS)} "
             f"(host <repo>/data/x is /data/x)."
         )
     return path

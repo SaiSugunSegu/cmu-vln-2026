@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Bulk pre-seed of the Hugging Face cache.
 
-Nothing forces offline mode — the deployment always has connectivity. This exists so the
-first real run is not also a ~20 GB download, and to warm SAM 3's cv-utils kernel, which is
-otherwise fetched lazily and fails silently (see warm_kernels).
+Nothing forces offline mode — the deployment always has connectivity. `just up`
+bakes sam3 into the image (this script, above the package COPYs). Local Qwen3-VL
+uses the host HF cache; `just vqa-up` bind-mounts it.
+`just hf-fetch` refreshes a running container; a checkpoint that must ship in
+the Hub image has to land via `just up`.
 
-Run it once after `just up`, and again on any new machine:
+Also warms SAM 3's cv-utils kernel, which is otherwise fetched lazily and fails
+silently (see warm_kernels).
 
     just hf-fetch                 # all models + kernels
-    just hf-fetch qwen3vl sam3    # a subset
+    just hf-fetch sam3            # a subset
 
 `facebook/sam3` is a gated repo — it needs HF_TOKEN (repo-root .env) AND the
 licence accepted on the model page by the account that issued the token.
@@ -23,19 +26,14 @@ from typing import Optional
 # Keep these in sync with the defaults at each call site — a drift here shows up as a
 # surprise download of a second copy much later, not as an error:
 #   sam3     -> ai_module/src/sam_mapper/config/sam3_*.yaml  ("model_id:")
-#   qwen3vl  -> captioner/models/captioning.py  (Qwen3VLHFBackend.default_model_id)
 #   qwen2_5vl-> captioner/models/captioning.py  (QwenHFBackend.default_model_id)
 #   clip     -> captioner/models/clip.py        (OpenCLIP default model_id)
+# Qwen3-VL is the host HF cache; `just vqa-up` bind-mounts it.
 MODELS: dict[str, dict] = {
     "sam3": {
         "repo_id": "facebook/sam3",
         "gated": True,
         "why": "sam_mapper detection/segmentation",
-    },
-    "qwen3vl": {
-        "repo_id": "Qwen/Qwen3-VL-4B-Instruct",
-        "gated": False,
-        "why": "captioner + qwen_vqa_server + category-1 (default backend)",
     },
     "clip": {
         "repo_id": "apple/DFN5B-CLIP-ViT-H-14-378",
@@ -143,7 +141,7 @@ def fetch(name: str, spec: dict, token: Optional[str]) -> bool:
         return False
     except OSError as exc:
         # Covers the permission case: a root-owned cache dir the container's uid
-        # cannot write. The init one-shot in docker/compose.yml is what fixes it.
+        # cannot write. The init one-shot in docker/compose_gpu.yml is what fixes it.
         print(f"[hf-fetch] {repo_id} failed writing the cache: {exc}\n"
               f"           If this is a permission error, run `just up` so the init\n"
               f"           container can chown {os.environ.get('HF_HOME', '~/.cache/huggingface')}.",
@@ -156,7 +154,7 @@ def fetch(name: str, spec: dict, token: Optional[str]) -> bool:
 
 def main(argv: Optional[list] = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Pre-seed the HF cache so the first real run is not a 20 GB download.")
+        description="Pre-seed the HF cache so the first real run is not a multi-GB download.")
     parser.add_argument(
         "models", nargs="*", default=None,
         help=f"Subset to fetch. Default: {' '.join(MODELS)}. "
