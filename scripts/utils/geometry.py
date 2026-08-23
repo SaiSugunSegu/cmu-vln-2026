@@ -148,17 +148,16 @@ BAD_LANDMARKS = {
 
 # Class folding, same spirit (and mostly the same entries) as scripts/eval/score_map3d.py:
 # every wrong entry here merges two genuinely different classes and lets an ambiguous
-# question through, so keep it short.
+# question through, so keep it short. Plurals are NOT listed — `singularise` handles them
+# for the whole vocabulary, and an entry per plural is the thing that made "flowers" fail
+# to reach the "flower" in the map while "books" reached the "book".
 SYNONYM_GROUPS = [
     {"sofa", "couch"},
-    {"picture", "painting", "photo", "poster", "framed record", "framed records"},
+    {"picture", "painting", "photo", "poster", "framed record"},
     {"carpet", "rug"},
     {"potted plant", "plant"},
     {"nightstand", "night stand", "bedside table"},
     {"tv", "television"},
-    {"book", "books"},
-    {"curtain", "curtains"},
-    {"window", "windows"},
     {"lamp", "light"},
     {"trash can", "trash bin", "garbage can"},
 ]
@@ -167,6 +166,11 @@ for _group in SYNONYM_GROUPS:
     _canon = sorted(_group)[0]
     for _name in _group:
         CLASS_ALIAS[_name] = _canon
+
+# Plurals the -s rules below would mangle or miss. Short on purpose: every one of these is
+# a word that actually appears as a label or a question's head noun.
+IRREGULAR_PLURALS = {"shelves": "shelf", "leaves": "leaf", "knives": "knife",
+                     "people": "person"}
 
 COLORS = {
     "black", "gray", "grey", "white", "brown", "maroon", "olive", "pink", "red", "blue",
@@ -198,10 +202,35 @@ def color_matches(wanted: str, colors: list[str]) -> bool:
     return any(c in accepted for c in colors)
 
 
+def singularise(word: str) -> str:
+    """English plural -> singular, conservative enough to run on any label.
+
+    The guards matter more than the rules: "glass", "dress" and "mattress" all end in s and
+    are not plurals, and stripping one would invent a class. So -ss, -us and -is are left
+    alone, and only -ies, the -es that follows a sibilant, and a plain trailing -s move.
+    """
+    if word in IRREGULAR_PLURALS:
+        return IRREGULAR_PLURALS[word]
+    if len(word) > 3 and word.endswith("ies"):
+        return word[:-3] + "y"
+    if len(word) > 4 and word.endswith(("sses", "shes", "ches", "xes", "zes")):
+        return word[:-2]
+    if len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
+        return word[:-1]
+    return word
+
+
 def norm_class(name: str) -> str:
-    """Canonical class key: lowercased, whitespace-collapsed, synonyms folded."""
+    """Canonical class key: lowercased, whitespace-collapsed, singularised, synonyms folded.
+
+    The alias table is consulted before singularising as well as after, so a canonical form
+    that is itself plural ("glasses") can still be spelled in a synonym group and win.
+    """
     key = " ".join(str(name or "").lower().split())
-    return CLASS_ALIAS.get(key, key)
+    if key in CLASS_ALIAS:
+        return CLASS_ALIAS[key]
+    singular = " ".join(singularise(word) for word in key.split())
+    return CLASS_ALIAS.get(singular, singular)
 
 
 class Obj:

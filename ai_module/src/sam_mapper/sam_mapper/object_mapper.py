@@ -20,6 +20,12 @@ from sam_mapper.mapping_config import MappingConfig
 from sam_mapper.ros_markers import create_colored_point_cloud, create_text_marker, create_wireframe_marker
 from sam_mapper.single_object import SingleObject
 
+#: Key of the non-object entry `serialize_map_to_dict` writes into obj_map.json. Safe
+#: because every other key is a track id, i.e. an int. `scripts/utils/objmap.py` keeps its
+#: own copy of this string — it runs on the host and cannot import this package — so the
+#: two must change together.
+SCHEMA_KEY = "_schema"
+
 VERTICAL_OBJECTS = ["door", "painting"]  # merge candidates must agree on this (see the loop below)
 
 
@@ -601,7 +607,12 @@ class ObjMapper:
         return center, np.ptp(voxels, axis=0)
 
     def serialize_map_to_dict(self):
-        objects_dict = {}
+        # Under a key no track id can take, because every other key is an int. It says how
+        # the extents were computed: maps written before the clamp carry a whole extra
+        # voxel on each axis, and a reader that cannot tell the two apart has to either
+        # over-trust old boxes or under-trust new ones. See objmap.load_obj_map.
+        objects_dict = {SCHEMA_KEY: {"box_extent": "voxel_floor",
+                                     "voxel_size": float(self.voxel_size)}}
         for single_obj in self.single_obj_list:
             center = single_obj.infer_centroid(diversity_percentile=self.percentile_thresh, regularized=True)
             if center is None:
