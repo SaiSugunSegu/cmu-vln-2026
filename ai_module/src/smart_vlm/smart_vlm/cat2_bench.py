@@ -26,6 +26,10 @@ these boxes, which needs no selection to compute — so one report already separ
 ways a question is lost: the object is not in the map (`found` false), the wrong candidate was
 chosen (`score` far below `ceiling_score`), or the box is loose (`ceiling_score` itself is low).
 On the first cache measured, the ceiling was 0.31 of 2, i.e. selection was not the bottleneck.
+
+`loss_bucket` turns that reading into one word per row and `loss_attribution` counts them, so
+a change can be checked against the bucket it was supposed to empty: box sizing should move
+`box_near_miss`, and a prompt should move `wrong_pick_vlm` while leaving `perception` alone.
 """
 from __future__ import annotations
 
@@ -76,6 +80,10 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
                         help="first N questions per scene, 0 = all")
     parser.add_argument("--views", type=int, default=3,
                         help="best-view ranks shown to the model (default: %(default)s)")
+    parser.add_argument("--score-uncached", action="store_true",
+                        help="score questions the cache does not cover as zeros instead of "
+                             "skipping them. A partial cache otherwise reports a mean over "
+                             "the questions it could actually replay")
     return parser.parse_args(argv)
 
 
@@ -173,6 +181,13 @@ def score_one(backend, scene: str, entry: dict, row: Optional[dict], args) -> di
         "correct": False,
         "selection_source": None,
         "reason": None,
+        # Provenance for `attribution`: which ids the choice was made from, which of them
+        # the ceiling belongs to, and what the geometry would have answered alone. Without
+        # these a lost question cannot be told apart from a lost *ranking* after the fact.
+        "candidate_ids": [],
+        "solver_first": None,
+        "ceiling_rank": None,
+        "loss": None,
         "vlm_calls": 0,
         "views_used": [],
         "best_view_dir": (row or {}).get("best_view_dir"),
@@ -230,8 +245,14 @@ def score_one(backend, scene: str, entry: dict, row: Optional[dict], args) -> di
             candidates = selection.candidates
             out["vlm_calls"] = selection.vlm_calls
 
+        ranked = [str(c) for c in candidates]
         out.update({"selection_source": source, "reason": reason,
                     "n_candidates": len(candidates),
+                    "candidate_ids": ranked,
+                    "solver_first": ranked[0] if ranked else None,
+                    "ceiling_rank": (ranked.index(str(best_id)) + 1
+                                     if best_id is not None and str(best_id) in ranked
+                                     else None),
                     "views_used": [p.name for p in views]})
         if chosen is not None and chosen in objects:
             picked = objects[chosen]
@@ -243,6 +264,7 @@ def score_one(backend, scene: str, entry: dict, row: Optional[dict], args) -> di
                 "score": round(2.0 * overlap, 4),
                 "correct": overlap >= HIT_IOU,
             })
+        out["loss"] = loss_bucket(out)
         log(f"{scene} {entry['id']} [{out['relation'] or '-'}]: "
             f"{out['predicted_label']}#{chosen} via {source} "
             f"-> {out['score']:.2f}/2 (ceiling {out['ceiling_score']:.2f}) — {reason}")
@@ -255,6 +277,49 @@ def score_one(backend, scene: str, entry: dict, row: Optional[dict], args) -> di
 
 
 # ---------------------------------------------------------------- aggregates
+
+
+#: Ordered because the buckets are a cascade, not a partition of independent causes: a
+#: question whose map never held the object cannot also have been mis-ranked, so the first
+#: bucket that applies is the one that actually cost the point.
+LOSS_BUCKETS = ("hit", "perception", "box_near_miss", "shortlist_miss",
+                "wrong_pick_solver", "wrong_pick_vlm", "no_pick", "error")
+
+
+def loss_bucket(row: dict) -> str:
+    """Why this question did not score, in one word.
+
+    The split the plan turns on is the first two buckets against the rest: only the lower
+    ones are reachable by changing how an object is *chosen*, so a reasoning change that
+    moves the `perception` count is measuring noise rather than itself. `box_near_miss` is
+    kept apart from `perception` because the two want opposite fixes — something in the map
+    does overlap the answer and the box is merely too loose to clear the threshold, which is
+    a sizing bug, not a missed detection.
+    """
+    if row.get("error"):
+        return "error"
+    if row.get("correct"):
+        return "hit"
+    ceiling = float(row.get("ceiling_iou") or 0.0)
+    if ceiling <= 0.0:
+        return "perception"
+    if ceiling < HIT_IOU:
+        return "box_near_miss"
+    if row.get("predicted_object_id") is None:
+        return "no_pick"
+    if row.get("ceiling_rank") is None:
+        return "shortlist_miss"
+    # The shortlist held the answer and the ranking was rejected: blame whichever stage
+    # made the final call, so a prompt change is scored against the picks it can move.
+    return "wrong_pick_vlm" if row.get("selection_source") == "vlm" else "wrong_pick_solver"
+
+
+def loss_attribution(results: list[dict]) -> dict[str, int]:
+    """How many questions each bucket cost, in cascade order and omitting empty ones."""
+    counts = {name: 0 for name in LOSS_BUCKETS}
+    for row in results:
+        counts[loss_bucket(row)] += 1
+    return {name: n for name, n in counts.items() if n}
 
 
 def per_relation(results: list[dict]) -> dict[str, dict]:
@@ -295,8 +360,12 @@ def cat2_extras(results: list[dict], args) -> dict[str, Any]:
         "selection_accuracy": round(
             sum(1 for r in found if r["correct"]) / (len(found) or 1), 4),
         "total_vlm_calls": sum(int(r.get("vlm_calls") or 0) for r in results),
+        # Where the other (n - correct) questions went. Two runs with the same mean score
+        # and different buckets are two different problems.
+        "loss_attribution": loss_attribution(results),
         "per_relation": per_relation(results),
         "cache": args.cache,
+        "skipped_uncached": getattr(args, "skipped_uncached", 0),
     }
 
 
@@ -321,6 +390,21 @@ def main(argv: Optional[list[str]] = None) -> None:
         log(f"no category-2 questions for scene={args.scene}", err=True)
         sys.exit(1)
     index = load_index(cache_path)
+
+    # A cache built for a subset of scenes covers a subset of the questions, and scoring the
+    # rest as zeros reports the cache's coverage rather than the policy's accuracy — on a
+    # 40-of-122 cache it divides every mean by three. They are dropped rather than counted,
+    # and the count is carried into the summary so a thin cache stays visible.
+    if not args.score_uncached:
+        covered = [(s, e) for s, e in questions if (s, e["id"]) in index]
+        args.skipped_uncached = len(questions) - len(covered)
+        if args.skipped_uncached:
+            log(f"{args.skipped_uncached} question(s) not in the cache — skipping "
+                "(pass --score-uncached to score them as zeros)")
+        questions = covered
+        if not questions:
+            log(f"the cache at {cache_path} covers none of these questions", err=True)
+            sys.exit(1)
 
     # Cloud only, and only when a mode actually asks a model: the local Qwen answers over
     # ROS topics, which is the graph this script exists to avoid.
@@ -352,6 +436,8 @@ def main(argv: Optional[list[str]] = None) -> None:
         f"{summary['correct']}/{summary['total_run']} on the right object, "
         f"found {summary['found_rate']}, selection {summary['selection_accuracy']}, "
         f"{summary['total_vlm_calls']} model call(s) -> {report_path}")
+    log("  loss: " + ", ".join(f"{name} {n}"
+                               for name, n in summary["loss_attribution"].items()))
     for name, stats in summary["per_relation"].items():
         log(f"  {name:<10} n={stats['n']:<3} mean {stats['mean_score']:.2f}/2 "
             f"(ceiling {stats['mean_ceiling']:.2f}) hits {stats['hits']}/{stats['n']}")
