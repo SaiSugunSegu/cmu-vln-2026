@@ -71,18 +71,21 @@ exits — `Exited (0)` is success, not an error.
 ## First run: download model weights
 
 Nothing forces offline mode, so a load can always fetch what it needs. Seed the cache
-anyway, so your first real run is not also a ~15-20 GB download:
+anyway, so your first real run is not also a multi-GB download:
 
 ```bash
 
 just up          # build + start; `init` makes /data and the HF cache writable
-just hf-fetch    # one-time download: facebook/sam3, Qwen3-VL-4B, DFN5B-CLIP
-just vqa-up      # OPTIONAL: keeps Qwen resident across relaunches; the
-                 # pipeline starts its own server if you skip this
+just hf-fetch    # one-time download: facebook/sam3, DFN5B-CLIP
+just vqa-up      # OPTIONAL: mounts the host Qwen3-VL cache and keeps a resident
+                 # server across relaunches; the pipeline starts its own server
+                 # if you skip this
 ```
 
-`just hf-fetch --list` shows what will be pulled; `just hf-fetch "qwen3vl sam3"`
+`just hf-fetch --list` shows what will be pulled; `just hf-fetch "sam3"`
 pulls a subset. It resumes and skips what is already cached, so re-running is cheap.
+Qwen3-VL is **not** pulled by `hf-fetch` — it lives in the host HF cache and
+`just vqa-up` bind-mounts it into the container (see "Run Qwen VQA" below).
 
 **You do not need `hf auth login`.** Put your token in the repo-root `.env`:
 
@@ -123,6 +126,19 @@ cd /home/docker/autonomy_stack_mecanum_wheel_platform
 vglrun -d egl ./system_simulation.sh              # ./system_simulation_noviz.sh to skip RVIZ
 ```
 See "GPU rendering" in the [repo README](../README.md) for details and how to verify.
+
+## Launch the AI module
+
+Official evaluation starts the module with this command inside `iros2026_ai_module`:
+
+```bash
+ros2 launch dummy_vlm dummy_vlm.launch
+```
+
+That includes `smart_vlm.launch`: SAM 3, the 3D mapper, the supervisor, the numerical /
+object-reference / instruction reasoners, TARE, and the local Qwen server. `just ai`
+runs the same launch. `just up` bakes `facebook/sam3` and the API keys into
+`iros2026_odyssey:submission` from the repo-root `.env`.
 
 ## Numerical answers (smart_vlm)
 
