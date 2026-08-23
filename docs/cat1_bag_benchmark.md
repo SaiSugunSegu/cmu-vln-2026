@@ -121,7 +121,7 @@ just run-sam
 Wait for `SAM 3 ready` / `sam_node started`. Optional check:
 
 ```bash
-docker exec iros2026_odyssey bash -lc \
+docker exec iros2026_ai_module bash -lc \
   'source /home/docker/ai_module/install/setup.bash && \
    timeout 5 ros2 topic echo /sam3/status std_msgs/msg/String --once'
 ```
@@ -166,7 +166,7 @@ just cat1-bag-bench livingroom_1 0 "Q01"
 ### Direct driver (inside the AI container)
 
 ```bash
-docker exec -e PYTHONUTF8=1 iros2026_odyssey bash -lc '
+docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc '
   source /home/docker/ai_module/install/setup.bash &&
   python3 /home/ubuntu/myspace/cmu-vln-2026/scripts/eval/run_cat1_bag_bench.py \
     --qa /data/benchmark/arabic_room/category_1/arabic_room_category1_qa.json \

@@ -76,13 +76,13 @@ git clone --recurse-submodules git@github.com:SaiSugunSegu/cmu-vln-2026.git && c
 # existing clone:  git pull && git submodule update --init --recursive
 
 xhost +local:
-just up          # build + start; bakes weights, HF_TOKEN, and the OpenRouter key
+just up          # build + start containers (the `init` one-shot fixes mount perms; Exited (0) = ok)
+just hf-fetch    # ONE-TIME ~15-20 GB weights — nothing loads until this finishes
 ```
 
-`just up` needs `HF_TOKEN=hf_…` and `OPENROUTER_API_KEY=…` in the repo-root `.env`
-(**not** `hf auth login`), plus the gated `facebook/sam3` licence accepted once at
-<https://huggingface.co/facebook/sam3> with that same account. The weight layer is
-`facebook/sam3` (~6.5 GB). Later rebuilds only the layers that changed.
+`hf-fetch` is the only command that goes online. It needs `HF_TOKEN=hf_…` in the
+repo-root `.env` (**not** `hf auth login`), plus the gated `facebook/sam3` licence
+accepted once at <https://huggingface.co/facebook/sam3> with that same account.
 [docker/README.md](docker/README.md) · troubleshooting [docs/M0_infra.md](docs/M0_infra.md)
 
 ### 2 · Live sim — three terminals
@@ -193,7 +193,7 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 
 | Group | Commands |
 |---|---|
-| **setup** | `up` (build + start; bakes weights and keys; also how source edits reach the container) · `down` · `hf-fetch` · `test` |
+| **setup** | `up` (build + start; also how source edits reach the container) · `down` · `hf-fetch` · `test` |
 | **sim** | `sim` · `sim-noviz` · `challenge` · `ask "…"` · `teleop` |
 | **bags** | `bag-play <scene>` · `bag <name>` (record) · `list-scenes` |
 | **run** | `ai` · `run-sam` · `run-map` |
@@ -202,8 +202,7 @@ file**. Add `just teleop` in a third terminal to drive (needs keyboard focus).
 | **vqa** | `vqa-up` · `vqa-ask "…" <img>` · `caption` |
 | **cat1** | `cat1-reasoner` · `cat1-bag-bench <scene> [limit]` |
 | **cat2** | `gen-cat2` · `verify-cat2` · `pdf-assets` |
-| **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` · `eval-cat2` · `eval-cat1-sim` · `eval-cat2-sim` |
-| **submit** | `trial-submission-image` · `build-submission-image` · `push-submission-image USER/name:tag` |
+| **eval** | `eval-cat1 <scene> [limit] [target_source] [speed]` · `eval-target-extract [--backend cloud] [--category 3]` |
 | **map3d** | `map3d-record <scene> [stride]` · `map3d-replay <scene> [jobs]` · `map3d-score` · `map3d-determinism` · `map3d-audit` |
 
 Run `just` for this list with descriptions and default arguments.

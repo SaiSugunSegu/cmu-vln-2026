@@ -4,7 +4,8 @@
 # Run `just` with no arguments for the grouped recipe list.
 #
 # First run, in order:
-#   just up          # build + start; bakes weights, HF_TOKEN, OpenRouter key
+#   just up          # build + start containers
+#   just hf-fetch    # ONE-TIME ~15-20 GB weight download (needs HF_TOKEN in .env)
 #
 # Then pick a flow:
 #   scored eval   just eval-cat1 arabic_room 2                # one command, per-question relaunch
@@ -16,9 +17,6 @@
 #                 just cache-cat2                then just bench-cat2  (per selection mode)
 #   live sim      just sim          | just ai | just ask "How many …"
 #   manual bags   just vqa-up ; just run-sam ; just cat1-reasoner ; just cat1-bag-bench
-#   submit        just trial-submission-image                 # arabic_room Q01 in live sim
-#                 just build-submission-image                 # bake AI image + checks
-#                 just push-submission-image USER/cmu-vln-ai:v1
 
 vgl := "cd /home/docker/autonomy_stack_mecanum_wheel_platform && vglrun -d egl"
 # The workspace path inside the image.
@@ -26,8 +24,6 @@ ai_src := "/home/docker/ai_module"
 # `bash -lc` does not source ~/.bashrc for non-interactive shells, so recipes that
 # invoke a captioner console script must put its install dir on PATH themselves.
 capt_env := "source /home/docker/ai_module/install/setup.bash && export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH"
-# just up writes this tag. just push-submission-image USER/name:tag retags and pushes.
-submit_image := "iros2026_odyssey:submission"
 
 # --unsorted keeps groups in justfile order (setup first, then the flows) instead
 # of alphabetical, which would bury [setup] in the middle.
@@ -38,19 +34,11 @@ default:
 # always runs the source baked into the image, which is exactly what CI and the eval
 # harness run. The corollary is that an ai_module edit does nothing until you re-run
 # this — the rebuild IS how source lands in the container.
-# Tags iros2026_odyssey:submission and bakes HF_TOKEN + the vqa.yaml provider key
-# into image ENV so the running container is the Hub artifact.
 [group('setup')]
-[doc('Build + start both containers (GPU); bake weights and API keys')]
+[doc('Build + start both containers (GPU)')]
 [working-directory: 'docker']
 up:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    extra=()
-    if [ -f ../.env ]; then extra+=(--env-file ../.env); fi
-    docker compose "${extra[@]}" -f compose_gpu.yml build
-    ../scripts/submit/wrap_image_keys.sh --tag {{submit_image}}
-    docker compose "${extra[@]}" -f compose_gpu.yml up -d
+    docker compose -f compose_gpu.yml up --build -d
 
 [group('setup')]
 [doc('Stop and remove both containers')]
@@ -58,15 +46,15 @@ up:
 down:
     docker compose -f compose_gpu.yml down
 
-# Optional: pull a new checkpoint or warm SAM 3's cv-utils kernel in the running
-# container. Setup itself is `just up` (HF_TOKEN in .env bakes sam3 into the
-# image). A checkpoint you want in the Hub image has to land via just up.
-#   just hf-fetch                # all defaults (sam3 + clip)
-#   just hf-fetch --list         # names and repos
+# Pre-seeds the HF cache so the first real run is not also a ~20 GB download, and warms
+# SAM 3's cv-utils kernel, whose absence silently disables mask NMS. Re-run on a new machine.
+# Gated sam3 needs HF_TOKEN in .env and the licence accepted on the model page.
+#   just hf-fetch                # all defaults
+#   just hf-fetch "qwen3vl sam3" # a subset;  just hf-fetch --list  to see them
 [group('setup')]
-[doc('Refresh weights / SAM 3 kernels in the running container')]
+[doc('ONE-TIME ~15-20 GB weight download (sam3, Qwen3-VL, CLIP) + SAM 3 kernels')]
 hf-fetch models="":
-    docker exec -e PYTHONUTF8=1 iros2026_odyssey bash -lc \
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "{{capt_env}} && fetch_weights {{models}}"
 
 # Runs in the container because sam_mapper/smart_vlm tests need cv2 + rclpy;
@@ -82,31 +70,10 @@ test pkgs="captioner sam_mapper smart_vlm":
     # -p no:cacheprovider: the source tree is root-owned in the container, so pytest's
     # .pytest_cache write fails and emits three Permission-denied warnings per run. The
     # cache buys nothing here (no --lf/--sw usage), so turn it off rather than chmod.
-    docker exec -e PYTHONUTF8=1 iros2026_odyssey bash -lc "
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
       source {{ai_src}}/install/setup.bash &&
       python3 -m pytest $dirs -q -p no:cacheprovider
     "
-
-# Bakes iros2026_odyssey:submission only (compose service odyssey). Does not
-# build cmu-vln-system or start containers — that is `just up`.
-[group('submit')]
-[doc('Bake the AI image and run preflight checks (no compose up)')]
-build-submission-image:
-    ./scripts/submit/build_submission_image.sh --tag {{submit_image}}
-
-# arabic_room Q01: "How many sofas are below a window?" (GT 2). Live sim with
-# TARE exploring. Fetches the Unity mesh only if data/scenes/arabic_room is
-# missing. just up first.
-[group('submit')]
-[doc('arabic_room Q01 in the live sim (TARE explores)')]
-trial-submission-image:
-    ./scripts/submit/trial_submission_image.sh --tag {{submit_image}}
-
-[group('submit')]
-[doc('Tag the local image and push to a registry (no rebuild)')]
-push-submission-image tag:
-    docker tag {{submit_image}} {{tag}}
-    docker push {{tag}}
 
 # Headless default: Override: just sim :0
 [group('sim')]
@@ -128,7 +95,7 @@ challenge sim_display=":0":
 [group('bags')]
 [doc('Replay a recorded scene bag instead of the live sim')]
 bag-play scene="livingroom_1" speed="1.0" loop="false":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch smart_vlm bag_replay.launch scene:={{scene}} speed:={{speed}} loop:={{loop}}"
 
 # Self-contained: when vqa.yaml has a local backend the launch starts its own Qwen
 # server, so `just vqa-up` is not a prerequisite — and must not be running at the
@@ -138,7 +105,7 @@ bag-play scene="livingroom_1" speed="1.0" loop="false":
 [group('run')]
 [doc('Official entry: dummy_vlm.launch → SAM + supervisor + reasoners + TARE')]
 ai:
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch dummy_vlm dummy_vlm.launch"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch dummy_vlm dummy_vlm.launch"
 
 # Exploration on its own, with no perception or reasoning attached -- the way to tell a
 # TARE problem from a pipeline problem. Needs the sim already up in the other terminal
@@ -152,7 +119,7 @@ ai:
 [group('run')]
 [doc('TARE exploration alone (blocks; holds until `just tare-go`)')]
 tare scenario="cmu_challenge":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch tare_planner explore.launch scenario:={{scenario}}"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch tare_planner explore.launch scenario:={{scenario}}"
 
 # Stands in for the supervisor, which publishes this alongside /pipeline/armed once SAM
 # holds the question's prompts. Only needed for a bare `just tare` -- in the full
@@ -160,31 +127,31 @@ tare scenario="cmu_challenge":
 [group('run')]
 [doc('Release the TARE start gate (supervisor stand-in; for a bare `just tare`)')]
 tare-go:
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic pub --once /start_exploration std_msgs/msg/Bool '{data: true}'"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic pub --once /start_exploration std_msgs/msg/Bool '{data: true}'"
 
 # /camera/image in -> /annotated_image, /sam3/instance_map, /sam3/detections out.
 [group('run')]
 [doc('SAM 3 2D detector node (blocks)')]
 run-sam config="sam3_mecanum_sim.yaml":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper sam_node.launch config:={{config}}"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper sam_node.launch config:={{config}}"
 
 [group('run')]
 [doc('Lidar fusion / 3D mapping node (blocks)')]
 run-map config="sam3_mecanum_sim.yaml":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper map_node.launch config:={{config}}"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 launch sam_mapper map_node.launch config:={{config}}"
 
 # Use out=/data/bags/_frames to see them on the host.
 [group('sam')]
 [doc('Dump /camera/image frames from a bag to PNGs, for the offline probe')]
 sam-frames scene="livingroom_1" out="/data/bags/_frames" limit="40":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.dump_frames --bag /data/bags/{{scene}} --out {{out}} --limit {{limit}}"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.dump_frames --bag /data/bags/{{scene}} --out {{out}} --limit {{limit}}"
 
 # Are object IDs stable across frames, and which image_size is fastest?
 # Answers whether dropping ByteTrack was sound.
 [group('sam')]
 [doc('Offline SAM 3 probe on dumped frames: ID stability + image_size sweep')]
 sam-probe frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="--sweep-image-size":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.sam3_backend --frames {{frames}} --config /home/docker/ai_module/src/sam_mapper/config/{{config}} {{args}}"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.sam3_backend --frames {{frames}} --config /home/docker/ai_module/src/sam_mapper/config/{{config}} {{args}}"
 
 # Splits the frame into vision encoder / per-prompt detection / tracker / mask transfer, and
 # fits ms ~ fixed + per_object * N per stage. Dump frames first with `just sam-frames`.
@@ -199,7 +166,7 @@ sam-profile frames="/data/bags/_frames" config="sam3_mecanum_sim.yaml" args="":
 [group('sam')]
 [doc('SAM 3.1 benchmark: all concepts batched through one backbone pass')]
 sam31-probe args="--bench":
-    docker exec -it -e PYTHONUTF8=1 iros2026_odyssey bash -lc \
+    docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && \
        python3 /home/docker/scripts/eval/sam31_probe.py {{args}}"
 
@@ -207,13 +174,13 @@ sam31-probe args="--bench":
 [group('sim')]
 [doc('Publish a one-shot question on /challenge_question')]
 ask q domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_odyssey bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: '{{q}}'}\""
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "ros2 topic pub --once /challenge_question std_msgs/msg/String \"{data: '{{q}}'}\""
 
 # Default domain 0 matches sim-noviz. Challenge mode: just foxglove 42
 [group('debug')]
 [doc('Foxglove bridge on host port 8765 (blocks; tunnel from laptop)')]
 foxglove domain="0":
-    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_odyssey bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8090 address:=0.0.0.0"
+    docker exec -it -e ROS_DOMAIN_ID={{domain}} iros2026_ai_module bash -c "source /opt/ros/jazzy/setup.bash && ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8090 address:=0.0.0.0"
 
 # Default domain 0 matches sim-noviz. Challenge mode: just teleop 42
 [group('sim')]
@@ -227,12 +194,12 @@ teleop domain="0":
 [group('debug')]
 [doc('List all ROS topics visible in the AI container')]
 topics:
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic list"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic list"
 
 [group('bags')]
 [doc('Record the 6 allowed topics + tf into data/bags/<name>')]
 bag name:
-    docker exec -it iros2026_odyssey bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /tf /tf_static /challenge_question -o /data/bags/{{name}}"
+    docker exec -it iros2026_ai_module bash -c "ros2 bag record /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation /tf /tf_static /challenge_question -o /data/bags/{{name}}"
 
 # Static list -- the Drive folder is a public link, not in this account's own
 # Drive, so it can't be queried live.
@@ -260,7 +227,7 @@ shell-sys sim_display=":0":
 [group('debug')]
 [doc('Interactive shell in the AI module container')]
 shell-ai:
-    docker exec -it iros2026_odyssey bash
+    docker exec -it iros2026_ai_module bash
 
 # ---------- 3D map benchmark (map3d) -----------------------------------
 # Record SAM 3 output once per scene on GPU, then replay the 3D mapper on CPU
@@ -271,13 +238,13 @@ shell-ai:
 [group('map3d')]
 [doc('Record companion /sam3/* bag for a scene (GPU, one-time). scene=all for every scene')]
 map3d-record scene="arabic_room" stride="5" args="":
-    docker exec -it -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.record_companion --scene {{scene}} --stride {{stride}} {{args}}"
+    docker exec -it -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 -m sam_mapper.tools.record_companion --scene {{scene}} --stride {{stride}} {{args}}"
 # Splits no-coverage-where-the-mask-sits (sensor geometry) from coverage-beside-it
 # (alignment). Opposite fixes.
 [group('map3d')]
 [doc('Why do masked detections receive zero lidar points?')]
 map3d-zeropoints scene="livingroom_1" variant="" args="":
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/diagnose_zero_points.py --scene {{scene}} {{ if variant != '' { '--variant ' + variant } else { '' } }} {{args}}"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/diagnose_zero_points.py --scene {{scene}} {{ if variant != '' { '--variant ' + variant } else { '' } }} {{args}}"
 
 # Writes /data/runs/map3d/<run-id>/<scene>.json. run-id is the HOST git sha (the container
 # has no .git), so A/B diffs are a git-keyed table.
@@ -289,7 +256,7 @@ map3d-zeropoints scene="livingroom_1" variant="" args="":
 [group('map3d')]
 [doc('Replay the 3D mapper offline against recorded SAM 3 output (CPU, deterministic)')]
 map3d-replay scene="arabic_room" jobs="1" args="" label="":
-    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty){{ if label != '' { '-' + label } else { '' } }}" iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/replay_map3d.py --scene {{scene}} --jobs {{jobs}} {{args}}"
+    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty){{ if label != '' { '-' + label } else { '' } }}" iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/replay_map3d.py --scene {{scene}} --jobs {{jobs}} {{args}}"
 
 # Two replays must give an identical digest, or every later A/B is measuring noise.
 [group('map3d')]
@@ -303,7 +270,7 @@ map3d-determinism scene="arabic_room":
 [group('map3d')]
 [doc('Score a replayed 3D map against IRef-VLA ground truth')]
 map3d-score run="" args="":
-    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_odyssey bash -c "python3 /home/docker/scripts/eval/score_map3d.py {{ if run != '' { '--run ' + run } else { '' } }} {{args}}"
+    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_ai_module bash -c "python3 /home/docker/scripts/eval/score_map3d.py {{ if run != '' { '--run ' + run } else { '' } }} {{args}}"
 
 # A sloppy prompt->GT-label map silently invalidates every number above.
 [group('map3d')]
@@ -340,7 +307,7 @@ cat3-build args="--dry-run":
 [group('map3d')]
 [doc('One-shot JSON dump of every 3D instance the mapper has built')]
 sam-map-json:
-    docker exec -it iros2026_odyssey bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic echo /obj_map_json --once"
+    docker exec -it iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && ros2 topic echo /obj_map_json --once"
 
 # ---------- Persistent Qwen VQA (model stays loaded) --------------------
 #   just vqa-up
@@ -348,21 +315,10 @@ sam-map-json:
 #   just vqa-down
 
 # Starts the Qwen VQA server process. Run it before `just ai` or the evaluation.
-# Bind-mounts host Qwen3-VL ($HF_HOME or ~/.cache/huggingface) then starts the
-# resident server. Recreates odyssey — mounts are create-time.
 [group('vqa')]
-[doc('Mount host Qwen weights and keep a resident VQA server')]
+[doc('Load Qwen once and keep it resident (~60s first time)')]
 vqa-up model="qwen3vl" quantization="int4":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    host="${HF_HOME:-$HOME/.cache/huggingface}/hub/models--Qwen--Qwen3-VL-4B-Instruct"
-    [[ -d $host/snapshots ]] || {
-      echo "Qwen3-VL missing at $host — huggingface-cli download Qwen/Qwen3-VL-4B-Instruct" >&2
-      exit 1
-    }
-    QWEN_HOST_DIR=$host docker compose -f docker/compose_gpu.yml -f docker/compose_qwen.yml \
-      up -d odyssey
-    docker exec -it -e PYTHONUTF8=1 iros2026_odyssey bash -lc \
+    docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && ros2 launch captioner vqa_server.launch model:={{model}} quantization:={{quantization}}"
 
 # Image path: container-absolute under /data (host data/x is /data/x).
@@ -381,7 +337,7 @@ vqa-ask q image:
     else
       image="${image/#$PWD\/data//data}"
     fi
-    docker exec -e PYTHONUTF8=1 iros2026_odyssey bash -lc "
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
       if ! pgrep -f '[q]wen_vqa_server' >/dev/null; then
         echo 'VQA server is not running. Start it with: just vqa-up' >&2
         exit 1
@@ -391,7 +347,7 @@ vqa-ask q image:
     "
 
 # Host data/ <-> /data, so `just caption crops captions` reads data/crops and
-# writes data/captions. Weights come from the image's baked HF cache.
+# writes data/captions. Weights come from the mounted ~/.cache/huggingface.
 [group('vqa')]
 [doc('Caption a folder of crops offline with Qwen (data/crops -> data/captions)')]
 caption input="crops" output="captions" batch_size="8" quantization="int4" model="qwen3vl":
@@ -413,13 +369,13 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
     [[ "$out" == /* ]] || out="/data/${out}"
     in="${in/#$PWD\/data//data}"
     out="${out/#$PWD\/data//data}"
-    # No host-side mkdir/chmod: the init one-shot in docker/compose_gpu.yml makes
+    # No host-side mkdir/chmod: the init one-shot in docker/compose.yml makes
     # /data writable by the container's uid 1001, and these are container paths —
     # creating them on the host would make a root-level /data.
     # PYTHONUTF8: native libs loaded during model init can reset the C locale, which
     # makes Python's default text encoding ascii and breaks writing captions that
     # contain curly quotes. UTF-8 mode ignores the locale entirely.
-    docker exec -it -e PYTHONUTF8=1 iros2026_odyssey bash -lc "
+    docker exec -it -e PYTHONUTF8=1 iros2026_ai_module bash -lc "
       {{capt_env}} &&
       mkdir -p '${out}' &&
       caption_crops '${in}' \
@@ -448,7 +404,7 @@ cat1-reasoner views="3":
     # too, since smart_vlm imports captioner.paths / .text_utils / .ros_utils /
     # .vlm_backends.
     just up
-    docker exec -it iros2026_odyssey bash -lc "
+    docker exec -it iros2026_ai_module bash -lc "
       source {{ai_src}}/install/setup.bash &&
       ros2 run smart_vlm numerical_reasoner --ros-args -p max_context_views:={{views}}
     "
@@ -473,7 +429,7 @@ cat1-reasoner views="3":
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
 eval-cat1 scene="all" limit="0" target_source="vlm" speed="0.1" report="/data/runs/challenge_report.json":
-    docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
 
 # The same driver against the object-reference questions: same per-question relaunch, same
 # gates, but the answer arrives as a Marker on /selected_object_marker and is graded on
@@ -489,7 +445,7 @@ eval-cat1 scene="all" limit="0" target_source="vlm" speed="0.1" report="/data/ru
 [group('eval')]
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
 eval-cat2 scene="all" limit="0" mode="hybrid" target_source="vlm" speed="0.1" report="/data/runs/cat2_report.json":
-    docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
 
 # The same two sweeps against the LIVE SIM instead of bags, with TARE driving. Unlike
 # the bag recipes these run on the HOST, not in a container: switching Unity scenes
@@ -528,7 +484,7 @@ eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="vlm" report="/d
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
 cache-cat1 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/runs/views_cache.json":
-    docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
 
 # Phase 2: answer-only replay over those crops. No TARE, no SAM, no bag -- minutes per
 # model instead of hours, and every model sees byte-identical images, which is what
@@ -547,7 +503,7 @@ cache-cat1 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/ru
 [group('eval')]
 [doc('Benchmark a VLM against the cached best views (no SAM, no bag)')]
 bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/cat1_bench_report.json":
-    docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat1_bench --cache {{cache}} --views {{views}} --scene {{scene}} --limit {{limit}} --report {{report}}"
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat1_bench --cache {{cache}} --views {{views}} --scene {{scene}} --limit {{limit}} --report {{report}}"
 
 # The category-2 half of the same two-phase split, and the same warning: 122 questions at
 # roughly 2.5 minutes each is about 5.5 hours, so run it in tmux. Resumable question by
@@ -557,7 +513,7 @@ bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" r
 [group('eval')]
 [doc('Cache maps + crops for every category-2 question, without answering')]
 cache-cat2 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/runs/cat2_cache.json":
-    docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p target_source:={{target_source}} -p speed:={{speed}} -p crops_only:=true -p resume:=true -p report_file:={{cache}}"
 
 # Phase 2 for category 2, the same shape as bench-cat1: replay the selection step over
 # those cached maps and crops. Seconds per mode for solver and naive, which ask no model,
@@ -571,7 +527,7 @@ cache-cat2 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/ru
 [group('eval')]
 [doc('Score category-2 object selection over the cached maps (no SAM, no bag)')]
 bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json":
-    docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}}"
+    docker exec -it iros2026_ai_module bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}}"
 
 # Text-only extract call the live reasoners use to arm SAM, scored against each
 # question's target_objects. `flags` go straight to extract_bench (see --help).
@@ -583,7 +539,7 @@ bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json
 [group('eval')]
 [doc('Score target extraction against benchmark target_objects (text only, no SAM)')]
 eval-target-extract *flags:
-    docker exec -it iros2026_odyssey bash -lc \
+    docker exec -it iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && \
        export PYTHONPATH={{ai_src}}/src/smart_vlm:{{ai_src}}/src/captioner:\$PYTHONPATH && \
        python3 -m smart_vlm.extract_bench {{flags}}"
@@ -617,13 +573,13 @@ cat1-bag-bench scene="arabic_room" limit="0" ids="" speed="1.0" tag="":
     qa="/data/benchmark/${scene}/category_1/${scene}_category1_qa.json"
     out="/data/runs/cat1_${scene}${tag:+_$tag}"
     # Repo scripts/ is bind-mounted read-only at /home/docker/scripts; /data/runs
-    # is created and made writable by the init one-shot (docker/compose_gpu.yml).
+    # is created and made writable by the init one-shot (docker/compose.yml).
     script="/home/docker/scripts/eval/run_cat1_bag_bench.py"
     extra=""
     if [[ -n "$ids" ]]; then
       extra="--ids ${ids}"
     fi
-    docker exec -e PYTHONUTF8=1 iros2026_odyssey bash -lc \
+    docker exec -e PYTHONUTF8=1 iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && python3 $(printf '%q' "$script") --qa $(printf '%q' "$qa") --scene $(printf '%q' "$scene") --out $(printf '%q' "$out") --limit $(printf '%q' "$limit") --speed $(printf '%q' "$speed") ${extra}"
 
 # ---------- Category-2 (object reference) benchmark ---------------------
@@ -671,7 +627,7 @@ pdf-assets args="":
 visibility scene="all" args="":
     #!/usr/bin/env bash
     set -euo pipefail
-    docker exec iros2026_odyssey bash -lc \
+    docker exec iros2026_ai_module bash -lc \
       "source {{ai_src}}/install/setup.bash && python3 /home/docker/scripts/eval/object_visibility.py --scene $(printf '%q' "{{scene}}") {{args}}"
     for report in data/runs/visibility/*_visibility.json; do
       s="$(basename "$report" _visibility.json)"

@@ -13,7 +13,7 @@
 #  https://drive.google.com/drive/folders/1nki_xoFKX1bYr8m7qiGRQelwnQ7EKVYc?usp=drive_link
 #
 # To regenerate these ids after the organizers re-upload — no browsing needed:
-#  docker exec iros2026_odyssey python3 -c 'import gdown; \
+#  docker exec iros2026_ai_module python3 -c 'import gdown; \
 #    [print(f.path, f.id) for f in gdown.download_folder( \
 #      url="https://drive.google.com/drive/folders/1nki_xoFKX1bYr8m7qiGRQelwnQ7EKVYc", \
 #      skip_download=True, quiet=True)]'

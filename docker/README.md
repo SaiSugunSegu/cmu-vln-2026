@@ -49,49 +49,58 @@ Allow remote X connection.
 ```
 xhost +
 ```
-From the repo root (GPU). `.env` must contain `HF_TOKEN` and the VLM key:
-```bash
-just up
+Go inside the docker folder.
 ```
-This builds `iros2026_odyssey:submission` (weights + keys) and starts two containers:
+cd docker
+```
+For computers **without a Nvidia GPU**, build and start both containers.
+```bash
+docker compose -f compose.yml up --build -d
+```
+For computers **with Nvidia GPUs**, use the GPU compose file instead.
+```bash
+docker compose -f compose_gpu.yml up --build -d
+```
+This starts two containers:
 - `iros2026_system` — the base autonomy system (simulator + autonomy stack)
-- `iros2026_odyssey` — the submission image (`iros2026_odyssey:submission`)
+- `iros2026_ai_module` — the AI module development environment, with `smart_vlm` and `captioner` built in
 
 plus a one-shot `init` container that fixes permissions on the bind mounts and then
 exits — `Exited (0)` is success, not an error.
 
-## First run: bake the AI image
+## First run: download model weights
 
-`just up` builds `iros2026_odyssey:submission`, bakes `facebook/sam3` (~6.5 GB)
-into a layer, and writes `HF_TOKEN` plus the vqa.yaml provider key (OpenRouter)
-into image ENV. Local Qwen3-VL is the host HF cache — `just vqa-up` bind-mounts
-it (and recreates odyssey). `init` makes `/data` writable (`Exited (0)` is success).
+Nothing forces offline mode, so a load can always fetch what it needs. Seed the cache
+anyway, so your first real run is not also a ~15-20 GB download:
 
 ```bash
-just up          # build + start; weights and keys come from .env
-just vqa-up      # OPTIONAL: host Qwen + resident server across relaunches; the
+
+just up          # build + start; `init` makes /data and the HF cache writable
+just hf-fetch    # one-time download: facebook/sam3, Qwen3-VL-4B, DFN5B-CLIP
+just vqa-up      # OPTIONAL: keeps Qwen resident across relaunches; the
                  # pipeline starts its own server if you skip this
 ```
 
-**You do not need `hf auth login`.** Put the tokens in the repo-root `.env`:
+`just hf-fetch --list` shows what will be pulled; `just hf-fetch "qwen3vl sam3"`
+pulls a subset. It resumes and skips what is already cached, so re-running is cheap.
+
+**You do not need `hf auth login`.** Put your token in the repo-root `.env`:
 
 ```
 HF_TOKEN=hf_...
-OPENROUTER_API_KEY=sk-or-...
 ```
 
 `huggingface_hub` reads `HF_TOKEN` automatically on every `from_pretrained()`.
 `facebook/sam3` is a **gated** repo, so besides a valid token you must accept its
-licence once at <https://huggingface.co/facebook/sam3> with the same account.
+licence once at <https://huggingface.co/facebook/sam3> with the same account —
+otherwise `hf-fetch` reports `GATED` and tells you which of the two is missing.
 
-`just hf-fetch` is optional: it pulls a new checkpoint or warms SAM 3's `cv-utils`
-kernel in the running container. A checkpoint you want in the Hub image has to
-land via `just up`. The kernel does mask **NMS** as well as hole filling; it is
-fetched lazily on first use and its absence degrades **silently** — NMS is skipped
-entirely, so duplicate detections are never suppressed and `det_nms_thresh` does
-nothing. Confirm with `just sam-profile /data/bags/_frames`, which prints
-`cv-utils kernel: ...`, `[sam3] attn effective: ...` and the thresholds actually
-in force.
+`just hf-fetch` also warms SAM 3's `cv-utils` kernel, which does mask **NMS** as well as
+hole filling. It is fetched lazily on first use and its absence degrades **silently** —
+NMS is skipped entirely, so duplicate detections are never suppressed and `det_nms_thresh`
+does nothing. Re-run `just hf-fetch` on any new machine and confirm with
+`just sam-profile /data/bags/_frames`, which prints `cv-utils kernel: ...`,
+`[sam3] attn effective: ...` and the thresholds actually in force.
 
 Flash attention is deliberately **not** used: on SAM 3 it returns zero detections.
 Re-check with `just sam-probe <frames> <cfg> "--attn kernels-community/flash-attn2"`.
@@ -115,24 +124,11 @@ vglrun -d egl ./system_simulation.sh              # ./system_simulation_noviz.sh
 ```
 See "GPU rendering" in the [repo README](../README.md) for details and how to verify.
 
-## Launch the AI module
-
-Official evaluation starts the module with this command inside `iros2026_odyssey`:
-
-```bash
-ros2 launch dummy_vlm dummy_vlm.launch
-```
-
-That includes `smart_vlm.launch`: SAM 3, the 3D mapper, the supervisor, the numerical /
-object-reference / instruction reasoners, and TARE. `just ai` runs the same launch.
-`just up` bakes `facebook/sam3` and the API keys into `iros2026_odyssey:submission`
-from the repo-root `.env`.
-
 ## Numerical answers (smart_vlm)
 
-`ros2 launch dummy_vlm dummy_vlm.launch` brings up the whole per-question pipeline:
+`ros2 launch smart_vlm smart_vlm.launch` brings up the whole per-question pipeline:
 `sam_node` (booted unarmed — it loads weights but detects nothing until the question
-supplies prompts), the `smart_vlm` supervisor, the three reasoners, and TARE
+supplies prompts), the `smart_vlm` supervisor, `numerical_reasoner`, and TARE
 exploration. It starts **no scene source** — it is the submission artifact, and consumes
 the six allowed topics from whatever is publishing them. For offline replay use
 `eval_bag.launch`, which wraps it and adds a bag.
@@ -150,8 +146,7 @@ deliberate: at evaluation nobody runs a setup step for you.
 `just vqa-up` is therefore optional. It keeps one server resident *across* relaunches,
 which saves the ~8.3 GB reload each question costs — useful in a long sweep, but do not
 run it while the launch is also starting one, or the two collide on the node name and
-the `/qwen_vqa` topics. With both `vlm_backend` and `target_extract_backend` set to
-`cloud` in vqa.yaml no server is started or waited for.
+the `/qwen_vqa` topics. With `vlm_backend:=cloud` no server is started or waited for.
 
 ```bash
 # after colcon build --packages-select captioner smart_vlm sam_mapper
@@ -170,12 +165,13 @@ relaunches the pipeline per question (README §3.5).
 ## Run the captioner (offline crop CLI)
 
 The AI image installs CUDA PyTorch, transformers, and the `captioner` ROS package.
-Host folder `data/` is mounted at `/data`. Model weights live in the image.
+Host folder `data/` is mounted at `/data`, and your Hugging Face cache is
+mounted so model weights persist across rebuilds.
 
 Put instance-crop folders (each with `crop.png` or `rgb.png`) under `data/crops`, then:
 
 ```bash
-docker exec -it iros2026_odyssey bash -lc '
+docker exec -it iros2026_ai_module bash -lc '
   source /home/docker/ai_module/install/setup.bash &&
   export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH &&
   caption_crops /data/crops \
@@ -189,7 +185,7 @@ docker exec -it iros2026_odyssey bash -lc '
 Or with the helper script from the repo root:
 
 ```bash
-./ai_module/docker/run_tool.sh caption /data/crops /data/captions
+./ai_module/docker/run_captioner.sh /data/crops /data/captions
 ```
 
 ## Run Qwen VQA (offline image + question CLI)
@@ -197,14 +193,12 @@ Or with the helper script from the repo root:
 **Preferred (persistent server — load once, ask many):** from the repo root:
 
 ```bash
-just vqa-up          # terminal 1: loads Qwen int4 (~60s first time), then blocks serving
-just vqa-ask "How many pillows are on the bed?" /data/pillow_bed.png   # terminal 2
-just vqa-ask "How many lamps are there?" /data/pillow_bed.png          # fast, stays loaded
+just vqa-up          # compose + load Qwen int4; blocks until ready
+just vqa-ask "How many pillows are on the bed?" /data/pillow_bed.png
+just vqa-ask "How many lamps are there?" /data/pillow_bed.png   # fast
+just vqa-status
+just vqa-down
 ```
-
-`vqa-up` runs in the foreground; Ctrl-C in that terminal stops the server. Do not
-run it alongside `just ai` or the eval recipes — those start their own server, and
-two of them collide on the node name and the `/qwen_vqa` topics.
 
 Image paths must be under `/data/…`. Host `data/` is bind-mounted 1:1, so host
 `data/pillow_bed.png` is container `/data/pillow_bed.png`. Paths outside the
@@ -213,17 +207,17 @@ mount are rejected (`captioner/paths.py`) — copy the file into `data/` first.
 One-shot CLI (reloads weights every call — slow):
 
 ```bash
-./ai_module/docker/run_tool.sh vqa /data/pillow_bed.png \
+./ai_module/docker/run_qwen_vqa.sh /data/pillow_bed.png \
   "How many pillows are on the bed?"
 ```
 
 Or directly, with paths under the `data/` mount (the `init` one-shot in
-`compose_gpu.yml` creates `crops/`, `captions/`, `runs/` and makes them writable by
+`compose.yml` creates `crops/`, `captions/`, `runs/` and makes them writable by
 the container's uid, so no host-side `mkdir`/`chmod` is needed):
 
 ```bash
 # copy/symlink a scene of crops into data/crops on the host, then:
-docker exec -it iros2026_odyssey bash -lc '
+docker exec -it iros2026_ai_module bash -lc '
   source /home/docker/ai_module/install/setup.bash &&
   export PATH=/home/docker/ai_module/install/captioner/lib/captioner:$PATH &&
   caption_crops /data/crops --output_dir /data/captions
@@ -234,7 +228,7 @@ After editing captioner Python sources, rebuild the image — `ai_module` is nev
 bind-mounted, so that is what carries the edit into the container:
 
 ```bash
-just up
+just up      # or: docker compose -f compose_gpu.yml up --build -d
 ```
 
 The ML wheels (torch, transformers, …) live in an earlier layer and stay cached, so
