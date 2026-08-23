@@ -58,10 +58,11 @@ class CloudImageFusion:
     #: horizontal radius lands on row 0. It also makes the `in_bounds` guard in
     #: generate_seg_cloud unreachable, since the ids have already been forced in range.
     #:
-    #: "reject" drops it. The camera never saw the point, so no mask may claim it.
+    #: "reject" drops it, and is the default. The camera never saw the point, so no mask
+    #: may claim it.
     BOUNDS_MODES = ("clip", "reject")
 
-    def __init__(self, platform: str, bounds_mode: str = "clip"):
+    def __init__(self, platform: str, bounds_mode: str = "reject", occlusion=None):
         if platform not in self._PLATFORMS:
             raise ValueError(f"Invalid platform: {platform}. Available: {list(self._PLATFORMS)}")
         if bounds_mode not in self.BOUNDS_MODES:
@@ -69,6 +70,33 @@ class CloudImageFusion:
         self.platform = platform
         self.bounds_mode = bounds_mode
         self.scan2pixels = self._PLATFORMS[platform]
+        # Imported lazily so this module keeps its "numpy only" property, which is what lets
+        # the host-side eval scripts import it without the rest of sam_mapper.
+        if occlusion is None:
+            from sam_mapper.mapping_config import OcclusionConfig
+            occlusion = OcclusionConfig()
+        self.occlusion = occlusion
+
+    def _visible(self, pixels: np.ndarray, depth: np.ndarray, width: int) -> np.ndarray:
+        """Which of these points are not hidden behind a nearer return in the same cell.
+
+        A z-buffer, coarsened to `pixel_bin` square cells because the lidar is far sparser
+        than the 1920x640 panorama: at ~1.6% pixel occupancy an exact-pixel buffer almost
+        never sees two returns in one cell and would be a no-op. The cell is the smallest
+        unit at which "these two returns are on the same ray" is answerable at all.
+
+        `depth` is the lidar-origin range, deliberately the same quantity B3 filters on.
+        Sharing it makes the two stages commute exactly: the range filter only ever drops
+        points that are FARTHER than the ones it keeps, so it can never remove the occluder
+        that decides another point's fate. Using `scan2pixels`'s third column instead would
+        not do — that is the HORIZONTAL range, which ignores elevation entirely and calls a
+        point on the ceiling directly overhead "zero metres away".
+        """
+        bin_px = max(int(self.occlusion.pixel_bin), 1)
+        cells = (pixels[:, 1] // bin_px) * (width // bin_px + 1) + (pixels[:, 0] // bin_px)
+        nearest = np.full(int(cells.max()) + 1, np.inf) if cells.size else np.zeros(0)
+        np.minimum.at(nearest, cells, depth)
+        return depth <= nearest[cells] + float(self.occlusion.depth_tolerance)
 
     def generate_seg_cloud(self, cloud: np.ndarray, masks, R_b2w, t_b2w):
         """Project cloud (body frame) into the image, then split by mask into per-object world clouds.
@@ -82,9 +110,17 @@ class CloudImageFusion:
                     (point_pixel_idx[:, 1] >= 0) & (point_pixel_idx[:, 1] < image_shape[0]))
         point_pixel_idx = point_pixel_idx[in_bounds].astype(int)
         cloud = cloud[in_bounds]
+        depth = np.linalg.norm(cloud[:, :3], axis=1) if self.occlusion.enabled else None
 
         obj_clouds_world = []
         for mask in masks:
             cloud_mask = mask[point_pixel_idx[:, 1], point_pixel_idx[:, 0]].astype(bool)
+            if depth is not None and cloud_mask.any():
+                # Per mask, not once for the whole frame: the question is whether a point is
+                # behind the surface THIS mask covers. A chair's mask holds the chair and the
+                # wall visible through the gap beneath it, and it is that wall — metres behind
+                # the near surface, inside the same silhouette — that inflates the box.
+                cloud_mask[cloud_mask] = self._visible(
+                    point_pixel_idx[cloud_mask], depth[cloud_mask], image_shape[1])
             obj_clouds_world.append(cloud[cloud_mask][:, :3] @ R_b2w.T + t_b2w)
         return obj_clouds_world
