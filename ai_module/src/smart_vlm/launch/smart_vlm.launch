@@ -47,7 +47,7 @@
 
   <!-- Mission budget (README "Timing": 10 minutes per question, from startup) -->
   <arg name="question_budget_s"  default="600.0"/> <!-- hard limit, includes model load -->
-  <arg name="explore_timeout_s"  default="120.0"/> <!-- exploration window, from first sensor data -->
+  <arg name="explore_timeout_s"  default="150.0"/> <!-- exploration CAP; target coverage usually ends it sooner -->
   <arg name="answer_reserve_s"   default="90.0"/>  <!-- T-90: stop exploring no matter what -->
   <arg name="fallback_reserve_s" default="30.0"/>  <!-- T-30: publish a guess rather than nothing -->
   <arg name="fallback_count"     default="1"/>     <!-- the numerical guess of last resort -->
@@ -104,7 +104,8 @@
           callbacks do not share a GIL well (20-80 s/frame when they did).
           Latest-frame-wins, so it drops under load rather than lagging the map.
        Input:   /sam3/{instance_map,detections}, /registered_scan, /state_estimation
-       Output:  /obj_points, /obj_boxes, /obj_labels, /obj_map_json -->
+       Output:  /obj_points, /obj_boxes, /obj_labels, /obj_map_json,
+                /exploration/object_targets -->
   <include file="$(find-pkg-share sam_mapper)/launch/map_node.launch">
     <arg name="config" value="$(var sam_config)"/>
   </include>
@@ -163,6 +164,34 @@
     <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
   </node>
 
+  <!-- 3c. Target-driven exploration — which side of each target object has never been
+       seen, turned into places to stand. Sits between perception and TARE and steers it
+       without writing waypoints: TARE stays the single writer of /way_point_with_heading.
+       Emits nothing until the reasoner publishes this question's targets, so a run with no
+       targets extracted explores exactly as it did before.
+
+       It also supplies half of the stop condition: /exploration/target_coverage_done goes
+       true once every target label has an instance and every one of them is covered or
+       proven blocked. The supervisor closes exploration only when TARE's own
+       /exploration_finish has landed too — target coverage alone is unsound for a COUNT,
+       since the objects we happened to find say nothing about the ones we did not. The
+       explore window is the cap for scenes where neither ever comes.
+
+       Every knob is a node parameter with its default in target_coverage.default_params,
+       sourced from the mapper's own config where one exists (cluster thresholds, max range).
+       Override with -p on the command line or add a <param> here.
+       Input:   /sam3/{set_prompts,prompts_ack}, /exploration/object_targets,
+                /exploration/target_viewpoint_feedback, /state_estimation,
+                /pipeline/explore_done, /exploration_finish
+       Output:  /exploration/{target_viewpoints,target_preempt,target_coverage_done,
+                target_status}, <run_dir>/target_coverage.json -->
+  <node pkg="smart_vlm" exec="target_explorer" name="target_explorer" output="screen">
+    <!-- Same scenario the planner below is launched with, so target_explorer reads its
+         kMaxTargetViewPointNum / kTargetViewPointSnapMaxDist out of the very file TARE is
+         running on instead of keeping its own copy of them. -->
+    <param name="tare_scenario" value="$(var tare_scenario)"/>
+  </node>
+
   <!-- 4. TARE exploration — drives the robot to cover the scene.
        Held until the supervisor publishes /start_exploration, which it does alongside
        /pipeline/armed the instant SAM holds this question's prompts. The wait is
@@ -173,8 +202,13 @@
        Runs unconditionally, including under eval_bag.launch: keeping the node set
        identical to the scored configuration is worth more than the CPU it costs
        replaying a bag, where its waypoints simply have no consumer.
+       Also steerable: target_explorer above publishes /exploration/target_viewpoints,
+       which TARE snaps to real candidate viewpoints and treats as must-visit. Those are
+       desiderata, not commands — anything not near a collision-free, connected candidate is
+       dropped, and if the topic goes silent TARE reverts to stock coverage after
+       kTargetViewPointTimeout. Still the only writer of /way_point_with_heading.
        Input:   /registered_scan, /terrain_map, /terrain_map_ext, /state_estimation,
-                /start_exploration
+                /start_exploration, /exploration/{target_viewpoints,target_preempt}
        Output:  /way_point_with_heading (Pose2D) -->
   <include file="$(find-pkg-share tare_planner)/launch/explore.launch">
     <arg name="scenario" value="$(var tare_scenario)"/>

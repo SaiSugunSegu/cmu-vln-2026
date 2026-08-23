@@ -85,8 +85,12 @@ def _node(**overrides):
         max_seen_id=-1,
         best_view_collector=None,
         TIME_JUMP_TOLERANCE=SamNode.TIME_JUMP_TOLERANCE,
+        # Production default. Every caller that wants the bag-loop behaviour opts in, which
+        # is the same way round as the yaml.
+        reset_session_on_time_jump=False,
         log=lambda *_: None,
-        get_logger=lambda: SimpleNamespace(warning=lambda *_: None, error=lambda *_: None),
+        get_logger=lambda: SimpleNamespace(warning=lambda *a, **k: None,
+                                           error=lambda *a, **k: None),
     )
     node.__dict__.update(overrides)
     return node, created
@@ -114,8 +118,28 @@ def test_a_stamp_that_regresses_within_tolerance_is_not_a_loop():
 @needs_ros
 def test_a_real_bag_loop_still_resets_and_renumbers():
     """The `--loop` path must keep working -- this is why the reset is not simply removed."""
-    node, created = _node(max_seen_id=41)
+    node, created = _node(max_seen_id=41, reset_session_on_time_jump=True)
     SamNode._handle_time_jump(node, 200.0)
     SamNode._handle_time_jump(node, 100.0)         # 100s backwards: a new lap
     assert created == ["reset"]
     assert node.id_offset == 42                    # past max_seen_id, so ids cannot collide
+
+
+@needs_ros
+def test_the_sim_never_resets_however_far_the_stamp_regresses():
+    """Sim-only testing: there is no lap, so no regression may restart the session.
+
+    The live sim reorders /camera/image by a second or two. Over one 13-scene sweep that
+    tripped 215 resets, every jump between 1.0s and 2.8s, and each one renumbered every track
+    -- track ids per mapped object went 1.37 with no resets to 4.59 at 6-20, and one `chair`
+    came back as eight ids for the world merge to reassemble.
+
+    Deliberately tested with a 100s jump, not a 2s one: raising TIME_JUMP_TOLERANCE would
+    pass a 2s case while leaving a threshold guarding a case that cannot occur. Off means off.
+    """
+    node, created = _node(max_seen_id=41)
+    SamNode._handle_time_jump(node, 200.0)
+    SamNode._handle_time_jump(node, 100.0)
+    assert created == []
+    assert node.id_offset == 0                     # ids continue, so tracks stay linked
+    assert node.last_frame_stamp == 100.0          # ...but the clock still follows the stream

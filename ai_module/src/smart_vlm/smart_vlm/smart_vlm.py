@@ -73,8 +73,12 @@ def _latched(depth: int = 1) -> QoSProfile:
 
 class SmartVLM(Node):
 
-    HEARTBEAT_S = 5.0
+    HEARTBEAT_S = 30.0
     TICK_S = 1.0
+    #: How long after explore_done to keep waiting for a first /obj_map_json before declaring
+    #: the question exhausted. Above sam_mapper's finalize_obj_map_wait_s (5.0), so a map that
+    #: is merely late is never mistaken for a map that is never coming.
+    EMPTY_MAP_GRACE_S = 8.0
 
     def __init__(self) -> None:
         super().__init__("smart_vlm_node")
@@ -104,6 +108,9 @@ class SmartVLM(Node):
         self.ready_published = False
         self.armed_published = False
         self.explore_done_published = False
+        #: When exploration closed, so the fallback can fire early on an empty map rather
+        #: than idling until T-30 for a value that cannot change. See _tick.
+        self.explore_done_at = None
         self.odom_count = 0
         self.last_odom_t: Optional[float] = None
         # The last 3D map map_node published, kept only so the object-reference fallback has
@@ -111,6 +118,21 @@ class SmartVLM(Node):
         # when something has already gone wrong, and that is the worst moment to discover
         # the payload does not parse.
         self.obj_map: dict = {}
+        # The two halves of "there is nothing left to explore", and exploration closes early
+        # only when BOTH have landed.
+        #
+        # target_explorer's half says every target label has an instance and every one of them
+        # is covered or proven blocked. On its own that is unsound for a COUNT: the chairs we
+        # happened to find say nothing about the chairs in the next room, and one missed chair
+        # is a wrong answer (docs/M1_exploration.md: "numerical = full sweep mandatory").
+        #
+        # TARE's half is its own coverage verdict. The two are independent by construction:
+        # while any target viewpoint is accepted, HasTargetViewPoints() keeps
+        # local_coverage_complete_ false, so TARE can only declare finished AFTER
+        # target_explorer stops asking — which is exactly when its answer starts meaning
+        # "the scene is done", not "the scene is done except where you sent me".
+        self.targets_covered = False
+        self.tare_finished = False
 
         # -- inputs ---------------------------------------------------------
         self.create_subscription(String, "/challenge_question", self._on_question, 10)
@@ -127,6 +149,9 @@ class SmartVLM(Node):
         self.create_subscription(String, "/instruction_reasoner/status",
                                  self._on_instruction_status, _latched())
         self.create_subscription(String, "/obj_map_json", self._on_obj_map, 10)
+        self.create_subscription(
+            Bool, "/exploration/target_coverage_done", self._on_targets_covered, 2)
+        self.create_subscription(Bool, "/exploration_finish", self._on_tare_finished, 2)
 
         # -- outputs --------------------------------------------------------
         self.pub_ready = self.create_publisher(String, "/pipeline/ready", _latched())
@@ -267,10 +292,43 @@ class SmartVLM(Node):
         self.last_odom_t = now
         if self.armed_published and not self.clock.exploring_started:
             self.clock.mark_exploring(now)
+            # Greppable and symmetric with EXPLORATION END below. The window opens HERE, on
+            # first sensor data after arming — not at t0 — so a slow model load does not eat
+            # it, and reading the two markers together is how you check that target coverage
+            # finished before exploration did.
             self.get_logger().info(
-                f"armed and sensor data flowing — exploring until "
-                f"T+{self.clock.explore_deadline - self.clock.t0:.0f}s")
+                f"EXPLORATION START T+{self.clock.elapsed(now):.1f}s "
+                f"(window {self.clock.budget.explore_timeout_s:.0f}s, "
+                f"deadline T+{self.clock.explore_deadline - self.clock.t0:.1f}s)")
             self._publish_status()
+
+    def _on_targets_covered(self, msg: Bool) -> None:
+        """Latched here, not just read: target_explorer stops publishing once exploration is
+        closed, and a level-triggered read would race its own shutdown."""
+        if msg.data and not self.targets_covered:
+            self.targets_covered = True
+            self._log_stop_signal("TARGET COVERAGE COMPLETE")
+
+    def _on_tare_finished(self, msg: Bool) -> None:
+        """TARE's own verdict, latched the same way (it publishes level, not edge)."""
+        if msg.data and not self.tare_finished:
+            self.tare_finished = True
+            self._log_stop_signal("TARE EXPLORATION FINISHED")
+
+    def _log_stop_signal(self, marker: str) -> None:
+        """One greppable line per half, with the time it landed.
+
+        Which of the two arrives last is the whole question behind the explore window: if
+        TARE's line never appears, the timeout is doing all the work and the cap is the real
+        policy; if it appears long before target coverage, the targets are the laggard.
+        """
+        now = time.monotonic()
+        waiting = [name for name, got in (("targets_covered", self.targets_covered),
+                                          ("tare_finished", self.tare_finished)) if not got]
+        self.get_logger().info(
+            f"{marker} T+{self.clock.elapsed(now):.1f}s "
+            + ("— both in, closing exploration" if not waiting
+               else f"— still waiting on {waiting[0]}"))
 
     def _scene_finished(self, now: float) -> bool:
         """A bag that has played out stops publishing odometry; the sim never does.
@@ -293,24 +351,48 @@ class SmartVLM(Node):
 
         if self._scene_finished(now):
             self._finish_exploration("bag_end", now)
+        elif self.targets_covered and self.tare_finished and self.clock.exploring_started:
+            # Ahead of the deadline check on purpose: this is the outcome we want reported,
+            # and at the instant both fire it is the more informative of the two.
+            self._finish_exploration("scene_covered", now)
         elif now >= self.clock.explore_deadline:
             reason = "budget" if self.clock.explore_deadline >= self.clock.answer_deadline \
                 else "timeout"
             self._finish_exploration(reason, now)
 
-        if now >= self.clock.fallback_deadline:
+        if now >= self.clock.fallback_deadline or self._fallback_is_all_thats_left(now):
             self._publish_fallback()
+
+    def _fallback_is_all_thats_left(self, now: float) -> bool:
+        """Exploration is over and the map is empty, so waiting for T-30 buys nothing.
+
+        Both inputs to an answer are exhausted: nothing more will be observed, and there is
+        nothing in the map for the reasoner to choose from. Measured on a 13-scene sweep, six
+        questions sat in this state for ~450 s each and then published nothing anyway
+        (loft Q02/Q03/Q05, office_1 Q01-Q03, all `predicted=None time=614s`) — a whole
+        question's budget spent on a value that could not change.
+
+        The grace period is not politeness: map_node writes /obj_map_json on its own cadence
+        and the reasoner allows `finalize_obj_map_wait_s` for the file, so a map arriving just
+        after explore_done is normal and must not be pre-empted.
+        """
+        if self.explore_done_at is None or self.obj_map:
+            return False
+        return (now - self.explore_done_at) >= self.EMPTY_MAP_GRACE_S
 
     def _finish_exploration(self, reason: str, now: float) -> None:
         """Close exploration exactly once and hand the question to the reasoner."""
         if self.explore_done_published:
             return
         self.explore_done_published = True
+        self.explore_done_at = now
         elapsed = round(self.clock.elapsed(now), 1)
         self.pub_explore_done.publish(String(data=json.dumps(
             {"reason": reason, "elapsed_s": elapsed, "scene_done": True})))
         self.get_logger().info(
-            f"exploration closed after {elapsed}s ({reason}) — /pipeline/explore_done sent")
+            f"EXPLORATION END T+{elapsed}s after "
+            f"{self.clock.exploring_elapsed(now):.1f}s of exploring (reason={reason}) "
+            f"— /pipeline/explore_done sent")
         self._publish_status()
 
     def _publish_fallback(self) -> None:
@@ -351,15 +433,13 @@ class SmartVLM(Node):
         """
         deadline = f"T-{self.clock.budget.fallback_reserve_s:.0f}s"
         if not self.obj_map:
-            self.get_logger().error(
-                f"FALLBACK: no answer by {deadline} and /obj_map_json is empty — nothing to "
-                f"point at, publishing nothing")
+            self._publish_marker_placeholder("/obj_map_json is empty")
             return
 
         track_id, why = naive_from_raw(self.obj_map, self.question or "")
         entry = self.obj_map.get(str(track_id)) if track_id else None
         if entry is None:
-            self.get_logger().error(f"FALLBACK: {why} — publishing nothing")
+            self._publish_marker_placeholder(why)
             return
 
         stamp = self.get_clock().now().seconds_nanoseconds()
@@ -373,6 +453,35 @@ class SmartVLM(Node):
         self.get_logger().error(
             f"FALLBACK: no answer by {deadline} — publishing /selected_object_marker "
             f"id={marker.id} ({why}) as a guess")
+
+    def _publish_marker_placeholder(self, why: str) -> None:
+        """Say "no answer" out loud instead of by never speaking.
+
+        There is nothing to point at, so this scores zero — but so does silence, and silence
+        additionally leaves every consumer waiting for a message that will never come. The
+        eval harness blocks on /selected_object_marker until its 600 s timeout, which is how
+        six questions in one sweep cost ~450 s each on top of a guaranteed zero.
+
+        `ns="placeholder"` and a negative id are the shape eval_orchestrator already reads
+        (`grade` treats it as no answer, exactly as it should) and the same shape
+        object_reference_reasoner._publish_placeholder emits for crops_only. Deliberately not
+        a box at the robot's pose: a marker somewhere real is a claim about the world, and a
+        fabricated one could score above zero by luck.
+        """
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.ns = "placeholder"
+        marker.id = -1
+        marker.type = Marker.CUBE
+        marker.action = Marker.ADD
+        marker.pose.orientation.w = 1.0
+        marker.scale.x = marker.scale.y = marker.scale.z = 1e-3
+        marker.text = "no_answer"
+        self.pub_marker.publish(marker)
+        self.get_logger().error(
+            f"FALLBACK: nothing to point at ({why}) — publishing a placeholder marker so the "
+            f"harness is not left waiting; this question scores zero")
 
     def _publish_waypoint_fallback(self) -> None:
         """Send the robot toward one mapped object rather than leaving it still.

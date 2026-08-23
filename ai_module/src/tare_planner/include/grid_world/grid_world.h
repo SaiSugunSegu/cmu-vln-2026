@@ -10,6 +10,7 @@
  */
 #pragma once
 
+#include <unordered_set>
 #include <vector>
 #include <memory>
 
@@ -306,6 +307,35 @@ public:
   void GetExploringCellIndices(std::vector<int>& exploring_cell_indices);
   CellStatus GetCellStatus(int cell_ind);
   void SetCellStatus(int cell_ind, CellStatus status);
+  /**
+   * Subspaces holding a target object that is still under-observed. A priority cell is kept
+   * EXPLORING so SolveGlobalTSP routes to it, and is exempt from the two demotions in
+   * UpdateCellStatus that would otherwise retire it — "Exploring to Covered", and the
+   * first-visit/near-robot COVERED shortcut. Without the exemption a drive-past marks the
+   * cell done and the robot never returns to the object it was sent for.
+   *
+   * Rebuilt every planning cycle by the caller, so this is steering, not a permanent
+   * annotation: stop publishing targets and every cell reverts to ordinary bookkeeping.
+   */
+  void AddPriorityCell(int cell_ind);
+  /**
+   * While true AND priority cells exist, SolveGlobalTSP offers the tour only those cells, so
+   * the robot heads for the target subspace instead of finishing the frontier tour first.
+   * Set false and the global planner is stock. Falls back to the full EXPLORING set whenever
+   * no priority cell is keypose-reachable — otherwise an empty tour latches return_home_.
+   */
+  void SetTargetPreempt(bool preempt)
+  {
+    target_preempt_ = preempt;
+  }
+  void ClearPriorityCells()
+  {
+    priority_cell_indices_.clear();
+  }
+  bool IsPriorityCell(int cell_ind) const
+  {
+    return priority_cell_indices_.find(cell_ind) != priority_cell_indices_.end();
+  }
   geometry_msgs::msg::Point GetCellPosition(int cell_ind);
   void SetCellRobotPosition(int cell_ind, const geometry_msgs::msg::Point& robot_position);
   geometry_msgs::msg::Point GetCellRobotPosition(int cell_ind);
@@ -383,6 +413,8 @@ private:
   geometry_msgs::msg::Point origin_;
   std::vector<int> neighbor_cell_indices_;
   std::vector<int> almost_covered_cell_indices_;
+  std::unordered_set<int> priority_cell_indices_;
+  bool target_preempt_ = false;
   std::vector<std::pair<int, int>> to_connect_cell_indices_;
   std::vector<nav_msgs::msg::Path> to_connect_cell_paths_;
   Eigen::Vector3d home_position_;

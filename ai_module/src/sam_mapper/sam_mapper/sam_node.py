@@ -71,7 +71,9 @@ class SamNode(WorkerNodeMixin, Node):
     FINALIZE_DRAIN_S = 30.0          # end of run: let every queued crop land
     SHUTDOWN_DRAIN_S = 5.0           # bag loop / teardown: eval_orchestrator SIGKILLs at 45 s
     VERBOSE_FIRST = 3
-    TIME_JUMP_TOLERANCE = 1.0        # seconds backwards before we call it a new lap
+    # Seconds backwards before the stream counts as having regressed. Only ever a LOG
+    # threshold now -- see runtime.reset_session_on_time_jump.
+    TIME_JUMP_TOLERANCE = 1.0
 
     def __init__(self, config: dict):
         super().__init__('sam_node')
@@ -83,6 +85,10 @@ class SamNode(WorkerNodeMixin, Node):
         self.verbose_objects = bool(runtime.get('verbose_objects', False))
         # How much of the node's frame is NOT SAM 3. Costs a cuda sync per stage.
         self.profile = bool(runtime.get('profile', False))
+        # Restarting the SAM 3 session on a backwards timestamp is correct for
+        # `ros2 bag play --loop` and wrong for everything else -- see _handle_time_jump.
+        self.reset_session_on_time_jump = bool(
+            runtime.get('reset_session_on_time_jump', False))
 
         self.declare_parameter('wait_for_prompts', False)
         self.wait_for_prompts = bool(self.get_parameter('wait_for_prompts').value)
@@ -104,6 +110,9 @@ class SamNode(WorkerNodeMixin, Node):
 
         self.best_view_cfg = config.get('save_best_target_view_images', {})
         self.best_view_collector = None
+        # The in-flight /pipeline/explore_done finalize, if any. destroy_node joins it rather
+        # than starting a second pass over the same crops.
+        self._finalize_thread = None
 
         # -- ROS interface (status first so clients can wait through weight load) --
         def group():
@@ -360,7 +369,12 @@ class SamNode(WorkerNodeMixin, Node):
         callback group would stall the frames queued behind it.
         """
         self.log(f"explore_done ({msg.data or 'ok'}) — finalizing best-view overlays")
-        threading.Thread(target=self._finalize_best_views, daemon=True).start()
+        # Kept so destroy_node can join it. The eval orchestrator SIGINTs the moment the
+        # answer lands, which is milliseconds after this fires, and a daemon thread dies with
+        # the process: hotel_room_1 lost its overlays to exactly that four-millisecond gap.
+        self._finalize_thread = threading.Thread(target=self._finalize_best_views,
+                                                 daemon=True)
+        self._finalize_thread.start()
 
     def _finalize_best_views(self, wait_s: float | None = None) -> None:
         """Render the overlay copies with the 3D map's object ids drawn on.
@@ -416,22 +430,46 @@ class SamNode(WorkerNodeMixin, Node):
     # -- bag-loop handling ------------------------------------------------------
 
     def _handle_time_jump(self, stamp: float) -> None:
-        """Detect a bag loop on /camera/image and start a clean SAM3 session.
+        """Start a clean SAM3 session when /camera/image loops back to the start.
 
         Only this node's own state needs resetting here: the SAM3 session (ids only mean
         anything within one session) and the id namespace (new ids must never collide with
         ones map_node has already placed in the map).
+
+        A LOOP is the only thing this is for, and only `ros2 bag play --loop` produces one.
+        The live sim does not loop; it reorders `/camera/image` by a second or two, which is
+        indistinguishable from a loop to a threshold and nothing like one in consequence.
+        Measured over a 13-scene sweep: 215 resets fired, every jump between 1.0 s and 2.8 s,
+        not one of them a loop (a loop regresses by the bag's whole length). Each false reset
+        renumbers every track, so D8 world merge has to reassemble each object from fragments
+        it cannot always prove belong together -- track ids per mapped object went 1.37 with no
+        resets, 2.14 at 1-5, 4.59 at 6-20, and one loft `chair` came back as eight ids.
+
+        So the reset is OFF by default and the regression is merely reported. Raising the
+        tolerance instead would have left a threshold guarding a case that cannot occur.
         """
         if self.last_frame_stamp is None or stamp >= self.last_frame_stamp - self.TIME_JUMP_TOLERANCE:
             self.last_frame_stamp = stamp
             return
 
         jump = self.last_frame_stamp - stamp
-        # WARN, not INFO: correct for `bag-play --loop`, but inside one eval question the bag
-        # plays forward once, so this means stamps regressed and the session just restarted
-        # under the 3D map. Either way it ends the run's single-session guarantee.
+        if not self.reset_session_on_time_jump:
+            # Throttled and still a WARN: the reordering is not acted on, but it is real, and
+            # a frame that regresses past runtime.cloud_window_before cannot be paired with a
+            # cloud at all. map_node's "older than oldest odom (skipped N)" is the same event
+            # seen from the other side; the two together say whether the window needs widening.
+            self.get_logger().warning(
+                f'time jumped backwards {jump:.1f}s — keeping SAM 3 session '
+                f'#{getattr(self.backend, "session_epoch", "?")} '
+                f'(runtime.reset_session_on_time_jump is off)',
+                throttle_duration_sec=10.0)
+            self.last_frame_stamp = stamp
+            return
+
+        # WARN, not INFO: this ends the run's single-session guarantee, and every id map_node
+        # has already placed in the map is about to be superseded.
         self.get_logger().warning(
-            f'time jumped backwards {jump:.1f}s (bag loop?) — resetting SAM 3 session '
+            f'time jumped backwards {jump:.1f}s (bag loop) — resetting SAM 3 session '
             f'(was #{getattr(self.backend, "session_epoch", "?")}); '
             f'new object ids offset by {self.max_seen_id + 1}')
         self.id_offset = self.max_seen_id + 1
@@ -619,6 +657,14 @@ class SamNode(WorkerNodeMixin, Node):
         either landed by now or is not coming.
         """
         try:
+            # Let the explore_done pass finish rather than racing it. It is already doing this
+            # work with better data (it waits for obj_map.json; this path does not), and two
+            # passes over one crop set differ only in which one wins the `_rendered_with`
+            # claim. Bounded by the same drain budget, so a wedged pass cannot eat the
+            # harness's SIGINT window.
+            in_flight = self._finalize_thread
+            if in_flight is not None and in_flight.is_alive():
+                in_flight.join(timeout=self.SHUTDOWN_DRAIN_S)
             self._finalize_best_views(wait_s=0.0)
         except Exception:  # noqa: BLE001 — an exception here reads as a crashed node to
             pass           # the eval harness; teardown must stay clean

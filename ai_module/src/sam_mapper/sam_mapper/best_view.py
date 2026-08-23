@@ -740,8 +740,18 @@ class BestViewCollector:
         with self._state_lock:
             if not self._overlays or self._rendered_with == track_to_map:
                 return False
-            self._rendered_with = dict(track_to_map) if track_to_map is not None else None
             pending = list(self._written)
+            # Nothing on disk to draw over yet, so this pass is a no-op — and it must not
+            # LOOK like one that happened. Two things went wrong when it did: `_rendered_with`
+            # claimed the map, so the real pass right behind it reported "already current",
+            # and the stale-rank sweep below ran with an empty `names` and would have deleted
+            # every overlay a previous pass had drawn. Measured: hotel_room_1 and office_1
+            # finished a 13-scene sweep with three raw crops each and an empty silhouette/,
+            # which is the directory the reasoner reads (view_source: silhouette). The trigger
+            # is teardown's wait_s=0.0 pass landing while the crop writer is still queued.
+            if not pending:
+                return False
+            self._rendered_with = dict(track_to_map) if track_to_map is not None else None
 
         names = set()
         for rank, cand in pending:

@@ -270,8 +270,13 @@ class ObjMapper:
                         # where the raw/downsampled distinction stops existing. Growth is
                         # tolerable meanwhile: update_map p50 is 194 ms against SAM 3's
                         # ~18 s/frame, so the mapper is ~1% of the run budget.
-                        single_obj.merge(np.array(pcd.points), R_b2w, t_b2w, class_id,
-                                         detection_stamp)
+                        dropped = single_obj.merge(np.array(pcd.points), R_b2w, t_b2w,
+                                                   class_id, detection_stamp)
+                        # D3b. Points refused for pushing the object past its class cap —
+                        # the bleed that used to end up inside the box. A count that climbs
+                        # with no drop in voxels_valid is the gate doing its job; one that
+                        # eats real geometry shows up as voxels_valid falling instead.
+                        stats["prior_gate_dropped"] += dropped
                         single_obj.reproject_obs_angle(R_w2b, t_w2b, masks[i], self.cloud_image_fusion.scan2pixels)
                         single_obj.inactive_frame = -1
                         merged = True
@@ -440,6 +445,13 @@ class ObjMapper:
         An object can survive every stage and still never appear in the output, because
         serialize_map_to_dict skips anything whose centroid comes back None — so without
         this the last step of the pipeline is invisible.
+
+        Two consumers: offline replay diagnostics, and /exploration/object_targets. The
+        planner-facing fields are `center`, `extent` and `view_bins` (where to go and which
+        directions are still unseen) plus `life`, `info_frames`, `voxels_total` and
+        `published`, which are its admission gate — an unpublished object is exempt from world
+        merge (that path needs a non-None centroid on BOTH sides), so duplicates of one real
+        object can persist and the consumer has to deduplicate them itself.
         """
         out = []
         for obj in self.single_obj_list:
@@ -451,6 +463,9 @@ class ObjMapper:
                                           regularized=True)
             clusters = (obj.clustering_labels if obj.clustering_labels is not None
                         else np.empty(0, dtype=int))
+            center, extent = self._exploration_geometry(obj, centroid)
+            bins = obj.observed_angle_bins()
+            view_bins = obj.observed_view_bins()
             out.append({
                 "label": obj.get_dominant_label(),
                 "ids": [int(x) for x in obj.obj_id],
@@ -463,9 +478,42 @@ class ObjMapper:
                 "inactive_frame": int(obj.inactive_frame),
                 "info_frames": int(obj.info_frames_cnt),
                 "published": centroid is not None,
+                # Where to aim, and from which world azimuths it has already been seen.
+                # `center` falls back to the provisional voxel mean precisely when
+                # `published` is false, so an exploration consumer always has a position.
+                "center": None if center is None else [float(v) for v in center],
+                "extent": None if extent is None else [float(v) for v in extent],
+                "angle_bins": [bool(b) for b in bins],
+                "n_angle_bins": int(np.count_nonzero(bins)),
+                # Which sides the robot has actually STOOD on -- one bin per observation,
+                # against angle_bins' per-voxel OR. A planner must read this one; see
+                # SingleObject.observed_view_bins.
+                "view_bins": [bool(b) for b in view_bins],
+                "n_view_bins": int(np.count_nonzero(view_bins)),
+                # Points the class-prior gate refused at merge time. Large next to a healthy
+                # voxels_valid means it is catching bleed; large next to a starved one means
+                # the cap is too tight for this class and is eating the object.
+                "prior_gate_dropped": int(obj.prior_gate_dropped),
                 "reject": dict(obj.regularize_rejections),
             })
         return out
+
+    def _exploration_geometry(self, obj, centroid):
+        """Position and size for an exploration consumer, for ANY tracked object.
+
+        Both fall back for objects the normal path cannot describe: the centroid to the
+        provisional voxel mean, the extent to the raw voxel spread. Without the fallbacks an
+        unpublished object carries no position at all and cannot be a navigation goal -- which
+        is the whole reason it is under-observed in the first place.
+        """
+        center = centroid if centroid is not None else obj.provisional_centroid()
+        box = obj.infer_bbox(diversity_percentile=self.percentile_thresh, regularized=True)
+        if box is not None and box[1] is not None:
+            return center, box[1]
+        voxels = obj.vote_stat.voxels
+        if voxels.shape[0] == 0:
+            return center, None
+        return center, np.ptp(voxels, axis=0)
 
     def serialize_map_to_dict(self):
         objects_dict = {}

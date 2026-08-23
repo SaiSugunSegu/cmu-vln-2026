@@ -69,7 +69,7 @@ save_best_target_view_images:
   output_dir: /data/crops   # host-visible, same convention as sam-frames
   save_annotated_copy: false            # also write a masks/boxes/labels overlay per image
   save_silhouette_copy: true           # also write a mask-outline + class-name copy per image
-  save_full_views: true         # mirror every image above under full/, uncropped, so the rest
+  save_full_views: false         # mirror every image above under full/, uncropped, so the rest
                                 # of the room is visible. Ignored when crop_to_roi is off.
   finalize_obj_map_wait_s: 5.0  # wait for map_node's obj_map.json this long, then label
                                 # with raw SAM track ids instead
@@ -78,7 +78,7 @@ save_best_target_view_images:
   crop_to_roi: true          # crop to the objects rather than saving the whole panorama
   roi_padding_frac: 0.2      # margin around the object group, as a fraction of its size
   roi_min_size_px: 300       # floor, so a small/far object still gives a readable crop
-  roi_cluster_gap_px: 800    # objects further apart than this are cropped as separate images
+  roi_cluster_gap_px: 300    # objects further apart than this are cropped as separate images
 
 # 3D mapping stage (map_node). Every filter in docs/map_node_pipeline.md stages B-E, with
 # an on/off switch and its thresholds. Omitted keys fall back to the defaults in
@@ -129,11 +129,19 @@ mapping:
                                    #     Add a `priors: {class: [h1, h2, z]}` block here only
                                    #     to override individual classes; it MERGES, it does
                                    #     not replace the derived table.
+    gate_merge: true               # D3b; hold INCOMING points to the same cap, so a bled
+                                   #     object loses the bleed instead of being rejected
+                                   #     whole. `enabled` alone is a per-cluster verdict and
+                                   #     can only keep or discard an object entire.
   percentile_threshold: 0.8        # D4 accept-stop AND D5 diversity trim
   prune:                           # D6; both conditions must hold
-    enabled: true
-    min_valid_voxels: 20
-    min_inactive_frames: 5
+    enabled: false                 # OFF deliberately: its first condition reads
+    min_valid_voxels: 20           #     valid_indices_regularized, which drops to zero on any
+    min_inactive_frames: 5         #     shape-gate misfire, so it deleted good objects six
+                                   #     frames after the robot looked away. D3b now removes
+                                   #     the bleed at source, which is the job this was doing
+                                   #     badly. Re-enable only with the condition changed to
+                                   #     raw accumulated voxels.
   world_merge:                     # D8; absolute_distance fires unconditionally and is the
     enabled: true                  #     known cause of 0.44 m-spaced pillows fusing
     extent_scale: 0.5
@@ -152,10 +160,11 @@ mapping:
 runtime:
   executor_threads: 8
   publish_annotated: false
-  log_every_n_frames: 5
+  log_every_n_frames: 50
   profile: false                    # per-stage breakdown in BOTH node logs, 
   cloud_window_before: 0.5         # gather clouds in [stamp - before, stamp + after]
   cloud_window_after: 0.1
+  reset_session_on_time_jump: false
   verbose_objects: false           # print every 2D detection + 3D map object per frame
   save_obj_map: true               # dump the final 3D map as readable JSON on shutdown
   obj_map_dir: ""                  # empty = follow sam_node's run dir (/sam3/best_view_dir),

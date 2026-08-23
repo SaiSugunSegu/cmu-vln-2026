@@ -53,6 +53,20 @@ public:
     lookahead_point_ = lookahead_point;
     lookahead_point_update_ = true;
   }
+  /**
+   * Viewpoints to visit regardless of how much new ground they cover — places a target
+   * object still needs to be looked at from. They join the four navigation viewpoints as
+   * must-visit TSP nodes, so the utility function is untouched: the tour is still ordered by
+   * path length, these are simply guaranteed to be in it. Empty restores stock behaviour.
+   */
+  void SetTargetViewPointIndices(const std::vector<int>& target_viewpoint_indices)
+  {
+    target_viewpoint_indices_ = target_viewpoint_indices;
+  }
+  bool HasTargetViewPoints() const
+  {
+    return !target_viewpoint_indices_.empty();
+  }
   exploration_path_ns::ExplorationPath
   SolveLocalCoverageProblem(const exploration_path_ns::ExplorationPath& global_path, int uncovered_point_num,
                             int uncovered_frontier_point_num = 0);
@@ -123,6 +137,7 @@ private:
   int start_viewpoint_ind_;
   int end_viewpoint_ind_;
   int lookahead_viewpoint_ind_;
+  std::vector<int> target_viewpoint_indices_;
 
   // Runtime
   int find_path_runtime_;

@@ -476,6 +476,23 @@ void GridWorld::SetCellStatus(int cell_ind, grid_world_ns::CellStatus status)
   subspaces_->GetCell(cell_ind).SetStatus(status);
 }
 
+void GridWorld::AddPriorityCell(int cell_ind)
+{
+  if (!subspaces_->InRange(cell_ind))
+  {
+    return;
+  }
+  priority_cell_indices_.insert(cell_ind);
+  // Promote straight away rather than waiting for UpdateCellStatus: SolveGlobalTSP selects
+  // on EXPLORING, so a cell left UNSEEN or COVERED would not enter the global tour at all
+  // and the robot would never set off towards the object.
+  if (subspaces_->GetCell(cell_ind).GetStatus() != CellStatus::NOGO &&
+      subspaces_->GetCell(cell_ind).GetStatus() != CellStatus::EXPLORING)
+  {
+    subspaces_->GetCell(cell_ind).SetStatus(CellStatus::EXPLORING);
+  }
+}
+
 geometry_msgs::msg::Point GridWorld::GetCellPosition(int cell_ind)
 {
   MY_ASSERT(subspaces_->InRange(cell_ind));
@@ -518,6 +535,7 @@ void GridWorld::Reset()
   {
     subspaces_->GetCell(i).Reset();
   }
+  priority_cell_indices_.clear();
 }
 
 int GridWorld::GetCellStatusCount(grid_world_ns::CellStatus status)
@@ -621,7 +639,7 @@ void GridWorld::UpdateCellStatus(const std::shared_ptr<viewpoint_manager_ns::Vie
       }
     }
     // Exploring to Covered
-    if (subspaces_->GetCell(cell_ind).GetStatus() == CellStatus::EXPLORING &&
+    if (subspaces_->GetCell(cell_ind).GetStatus() == CellStatus::EXPLORING && !IsPriorityCell(cell_ind) &&
         above_frontier_threshold_count < kCellExploringToCoveredThr &&
         above_small_threshold_count < kCellExploringToCoveredThr && selected_viewpoint_count == 0 &&
         candidate_count > 0)
@@ -649,7 +667,8 @@ void GridWorld::UpdateCellStatus(const std::shared_ptr<viewpoint_manager_ns::Vie
           std::remove(almost_covered_cell_indices_.begin(), almost_covered_cell_indices_.end(), cell_ind),
           almost_covered_cell_indices_.end());
     }
-    else if (subspaces_->GetCell(cell_ind).GetStatus() == CellStatus::EXPLORING && candidate_count == 0)
+    else if (subspaces_->GetCell(cell_ind).GetStatus() == CellStatus::EXPLORING && candidate_count == 0 &&
+             !IsPriorityCell(cell_ind))
     {
       // First visit
       if (subspaces_->GetCell(cell_ind).GetVisitCount() == 1 &&
@@ -678,7 +697,11 @@ void GridWorld::UpdateCellStatus(const std::shared_ptr<viewpoint_manager_ns::Vie
   }
   for (const auto& cell_ind : almost_covered_cell_indices_)
   {
-    if (std::find(neighbor_cell_indices_.begin(), neighbor_cell_indices_.end(), cell_ind) ==
+    // The third way a cell gets retired: it drifted out of the neighbourhood while almost
+    // covered. A priority cell must survive this one too — it is usually the far-away cell
+    // the robot is still on its way to, which is precisely when it is not a neighbour.
+    if (!IsPriorityCell(cell_ind) &&
+        std::find(neighbor_cell_indices_.begin(), neighbor_cell_indices_.end(), cell_ind) ==
         neighbor_cell_indices_.end())
     {
       subspaces_->GetCell(cell_ind).SetStatus(CellStatus::COVERED);
@@ -740,61 +763,106 @@ exploration_path_ns::ExplorationPath GridWorld::SolveGlobalTSP(
   exploration_path_ns::ExplorationPath global_path;
   std::vector<geometry_msgs::msg::Point> exploring_cell_positions;
   std::vector<int> exploring_cell_indices;
-  for (int i = 0; i < subspaces_->GetCellNumber(); i++)
+  // While targets preempt, offer the global tour ONLY the subspaces that hold an
+  // under-observed target. Keeping a cell EXPLORING (which AddPriorityCell already does) makes
+  // it *eligible*; it does nothing to make it *preferred*, which is why the robot used to
+  // finish the frontier tour before ever arriving at a target.
+  //
+  // Two passes, and the second is not optional: the reachability filter below can reject every
+  // priority cell, and an empty list at the end of this block latches return_home_ and sends
+  // the robot home mid-mission. Falling back to the full EXPLORING set is what prevents that.
+  bool priority_only = target_preempt_ && !priority_cell_indices_.empty();
+  for (int attempt = 0; attempt < 2; attempt++)
   {
-    if (subspaces_->GetCell(i).GetStatus() == CellStatus::EXPLORING)
+    for (int i = 0; i < subspaces_->GetCellNumber(); i++)
     {
-      if (std::find(neighbor_cell_indices_.begin(), neighbor_cell_indices_.end(), i) == neighbor_cell_indices_.end() ||
-          (subspaces_->GetCell(i).GetViewPointIndices().empty() && subspaces_->GetCell(i).GetVisitCount() > 1))
+      if (subspaces_->GetCell(i).GetStatus() == CellStatus::EXPLORING)
       {
-        if (!use_keypose_graph_ || keypose_graph == nullptr || keypose_graph->GetNodeNum() == 0)
+        if (priority_only && !IsPriorityCell(i))
         {
-          // Use straight line connection
-          exploring_cell_positions.push_back(GetCellPosition(i));
-          exploring_cell_indices.push_back(i);
+          continue;
         }
-        else
+        if (std::find(neighbor_cell_indices_.begin(), neighbor_cell_indices_.end(), i) == neighbor_cell_indices_.end() ||
+            (subspaces_->GetCell(i).GetViewPointIndices().empty() && subspaces_->GetCell(i).GetVisitCount() > 1))
         {
-          Eigen::Vector3d connection_point = subspaces_->GetCell(i).GetRoadmapConnectionPoint();
-          geometry_msgs::msg::Point connection_point_geo;
-          connection_point_geo.x = connection_point.x();
-          connection_point_geo.y = connection_point.y();
-          connection_point_geo.z = connection_point.z();
-
-          bool reachable = false;
-          if (keypose_graph->IsPositionReachable(connection_point_geo))
+          if (!use_keypose_graph_ || keypose_graph == nullptr || keypose_graph->GetNodeNum() == 0)
           {
-            reachable = true;
+            // Use straight line connection
+            exploring_cell_positions.push_back(GetCellPosition(i));
+            exploring_cell_indices.push_back(i);
           }
           else
           {
-            // Check all the keypose graph nodes within this cell to see if there are any connected nodes
-            double min_dist = DBL_MAX;
-            double min_dist_node_ind = -1;
-            for (const auto& node_ind : subspaces_->GetCell(i).GetGraphNodeIndices())
-            {
-              geometry_msgs::msg::Point node_position = keypose_graph->GetNodePosition(node_ind);
-              double dist = misc_utils_ns::PointXYZDist<geometry_msgs::msg::Point, geometry_msgs::msg::Point>(
-                  node_position, connection_point_geo);
-              if (dist < min_dist)
-              {
-                min_dist = dist;
-                min_dist_node_ind = node_ind;
-              }
-            }
-            if (min_dist_node_ind >= 0 && min_dist_node_ind < keypose_graph->GetNodeNum())
+            Eigen::Vector3d connection_point = subspaces_->GetCell(i).GetRoadmapConnectionPoint();
+            geometry_msgs::msg::Point connection_point_geo;
+            connection_point_geo.x = connection_point.x();
+            connection_point_geo.y = connection_point.y();
+            connection_point_geo.z = connection_point.z();
+
+            bool reachable = false;
+            if (keypose_graph->IsPositionReachable(connection_point_geo))
             {
               reachable = true;
-              connection_point_geo = keypose_graph->GetNodePosition(min_dist_node_ind);
             }
-          }
-          if (reachable)
-          {
-            exploring_cell_positions.push_back(connection_point_geo);
-            exploring_cell_indices.push_back(i);
+            else
+            {
+              // Check all the keypose graph nodes within this cell to see if there are any connected nodes
+              double min_dist = DBL_MAX;
+              double min_dist_node_ind = -1;
+              for (const auto& node_ind : subspaces_->GetCell(i).GetGraphNodeIndices())
+              {
+                geometry_msgs::msg::Point node_position = keypose_graph->GetNodePosition(node_ind);
+                double dist = misc_utils_ns::PointXYZDist<geometry_msgs::msg::Point, geometry_msgs::msg::Point>(
+                    node_position, connection_point_geo);
+                if (dist < min_dist)
+                {
+                  min_dist = dist;
+                  min_dist_node_ind = node_ind;
+                }
+              }
+              if (min_dist_node_ind >= 0 && min_dist_node_ind < keypose_graph->GetNodeNum())
+              {
+                reachable = true;
+                connection_point_geo = keypose_graph->GetNodePosition(min_dist_node_ind);
+              }
+            }
+            if (reachable)
+            {
+              exploring_cell_positions.push_back(connection_point_geo);
+              exploring_cell_indices.push_back(i);
+            }
           }
         }
       }
+    }
+
+    if (!exploring_cell_indices.empty() || !priority_only)
+    {
+      break;
+    }
+    // No priority cell was reachable this cycle — retry unfiltered rather than fall through
+    // to the return-home branch below.
+    priority_only = false;
+  }
+
+  // Targets outstanding, but nothing survived the reachability filter above -- usually just
+  // because the keypose graph has not grown out to them yet. Seed the tour with the priority
+  // cells' own centres instead of falling through to the return-home branch: going home while
+  // a target is still pending is precisely the failure this is here to prevent, and the graph
+  // fills in as the robot moves. Sorted, because priority_cell_indices_ is an unordered_set
+  // and an arbitrary iteration order would make the global tour jitter between cycles.
+  if (exploring_cell_indices.empty() && target_preempt_ && !priority_cell_indices_.empty())
+  {
+    std::vector<int> seed_cell_indices(priority_cell_indices_.begin(), priority_cell_indices_.end());
+    std::sort(seed_cell_indices.begin(), seed_cell_indices.end());
+    for (const auto& cell_ind : seed_cell_indices)
+    {
+      if (!subspaces_->InRange(cell_ind))
+      {
+        continue;
+      }
+      exploring_cell_positions.push_back(GetCellPosition(cell_ind));
+      exploring_cell_indices.push_back(cell_ind);
     }
   }
 

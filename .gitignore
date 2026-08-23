@@ -7,6 +7,9 @@
 *.mcap
 # host data/ is bind-mounted at /data in the containers (see docker/compose.yml).
 # Only the bag manifest and the benchmark QA files are tracked.
+data/scenes/*
+!data/scenes/README.md
+!data/scenes/scenes.yaml
 data/bags/*
 !data/bags/README.md
 !data/bags/scenes.yaml

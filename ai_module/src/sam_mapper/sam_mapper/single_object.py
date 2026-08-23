@@ -226,6 +226,25 @@ Keep only the voxels where `mask` is True — used by SingleObject.pop() (dorman
         obs_angles = self._obs_angle_bins(self.voxels[voxels_mask], odom_t)
         self.observation_angles[voxels_mask, obs_angles] = 1
 
+    def angle_bin_coverage(self):
+        """Which viewing-azimuth bins have EVER seen this object — the OR over all its voxels.
+
+        Deliberately over every voxel rather than the diversity-trimmed survivors that
+        retrieve_valid_voxel_indices returns. Those two answer different questions: the trim
+        asks "is this voxel's shape trustworthy", this asks "which directions have we still
+        never looked from", which is what an exploration planner needs in order to pick where
+        to stand next. Using the trimmed set would also let the answer *shrink* whenever
+        regularize_shape rejects a cluster, and a coverage signal that goes backwards makes a
+        planner oscillate between goals it thinks it has just un-satisfied.
+
+        Bin k spans [-pi + k*2pi/n, -pi + (k+1)*2pi/n) in the WORLD frame, matching
+        _obs_angle_bins, so bin k inverts to a standing position at
+        center - r * (cos theta_k, sin theta_k).
+        """
+        if self.observation_angles.shape[0] == 0:
+            return np.zeros(self.num_angle_bin, dtype=bool)
+        return np.any(self.observation_angles > 0, axis=0)
+
     def retrieve_valid_voxel_indices(self, diversity_percentile=0.3, regularized=True):
         obs_angles = self.observation_angles[self.regularized_voxel_mask] if regularized else self.observation_angles
         if len(obs_angles) == 0:
@@ -250,6 +269,13 @@ One tracked 3D instance — a voxel-voted point cluster plus its class/id/lifecy
         # config (tests, ad-hoc tooling) behaves exactly as before.
         self.config = config if config is not None else MappingConfig()
         self.vote_stat = VoteStatistics(voxels, voxel_size, odom_R, odom_t, num_angle_bin)
+        #: Which world azimuths the ROBOT has stood in, relative to this object as a whole.
+        #: Distinct from vote_stat.observation_angles, which is per VOXEL: standing 1.8 m from
+        #: a 2 m sofa spans 71 degrees of voxel azimuth, so the per-voxel OR marks four of the
+        #: twenty bins from a single pose and an exploration planner reads that as "circled".
+        #: One bin per observation is the honest answer to "which side have I looked from".
+        self.view_bins = np.zeros(num_angle_bin, dtype=bool)
+        self._mark_view_bin(odom_t)
 
         self.life = 0
         self.inactive_frame = -1
@@ -265,17 +291,100 @@ One tracked 3D instance — a voxel-voted point cluster plus its class/id/lifecy
         self.req_clustering = True
         self.req_shape_regularization = True
         self.req_recompute_indices = True
+        #: Points refused by the merge-time class-prior gate, cumulative. Surfaced through
+        #: describe_objects so the replay bench can see how much bleed it is catching.
+        self.prior_gate_dropped = 0
+
+    def _prior_gate(self, voxels):
+        """Which incoming points can belong to an object of this class, given what it is.
+
+        D3 already holds every class to a size cap, but only ever as a whole-cluster verdict:
+        `regularize_shape` accepts a cluster or rejects it entire, so a bled object is either
+        kept with its bleed or thrown away with its body. This is the same cap applied to the
+        individual points instead, at the moment they would join.
+
+        Per axis, the object's span may not exceed its class prior. With the current body
+        spanning [lo, hi], a point is admissible only in `[hi - prior, lo + prior]`: it may
+        extend the box in either direction, but never past what an object of this class can
+        physically measure. The bound is monotone, so however long a run goes on, an object
+        cannot grow past its cap -- which is what stops a 5 cm-resolution voxel chain walking
+        from a picture into the wall behind it and taking the box with it.
+
+        Anchored on the REGULARIZED body when there is one: that is the clean core DBSCAN and
+        the prior already agreed on, so the gate measures from good geometry rather than from
+        a span that bleed may already have inflated. Falls back to the raw voxels before the
+        first successful regularization, where the cap still bounds the damage.
+
+        NOTE the cap is a p90 UPPER bound across every VLA-3D instance of the class, so it is
+        loose for classes with a wide size range -- `sofa` allows 5.39 m because sectionals
+        exist. This gate bites hardest exactly where the targets are smallest, which is where
+        a stray point moves the centroid most.
+        """
+        cfg = self.config.dimension_priors
+        if not (cfg.enabled and cfg.gate_merge) or voxels.shape[0] == 0:
+            return np.ones(voxels.shape[0], dtype=bool)
+        body = self.vote_stat.voxels
+        if self.vote_stat.regularized_voxel_mask.any():
+            body = body[self.vote_stat.regularized_voxel_mask]
+        if body.shape[0] == 0:
+            return np.ones(voxels.shape[0], dtype=bool)
+        prior = np.asarray(cfg.for_label(self.get_dominant_label()), dtype=float)
+        lo, hi = body.min(axis=0), body.max(axis=0)
+        return np.all((voxels >= hi - prior) & (voxels <= lo + prior), axis=1)
+
+    def _mark_view_bin(self, odom_t):
+        """Record the azimuth bin the robot occupied for THIS observation.
+
+        Binned on the vector robot -> object centre, i.e. the same convention as
+        VoteStatistics._obs_angle_bins, so bin k inverts to a standing position at
+        `centre - r * (cos theta_k, sin theta_k)` exactly as angle_bin_coverage documents.
+
+        Skipped beyond range_filter.max_distance: past that no lidar point is ever assigned to
+        this object's mask, so the frame cannot improve its geometry and calling that side
+        "inspected" would retire a viewpoint the planner still needs.
+        """
+        centre = self.provisional_centroid()
+        if centre is None or odom_t is None:
+            return
+        offset = np.asarray(centre)[:2] - np.asarray(odom_t)[:2]
+        rf = self.config.range_filter
+        if rf.enabled and float(np.linalg.norm(offset)) > rf.max_distance:
+            return
+        angle = normalize_angles_to_pi(np.arctan2(offset[1], offset[0]))
+        self.view_bins[int(discretize_angles(angle, self.vote_stat.num_angle_bin))] = True
 
     def merge(self, voxels, odom_R, odom_t, label, stamp):
-        self.vote_stat.update(voxels, odom_R, odom_t)
+        """Fold one frame's points into this object. Returns how many the prior gate refused.
+
+        The gate runs BEFORE vote_stat.update so refused points never reach the accumulation
+        at all -- they are not merely excluded from the box, they never vote, never seed a
+        DBSCAN cluster, and never drag the provisional centroid. Filtering after the fact
+        would leave every one of those effects in place.
+        """
+        keep = self._prior_gate(voxels)
+        dropped = int(voxels.shape[0] - np.count_nonzero(keep))
+        self.prior_gate_dropped += dropped
+        voxels = voxels[keep]
+        # Still count the frame even if the gate emptied it: the object WAS seen, and
+        # info_frames is what admission and the exploration planner read as "seen across
+        # frames". Only the geometry is refused, not the observation.
+        if voxels.shape[0]:
+            self.vote_stat.update(voxels, odom_R, odom_t)
+            self.req_clustering = self.req_shape_regularization = True
+            self.req_recompute_indices = True
+        self._mark_view_bin(odom_t)
         self.info_frames_cnt += 1
         self.latest_stamp = stamp
         self.class_id[label] = self.class_id.get(label, 0) + 1
-        self.req_clustering = self.req_shape_regularization = self.req_recompute_indices = True
+        return dropped
 
     def merge_object(self, other: "SingleObject"):
         self.obj_id.extend(other.obj_id)
         self.vote_stat.update_through_vote_stat(other.vote_stat)
+        # Union, like the per-voxel bins: a world merge means both id's observations were of
+        # the same physical object, so the sides the loser was seen from are sides we have
+        # genuinely stood in and must not have to walk to again.
+        self.view_bins = np.logical_or(self.view_bins, other.view_bins)
         self.life = max(self.life, other.life)
         self.info_frames_cnt += other.info_frames_cnt
         self.latest_stamp = max(self.latest_stamp, other.latest_stamp)
@@ -408,6 +517,35 @@ Counterpart to pop() — also dormant, same feature."""
         if np.sum(weights) == 0:
             return None
         return np.average(valid_voxels, axis=0, weights=weights)
+
+    def observed_angle_bins(self):
+        """Length-num_angle_bin bool vector: which world azimuths this object has been seen
+        from. See VoteStatistics.angle_bin_coverage for why it is not diversity-trimmed."""
+        return self.vote_stat.angle_bin_coverage()
+
+    def observed_view_bins(self):
+        """Length-num_angle_bin bool vector: which world azimuths the ROBOT has stood in.
+
+        The planner-facing counterpart of observed_angle_bins. That one answers "has this
+        voxel's shape been triangulated"; this one answers "have I looked at this thing from
+        that side", which is the only question a viewpoint planner can act on.
+        """
+        return self.view_bins.copy()
+
+    def provisional_centroid(self):
+        """A position for an object infer_centroid cannot place.
+
+        infer_centroid returns None when the surviving voxels carry zero observation-angle
+        weight, and such an object is skipped by serialize_map_to_dict AND by world merge
+        (both the source and the target branch test for a non-None centroid) -- so it is
+        invisible to every consumer and never deduplicated. It is still a real cluster of
+        lidar points, and it is precisely the object exploration needs to go look at again,
+        so the plain voxel mean is enough to aim at. Never used when infer_centroid succeeds.
+        """
+        voxels = self.vote_stat.voxels
+        if voxels.shape[0] == 0:
+            return None
+        return np.mean(voxels, axis=0)
 
     def infer_bbox(self, diversity_percentile, regularized=True):
         self.compute_valid_indices(diversity_percentile)
