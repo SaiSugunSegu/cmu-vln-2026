@@ -66,7 +66,7 @@ objects:
 save_best_target_view_images:
   enabled: true
   top_n: 3
-  output_dir: /data/crops   # falls back to /home/docker/crops when /data is not writable
+  output_dir: /data/crops   # host-visible, same convention as sam-frames
   save_annotated_copy: false            # also write a masks/boxes/labels overlay per image
   save_silhouette_copy: true           # also write a mask-outline + class-name copy per image
   save_full_views: true         # mirror every image above under full/, uncropped, so the rest
