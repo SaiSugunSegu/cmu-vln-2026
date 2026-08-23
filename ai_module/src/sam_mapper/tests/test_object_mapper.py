@@ -86,7 +86,7 @@ def test_update_map_survives_without_ever_publishing():
 def test_serialize_emits_a_box_per_tracked_object():
     mp, fusion = mapper(), CloudImageFusion(platform="mecanum_sim")
     feed(mp, fusion, 8, [blob([3.0, 0.0, CAM_Z])], ids=[0], labels=["chair"])
-    out = mp.serialize_map_to_dict(101.0)
+    out = mp.serialize_map_to_dict()
     assert out, "expected at least one serialised object"
     entry = next(iter(out.values()))
     assert entry["label"] == "chair"
@@ -125,16 +125,17 @@ def test_two_well_separated_objects_stay_separate():
 PAIR_RANGE, PAIR_SEP, PAIR_HALF, PAIR_PAD = 2.0, 0.4, 0.10, 6
 
 
-@pytest.mark.xfail(strict=True, reason="defect 10: the merge rule's unconditional "
-                                       "`dist < 0.5` fuses any two same-label objects "
-                                       "within 0.5 m, even when they are co-visible "
-                                       "under different masks (Tier 2.5 view-consensus)")
 def test_objects_seen_simultaneously_under_different_masks_must_not_merge():
     """Appearing in the SAME frame under two different masks is conclusive evidence of two
-    objects; no amount of centroid proximity should override it. The merge test today is
-    `dist < norm((ext_a/2 + ext_b/2)/2) * 0.5 or dist < 0.5` — that second clause knows
-    nothing about co-visibility, and 0.5 m is larger than the spacing of most of the small
-    objects the questions actually ask about (pillows, vases, books, cups).
+    objects; no amount of centroid proximity should override it.
+
+    Defect 10, now FIXED — this was xfail(strict) until `world_merge.block_covisible` landed,
+    and it turned green as soon as it did. The rule it was written against was
+    `dist < norm((ext_a/2 + ext_b/2)/2) * 0.5 or dist < 0.5`, whose second clause knew nothing
+    about co-visibility and whose 0.5 m is larger than the spacing of most of the small objects
+    the questions actually ask about (pillows, vases, books, cups). It is a regression guard now
+    rather than a wish: block_covisible is what keeps it passing, so if that is ever loosened
+    this is the test that should say so.
     """
     mp, fusion = mapper(), CloudImageFusion(platform="mecanum_sim")
     blobs = [blob([PAIR_RANGE, -PAIR_SEP / 2, CAM_Z], half=PAIR_HALF),
@@ -271,8 +272,12 @@ def test_range_gap_depth_ceiling_works_at_low_point_counts():
 
 
 def test_range_gap_disabled_is_a_pass_through():
-    """Default config must reproduce the measured baseline exactly."""
-    mp = mapper()
+    """Switching B7 off must reproduce the pre-B7 baseline exactly.
+
+    `mapper()` will not do here: RangeGapConfig.enabled defaults to True, so the default
+    mapper has B7 ON and this asserted the opposite of its own name.
+    """
+    mp = gap_mapper(enabled=False)
     cloud = ray_cloud([2.0, 2.1, 2.2, 5.0, 5.1, 5.2])
     kept = mp._range_gap_cut(cloud, np.zeros(3), None, collections.defaultdict(int))
     assert len(kept) == len(cloud)
@@ -358,3 +363,113 @@ def test_covisible_overlap_threshold_separates_the_two_populations():
     sofa = [2.19, 0.78, 0.68]
     assert overlap_fraction([0, 0, 0], sofa, [0.3, 0, 0], [0.4, 0.4, 0.4]) >= thresh
     assert overlap_fraction([0, 0, 0], sofa, [0.6, 0, 0], [1.2, 0.78, 0.68]) >= thresh
+
+
+# -- D2b: the claimed-volume guard -------------------------------------------
+
+def claim_mapper(**overrides):
+    cfg = MappingConfig.from_dict({"claimed_volume": {"enabled": True, **overrides}})
+    return ObjMapper(cloud_image_fusion=CloudImageFusion(platform="mecanum_sim"),
+                     label_template=LABELS, captioner=None, log_info=lambda *_: None,
+                     config=cfg)
+
+
+def established_table(mp, fusion):
+    """One big `table`, accumulated past claimed_volume.min_voxels."""
+    feed(mp, fusion, 8, [blob([3.0, 0.0, CAM_Z], half=0.4, n=13)], ids=[1], labels=["table"])
+    obj = next(o for o in mp.single_obj_list if 1 in o.obj_id)
+    assert obj.vote_stat.voxels.shape[0] >= 30, "test premise: the table must be established"
+    return obj
+
+
+def claim_box(centre, half, label):
+    """A hand-built claim table entry, so the geometry under test is exact rather than
+    whatever `blob` happens to project to."""
+    lo = np.array(centre) - half
+    hi = np.array(centre) + half
+    return ([label], lo[None, :], hi[None, :], np.prod(hi - lo)[None])
+
+
+def test_a_smaller_cross_label_object_claims_its_own_points():
+    """The measured failure: a table's mask swallows the carpet under it, a chair's swallows
+    the magazine on it. Same range, so B7 cannot see it; no z-buffer in B6, so the mask keeps
+    the whole line of sight on frames where the neighbour was not detected."""
+    mp, fusion = claim_mapper(), CloudImageFusion(platform="mecanum_sim")
+    established_table(mp, fusion)
+    table = claim_box([3.0, 0.0, CAM_Z], 0.05, "carpet")
+
+    inside = np.array([[3.0, 0.0, CAM_Z]] * 20)
+    outside = np.array([[3.0, 1.0, CAM_Z]] * 20)
+    stats = collections.defaultdict(int)
+    kept = mp._claimed_volume_cut(np.vstack([inside, outside]), "table", 1, table, stats)
+    assert len(kept) == 20 and stats["claimed_by_other_object"] == 20
+
+
+def test_a_larger_object_may_not_claim_against_a_smaller_one():
+    """Direction matters. A magazine denying the chair its points is right; the chair denying
+    the magazine would starve exactly the small objects that already struggle to publish."""
+    mp, fusion = claim_mapper(), CloudImageFusion(platform="mecanum_sim")
+    established_table(mp, fusion)
+    huge = claim_box([3.0, 0.0, CAM_Z], 5.0, "carpet")
+
+    pts = np.array([[3.0, 0.0, CAM_Z]] * 20)
+    stats = collections.defaultdict(int)
+    assert len(mp._claimed_volume_cut(pts, "table", 1, huge, stats)) == 20
+    assert stats["claimed_by_other_object"] == 0
+
+
+def test_a_same_label_neighbour_never_claims():
+    """Same-label proximity is D8's business, and D8 may legitimately decide the two are one
+    object. This guard must never take that decision away from it."""
+    mp, fusion = claim_mapper(), CloudImageFusion(platform="mecanum_sim")
+    established_table(mp, fusion)
+    sibling = claim_box([3.0, 0.0, CAM_Z], 0.05, "table")
+
+    pts = np.array([[3.0, 0.0, CAM_Z]] * 20)
+    stats = collections.defaultdict(int)
+    assert len(mp._claimed_volume_cut(pts, "table", 1, sibling, stats)) == 20
+    assert stats["claimed_by_other_object"] == 0
+
+
+def test_the_guard_never_starves_a_detection():
+    """THE case. A bad box beats no object: the reasoner can still work with a loose box, but
+    an object absent from obj_map.json cannot be selected, cannot be the fallback and cannot be
+    reasoned about at all.
+
+    The chain this blocks is one the codebase has already been bitten by — points dropped ->
+    below min_points_per_detection -> no cluster survives regularize_shape -> infer_centroid
+    returns None -> serialize_map_to_dict skips the object. That is what D6 prune did, and why
+    prune is off.
+    """
+    mp, fusion = claim_mapper(), CloudImageFusion(platform="mecanum_sim")
+    established_table(mp, fusion)
+    table = claim_box([3.0, 0.0, CAM_Z], 0.05, "carpet")
+
+    # Every point inside the claimant: filtering would leave zero.
+    pts = np.array([[3.0, 0.0, CAM_Z]] * 20)
+    stats = collections.defaultdict(int)
+    kept = mp._claimed_volume_cut(pts, "table", 1, table, stats)
+    assert len(kept) == 20, "the guard destroyed a detection"
+    assert stats["claim_declined_would_starve"] == 1
+    assert stats["claimed_by_other_object"] == 0
+
+
+def test_a_young_object_keeps_its_founding_points():
+    """A young object needs its founding points more than a neighbour needs its boundary
+    respected — and an object with no accumulation has no volume to be 'larger' than."""
+    mp = claim_mapper()
+    table = claim_box([3.0, 0.0, CAM_Z], 0.05, "carpet")
+    pts = np.array([[3.0, 0.0, CAM_Z]] * 20)
+    stats = collections.defaultdict(int)
+    # obj_id 99 was never created, so there is nothing established to filter.
+    assert len(mp._claimed_volume_cut(pts, "table", 99, table, stats)) == 20
+
+
+def test_disabled_is_a_pass_through():
+    """Default config must reproduce the measured baseline exactly."""
+    mp, fusion = mapper(), CloudImageFusion(platform="mecanum_sim")
+    established_table(mp, fusion)
+    pts = np.array([[3.0, 0.0, CAM_Z]] * 20)
+    stats = collections.defaultdict(int)
+    table = claim_box([3.0, 0.0, CAM_Z], 0.05, "carpet")
+    assert len(mp._claimed_volume_cut(pts, "table", 1, table, stats)) == 20

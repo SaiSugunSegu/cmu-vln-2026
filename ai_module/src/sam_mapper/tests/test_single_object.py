@@ -56,13 +56,31 @@ def test_axis_aligned_box_recovers_centre_and_extent():
 
 
 def test_single_stray_point_sets_the_whole_extent():
-    """Defect 6, KNOWN and deliberately not fixed — see get_box_3d's docstring.
+    """Defect 6, KNOWN and deliberately not fixed. Percentile trimming has now lost TWICE.
 
-    A weighted-percentile trim was implemented and measured, and it made accuracy worse:
-    outlier inflation is not this mapper's failure mode. Measured against matched GT,
-    10/10 boxes are UNDER-sized (median volume ratio 0.106), so trimming moves them
-    further from the truth. This pins the current behaviour so the trade-off is a
-    deliberate decision rather than a forgotten one; revisit once boxes err large.
+    Attempt 1 — weighted percentile, rejected because boxes were UNDER-sized at the time
+    (10/10 vs matched GT, median volume ratio 0.106), so trimming moved them further from
+    the truth. That note ended "revisit once boxes err large".
+
+    Attempt 2 — boxes now DO err large (median horizontal extent ratio 1.22x, p75 1.66x,
+    absolute error median +0.062 m / p75 +0.207 m, while centroids and z extent are already
+    good). So the revisit condition was met and an unweighted per-axis quantile was
+    implemented and benched over 13 scenes at trim=0.02:
+
+        best_iou_per_gt  0.317 -> 0.321   (+0.004, against a +0.02 bar)
+        TP @ IoU 0.25      178 -> 175     while n_pred went 431 -> 433
+        recall_askable   0.547 -> 0.533
+        cat2 oracle      0.683 -> 0.675
+
+    It published MORE objects and matched FEWER: the trim shrank boxes below the matching
+    threshold. It cannot tell bleed from a real edge, because a quantile is a statistic over
+    the object's own points — so it taxes the ~half of boxes already within 6 cm of GT to win
+    a little on the rest, and the two cancel.
+
+    The lesson, and the reason the code is gone rather than defaulted off: a filter gated on
+    an object's OWN statistics bills every object. One gated on independent evidence bills
+    only where the evidence is — which is why claimed_volume (D2b) works where this does not.
+    A third variant needs a different theory of where the bleed enters, not another quantile.
     """
     pts = box_surface([0, 0, 0], [1.0, 1.0, 1.0])
     _, clean, _ = get_box_3d(pts)

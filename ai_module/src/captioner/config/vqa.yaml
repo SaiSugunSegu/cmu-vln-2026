@@ -25,8 +25,6 @@ model: "google/gemini-3.7-flash"
 # # own lite preset, then to `model` above.
 
 
-
-
 # Cheaper model for the extraction call (lite=True); blank falls back to the provider's
 # own lite preset, then to `model` above. OpenRouter has no lite preset, so this is
 # the same Gemini Flash until a cheaper slug is set.

@@ -137,12 +137,18 @@ class DimensionPriorsConfig(_FromDict):
     #: MERGED over the derived table, not a replacement — naming three classes must not
     #: silently revert the other 260 to `default`.
     priors: dict = field(default_factory=dict)
-    #: D3b - apply the same cap to INCOMING points at merge time, not just to whole clusters
-    #: after the fact. `enabled` above can only accept or reject a cluster entire, so a bled
-    #: object is either kept whole or thrown away whole; this drops the individual points that
-    #: would push the object past what its class can physically be, and keeps the rest.
-    #: Bounds an object's growth to its class cap no matter how long the run goes on.
-    gate_merge: bool = True
+    #: D3b - apply the same cap to INCOMING points at merge time. MEASURED AND REJECTED, so
+    #: it defaults OFF; the mechanism is kept only so the measurement can be reproduced.
+    #:
+    #: It refused 1,258,889 points across 13 scenes and changed nothing: all 13 map_digests
+    #: identical, 0 of 52 objects changed voxels_total. The reason is that a class prior is a
+    #: population UPPER BOUND, so it cannot separate a bled instance from a large one — only
+    #: 3 of 41 boxes exceed their prior at all, because a `table` prior is [3.06, 1.55, 1.15]
+    #: while a 5x-inflated table measures [1.31, 0.95, 0.62].
+    #:
+    #: ClaimedVolumeConfig (D2b) is the replacement: gate on another OBJECT's actual geometry
+    #: rather than on its class.
+    gate_merge: bool = False
 
     def __post_init__(self):
         merged = {"default": DEFAULT_PRIOR, **DERIVED_PRIORS}
@@ -153,6 +159,60 @@ class DimensionPriorsConfig(_FromDict):
 
     def for_label(self, label):
         return self.priors.get(label, self.priors["default"])
+
+
+@dataclass
+class ClaimedVolumeConfig(_FromDict):
+    """D2b - a point inside a SMALLER, differently-labelled object belongs to THAT object.
+
+    B6 has no z-buffer, so a mask claims its whole line of sight. B7 (range_gap) removes what
+    sits far BEHIND the object, which is the occlusion case; it cannot touch what sits ON or
+    UNDER it, because a magazine on a chair is at the same range as the chair. Those points
+    arrive on the frames where the neighbour was not detected, and they accumulate.
+
+    Measured over a 56-question sweep, 5 of the 17 over-large boxes provably swallow a second
+    named GT object -- couch/pillows, table/carpet, chair/magazine, chair/flowers, pillow/chair
+    -- and that is a LOWER bound, since a neighbour the questions never name is invisible to
+    the test. Every one is a support relationship, and every one is cross-label.
+
+    The four conditions are each load-bearing:
+      * different label   -- all 5 observed cases are cross-label, and it means this can never
+                            fight D8, which only ever merges SAME-label objects.
+      * claimant smaller  -- a magazine denying the chair its points is right; the chair
+                            denying the magazine would starve exactly the small objects that
+                            already struggle to reach a box at all.
+      * both established  -- an unproven blob must not claim territory, and a young object
+                            needs its founding points more than a neighbour needs its edge.
+      * shrunk box        -- the claiming box is itself imperfect, so only its core claims.
+
+    This is the principled replacement for D3b (dimension_priors.gate_merge), which gated
+    incoming points on CLASS priors and was measured as a complete no-op: 1.26M points refused,
+    all 13 map digests identical. The reason is now clear -- only 3 of 41 boxes exceed their
+    class prior, because a `table` prior is [3.06, 1.55, 1.15] and a 5x-inflated table is
+    [1.31, 0.95, 0.62]. Another object's ACTUAL geometry is real information; a population
+    upper bound is not.
+
+    MEASURED, 13 scenes, versus the same map with this off -- positive on every axis:
+
+        recall_askable   0.547 -> 0.552      TP @ IoU 0.25   178 -> 180
+        precision        0.415 -> 0.418      duplicate_rate  0.033 -> 0.030
+        centre err med   0.466 -> 0.325 m    (p90 2.55 -> 2.21)
+        cat2 oracle      0.683 -> 0.695      best_iou_per_gt 0.317 -> 0.319
+
+    The gain concentrates on QUESTION TARGETS (cat2 oracle) rather than on all GT
+    (best_iou_per_gt), which is the point: those are the small objects in support relations
+    this was built for.
+
+    LIMITATION, by construction: this filters INCOMING points only. It prevents further growth,
+    it does not retract bleed already accumulated -- if the small object establishes late, the
+    big box keeps what it took first.
+    """
+    enabled: bool = False
+    #: Only the claiming box's confident core takes points.
+    shrink: float = 0.9
+    #: Accumulated voxels a claimant must have -- and that the object being filtered must have
+    #: before the guard applies to it at all.
+    min_voxels: int = 30
 
 
 @dataclass
@@ -216,6 +276,7 @@ class MappingConfig(_FromDict):
     dbscan: DbscanConfig = field(default_factory=DbscanConfig)                    # D1
     cluster_weight_min: float = 10.0        # D2
     dimension_priors: DimensionPriorsConfig = field(default_factory=DimensionPriorsConfig)  # D3
+    claimed_volume: ClaimedVolumeConfig = field(default_factory=ClaimedVolumeConfig)       # D2b
     percentile_threshold: float = 0.8       # D4 accept-stop AND D5 diversity trim
     prune: PruneConfig = field(default_factory=PruneConfig)                       # D6
     world_merge: WorldMergeConfig = field(default_factory=WorldMergeConfig)       # D8
@@ -235,6 +296,7 @@ class MappingConfig(_FromDict):
         self.outlier_removal = _sub(OutlierRemovalConfig, self.outlier_removal)
         self.dbscan = _sub(DbscanConfig, self.dbscan)
         self.dimension_priors = _sub(DimensionPriorsConfig, self.dimension_priors)
+        self.claimed_volume = _sub(ClaimedVolumeConfig, self.claimed_volume)
         self.prune = _sub(PruneConfig, self.prune)
         self.world_merge = _sub(WorldMergeConfig, self.world_merge)
 

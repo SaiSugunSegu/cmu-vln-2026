@@ -127,6 +127,12 @@ def test_describe_objects_carries_the_field():
 
 # -- D3b: the class-prior gate on incoming points ----------------------------
 
+def gated():
+    """A config with D3b ON. It ships OFF -- see test_the_gate_is_off_by_default -- so every
+    case that exercises the gate has to ask for it, or it passes vacuously."""
+    return MappingConfig.from_dict({"dimension_priors": {"gate_merge": True}})
+
+
 def bled_point(obj, axis=0, distance=6.0):
     """A point far enough along one axis to blow the box past any class cap."""
     p = np.asarray(obj.provisional_centroid(), float).copy()
@@ -137,7 +143,7 @@ def bled_point(obj, axis=0, distance=6.0):
 def test_a_point_beyond_the_class_cap_never_joins():
     """The whole point: a 5 cm voxel chain must not be able to walk from an object into the
     wall behind it and take the box with it."""
-    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05)
+    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05, config=gated())
     before = obj.vote_stat.voxels.shape[0]
     dropped = obj.merge(bled_point(obj), IDENTITY, np.array([1.0, 0.0, 0.75]), "sofa", 1.0)
     assert dropped == 1
@@ -147,7 +153,7 @@ def test_a_point_beyond_the_class_cap_never_joins():
 
 def test_a_point_inside_the_class_cap_still_joins():
     """The gate is a cap, not a tightening — ordinary growth must be untouched."""
-    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05)
+    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05, config=gated())
     before = obj.vote_stat.voxels.shape[0]
     near = np.array([[0.4, 0.0, 0.5]])           # well inside sofa's 5.39 x 2.19 x 1.63
     assert obj.merge(near, IDENTITY, np.array([1.0, 0.0, 0.75]), "sofa", 1.0) == 0
@@ -157,7 +163,7 @@ def test_a_point_inside_the_class_cap_still_joins():
 def test_the_gate_bounds_growth_however_long_the_run():
     """Monotone by construction: the span can never exceed the cap, so bleed cannot
     accumulate one frame at a time into a box that fits nothing."""
-    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05)
+    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05, config=gated())
     prior = MappingConfig().dimension_priors.for_label("sofa")
     for step in range(1, 40):
         obj.merge(np.array([[0.3 * step, 0.0, 0.5]]), IDENTITY,
@@ -169,7 +175,7 @@ def test_the_gate_bounds_growth_however_long_the_run():
 def test_a_frame_the_gate_empties_still_counts_as_seen():
     """`info_frames` is what admission and the exploration planner read as "seen across
     frames". Only the geometry is refused, not the observation."""
-    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05)
+    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05, config=gated())
     before = obj.info_frames_cnt
     obj.merge(bled_point(obj), IDENTITY, np.array([1.0, 0.0, 0.75]), "sofa", 1.0)
     assert obj.info_frames_cnt == before + 1
@@ -185,3 +191,18 @@ def test_the_gate_can_be_switched_off():
     before = obj.vote_stat.voxels.shape[0]
     assert obj.merge(bled_point(obj), IDENTITY, np.array([1.0, 0.0, 0.75]), "sofa", 1.0) == 0
     assert obj.vote_stat.voxels.shape[0] == before + 1
+
+
+def test_the_gate_is_off_by_default():
+    """D3b ships OFF: measured over 13 scenes it refused 1,258,889 points and changed nothing
+    -- every map_digest identical, 0 of 52 objects changed voxels_total. A class prior is a
+    population UPPER bound, so it cannot separate a bled instance from a large one.
+
+    The mechanism is kept only so that result stays reproducible. This pins the default, so
+    the cases above cannot quietly start passing vacuously if it is ever flipped back.
+    """
+    assert MappingConfig().dimension_priors.gate_merge is False
+    obj = make_object(center=(0.0, 0.0, 0.5), spread=0.05)
+    before = obj.vote_stat.voxels.shape[0]
+    assert obj.merge(bled_point(obj), IDENTITY, np.array([1.0, 0.0, 0.75]), "sofa", 1.0) == 0
+    assert obj.vote_stat.voxels.shape[0] > before      # the bled point joins, ungated
