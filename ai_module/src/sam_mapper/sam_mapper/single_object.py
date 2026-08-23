@@ -67,14 +67,19 @@ def get_box_3d(points, weights=None, voxel_size=0.0):
 
 World-axis-aligned box over `points`, as (centre, extent, identity quaternion).
 
-    `voxel_size` is added to every extent: a voxel is a CELL, not a point, so min/max over
-    centres under-reports each axis by one cell and collapses a one-voxel-thick object to
-    exactly zero volume (windows published [0.0, 0.52, 0.78]).
+    `voxel_size` is a FLOOR on each extent, not a margin added to it. A voxel is a CELL, not
+    a point, so min/max over centres collapses a one-voxel-thick object to exactly zero
+    volume (windows published [0.0, 0.52, 0.78]) — clamping fixes that. Adding the cell to
+    every axis instead fixed it by inflating every object: at voxel_size 0.05 a 0.20 x 0.15 x
+    0.03 book was published 0.25 x 0.20 x 0.08, 4.4x its true volume, which caps its IoU
+    against the ground truth at 0.23 and puts a perfectly-detected book below the 0.25 the
+    challenge scores. Objects a metre across never noticed; the small ones category 2 asks
+    about are the whole population.
 
     `weights` is accepted and ignored — weighting the faces was measured 4x worse."""
     xyz = points[:, :3]
     lo, hi = xyz.min(axis=0), xyz.max(axis=0)
-    return (lo + hi) / 2, (hi - lo) + voxel_size, [0.0, 0.0, 0.0, 1.0]
+    return (lo + hi) / 2, np.maximum(hi - lo, voxel_size), [0.0, 0.0, 0.0, 1.0]
 
 
 def get_bbox_3d_oriented(points, voxel_size=0.0):
@@ -82,7 +87,7 @@ def get_bbox_3d_oriented(points, voxel_size=0.0):
 
     Falls back to an axis-aligned footprint when ConvexHull degenerates — a window is 4 cm
     thick, so its projection is collinear and the hull raises. That fallback is why planar
-    objects publish at all. `voxel_size` is added to every extent (see get_box_3d)."""
+    objects publish at all. `voxel_size` is a floor on every extent (see get_box_3d)."""
     bbox2d, _ = minimum_bounding_rectangle(points[:, :2])
     if bbox2d is None:
         if points.shape[0] == 0:
@@ -94,7 +99,7 @@ def get_bbox_3d_oriented(points, voxel_size=0.0):
     longest_edge = edge1 if edge1_length > edge2_length else edge2
     q = Rotation.from_euler("z", math.atan2(longest_edge[1], longest_edge[0])).as_quat()
     z_lo, z_hi = points[:, 2].min(), points[:, 2].max()
-    extent = np.array([edge1_length, edge2_length, z_hi - z_lo]) + voxel_size
+    extent = np.maximum(np.array([edge1_length, edge2_length, z_hi - z_lo]), voxel_size)
     # Expansion is symmetric, so the centre is the midpoint either way.
     center = np.array([center2d[0], center2d[1], (z_lo + z_hi) / 2])
     return center, extent, q
