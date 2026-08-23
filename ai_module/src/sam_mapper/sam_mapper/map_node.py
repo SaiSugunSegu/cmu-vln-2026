@@ -121,7 +121,8 @@ class MapNode(WorkerNodeMixin, Node):
         # change is a config edit rather than a code edit.
         mapping_config = MappingConfig.from_dict(config.get('mapping', {}))
         self.cloud_img_fusion = CloudImageFusion(platform=config['platform'],
-                                                 bounds_mode=mapping_config.bounds_mode)
+                                                 bounds_mode=mapping_config.bounds_mode,
+                                                 occlusion=mapping_config.occlusion)
         self.obj_mapper = ObjMapper(
             cloud_image_fusion=self.cloud_img_fusion,
             label_template=self.prompt_table.label_template(),

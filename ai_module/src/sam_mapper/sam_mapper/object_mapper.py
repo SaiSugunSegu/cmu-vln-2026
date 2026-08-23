@@ -18,7 +18,7 @@ from sam_mapper import box_geometry
 from sam_mapper.challenge_marker import quaternion_to_yaw
 from sam_mapper.mapping_config import MappingConfig
 from sam_mapper.ros_markers import create_colored_point_cloud, create_text_marker, create_wireframe_marker
-from sam_mapper.single_object import SingleObject
+from sam_mapper.single_object import SingleObject, _fits_prior
 
 #: Key of the non-object entry `serialize_map_to_dict` writes into obj_map.json. Safe
 #: because every other key is a track id, i.e. an int. `scripts/utils/objmap.py` keeps its
@@ -155,6 +155,38 @@ class ObjMapper:
 
         stats["claimed_by_other_object"] += dropped
         return obj_cloud[keep]
+
+    def _merge_fits_prior(self, obj, extent_a, extent_b, separation) -> bool:
+        """Would the merged object still be a plausible instance of its class?
+
+        The distance rule alone cannot answer that. `absolute_distance` fires whatever the
+        class is, so two pillows 0.44 m apart fuse into one 1 m pillow, and nothing
+        downstream ever questions the result — a wrong merge is unrecoverable. The class
+        priors that already reject a bled CLUSTER (D3, see regularize_shape) answer it
+        directly: the union of two boxes `separation` apart is at most their extents plus
+        that separation on the axis they are separated along, and if that cannot fit under
+        the cap for the class then these are two objects, not one split in two.
+
+        Deliberately generous — it bounds the union by the worst case rather than fitting
+        it — because the failure it guards against is fusing distinct objects, and a merge
+        it wrongly allows is no worse than today.
+        """
+        if not self.config.world_merge.prior_gate:
+            return True
+        priors_cfg = self.config.dimension_priors
+        prior = priors_cfg.for_label(obj.get_dominant_label()) if priors_cfg.enabled else None
+        if prior is None:
+            return True
+        union = np.maximum(np.asarray(extent_a, float), np.asarray(extent_b, float))
+        # Which axis the two are separated along is not known here, so the merge is allowed
+        # if ANY assignment fits: the gate should fire only when no arrangement of these two
+        # objects at this distance is a plausible single instance.
+        for axis in range(3):
+            candidate = union.copy()
+            candidate[axis] += separation
+            if _fits_prior(candidate, prior):
+                return True
+        return False
 
     def _range_gap_cut(self, obj_cloud, robot_xyz, mask, stats):
         """B7 - drop points sitting far behind the object their mask claimed."""
@@ -479,7 +511,13 @@ class ObjMapper:
                         if extent_object is not None and extent_target is not None:
                             dist_thresh = (np.linalg.norm((extent_object / 2 + extent_target / 2) / 2)
                                            * merge_cfg.extent_scale)
-                            if minimum_dist < dist_thresh or minimum_dist < merge_cfg.absolute_distance:
+                            close = (minimum_dist < dist_thresh
+                                     or minimum_dist < merge_cfg.absolute_distance)
+                            if close and not self._merge_fits_prior(
+                                    single_obj, extent_object, extent_target, minimum_dist):
+                                self.funnel[single_obj.get_dominant_label()][
+                                    "merge_blocked_prior"] += 1
+                            elif close:
                                 self.log_info(f"Merge {single_obj.class_id}:{single_obj.obj_id} to "
                                              f"{target_obj.class_id}:{target_obj.obj_id} with dist thresh {dist_thresh}")
                                 merged_obj = True
@@ -625,7 +663,10 @@ class ObjMapper:
                 continue
             box_center, box_extent, box_rotation = self._published_box(single_obj)
             obj_id = [int(x) for x in single_obj.obj_id]
-            objects_dict[obj_id[0]] = {
+            # str, not int: JSON turns these into strings on the way out anyway, so an int
+            # key made the in-memory map a different shape from every map ever read back.
+            # It also has to sort against SCHEMA_KEY, and int vs str does not compare.
+            objects_dict[str(obj_id[0])] = {
                 "label": single_obj.get_dominant_label(),
                 "id": obj_id,
                 "center": center.tolist(),

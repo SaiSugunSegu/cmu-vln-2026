@@ -10,6 +10,7 @@ import pytest
 
 from sam_mapper.cloud_image_fusion import (
     CloudImageFusion, scan2pixels_mecanum, scan2pixels_mecanum_sim)
+from sam_mapper.mapping_config import OcclusionConfig
 
 W, H = 1920, 640
 SCALE = W / (2 * np.pi)
@@ -107,12 +108,11 @@ def test_points_beyond_the_vertical_fov_currently_pile_onto_the_edge_rows():
     assert rows == [0, 0, 0]
 
 
-@pytest.mark.xfail(strict=True, reason="defect 2: out-of-FOV points are clipped to the "
-                                       "edge row instead of rejected (Tier 1.4)")
 def test_out_of_fov_points_must_not_be_claimed_by_an_edge_mask():
     """A point 85 deg above the horizon is outside the 120 deg FOV — the camera never saw
-    it, so no mask may claim it. Today it clips to row 0 and is swallowed by any mask
-    touching the top edge, which is how ceiling returns end up inside tall objects."""
+    it, so no mask may claim it. Under the old `clip` default it pinned to row 0 and was
+    swallowed by any mask touching the top edge, which is how ceiling returns ended up
+    inside tall objects."""
     fusion = CloudImageFusion(platform="mecanum_sim")
     cloud = np.array([at_elevation(85), [5.0, 0.0, CAM_Z]])
     masks = make_masks(((0, 340), (940, 980)))       # spans the top edge to the horizon
@@ -153,8 +153,6 @@ def test_azimuth_stays_in_bounds_all_the_way_round():
 
 # -- defect 1: no occlusion test ---------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason="defect 1: no z-buffer, so a mask claims points "
-                                       "behind the object it covers (Tier 1.8)")
 def test_occluded_points_on_the_same_ray_must_not_be_claimed():
     """Two points on one ray at 2 m and 5 m. A mask over that direction covers the near
     surface; the far point is behind it and must be rejected.
@@ -172,13 +170,50 @@ def test_occluded_points_on_the_same_ray_must_not_be_claimed():
     np.testing.assert_allclose(out[0][0], near)
 
 
-def test_both_points_on_a_ray_are_currently_claimed():
-    """Current behaviour, pinned so the occlusion fix demonstrably changes it."""
-    fusion = CloudImageFusion(platform="mecanum_sim")
+def test_disabling_the_z_buffer_restores_the_old_bleed():
+    """The behaviour the z-buffer replaced, reachable by config so the change is revertible
+    on a rig where it turns out to cost more than it saves."""
+    fusion = CloudImageFusion(platform="mecanum_sim", occlusion=OcclusionConfig(enabled=False))
     cloud = np.array([[2.0, 0.0, CAM_Z], [5.0, 0.0, CAM_Z]])
     masks = make_masks(((300, 340), (940, 980)))
+
     out = fusion.generate_seg_cloud(cloud, masks, np.eye(3), np.zeros(3))
     assert len(out[0]) == 2
+
+
+def test_an_oblique_surface_is_truncated_at_the_depth_tolerance():
+    """The cost of the z-buffer, pinned rather than glossed over.
+
+    A surface running away from the camera — a table seen end-on — puts all of its returns
+    in one cell at steadily growing range, and the buffer cannot tell that from a mask that
+    caught the wall behind it. Everything past `depth_tolerance` goes, so the far end of a
+    genuinely deep object is lost along with the bleed.
+
+    That is the deliberate trade: the tolerance is set well above the noise floor to keep
+    the loss to objects deeper than half a metre WITHIN A SINGLE 8 px cell, which at
+    3 m is a span of ~8 cm across. Sharpen `depth_tolerance` and this test is the one that
+    should fail first.
+    """
+    fusion = CloudImageFusion(platform="mecanum_sim",
+                              occlusion=OcclusionConfig(pixel_bin=8, depth_tolerance=0.5))
+    # A run of points along +x, each 0.1 m behind the last, sharing one cell.
+    cloud = np.array([[2.0 + 0.1 * i, 0.0, CAM_Z] for i in range(12)])
+    masks = make_masks(((300, 340), (940, 980)))
+
+    out = fusion.generate_seg_cloud(cloud, masks, np.eye(3), np.zeros(3))
+    assert len(out[0]) == 6, "keeps exactly the points within 0.5 m of the nearest"
+
+
+def test_the_z_buffer_is_per_mask_not_per_frame():
+    """Two objects at different depths in different directions must not shadow each other:
+    the near one is not between the camera and the far one."""
+    fusion = CloudImageFusion(platform="mecanum_sim")
+    cloud = np.array([[2.0, 0.0, CAM_Z], [5.0, 5.0, CAM_Z]])
+    masks = make_masks(((300, 340), (940, 980)),      # forward, the near point
+                       ((300, 340), (700, 740)))      # 45 deg left, the far one
+
+    out = fusion.generate_seg_cloud(cloud, masks, np.eye(3), np.zeros(3))
+    assert [len(c) for c in out] == [1, 1]
 
 
 def test_range_filter_commutes_with_projection():
@@ -236,7 +271,12 @@ def test_bounds_mode_reject_drops_out_of_fov_points():
 
 def test_bounds_mode_reject_keeps_everything_inside_the_fov():
     """The fix must not cost in-FOV points — a reject mode that trims the valid band would
-    look like an improvement in bleed and a regression everywhere else."""
+    look like an improvement in bleed and a regression everywhere else.
+
+    Occlusion is off here because this cloud is a random shell, not a scene: two points
+    that happen to share a cell at different ranges are legitimately culled by the
+    z-buffer, and counting that as a bounds-mode loss would measure the wrong thing.
+    """
     rng = np.random.default_rng(7)
     elevations = rng.uniform(-55, 55, size=400)
     azimuths = rng.uniform(-179, 179, size=400)
@@ -249,7 +289,8 @@ def test_bounds_mode_reject_keeps_everything_inside_the_fov():
     masks = [np.ones((H, W), dtype=bool)]
 
     for mode in ("clip", "reject"):
-        fusion = CloudImageFusion(platform="mecanum_sim", bounds_mode=mode)
+        fusion = CloudImageFusion(platform="mecanum_sim", bounds_mode=mode,
+                                  occlusion=OcclusionConfig(enabled=False))
         out = fusion.generate_seg_cloud(cloud, masks, np.eye(3), np.zeros(3))
         assert len(out[0]) == len(cloud), f"{mode} dropped an in-FOV point"
 
