@@ -248,10 +248,15 @@ map3d-zeropoints scene="livingroom_1" variant="" args="":
 
 # Writes /data/runs/map3d/<run-id>/<scene>.json. run-id is the HOST git sha (the container
 # has no .git), so A/B diffs are a git-keyed table.
+#
+# `label` is appended to it. The sha does NOT change while the tree is dirty, so without a
+# label every replay overwrites the last and an A/B has nothing to compare. (--variant cannot
+# serve: it selects a different companion BAG, not a run name.)
+#   just map3d-replay all 8 "" p2-safe   ->  data/runs/map3d/<sha>-dirty-p2-safe/
 [group('map3d')]
 [doc('Replay the 3D mapper offline against recorded SAM 3 output (CPU, deterministic)')]
-map3d-replay scene="arabic_room" jobs="1" args="":
-    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty)" iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/replay_map3d.py --scene {{scene}} --jobs {{jobs}} {{args}}"
+map3d-replay scene="arabic_room" jobs="1" args="" label="":
+    docker exec -it -e MAP3D_RUN_ID="$(git rev-parse --short HEAD 2>/dev/null || echo dev)$(git diff --quiet 2>/dev/null || echo -dirty){{ if label != '' { '-' + label } else { '' } }}" iros2026_ai_module bash -c "source /home/docker/ai_module/install/setup.bash && python3 /home/docker/scripts/eval/replay_map3d.py --scene {{scene}} --jobs {{jobs}} {{args}}"
 
 # Two replays must give an identical digest, or every later A/B is measuring noise.
 [group('map3d')]

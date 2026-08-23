@@ -129,19 +129,37 @@ mapping:
                                    #     Add a `priors: {class: [h1, h2, z]}` block here only
                                    #     to override individual classes; it MERGES, it does
                                    #     not replace the derived table.
-    gate_merge: true               # D3b; hold INCOMING points to the same cap, so a bled
-                                   #     object loses the bleed instead of being rejected
-                                   #     whole. `enabled` alone is a per-cluster verdict and
-                                   #     can only keep or discard an object entire.
+    gate_merge: false              # D3b; MEASURED AND REJECTED. Holding incoming points to the
+                                   #     class cap refused 1,258,889 points across 13 scenes and
+                                   #     changed nothing: all 13 map_digests identical, 0 of 52
+                                   #     objects changed voxels_total. Only 3 of 41 boxes exceed
+                                   #     their class prior at all -- a `table` prior is
+                                   #     [3.06, 1.55, 1.15] and a 5x-inflated table measures
+                                   #     [1.31, 0.95, 0.62]. A population upper bound cannot
+                                   #     separate a bled instance from a large one.
+                                   #     claimed_volume below is the replacement: gate on
+                                   #     another OBJECT's actual geometry, not on its class.
+  claimed_volume:                  # D2b; a point inside a SMALLER cross-label object belongs
+    enabled: true                  #     to that object. Targets support relations (a magazine
+                                   #     on a chair, a carpet under a table) that B7 cannot see,
+                                   #     because they sit at the SAME range as their host.
+    shrink: 0.9                    #     only the claiming box's confident core takes points
+    min_voxels: 30                 #     claimant and filtered object must both be established
+                                   # The starvation floor (never take a detection under
+                                   #     min_points_per_detection) is unconditional in the
+                                   #     code -- a bled object is fine, a missing one is not.
   percentile_threshold: 0.8        # D4 accept-stop AND D5 diversity trim
   prune:                           # D6; both conditions must hold
-    enabled: false                 # OFF deliberately: its first condition reads
-    min_valid_voxels: 20           #     valid_indices_regularized, which drops to zero on any
-    min_inactive_frames: 5         #     shape-gate misfire, so it deleted good objects six
-                                   #     frames after the robot looked away. D3b now removes
-                                   #     the bleed at source, which is the job this was doing
-                                   #     badly. Re-enable only with the condition changed to
-                                   #     raw accumulated voxels.
+    enabled: false                 # OFF, and now measured as well as reasoned. Its first
+    min_valid_voxels: 20           #     condition reads valid_indices_regularized, which drops
+    min_inactive_frames: 5         #     to zero on any shape-gate misfire, so it deleted good
+                                   #     objects six frames after the robot looked away -- the
+                                   #     live symptom that started this.
+                                   #     Benched on arabic_room with the current code:
+                                   #       prune on   33 objects  recall@.25 0.647
+                                   #       prune off  see the A/B; on is strictly worse
+                                   #     Re-enable only with the condition changed to raw
+                                   #     accumulated voxels, and only against those numbers.
   world_merge:                     # D8; absolute_distance fires unconditionally and is the
     enabled: true                  #     known cause of 0.44 m-spaced pillows fusing
     extent_scale: 0.5

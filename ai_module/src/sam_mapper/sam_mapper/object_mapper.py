@@ -74,6 +74,82 @@ class ObjMapper:
             box_a[0], box_a[1], box_b[0], box_b[1],
             quaternion_to_yaw(box_a[2]), quaternion_to_yaw(box_b[2]))
 
+    def _claim_table(self):
+        """(labels, lo, hi, volume) for every tracked object with enough voxels to claim.
+
+        Built ONCE per frame and reused across the frame's detections: update_map loops over
+        detections, and rebuilding this per detection would make the cost quadratic in objects.
+
+        The raw accumulated-voxel AABB, deliberately, not `_published_box` -- that one runs
+        regularize_shape, which runs DBSCAN, and this is consulted per object per detection.
+        """
+        cfg = self.config.claimed_volume
+        labels, lows, highs, volumes = [], [], [], []
+        for obj in self.single_obj_list:
+            voxels = obj.vote_stat.voxels
+            if voxels.shape[0] < cfg.min_voxels:
+                continue
+            lo, hi = voxels.min(axis=0), voxels.max(axis=0)
+            centre, half = (lo + hi) / 2.0, (hi - lo) / 2.0 * cfg.shrink
+            labels.append(obj.get_dominant_label())
+            lows.append(centre - half)
+            highs.append(centre + half)
+            # The TRUE volume, not the shrunk one. `shrink` decides how much of the box
+            # claims points; it must not also make the claimant look smaller than it is, or
+            # the "claimant must be smaller" test quietly loosens by shrink**3 (0.73x at 0.9).
+            volumes.append(float(np.prod(hi - lo)))
+        if not labels:
+            return None
+        return labels, np.asarray(lows), np.asarray(highs), np.asarray(volumes)
+
+    def _claimed_volume_cut(self, obj_cloud, label, obj_id, table, stats):
+        """D2b. Drop points that lie inside a SMALLER, differently-labelled object's box.
+
+        See ClaimedVolumeConfig for the evidence and for why each condition is there. The
+        starvation floor at the end is the important part: a bled object is acceptable, a
+        missing one is not.
+        """
+        cfg = self.config.claimed_volume
+        if not cfg.enabled or table is None or obj_cloud.shape[0] == 0:
+            return obj_cloud
+        labels, lo, hi, volume = table
+
+        # The object being filtered must itself be established -- a young object needs its
+        # founding points more than a neighbour needs its boundary respected. Its own volume
+        # is what "smaller" is measured against; with no accumulation yet there is nothing to
+        # compare, so the guard simply does not apply.
+        mine = next((o for o in self.single_obj_list if obj_id in o.obj_id), None)
+        if mine is None or mine.vote_stat.voxels.shape[0] < cfg.min_voxels:
+            return obj_cloud
+        my_voxels = mine.vote_stat.voxels
+        my_volume = float(np.prod(my_voxels.max(axis=0) - my_voxels.min(axis=0)))
+
+        claimant = np.array([lbl != label and vol < my_volume
+                             for lbl, vol in zip(labels, volume)])
+        if not claimant.any():
+            return obj_cloud
+
+        xyz = obj_cloud[:, :3]
+        # (N, M) containment against every claiming box at once.
+        inside = np.all((xyz[:, None, :] >= lo[None, claimant, :])
+                        & (xyz[:, None, :] <= hi[None, claimant, :]), axis=2)
+        keep = ~inside.any(axis=1)
+        dropped = int((~keep).sum())
+        if not dropped:
+            return obj_cloud
+
+        # Unconditional, not a knob. Taking this detection under B8 would cost the OBJECT,
+        # not just its bleed: below min_points it never creates, never clusters, never gets a
+        # centroid, and serialize_map_to_dict drops it. A bled object is an acceptable
+        # outcome; a missing one is not, and no measurement would justify trading one for the
+        # other -- so there is nothing here to tune.
+        if int(keep.sum()) < self.config.min_points_per_detection:
+            stats["claim_declined_would_starve"] += 1
+            return obj_cloud
+
+        stats["claimed_by_other_object"] += dropped
+        return obj_cloud[keep]
+
     def _range_gap_cut(self, obj_cloud, robot_xyz, mask, stats):
         """B7 - drop points sitting far behind the object their mask claimed."""
         cfg = self.config.range_gap
@@ -221,6 +297,9 @@ class ObjMapper:
 
         obj_clouds_world = self.cloud_image_fusion.generate_seg_cloud(cloud_body, masks, R_b2w, t_b2w)
 
+        # D2b, once per frame rather than once per detection -- see _claim_table.
+        claim_table = self._claim_table() if self.config.claimed_volume.enabled else None
+
         for i, obj_cloud in enumerate(obj_clouds_world):
             stats = self.funnel[str(labels[i])]
             # No per-label range-drop count any more: B3 runs before masks exist, so it
@@ -230,6 +309,12 @@ class ObjMapper:
             # B7, before the min-points gate: a detection whose points are ALL background
             # should fail the gate, not pass it on the strength of the background.
             obj_cloud = self._range_gap_cut(obj_cloud, t_b2w, masks[i], stats)
+
+            # D2b, here rather than in the merge/create branches below: those are asymmetric
+            # (merge takes the RAW cloud, create the downsampled one), so filtering once at the
+            # single point they share is the only way to keep one implementation.
+            obj_cloud = self._claimed_volume_cut(obj_cloud, labels[i], obj_ids[i],
+                                                 claim_table, stats)
 
             if obj_cloud.shape[0] < self.config.min_points_per_detection:
                 # ZERO points is a coverage problem, a HANDFUL is a resolution problem.
