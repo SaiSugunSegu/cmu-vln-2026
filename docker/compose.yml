@@ -21,13 +21,6 @@ services:
       - ../scripts:/home/docker/scripts:ro
     stdin_open: true
     tty: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   # Init container: prepares the bind mounts so the non-root ai_module user
   # (uid 1001) can write into them — a Dockerfile can't chmod a bind mount, and
@@ -45,7 +38,7 @@ services:
     # Folded scalar: every line must sit at the SAME indent, or YAML keeps the
     # newlines and the shell sees a line starting with `&&`.
     command: >-
-      sh -c "mkdir -p /data/bags /data/scenes /data/crops /data/captions /data/runs &&
+      sh -c "mkdir -p /data/bags /data/scenes /data/crops /data/captions /data/runs /data/runs/map3d &&
       chmod -R a+w /data &&
       mkdir -p /hf &&
       if [ \"$$(stat -c %u /hf)\" != 1001 ]; then chown -R 1001:1001 /hf; fi"
@@ -61,21 +54,10 @@ services:
     env_file:
       - path: ../.env
         required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
-    # backend/provider/model are configured in ai_module/src/captioner/config/vqa.yaml,
-    # not here; .env only supplies each provider's API key (see PROVIDERS in
-    # captioner/vlm_backends/constants.py) plus HF_TOKEN.
-    environment:
-      # No privileged: true — the nvidia runtime reservation below is what grants
-      # GPU access, and privileged would hand the container every host device.
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+    # HF_HOME comes from the image (ai_module/docker/Dockerfile). Offline mode is not set
+    # anywhere — see the note in compose_gpu.yml. Gated repos read HF_TOKEN from ../.env.
     volumes:
       # Host data/ maps 1:1 to /data — bags, benchmark, crops, captions, runs.
-      # Put caption input under data/crops, read results from data/captions.
-      # Scene recordings live in data/bags (gitignored by `data/bags/*`, with README.md
-      # and scenes.yaml kept). Do NOT bind a separate <repo>/bags over /data/bags: it
-      # shadows every recording, so bag_fetch reads each scene as missing and re-downloads
-      # it from Drive, and the new source lands root-owned outside init's reach.
       - ../data:/data
       # Ground-truth QA files are tracked in git; nothing in the container writes them.
       - ../data/benchmark:/data/benchmark:ro
@@ -88,10 +70,3 @@ services:
         condition: service_completed_successfully
     stdin_open: true
     tty: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]

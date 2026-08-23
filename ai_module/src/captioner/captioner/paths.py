@@ -14,13 +14,13 @@ import os
 from pathlib import Path
 from urllib.parse import unquote
 
-# Writable roots the pipeline may read/write. Official compose mounts none of
-# these; /home/docker is the image workspace and always exists. Dev compose also
-# bind-mounts ../data -> /data.
+# Container mounts, see docker/compose.yml:
+#   ../data          -> /data          (bags, benchmark, crops, captions, runs)
+#   ../scripts       -> /home/docker/scripts (ro)
+# and the image's own workspace at /home/docker/ai_module.
 _CANDIDATE_ROOTS = (
     Path("/data"),
     Path("/home/docker"),
-    Path("/tmp"),
 )
 
 # Resolved once at import: the mount set is fixed for the life of the container,
@@ -56,7 +56,8 @@ def secure_path(user_path: str | os.PathLike, roots: tuple[Path, ...] | None = N
         # rather than the real cause: this is not the container, or /data is unmounted.
         raise RuntimeError(
             f"No allowed data roots exist ({[str(p) for p in _CANDIDATE_ROOTS]}). "
-            "Expected /home/docker (image workspace) or /data (dev mount).")
+            "Run inside iros2026_ai_module with the ../data:/data mount from "
+            "docker/compose.yml.")
     if not any(_is_under(resolved, root) for root in allowed):
         raise PermissionError(
             f"Path is not under an allowed mount {[str(r) for r in allowed]}: {resolved}")
