@@ -142,7 +142,8 @@ def replay_scene(scene: str, args) -> dict:
     mapping_config = MappingConfig.from_dict(config.get("mapping", {}))
     mapper = ObjMapper(
         cloud_image_fusion=CloudImageFusion(platform=platform,
-                                            bounds_mode=mapping_config.bounds_mode),
+                                            bounds_mode=mapping_config.bounds_mode,
+                                            occlusion=mapping_config.occlusion),
         label_template=table.label_template(),
         captioner=None,
         log_info=(lambda m: None) if args.quiet else (lambda m: print(f"  {m}", flush=True)),
@@ -178,6 +179,9 @@ def replay_scene(scene: str, args) -> dict:
     # rather than being double-counted by both.
     tracked = mapper.describe_objects()
     objects_dict = mapper.serialize_map_to_dict()
+    # The map carries a `_schema` entry alongside the track ids, which is not an object and
+    # must not be counted as one.
+    n_objects = sum(1 for key in objects_dict if not str(key).startswith("_"))
 
     result = {
         "scene": scene,
@@ -189,7 +193,7 @@ def replay_scene(scene: str, args) -> dict:
             "p50": round(float(np.percentile(per_frame_ms, 50)), 1) if per_frame_ms else None,
             "p99": round(float(np.percentile(per_frame_ms, 99)), 1) if per_frame_ms else None,
         },
-        "n_objects": len(objects_dict),
+        "n_objects": n_objects,
         "n_tracked": len(tracked),
         # Per-label, per-stage counts of every place a detection can be discarded. Whole
         # classes vanish between detection and map; this is what makes that visible.

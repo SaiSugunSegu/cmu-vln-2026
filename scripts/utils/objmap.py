@@ -27,7 +27,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Optional, Sequence
 
 import numpy as np
 
@@ -55,10 +55,19 @@ __all__ = [
     "load_obj_map",
     "same_class",
     "shortlist",
+    "unpad_legacy_extent",
 ]
 
 # Identity quaternion, which is what map_node writes unless publish_oriented_box is on.
 IDENTITY_QUAT = (0.0, 0.0, 0.0, 1.0)
+
+# Mirrors sam_mapper.object_mapper.SCHEMA_KEY, which this file cannot import: it runs on the
+# host, outside the container that holds ai_module. The two must change together.
+SCHEMA_KEY = "_schema"
+
+# Every config ships voxel_downsample.voxel_size 0.05, and a map written before SCHEMA_KEY
+# records no value to read, so un-padding a legacy cache has to assume the shipped one.
+LEGACY_VOXEL_SIZE = 0.05
 
 # One region, because a live map has no region annotation: IRef's regions come from the
 # dataset's floorplan, and nothing in the pipeline reconstructs them. Every helper in
@@ -138,6 +147,21 @@ def map_entry_to_obj(track_id: str, entry: dict[str, Any], labels: dict[str, str
     )
 
 
+def unpad_legacy_extent(extent: Sequence[float], voxel_size: float) -> list[float]:
+    """A legacy extent as the current mapper would have written it from the same voxels.
+
+    Maps written before the clamp added a whole `voxel_size` to every axis instead of using
+    it as a floor, so `legacy = (hi - lo) + voxel_size` and the current rule is
+    `max(hi - lo, voxel_size)`. The padding is symmetric, so the centre is unaffected and
+    only the extent has to be rebuilt.
+
+    This exists so a cache recorded under the old rule can be replayed under the new one
+    without re-running the mapper — hours of exploration per scene — and it is applied only
+    to maps carrying no schema marker, i.e. only to caches that predate it.
+    """
+    return [float(max(float(v) - voxel_size, voxel_size)) for v in extent]
+
+
 def load_obj_map(path: str | Path, prompts: Iterable[str] = ()) -> dict[str, Obj]:
     """Load a map written beside a question's crops, keyed by track id as a string.
 
@@ -146,10 +170,17 @@ def load_obj_map(path: str | Path, prompts: Iterable[str] = ()) -> dict[str, Obj
     """
     with open(path, "r", encoding="utf-8") as handle:
         raw = json.load(handle)
+    schema = (raw or {}).get(SCHEMA_KEY) or {}
+    legacy_voxel = None if schema.get("box_extent") == "voxel_floor" else LEGACY_VOXEL_SIZE
     labels = prompt_labels(prompts)
     out: dict[str, Obj] = {}
     for track_id, entry in (raw or {}).items():
-        if isinstance(entry, dict) and (obj := map_entry_to_obj(track_id, entry, labels)):
+        if track_id == SCHEMA_KEY or not isinstance(entry, dict):
+            continue
+        if legacy_voxel is not None and (bbox := entry.get("bbox3d")) and bbox.get("extent"):
+            entry = {**entry, "bbox3d": {
+                **bbox, "extent": unpad_legacy_extent(bbox["extent"], legacy_voxel)}}
+        if obj := map_entry_to_obj(track_id, entry, labels):
             out[str(track_id)] = obj
     return out
 
@@ -243,14 +274,44 @@ def shortlist(text: str, objects: Sequence[Obj]) -> dict[str, Any]:
     -- "between a door frame and a window", "the chair between the fireplace and the stairs"
     -- and pruning those away leaves the relation unjudgeable and the question lost.
 
-    Returns `{candidates, anchors, anchor_groups, relation, committed, reason, trace}` --
-    `candidates` best-first and never empty unless nothing matches the head noun at all.
+    Returns `{candidates, anchors, anchor_groups, all_anchors, anchors_unmatched, head,
+    relation, committed, reason, trace}` -- `candidates` best-first and never empty unless
+    nothing matches the head noun at all. `anchors` and `anchor_groups` are the FIRST hop's,
+    which is what the ranking and `relation_holds` are about; `all_anchors` is every hop's,
+    deduplicated, which is what "not the answer" is about.
     """
     objs = list(objects)
     targets = [o for o in objs if not prunable(o)]
     spec = solver.parse(text)
     trace: list[str] = [f"head={spec['head']!r} color={spec['color']!r} hops={spec['hops']}"]
 
+    hops = spec["hops"]
+    relation = hops[0]["relation"] if hops else ""
+    groups = [solver.match_class(p, objs) for p in hops[0]["phrases"]] if hops else []
+    anchors = [o for group in groups for o in group]
+
+    # Every noun the question names other than the head, across ALL hops rather than only the
+    # first. `groups` stops at hop 0 because that is the hop the ranking filters on, but "the
+    # bowl on the table closest to the folding screen" names the screen in its second hop and
+    # the screen is no more answerable than the table is -- one of the measured losses is
+    # exactly that answer. Dict rather than list: a phrase repeated across hops is one anchor.
+    matched = {p: solver.match_class(p, objs) for hop in hops for p in hop["phrases"]}
+    seen: set[str] = set()
+    all_anchors: list[Obj] = []
+    for anchor in (a for group in matched.values() for a in group):
+        if anchor.id not in seen:
+            seen.add(anchor.id)
+            all_anchors.append(anchor)
+    # Which named anchors the map does not hold. Recorded rather than inferred from an empty
+    # group later, because only here are the phrase and its matches still side by side -- and
+    # a reasoner that is not told an anchor is missing ranks on a relation that collapsed.
+    unmatched = [phrase for phrase, group in matched.items() if not group]
+    if unmatched:
+        trace.append(f"anchors named but not in the map: {unmatched}")
+
+    # Resolved before the head noun is looked for, not after, because the no-candidate
+    # return below is the one the caller answers by falling back -- and a fallback that is
+    # not told which objects are anchors answers with one of them.
     heads = solver.match_class(spec["head"], targets)
     if spec["color"]:
         # The mapper stores no colours, so this only ever narrows a GT-sourced run. Kept so
@@ -260,16 +321,13 @@ def shortlist(text: str, objects: Sequence[Obj]) -> dict[str, Any]:
             trace.append(f"colour {spec['color']}: {len(heads)} candidate(s)")
     if not heads:
         return {
-            "candidates": [], "anchors": [], "anchor_groups": [], "relation": "",
+            "candidates": [], "anchors": anchors, "anchor_groups": groups,
+            "all_anchors": all_anchors, "anchors_unmatched": unmatched,
+            "head": spec["head"], "relation": relation,
             "committed": None, "reason": f"nothing in the map matches {spec['head']!r}",
             "trace": trace,
         }
     trace.append(f"head candidates: {heads[:8]}")
-
-    hops = spec["hops"]
-    relation = hops[0]["relation"] if hops else ""
-    groups = [solver.match_class(phrase, objs) for phrase in hops[0]["phrases"]] if hops else []
-    anchors = [o for group in groups for o in group]
 
     ranked = heads
     if hops and anchors:
@@ -309,6 +367,9 @@ def shortlist(text: str, objects: Sequence[Obj]) -> dict[str, Any]:
         "candidates": ranked,
         "anchors": anchors,
         "anchor_groups": groups,
+        "all_anchors": all_anchors,
+        "anchors_unmatched": unmatched,
+        "head": spec["head"],
         "relation": relation,
         "committed": committed,
         "reason": str(verdict.get("reason") or ""),
@@ -375,40 +436,90 @@ def candidate_table(
     groups: Sequence[Sequence[Obj]],
     relation: str = "",
     limit: int = 12,
+    head: str = "",
+    anchors: Optional[Sequence[Obj]] = None,
+    unmatched_anchors: Sequence[str] = (),
 ) -> str:
-    """The candidate list as text, one candidate per block, derived numbers included.
+    """The object list as text: what is answerable, what is only a reference, and the numbers.
 
     Capped, because a table long enough to hold a whole scene buries the handful of objects
     the question is actually about -- the pruning every recent zero-shot grounding method
     reports as its largest single gain. The cap applies to an already-ranked list, so what
     gets dropped is what the geometry likes least.
+
+    Three things are stated that the flat version left the reader to infer, each one a
+    measured loss:
+
+      * the head noun, because an answer has to be an instance of it;
+      * the anchors, in their own section, because their ids appear in every candidate's
+        fact rows and with no role marker three answers came back naming one of them;
+      * the anchors the question named that the map does not hold, because the alternative
+        is a reasoner silently ranking on a relation that collapsed.
+
+    Units are stated once here rather than suffixed to each of the four numbers on every
+    row, which on a full table is the difference between reading a sentence and reading a
+    unit conversion.
+
+    `anchors` defaults to the first hop's, flattened out of `groups`. Pass every hop's when
+    the caller has them: an anchor from a deeper hop ("closest to the folding screen") has no
+    fact row of its own, so this section is the only place its id is explained at all.
     """
+    kept = list(candidates)[: max(1, limit)]
     lines: list[str] = []
+    if head:
+        lines.append(f"The answer is a {head!r}.")
     if relation:
         lines.append(f"Relation asked for: {relation}")
-    for cand in list(candidates)[: max(1, limit)]:
+    lines.append("All lengths are in metres. centre and size are (x, y, z).")
+
+    lines.append("")
+    lines.append("CANDIDATES — the answer is exactly one of these:" if kept else
+                 f"CANDIDATES: none — the map holds no {head or 'matching object'}.")
+    for cand in kept:
         facts = facts_for(cand, groups)
-        head = (f"[{facts['id']}] {facts['label']}  centre={tuple(facts['centre'])}  "
-                f"size={tuple(facts['size'])}")
-        lines.append(head)
+        lines.append(f"[{facts['id']}] {facts['label']}  centre={tuple(facts['centre'])}  "
+                     f"size={tuple(facts['size'])}")
         for row in facts["anchors"]:
             flags = [name for name in ("on", "supports", "inside", "above", "below")
                      if row[name]]
             lines.append(
-                f"    to {row['anchor']}: centre {row['centre_m']} m, box gap "
-                f"{row['gap_m']} m, vertical gap {row['vertical_gap_m']} m"
+                f"    to {row['anchor']}: centre {row['centre_m']}, box gap "
+                f"{row['gap_m']}, vertical gap {row['vertical_gap_m']}"
                 + (f", holds: {', '.join(flags)}" if flags else "")
             )
         if between := facts.get("between"):
             lines.append(
                 f"    between {between['pair']}: "
                 f"{'yes' if between['holds'] else 'no'}"
-                + (f", lateral offset {between['lateral_offset_m']} m"
+                + (f", lateral offset {between['lateral_offset_m']}"
                    if between["lateral_offset_m"] is not None else "")
             )
     dropped = max(0, len(candidates) - max(1, limit))
     if dropped:
         lines.append(f"({dropped} further candidate(s) ranked lower, omitted)")
+
+    # Deduplicated: "between a window and a window frame" can match one object from both
+    # phrases, and listing it twice under two roles is worse than not listing it.
+    seen: set[str] = set()
+    anchor_lines: list[str] = []
+    for anchor in (a for group in groups for a in group) if anchors is None else anchors:
+        if anchor.id in seen:
+            continue
+        seen.add(anchor.id)
+        anchor_lines.append(
+            f"[{anchor.id}] {anchor.display}  "
+            f"centre={tuple(round(float(v), 2) for v in anchor.center)}  "
+            f"size={tuple(round(float(v), 2) for v in anchor.size)}")
+    if anchor_lines:
+        lines.append("")
+        lines.append("ANCHORS — reference objects the question names to say which candidate "
+                     "it means. Never the answer:")
+        lines.extend(anchor_lines)
+
+    if unmatched_anchors:
+        lines.append("")
+        lines.append("NOT DETECTED — named by the question, absent from the map: "
+                     + ", ".join(repr(str(p)) for p in unmatched_anchors))
     return "\n".join(lines)
 
 

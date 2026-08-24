@@ -44,6 +44,7 @@ from sam_mapper.ros_markers import create_selected_object_marker
 from smart_vlm.cat2_utils import naive_from_raw
 from smart_vlm.mission_clock import MissionBudget, MissionClock, Phase, budget_for
 from smart_vlm.question import QuestionType, classify, question_text
+from smart_vlm.reasoner_common import map_objects_only
 
 # The only inputs allowed at test time (README 'System Outputs'). Names only: liveness
 # comes from count_publishers(), so we never pay to deserialize 10 Hz panoramas and
@@ -322,7 +323,7 @@ class SmartVLM(Node):
         except json.JSONDecodeError:
             return
         if isinstance(payload, dict):
-            self.obj_map = payload
+            self.obj_map = map_objects_only(payload)
 
     # ---- scene progress --------------------------------------------------
 

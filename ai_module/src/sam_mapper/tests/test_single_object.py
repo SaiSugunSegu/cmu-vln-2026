@@ -133,19 +133,40 @@ def test_oriented_box_falls_back_to_axis_aligned_when_the_hull_degenerates():
     assert get_bbox_3d_oriented(np.zeros((0, 3))) == (None, None, None)
 
 
-def test_extent_includes_the_voxel_cell_size():
-    """A voxel is a CELL, not a point. min/max over voxel CENTRES under-reports every
-    extent by one voxel size, and collapses a one-voxel-thick object to exactly zero —
-    which is how arabic_room's windows published as `[0.0, 0.52, 0.78]`: a zero-volume
-    box scoring IoU 0 despite a 3 cm accurate centroid."""
+def test_voxel_cell_size_floors_the_extent_without_inflating_it():
+    """A voxel is a CELL, not a point, so min/max over voxel CENTRES collapses a
+    one-voxel-thick object to exactly zero — which is how arabic_room's windows published
+    as `[0.0, 0.52, 0.78]`: a zero-volume box scoring IoU 0 despite a 3 cm accurate
+    centroid. `voxel_size` fixes that as a FLOOR.
+
+    It used to be added to every axis instead, which fixed the degenerate case by
+    inflating every other box. At 0.05 that is invisible on a sofa and decisive on the
+    small objects category 2 asks about: a 0.20 x 0.15 x 0.03 book went out 4.4x its true
+    volume, capping its IoU at 0.23 against a 0.25 threshold.
+    """
     single_cell = np.zeros((1, 3))
     _, extent, _ = get_box_3d(single_cell, voxel_size=0.05)
     np.testing.assert_allclose(extent, [0.05, 0.05, 0.05])
 
     pts = box_surface([0, 0, 0], [1.0, 1.0, 1.0])
     _, plain, _ = get_box_3d(pts)
-    _, expanded, _ = get_box_3d(pts, voxel_size=0.05)
-    np.testing.assert_allclose(expanded - plain, [0.05, 0.05, 0.05])
+    _, floored, _ = get_box_3d(pts, voxel_size=0.05)
+    np.testing.assert_allclose(floored, plain)
+
+    # Only the axis below the floor moves, and only up to it.
+    thin = box_surface([0, 0, 0], [0.40, 0.30, 0.0])
+    _, extent, _ = get_box_3d(thin, voxel_size=0.05)
+    np.testing.assert_allclose(extent, [0.40, 0.30, 0.05])
+
+
+def test_the_oriented_box_floors_its_extent_the_same_way():
+    # Both fitters feed the same obj_map.json, so a difference between them would make a
+    # box's size depend on whether publish_oriented_box happened to be on.
+    pts = box_surface([0, 0, 0], [1.2, 0.8, 1.0], yaw=0.3)
+    _, plain, _ = get_bbox_3d_oriented(pts)
+    _, floored, _ = get_bbox_3d_oriented(pts, voxel_size=0.05)
+
+    np.testing.assert_allclose(floored, plain, atol=1e-9)
 
 
 def test_min_area_rect_picks_the_wrong_yaw_on_a_partially_observed_box():

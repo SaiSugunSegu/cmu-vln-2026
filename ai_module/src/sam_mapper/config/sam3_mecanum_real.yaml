@@ -67,13 +67,17 @@ mapping:
     enabled: true                  #     and saves one cloud pass per mask
     max_distance: 5.0
                                    # B4 is the projection itself; no tunables
-  bounds_mode: clip                # B5; clip | reject. "clip" pins out-of-FOV points to row
+  bounds_mode: reject              # B5; clip | reject. "clip" pins out-of-FOV points to row
                                    #     0/639 where an edge mask swallows them (ceiling
                                    #     returns inside tall objects). "reject" drops them.
-                                   # B6 is the mask lookup; no tunables (and no z-buffer)
+                                   # B6 is the mask lookup; no tunables
+  occlusion:                       # B6b; z-buffer, so a mask stops claiming what is behind it
+    enabled: true
+    pixel_bin: 8                   #     square cell, px; the lidar is too sparse for 1 px
+    depth_tolerance: 0.5           #     metres behind the cell's nearest return
   range_gap:                       # B7; drop points sitting far BEHIND their mask's object.
-    enabled: true                  #     The principled replacement for erosion: costs no
-    min_points: 6                  #     pixels, and catches occlusion bleed too.
+    enabled: true                  #     Complements B6b: one global gap per mask, so it
+    min_points: 6                  #     catches bleed that never shares a cell.
     min_gap: 0.35                  #     metres; smaller gaps are within-object structure
     max_depth_scale: 0.0           #     0 disables; else ceiling = front + scale * apparent width
   min_points_per_detection: 5      # B8; absolute gate, falls hardest on small objects
@@ -105,10 +109,11 @@ mapping:
     enabled: true
     min_valid_voxels: 20
     min_inactive_frames: 5
-  world_merge:                     # D8; absolute_distance fires unconditionally and is the
-    enabled: true                  #     known cause of 0.44 m-spaced pillows fusing
-    extent_scale: 0.5
-    absolute_distance: 0.5
+  world_merge:                     # D8; every merge is additionally gated on the class
+    enabled: true                  #     prior, so it cannot build an object its own class
+    extent_scale: 0.5              #     could not be (0.44 m-spaced pillows used to fuse)
+    absolute_distance: 0.25
+    prior_gate: true               #     turn OFF first if this rig's priors are wrong
     block_covisible: true          #     two ids seen in the SAME frame are distinct objects
                                    #     at any distance - the criterion distance cannot make
     covisible_overlap: 0.7         #     ...unless they overlap more than this (intersection

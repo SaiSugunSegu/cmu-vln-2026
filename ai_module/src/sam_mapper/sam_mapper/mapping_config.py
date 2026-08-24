@@ -102,13 +102,36 @@ class OutlierRemovalConfig(_FromDict):
 
 
 @dataclass
+class OcclusionConfig(_FromDict):
+    """B6b - z-buffer: drop points hidden behind a nearer return on the same ray.
+
+    Without it a mask claims its entire line of sight, so a chair collects the wall visible
+    through the gap under its seat. B7 already cuts the worst of that, but only as ONE
+    global gap per mask, which is the wrong shape for a mask that legitimately spans depth:
+    a table running away from the camera has no gap to find, and a wall behind its far end
+    is nearer than its own front edge.
+
+    `pixel_bin` coarsens the buffer because the lidar is far sparser than the panorama —
+    around 1.6% pixel occupancy, so an exact-pixel buffer would almost never see two returns
+    in one cell. `depth_tolerance` has to clear the depth an oblique surface genuinely spans
+    within one cell (8 px is ~8 cm of arc at 3 m, but on a grazing surface that is much more
+    in depth), which is why it is set well above the noise floor rather than tight.
+    """
+    enabled: bool = True
+    pixel_bin: int = 8              # square cell, px; 1 = exact pixel
+    depth_tolerance: float = 0.5    # metres behind the cell's nearest return
+
+
+@dataclass
 class RangeGapConfig(_FromDict):
     """B7 - drop points sitting far BEHIND the object their mask claimed.
 
-    B6 has no z-buffer, so a mask claims its whole line of sight: a sofa at 2 m collects the
-    wall at 5 m, and B3 cannot help because both are in range. Sort by range, cut at the
-    largest gap above `min_gap`, keep the near side. A GAP rather than a depth budget, because
-    an object's own returns stay continuous however deep it is."""
+    A sofa at 2 m collects the wall at 5 m, and B3 cannot help because both are in range.
+    Sort by range, cut at the largest gap above `min_gap`, keep the near side. A GAP rather
+    than a depth budget, because an object's own returns stay continuous however deep it is.
+    Kept alongside B6b's z-buffer rather than replaced by it: this one sees the mask's whole
+    depth histogram at once and so catches a bled surface that never shares a cell with the
+    object, which a per-cell buffer cannot."""
     enabled: bool = True
     min_points: int = 6             # fewer than this: skip the gap search, ceiling only
     min_gap: float = 0.35           # metres; smaller gaps are within-object structure
@@ -227,13 +250,22 @@ class PruneConfig(_FromDict):
 class WorldMergeConfig(_FromDict):
     """D8 - fuse same-label objects that are close in world space.
 
-    `absolute_distance` fires unconditionally and is why arabic_room's pillows (0.44 m
-    apart) fused. `extent_scale` feeds a threshold that grows with the box it just merged,
-    so merges chain — `column` was seen climbing 0.077 -> 0.813 m over five ids.
+    `absolute_distance` used to fire unconditionally at 0.5 m, which is why arabic_room's
+    pillows (0.44 m apart) fused. It is now 0.25 m AND gated on the class prior, so the
+    distance rule can no longer produce an object its own class could not be — see
+    ObjMapper._merge_fits_prior. `extent_scale` feeds a threshold that grows with the box
+    it just merged, so merges chain — `column` was seen climbing 0.077 -> 0.813 m over five
+    ids; the prior gate bounds that chain too.
     """
     enabled: bool = True
-    extent_scale: float = 0.5       # thresh = ||(ext_a/2 + ext_b/2)/2|| * extent_scale
-    absolute_distance: float = 0.5  # ...OR closer than this, unconditionally
+    extent_scale: float = 0.5        # thresh = ||(ext_a/2 + ext_b/2)/2|| * extent_scale
+    absolute_distance: float = 0.25  # ...OR closer than this, if the class prior allows
+
+    #: Refuse a merge whose result no instance of the class could be, using the same D3
+    #: caps that already reject a bled cluster. Separately switchable from the distances
+    #: above so the two can be A/B'd apart, and because a wrong merge is unrecoverable:
+    #: on a rig whose priors are wrong this is the first thing to turn off.
+    prior_gate: bool = True
 
     #: Two ids SAM 3 saw in the SAME frame are different objects, at any distance —
     #: something distance alone cannot know. Blocking those merges is what stops the
@@ -262,8 +294,11 @@ class MappingConfig(_FromDict):
     erosion: ErosionConfig = field(default_factory=ErosionConfig)                 # B2
     range_filter: RangeFilterConfig = field(default_factory=RangeFilterConfig)    # B3
     #: B5. "clip" pins out-of-FOV points to row 0/639 where an edge mask swallows them;
-    #: "reject" drops them.
-    bounds_mode: str = "clip"
+    #: "reject" drops them. Clipping is the inherited behaviour and the reason ceiling
+    #: returns end up inside tall objects: with the sensor 0.75 m up and a 2.78 m ceiling,
+    #: every ceiling return within a 1.17 m radius lands on row 0.
+    bounds_mode: str = "reject"
+    occlusion: OcclusionConfig = field(default_factory=OcclusionConfig)           # B6b
     range_gap: RangeGapConfig = field(default_factory=RangeGapConfig)             # B7
     min_points_per_detection: int = 5       # B8
     voxel_downsample: VoxelDownsampleConfig = field(default_factory=VoxelDownsampleConfig)  # B9
@@ -291,6 +326,7 @@ class MappingConfig(_FromDict):
             raise ValueError(f"bounds_mode must be 'clip' or 'reject', got {self.bounds_mode!r}")
         self.erosion = _sub(ErosionConfig, self.erosion)
         self.range_filter = _sub(RangeFilterConfig, self.range_filter)
+        self.occlusion = _sub(OcclusionConfig, self.occlusion)
         self.range_gap = _sub(RangeGapConfig, self.range_gap)
         self.voxel_downsample = _sub(VoxelDownsampleConfig, self.voxel_downsample)
         self.outlier_removal = _sub(OutlierRemovalConfig, self.outlier_removal)
