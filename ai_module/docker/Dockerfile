@@ -36,9 +36,6 @@ ENV PIP_DEFAULT_TIMEOUT=120 \
     PIP_BREAK_SYSTEM_PACKAGES=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# `pip-install` = pip install with an --ignore-installed retry; see the script.
-COPY --chmod=0755 docker/pip-install.sh /usr/local/bin/pip-install
-
 # --ignore-installed: base image ships some Debian Python pkgs (e.g. psutil)
 # without pip RECORD metadata, which otherwise breaks upgrades.
 # Cache mount rather than --no-cache-dir so a network failure part-way through
@@ -74,11 +71,12 @@ RUN /bin/bash -c "\
 # Cache mounts (not --no-cache-dir) let a retry resume; re-run `just up` if one fails.
 USER root
 
-# Bulk pre-empt of the Debian-packaged modules that have no pip RECORD file (see
-# /usr/local/bin/pip-install for why that matters), so the layers below do not each
-# have to fall back. Excluded on purpose: numpy (PIP_CONSTRAINT pins it —
-# rclpy/cv_bridge use its ABI) and setuptools (colcon's ament_python builds break
-# if it moves).
+# Debian-packaged Python modules have no RECORD file, so pip cannot uninstall them
+# ("Cannot uninstall psutil 5.9.8, RECORD file not found") and any dependency wanting a
+# different version kills the layer. --ignore-installed writes pip-managed copies with
+# proper RECORD files into dist-packages, shadowing the dpkg ones.
+# Excluded on purpose: numpy (pinned below — rclpy/cv_bridge use its ABI) and
+# setuptools (colcon's ament_python builds break if it moves).
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --ignore-installed \
       psutil PyYAML cryptography \
@@ -100,8 +98,11 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # Unpinned: guessing which release carries SAM 3 would either be wrong or hold back a
 # newer wheel; the import check at the bottom is what proves Sam3VideoModel exists.
+# The `|| --ignore-installed` retry here and below catches any apt-shipped transitive
+# dep not pre-empted above, instead of failing the build.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip-install --upgrade transformers
+    python3 -m pip install --upgrade transformers \
+    || python3 -m pip install --ignore-installed --upgrade transformers
 
 # `kernels` delivers kernels-community/cv-utils (no pip package exists), which SAM 3 uses
 # for two jobs: generic_nms (mask NMS — skipped entirely without it, making det_nms_thresh
@@ -163,9 +164,11 @@ print(f'sam3 OK — ftfy {ftfy.__version__}, numpy {numpy.__version__}, torch {t
 
 # semantic_mapping's 3D stage: open3d is the big one (~400 MB), hence its own layer.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip-install open3d
+    python3 -m pip install open3d \
+    || python3 -m pip install --ignore-installed open3d
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip-install "scipy==1.13.1" scikit-learn line_profiler
+    python3 -m pip install "scipy==1.13.1" scikit-learn line_profiler \
+    || python3 -m pip install --ignore-installed "scipy==1.13.1" scikit-learn line_profiler
 
 # cv2 normally arrives with cv_bridge in the ROS base image; only install if missing.
 # Pin <5: opencv 5.x requires numpy>=2, which breaks cv_bridge.
@@ -177,7 +180,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # scope, reached via semantic_map.py:16, so ObjMapper fails without it. SAM 3 does not
 # use it. Retry covers setuptools/click/pydantic possibly being apt-installed.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip-install spacy \
+    { python3 -m pip install spacy || python3 -m pip install --ignore-installed spacy; } \
  && python3 -m spacy download en_core_web_sm
 USER docker
 
