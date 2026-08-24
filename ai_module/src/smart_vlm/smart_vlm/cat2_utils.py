@@ -102,17 +102,6 @@ on, above, below, in — read the `holds:` flags, which already combine the vert
   an overlap in plan view. `holds: on` is support. A small `vertical gap` with no `on` flag
   means the two do not overlap from above, so neither is on the other.
 
-THE BOXES ARE OVER-ESTIMATES
-A box in this list runs about 1.8 times the true volume of its object, and the thinner the
-object — a picture, a carpet, a map — the worse it is. Use `size` only to tell a small
-object from a large one, and judge whether something is inside, on, or the same size as
-something else from the photographs.
-A box only a few centimetres across on two of its three axes is a different matter: that is
-a fragment of something — a stalk, an edge, a pole — and not the object it is named after.
-It cannot be the answer, because your box is graded on how much of the real object's space
-it covers and a sliver covers almost none of it. Thin on ONE axis is normal and is exactly
-the case above, so never rule out a picture, a carpet or a map for being flat.
-
 WHERE THE DETECTOR GOES WRONG
 The outlines come from a detector armed with a few words guessed from the question, and from
 a tracker following objects across frames. Both fail in specific ways, and the question
