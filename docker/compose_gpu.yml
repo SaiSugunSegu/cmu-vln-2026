@@ -1,3 +1,5 @@
+name: cmu-vln
+
 services:
   system:
     build:
@@ -38,32 +40,28 @@ services:
     image: busybox
     volumes:
       - ../data:/data
-      - ${HOME}/.cache/huggingface:/hf
-    # The uid test guards the recursive chown: once seeded the HF cache is tens of
-    # GB, and chown -R on every `up` would cost minutes for nothing. $$ is compose
-    # escaping for a literal $.
     # Folded scalar: every line must sit at the SAME indent, or YAML keeps the
     # newlines and the shell sees a line starting with `&&`.
     command: >-
       sh -c "mkdir -p /data/bags /data/scenes /data/crops /data/captions /data/runs &&
-      chmod -R a+w /data &&
-      mkdir -p /hf &&
-      if [ \"$$(stat -c %u /hf)\" != 1001 ]; then chown -R 1001:1001 /hf; fi"
+      chmod -R a+w /data"
     restart: "no"
 
-  ai_module:
+  odyssey:
+    image: iros2026_odyssey:submission
     build:
       context: ../ai_module
       dockerfile: docker/Dockerfile
-    container_name: iros2026_ai_module
+      args:
+        HF_TOKEN: ${HF_TOKEN:-}
+    container_name: iros2026_odyssey
     network_mode: host
     ipc: host
     env_file:
       - path: ../.env
-        required: false   # fine if it doesn't exist; HF_TOKEN just won't be set
+        required: false   # overlay; HF_TOKEN and the VLM key are also baked into the image
     # backend/provider/model are configured in ai_module/src/captioner/config/vqa.yaml,
-    # not here; .env only supplies each provider's API key (see PROVIDERS in
-    # captioner/vlm_backends/constants.py) plus HF_TOKEN.
+    # not here. just up bakes HF_TOKEN and the provider key from .env into the image.
     environment:
       # No privileged: true — the nvidia runtime reservation below is what grants
       # GPU access, and privileged would hand the container every host device.
@@ -81,8 +79,6 @@ services:
       - ../data/benchmark:/data/benchmark:ro
       # Repo scripts (eval drivers) at a fixed container path.
       - ../scripts:/home/docker/scripts:ro
-      # Persist HF model weights across container rebuilds.
-      - ${HOME}/.cache/huggingface:/home/docker/.cache/huggingface
     depends_on:
       init:
         condition: service_completed_successfully

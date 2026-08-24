@@ -35,13 +35,14 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
     && python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed gdown \
     && rm -f /tmp/requirements_captioner.txt
 
-# Hugging Face cache lives under the docker user home (compose bind-mounts it).
+# Hugging Face cache lives under the docker user home. just up bakes weights here.
 # HF_HUB_OFFLINE deliberately NOT set: this deployment always has connectivity, and the
 # cv-utils kernel downloads on first use (its absence silently disables mask NMS).
 # HUGGINGFACE_HUB_CACHE is not set: HF derives $HF_HOME/hub by default.
 # TRANSFORMERS_CACHE / TRANSFORMERS_OFFLINE are deprecated aliases; don't add them.
 ENV HF_HOME=/home/docker/.cache/huggingface
-RUN mkdir -p /home/docker/.cache/huggingface && chown -R docker:docker /home/docker/.cache
+RUN mkdir -p /home/docker/.cache/huggingface /home/docker/crops \
+ && chown -R docker:docker /home/docker/.cache /home/docker/crops
 
 USER docker
 
@@ -177,6 +178,24 @@ RUN --mount=type=cache,target=/root/.cache/pip \
  && python3 -m spacy download en_core_web_sm
 USER docker
 
+# Bake SAM 3 into HF_HOME BEFORE the package COPYs so a code edit does not
+# re-download ~6.5 GB. Qwen3-VL is the host HF cache; `just vqa-up` bind-mounts it.
+# fetch_weights.py is stdlib + huggingface_hub + transformers (already installed
+# above); it does not need the captioner colcon install. Cache mount lets a retry
+# of this layer skip files already pulled. Empty HF_TOKEN skips the download;
+# runtime from_pretrained still reads ENV.
+ARG HF_TOKEN=""
+ENV HF_TOKEN=${HF_TOKEN}
+COPY --chown=docker:docker src/captioner/captioner/tools/fetch_weights.py /tmp/fetch_weights.py
+RUN --mount=type=cache,target=/tmp/hf-build-cache,uid=1001,gid=1001 \
+    if [ -n "$HF_TOKEN" ]; then \
+      HF_HOME=/tmp/hf-build-cache python3 /tmp/fetch_weights.py sam3 && \
+      mkdir -p /home/docker/.cache/huggingface && \
+      cp -a /tmp/hf-build-cache/. /home/docker/.cache/huggingface/; \
+    else \
+      echo "HF_TOKEN empty — skipping weight bake"; \
+    fi
+
 # Copy and compile active dev packages (takes <5s and updates instantly on edit)
 COPY src/smart_vlm /home/docker/ai_module/src/smart_vlm
 COPY src/sam_mapper /home/docker/ai_module/src/sam_mapper
@@ -214,10 +233,3 @@ from smart_vlm.cat2_utils import EXTRACT_SYSTEM as CAT2_EXTRACT; \
 from smart_vlm.cat3_utils import waypoints_from_map; \
 import openai; \
 print('import check OK: transformers', transformers.__version__)\""
-
-# No weights are baked into this image — they are fetched into the mounted HF cache. Seed
-# it once with `just hf-fetch` (see docker/README.md) so the first real run is not also a
-# ~20 GB download; nothing forces offline mode. No `hf auth login` is needed: put
-# HF_TOKEN in the repo-root .env (docker/compose*.yml reads it via env_file) and
-# huggingface_hub picks it up on every from_pretrained(). SAM 3 is additionally
-# gated — accept its licence once on the model page with the same account.
