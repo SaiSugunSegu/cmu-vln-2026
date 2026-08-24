@@ -99,6 +99,26 @@ def sanitize_run_id(run_id: str, fallback: str = "run") -> str:
     return "/".join(parts) or fallback
 
 
+def resolve_output_dir(configured: str = "/data/crops") -> str:
+    """First writable crops root. Official compose has no /data mount."""
+    candidates = []
+    if configured:
+        candidates.append(configured)
+    candidates.extend(("/data/crops", "/home/docker/crops", "/tmp/crops"))
+    seen: set[str] = set()
+    for path in candidates:
+        if path in seen:
+            continue
+        seen.add(path)
+        try:
+            os.makedirs(path, exist_ok=True)
+            if os.access(path, os.W_OK):
+                return path
+        except OSError:
+            continue
+    return "/tmp/crops"
+
+
 @dataclass(frozen=True)
 class BestViewConfig:
     targets: tuple[str, ...]
@@ -131,7 +151,7 @@ class BestViewConfig:
         return BestViewConfig(
             targets=targets,
             top_n=top_n,
-            output_dir=raw.get("output_dir", "/data/crops"),
+            output_dir=resolve_output_dir(raw.get("output_dir", "/data/crops")),
             save_annotated_copy=bool(raw.get("save_annotated_copy", True)),
             save_silhouette_copy=bool(raw.get("save_silhouette_copy", False)),
             # Opt-in: it roughly doubles the images on disk, and every overlay with them.

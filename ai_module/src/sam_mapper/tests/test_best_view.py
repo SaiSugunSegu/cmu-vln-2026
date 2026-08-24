@@ -15,7 +15,7 @@ from sam_mapper.annotate import (
     _mask_anchor,
     silhouette_frame,
 )
-from sam_mapper.best_view import BestViewCollector, BestViewConfig, write_image
+from sam_mapper.best_view import BestViewCollector, BestViewConfig, write_image, resolve_output_dir
 from sam_mapper.challenge_marker import track_to_map_id
 from sam_mapper.detections import PromptTable
 
@@ -716,3 +716,9 @@ def test_a_reader_polling_during_rewrites_never_sees_a_partial_file(tmp_path):
 
     assert seen > 0, "the reader never observed the file; the race was not exercised"
     assert partial == 0
+def test_resolve_output_dir_skips_unwritable_configured_path(tmp_path):
+    blocker = tmp_path / "not_a_directory"
+    blocker.write_text("x")
+    got = resolve_output_dir(str(blocker))
+    assert got != str(blocker)
+    assert os.path.isdir(got)

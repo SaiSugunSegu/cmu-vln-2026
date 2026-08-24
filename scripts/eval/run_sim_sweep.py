@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Live-sim eval sweep. Runs on the HOST, because only the host can change scenes.
 
-`eval_orchestrator` runs inside iros2026_ai_module. It can walk every scene of a BAG
+`eval_orchestrator` runs inside iros2026_odyssey. It can walk every scene of a BAG
 sweep by itself, since bags are just files under /data/bags that it can open. It cannot
 do the same for the simulator: the Unity mesh is a single overwritable slot inside
 iros2026_system's image, and that container mounts nothing that would let the AI module
@@ -48,7 +48,7 @@ sys.path.insert(0, str(REPO / "ai_module" / "src" / "smart_vlm"))
 from smart_vlm.report_utils import previous_results, summarise  # noqa: E402
 
 SYS_CONTAINER = "iros2026_system"
-AI_CONTAINER = "iros2026_ai_module"
+AI_CONTAINER = "iros2026_odyssey"
 STACK = "/home/docker/autonomy_stack_mecanum_wheel_platform"
 MESH_SLOT = f"{STACK}/src/base_autonomy/vehicle_simulator/mesh/unity"
 AI_SRC = "/home/docker/ai_module"
@@ -63,7 +63,7 @@ def host_path(container_path: str) -> Path:
 
     This script straddles both sides: the orchestrator runs inside the AI container and
     must be given /data/..., while the merge at the end reads and writes the same files
-    from out here. docker/compose.yml bind-mounts <repo>/data to /data, so the mapping
+    from out here. docker/compose_gpu.yml bind-mounts <repo>/data to /data, so the mapping
     is a prefix swap.
     """
     if container_path.startswith("/data/"):

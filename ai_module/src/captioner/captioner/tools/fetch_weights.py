@@ -5,6 +5,11 @@ Nothing forces offline mode — the deployment always has connectivity. This exi
 first real run is not also a ~20 GB download, and to warm SAM 3's cv-utils kernel, which is
 otherwise fetched lazily and fails silently (see warm_kernels).
 
+The submission image only ever bakes sam3: the Dockerfile calls this script with an explicit
+`sam3` arg (not the MODELS default) so Qwen3-VL's 8-15 GB never lands in that build. Qwen3-VL
+is still fetched by default here for local dev (`just vqa-up` bind-mounts it from the host HF
+cache via docker/compose_qwen.yml).
+
 Run it once after `just up`, and again on any new machine:
 
     just hf-fetch                 # all models + kernels
@@ -143,7 +148,7 @@ def fetch(name: str, spec: dict, token: Optional[str]) -> bool:
         return False
     except OSError as exc:
         # Covers the permission case: a root-owned cache dir the container's uid
-        # cannot write. The init one-shot in docker/compose.yml is what fixes it.
+        # cannot write. The init one-shot in docker/compose_gpu.yml is what fixes it.
         print(f"[hf-fetch] {repo_id} failed writing the cache: {exc}\n"
               f"           If this is a permission error, run `just up` so the init\n"
               f"           container can chown {os.environ.get('HF_HOME', '~/.cache/huggingface')}.",
