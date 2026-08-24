@@ -41,8 +41,11 @@ ENV PIP_DEFAULT_TIMEOUT=120 \
 # Cache mount rather than --no-cache-dir so a network failure part-way through
 # torch resumes on the next attempt instead of re-downloading from zero. The
 # cache lives outside the layer either way, so the image is no larger.
+# gdown is not a captioner dep: bag_fetch / scene_fetch use it to pull Unity scenes
+# and recorded bags from the organizers' public Drive folder.
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --ignore-installed -r /tmp/requirements_captioner.txt \
+    && python3 -m pip install --ignore-installed gdown \
     && rm -f /tmp/requirements_captioner.txt
 
 # Hugging Face cache lives under the docker user home. just up bakes weights here.
