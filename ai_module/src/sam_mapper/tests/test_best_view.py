@@ -15,7 +15,7 @@ from sam_mapper.annotate import (
     _mask_anchor,
     silhouette_frame,
 )
-from sam_mapper.best_view import BestViewCollector, BestViewConfig
+from sam_mapper.best_view import BestViewCollector, BestViewConfig, resolve_output_dir
 from sam_mapper.challenge_marker import track_to_map_id
 from sam_mapper.detections import PromptTable
 
@@ -652,3 +652,11 @@ def test_a_rank_swap_rewrites_both_images(tmp_path):
     assert sorted(set(writes)) == ["best_rank1_cabinet+tv.png", "best_rank2_cabinet+tv.png"]
     # Rank 1 genuinely changed object, not just its seq.
     assert cv2.imread(_rank_png(collector, 1)).shape[:2] != rank1_before
+
+
+def test_resolve_output_dir_skips_unwritable_configured_path(tmp_path):
+    blocker = tmp_path / "not_a_directory"
+    blocker.write_text("x")
+    got = resolve_output_dir(str(blocker))
+    assert got != str(blocker)
+    assert os.path.isdir(got)
