@@ -142,7 +142,8 @@ def replay_scene(scene: str, args) -> dict:
     mapping_config = MappingConfig.from_dict(config.get("mapping", {}))
     mapper = ObjMapper(
         cloud_image_fusion=CloudImageFusion(platform=platform,
-                                            bounds_mode=mapping_config.bounds_mode),
+                                            bounds_mode=mapping_config.bounds_mode,
+                                            occlusion=mapping_config.occlusion),
         label_template=table.label_template(),
         captioner=None,
         log_info=(lambda m: None) if args.quiet else (lambda m: print(f"  {m}", flush=True)),

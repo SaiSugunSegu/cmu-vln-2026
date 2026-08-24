@@ -92,6 +92,8 @@ def test_serialize_emits_a_box_per_tracked_object():
     entry = next(iter(objects.values()))
     assert entry["label"] == "chair"
     assert set(entry["bbox3d"]) == {"center", "extent", "rotation"}
+    # Homogeneous keys, so the map sorts and round-trips through JSON unchanged.
+    assert all(isinstance(k, str) for k in out)
 
 
 def test_serialize_records_how_the_extents_were_computed():
@@ -142,13 +144,10 @@ def test_objects_seen_simultaneously_under_different_masks_must_not_merge():
     """Appearing in the SAME frame under two different masks is conclusive evidence of two
     objects; no amount of centroid proximity should override it.
 
-    Defect 10, now FIXED — this was xfail(strict) until `world_merge.block_covisible` landed,
-    and it turned green as soon as it did. The rule it was written against was
-    `dist < norm((ext_a/2 + ext_b/2)/2) * 0.5 or dist < 0.5`, whose second clause knew nothing
-    about co-visibility and whose 0.5 m is larger than the spacing of most of the small objects
-    the questions actually ask about (pillows, vases, books, cups). It is a regression guard now
-    rather than a wish: block_covisible is what keeps it passing, so if that is ever loosened
-    this is the test that should say so.
+    Three things now stand between these two and a merge, and the test does not care which
+    one fires: `block_covisible` (D8), the absolute distance dropping to 0.25 m, and the
+    class-prior gate that refuses to build a chair wider than a chair can be. What it
+    pins is that the unconditional distance clause can no longer overrule co-visibility.
     """
     mp, fusion = mapper(), CloudImageFusion(platform="mecanum_sim")
     blobs = [blob([PAIR_RANGE, -PAIR_SEP / 2, CAM_Z], half=PAIR_HALF),
@@ -167,6 +166,22 @@ def test_objects_seen_simultaneously_under_different_masks_must_not_merge():
     instances = [o for o in mp.single_obj_list if o.obj_id[0] >= 0]
     merged = [o for o in instances if len(o.obj_id) > 1]
     assert not merged, f"co-visible distinct objects were merged: {[o.obj_id for o in instances]}"
+
+
+def test_the_prior_gate_refuses_a_merge_no_instance_of_the_class_could_survive():
+    mp = mapper()
+    pillow = next(iter(mp.config.dimension_priors.priors))  # any class; the cap is what matters
+    prior = mp.config.dimension_priors.for_label(pillow)
+
+    class _Obj:
+        def get_dominant_label(self):
+            return pillow
+
+    # Two boxes each filling the class cap, separated by another full cap: nothing that
+    # class could be spans that, on any axis.
+    assert not mp._merge_fits_prior(_Obj(), prior, prior, max(prior) * 2)
+    # The same two touching are exactly one instance's worth, so the merge stays available.
+    assert mp._merge_fits_prior(_Obj(), prior, prior, 0.0)
 
 
 def test_same_label_objects_beyond_the_merge_radius_stay_separate():
