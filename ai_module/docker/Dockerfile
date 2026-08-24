@@ -41,9 +41,6 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
 # HUGGINGFACE_HUB_CACHE is not set: HF derives $HF_HOME/hub by default.
 # TRANSFORMERS_CACHE / TRANSFORMERS_OFFLINE are deprecated aliases; don't add them.
 ENV HF_HOME=/home/docker/.cache/huggingface
-# Official compose has no ipc: host. FastDDS otherwise moves image/cloud payloads
-# over shared memory that never arrives. UDP works with network_mode: host alone.
-ENV FASTDDS_BUILTIN_TRANSPORTS=UDPv4
 RUN mkdir -p /home/docker/.cache/huggingface /home/docker/crops \
  && chown -R docker:docker /home/docker/.cache /home/docker/crops
 
