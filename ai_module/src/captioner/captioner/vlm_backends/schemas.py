@@ -11,7 +11,7 @@ No ROS or torch imports — these are unit-testable on their own.
 from __future__ import annotations
 
 import json
-from typing import Type, get_origin
+from typing import Type, get_args, get_origin
 
 from pydantic import BaseModel, Field
 
@@ -66,17 +66,66 @@ class RelationCheck(BaseModel):
     holds: bool = Field(description="True if the stated relation is visibly true")
 
 
+class RouteWaypoint(BaseModel):
+    """One place on an instruction-following route, as the robot will drive it.
+
+    `x`/`y` are what actually reach `/way_point_with_heading`, but `object_ids` is what
+    makes them checkable: a waypoint that names the map rows it stands at can be verified
+    against those rows' centres and corrected, where a bare coordinate can only be trusted.
+    `why` carries the words of the command it satisfies, which is how a wrong route is read
+    as a misparse rather than a misgrounding after the fact.
+    """
+
+    role: str = Field(description="One of: pass | goal")
+    x: float = Field(description="Map-frame x of the place to drive to, in metres")
+    y: float = Field(description="Map-frame y of the place to drive to, in metres")
+    object_ids: list[str] = Field(
+        description="Ids of the mapped objects this waypoint stands at, copied from the "
+                    "object table; empty only for a detour point in open floor")
+    why: str = Field(
+        description="The words from the command that this waypoint satisfies")
+
+
+class RoutePlan(BaseModel):
+    """The whole route for one instruction-following command, in driving order.
+
+    Asking for `reason` before the waypoints is what makes the model segment the command
+    aloud rather than emit the first plausible coordinates — the same trick `CountAnswer`
+    and `ObjectChoice` use.
+    """
+
+    reason: str = Field(
+        description="One short sentence: the places the command names, in order")
+    waypoints: list[RouteWaypoint] = Field(
+        description="The route in order, one entry per place, with the goal last")
+
+
+def _example_object(model: Type[BaseModel]) -> dict:
+    """One nested model rendered as a filled-in example object."""
+    return {name: _example_value(name, field)
+            for name, field in model.model_fields.items()}
+
+
 def _example_value(name: str, field) -> object:
     """The description, wrapped so the example has the field's own shape.
 
     A list field shown as `"targets": "some words"` gets answered with a string,
     which then fails validation — the example is the strongest signal in the hint,
-    so its brackets have to be real.
+    so its brackets have to be real. The same argument applies one level down: a
+    `list[SubModel]` rendered as `["ordered steps"]` teaches a list of STRINGS,
+    and the reply then fails validation for the shape the hint itself asked for.
+    So a nested model is expanded rather than described.
     """
     text = field.description or name
-    origin = get_origin(field.annotation)
-    if origin in (list, set, tuple):
+    annotation = field.annotation
+    if get_origin(annotation) in (list, set, tuple):
+        args = get_args(annotation)
+        inner = args[0] if args else None
+        if isinstance(inner, type) and issubclass(inner, BaseModel):
+            return [_example_object(inner)]
         return [text]
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return _example_object(annotation)
     return text
 
 
@@ -87,11 +136,7 @@ def json_hint(schema: Type[BaseModel]) -> str:
     filled-in example far more reliably than it follows a JSON Schema document,
     and the schema document alone would spend a few hundred tokens saying less.
     """
-    example = {
-        name: _example_value(name, field)
-        for name, field in schema.model_fields.items()
-    }
     return (
         "Reply with ONLY a JSON object, no prose and no code fence, "
-        f"with exactly these keys: {json.dumps(example)}"
+        f"with exactly these keys: {json.dumps(_example_object(schema))}"
     )

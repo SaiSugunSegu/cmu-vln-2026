@@ -47,11 +47,61 @@
 
   <!-- Mission budget (README "Timing": 10 minutes per question, from startup) -->
   <arg name="question_budget_s"  default="600.0"/> <!-- hard limit, includes model load -->
-  <arg name="explore_timeout_s"  default="150.0"/> <!-- exploration CAP; target coverage usually ends it sooner -->
+  <arg name="explore_timeout_s"  default="300.0"/> <!-- exploration CAP; target coverage usually ends it sooner -->
+
+  <!-- Exploration order. true: TARE sweeps the room on its own frontier exploration first and
+       target viewpoints are withheld, so the tour is solved over the whole grid; the phase ends
+       when TARE reports finished or the cap below elapses, and target-driven exploration then
+       runs exactly as it always has. Discovery first, because a target the robot never drove
+       past is one no amount of re-viewing can find. false restores the old behaviour, where
+       targets compete with the frontier from the first second. -->
+  <arg name="tare_explore_priority" default="true"/>
+  <arg name="tare_explore_max_time" default="180.0"/>  <!-- cap; TARE finishing ends it sooner -->
+
   <arg name="answer_reserve_s"   default="90.0"/>  <!-- T-90: stop exploring no matter what -->
   <arg name="fallback_reserve_s" default="30.0"/>  <!-- T-30: publish a guess rather than nothing -->
   <arg name="fallback_count"     default="1"/>     <!-- the numerical guess of last resort -->
   <arg name="ready_timeout_s"    default="300.0"/> <!-- give up waiting on models, run degraded -->
+
+  <!-- Category 3 only. An instruction question is answered by DRIVING, so the supervisor
+       raises its own answering reserve to CATEGORY_ANSWER_RESERVE_S[3] the moment it
+       classifies one (mission_clock.budget_for); these are the reasoner's half of the same
+       arithmetic. route_reserve_s is when it must STOP driving, leaving room to settle on the
+       goal pose and be torn down. Every waypoint is separately bounded by the try budget
+       below, so no single leg can eat the journey. Demo routes run 1.7 to 33 m. -->
+  <arg name="route_reserve_s"  default="45.0"/>
+  <!-- Driving is three tries and two arrival tests. A try publishes the waypoint for
+       try_duration_s; the leg ends when the robot is within settle_radius_m of the model's
+       point OR within arrival_m of the point actually published, then settles for settle_s;
+       otherwise the next try starts, and after max_tries the route moves on. Worst case per
+       waypoint is max_tries * try_duration_s + settle_s = 50 s.
+       settle_radius_m IS the scoring radius. arrival_m is the second test because the first
+       cannot always be won: distance to the model's point is bounded below by the snap plus
+       the converter's 0.3 m stop deadband, so a leg snapped 1.4 m off can never enter a 1.5 m
+       circle and would burn all three tries standing exactly where it was aimed. -->
+  <arg name="try_duration_s"   default="15.0"/>
+  <arg name="max_tries"        default="3"/>
+  <arg name="settle_radius_m"  default="1.5"/>
+  <arg name="settle_s"         default="5.0"/>
+  <arg name="arrival_m"        default="0.5"/>
+  <!-- Before publishing, a waypoint is moved to the CLOSEST point of the traversable area, and
+       re-chosen every metre of travel. The area is a grid built from /terrain_map_ext across
+       the whole run, starting during exploration: that cloud decays in 4 s, so ground near a
+       distant waypoint is not in any single frame of it and only accumulation makes the snap
+       possible. Nothing is traded against closeness: snap_clearance_m erodes the area before
+       the snap and is OFF, because the base autonomy applies its own 0.75 m when it decides
+       where to drive, and reproducing that here only pushed our published point ~1.2 m off the
+       waypoint. Dial it up to trade closeness for the converter passing our point through
+       untouched. max_snap_m is the honesty limit: past it the nearest floor is not the edge of
+       the object the model meant, so the waypoint is published unchanged. -->
+  <arg name="snap_clearance_m"    default="0.75"/>
+  <arg name="max_snap_m"          default="3.0"/>
+  <!-- The floor grid. The cell is the quantisation floor on how precisely we can aim; the span
+       only sets how often the grid has to grow, and 40 m square costs 0.16 MB.
+       The cell matches terrain analysis' own scanVoxelSize; finer marks holes, not a region. -->
+  <arg name="traversable_cell_m"      default="0.10"/>
+  <arg name="traversable_half_span_m" default="20.0"/>
+  <arg name="map_wait_s"       default="15.0"/> <!-- obj_map.json can land just after explore_done -->
 
   <!-- Reasoning -->
   <arg name="vqa_timeout_s" default="180.0"/>            <!-- max wait for a VLM reply -->
@@ -153,15 +203,30 @@
   </node>
 
   <!-- 3c. Instruction reasoner — question to targets to an ordered Pose2D sequence.
-       Arms SAM (so TARE can start), then after explore_done holds TARE and publishes
-       /way_point_with_heading toward each named object in prompt order.
+       Arms SAM (so TARE can start), then after explore_done holds TARE, asks the VLM for
+       a route over the 3D map plus the tagged best views, and drives it.
        Input:   /challenge_question, /gt_target_objects, /pipeline/explore_done,
-                /sam3/best_view_dir, /state_estimation
+                /sam3/best_view_dir, /state_estimation, /way_point_reached
        Output:  /sam3/set_prompts, /start_exploration (false), /way_point_with_heading -->
   <node pkg="smart_vlm" exec="instruction_reasoner" name="instruction_reasoner"
         output="screen">
     <param name="run_id" value="$(var run_id)"/>
     <param name="vqa_timeout_s" value="$(var vqa_timeout_s)"/>
+    <!-- The reasoner keeps its own clock on the same budget as the supervisor's, so both
+         agree on how much of the question is left without publishing it to each other. -->
+    <param name="question_budget_s" value="$(var question_budget_s)"/>
+    <param name="route_reserve_s"   value="$(var route_reserve_s)"/>
+    <param name="try_duration_s"    value="$(var try_duration_s)"/>
+    <param name="max_tries"         value="$(var max_tries)"/>
+    <param name="settle_radius_m"   value="$(var settle_radius_m)"/>
+    <param name="settle_s"          value="$(var settle_s)"/>
+    <param name="arrival_m"         value="$(var arrival_m)"/>
+    <param name="snap_clearance_m"    value="$(var snap_clearance_m)"/>
+    <param name="max_snap_m"          value="$(var max_snap_m)"/>
+    <param name="traversable_cell_m"      value="$(var traversable_cell_m)"/>
+    <param name="traversable_half_span_m" value="$(var traversable_half_span_m)"/>
+    <param name="map_wait_s"        value="$(var map_wait_s)"/>
+    <param name="max_views"         value="$(var max_context_views)"/>
   </node>
 
   <!-- 3c. Target-driven exploration — which side of each target object has never been
@@ -190,6 +255,8 @@
          kMaxTargetViewPointNum / kTargetViewPointSnapMaxDist out of the very file TARE is
          running on instead of keeping its own copy of them. -->
     <param name="tare_scenario" value="$(var tare_scenario)"/>
+    <param name="tare_explore_priority" value="$(var tare_explore_priority)"/>
+    <param name="tare_explore_max_time" value="$(var tare_explore_max_time)"/>
   </node>
 
   <!-- 4. TARE exploration — drives the robot to cover the scene.

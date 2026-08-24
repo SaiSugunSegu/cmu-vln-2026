@@ -8,7 +8,7 @@ supervisor, and the eval harness all import these names — there is no ROS over
   provider                 gemini | anthropic | dashscope | openrouter | openai | <custom>
   base_url                 OpenAI-compatible URL (blank = the provider preset)
   model / model_lite
-  view_source              crop | silhouette
+  view_source              crop | silhouette | full | full_silhouette
   silhouette_wait_s / silhouette_poll_s
 
 `cloud` is a hosted OpenAI-compatible endpoint. `local` is the in-image Qwen server.
@@ -46,11 +46,33 @@ def local_vqa_launch_flag() -> str:
 # `crop` is the plain, unannotated photo. Read by both category-1
 # (`numerical_utils.select_context_views`) and category-2 (`cat2_utils.marked_views`),
 # live reasoners and their offline benches alike.
+#
+# The `full*` values send the WHOLE 360 panorama instead of the ROI crop cut out of it, which
+# is what category 3 wants: a route is planned over a room, and a crop shows a corner of one.
+# They require sam_mapper's `save_full_views: true`; with it off nothing is written under
+# `full/`, and a caller must fall back to the cropped equivalent rather than send nothing.
+#: view_source -> the run-directory subpath its images live in.
+VIEW_DIRS = {
+    "crop": "",
+    "silhouette": "silhouette",
+    "full": "full",
+    "full_silhouette": "full/silhouette",
+}
 VIEW_SOURCE = str(_CONFIG.get("view_source", "silhouette")).strip().lower()
-if VIEW_SOURCE not in ("crop", "silhouette"):
+if VIEW_SOURCE not in VIEW_DIRS:
     VIEW_SOURCE = "silhouette"
 
-# How long a view_source: silhouette run waits for sam_node to finish writing the
+
+def view_dir(source: str | None = None) -> str:
+    """The subdirectory of a run dir that `source` names. '' is the run dir itself."""
+    return VIEW_DIRS.get(source or VIEW_SOURCE, VIEW_DIRS["silhouette"])
+
+
+def is_silhouette(source: str | None = None) -> bool:
+    """True when the images are written by sam_node's finalize pass, so a caller must wait."""
+    return "silhouette" in (source or VIEW_SOURCE)
+
+# How long a silhouette run waits for sam_node to finish writing the
 # finalized copy before falling back to the plain crop, and how often it polls while
 # waiting. Both reasoners fire on the same /pipeline/explore_done that starts the
 # finalize pass, so arriving a few hundred ms early is normal, not a fault.

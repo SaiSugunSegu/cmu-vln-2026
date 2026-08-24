@@ -40,6 +40,7 @@ from smart_vlm.cat2_utils import (
     select_object,
     solver_status,
 )
+
 from smart_vlm.question import QuestionType
 from smart_vlm.reasoner_common import (
     ReasonerNode,

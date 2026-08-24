@@ -2,6 +2,14 @@
 """target_explorer — turn "which side of this object have I never looked from" into
 "go stand here", until every reachable side of every target has been seen.
 
+Exploration runs in TWO phases, gated by `tare_explore_priority` (see target_coverage's
+`default_params`). Phase one hands the room to TARE's own frontier exploration and publishes
+no viewpoints at all, so the tour is solved over the whole grid; it ends when TARE reports
+finished or `tare_explore_max_time` elapses. Phase two is everything below, unchanged --
+targets steer the tour. Discovery comes first because a target the robot never drove past is
+one no amount of re-viewing will find; with the flag off, targets compete from the first
+second, which is how this node behaved before.
+
 The ROS shell only. Every rule lives in `target_coverage`, which imports no rclpy and is
 unit-tested under `just test`; this file is subscriptions, a publish timer, and one file
 write. Read target_coverage's module docstring for why the coverage model looks the way it
@@ -81,6 +89,10 @@ class TargetExplorer(Node):
         self._complete_since: float | None = None
         self._coverage_done = False
         self._last_report_t = 0.0
+        #: Phase 1 of two: TARE sweeps the room on frontier exploration alone, then targets
+        #: take over. Latched false once it ends -- see `_tare_phase_active`.
+        self._tare_phase = bool(self.p("tare_explore_priority"))
+        self._tare_phase_started: float | None = None
 
         self.create_subscription(String, "/sam3/set_prompts", self._on_prompts, 10)
         self.create_subscription(String, "/sam3/prompts_ack", self._on_ack, 10)
@@ -198,6 +210,8 @@ class TargetExplorer(Node):
         self.stopped, self._last_preempt = False, None
         self._complete_since, self._coverage_done = None, False
         self.tare_finished = False
+        self._tare_phase = bool(self.p("tare_explore_priority"))
+        self._tare_phase_started = None
         self.get_logger().info(message)
 
     def _on_tare_finished(self, msg: Bool) -> None:
@@ -246,10 +260,58 @@ class TargetExplorer(Node):
 
     # -- output ---------------------------------------------------------------
 
+    def _tare_phase_active(self, now: float) -> bool:
+        """Is TARE still doing the global sweep, before targets are allowed to steer it?
+
+        Latched: it can end, never restart. Two ways out, whichever comes first --
+
+          * TARE reports `/exploration_finish`, i.e. it believes the room is explored;
+          * `tare_explore_max_time` elapses, which is the one that actually fires. Across a
+            measured 15-scene sweep TARE never raised the finish signal once, so without a cap
+            the target phase would simply never begin.
+
+        The clock starts when the question's targets land, not at node construction: this
+        timer runs while the robot drives, and anchoring it earlier would spend the global
+        phase on model loading, before the scene is even released.
+        """
+        if not self._tare_phase:
+            return False
+        if not self.model.targets:
+            return True                      # not armed yet; nothing to steer with anyway
+        if self._tare_phase_started is None:
+            self._tare_phase_started = now
+            self.get_logger().info(
+                f"global exploration first — TARE has the room to itself for up to "
+                f"{float(self.p('tare_explore_max_time')):.0f}s before targets take over")
+        elapsed = now - self._tare_phase_started
+        limit = float(self.p("tare_explore_max_time"))
+        if self.tare_finished or elapsed >= limit:
+            self._tare_phase = False
+            self.get_logger().info(
+                f"global exploration ended after {elapsed:.0f}s "
+                f"({'TARE finished' if self.tare_finished else f'{limit:.0f}s cap'}) "
+                f"— target-driven exploration takes over")
+            return False
+        return True
+
     def _publish(self) -> None:
         if self.stopped or self.robot is None:
             return
         now = time.monotonic()
+
+        if self._tare_phase_active(now):
+            # An empty PoseArray is what reverts TARE to stock frontier exploration -- with no
+            # priority cells, `grid_world.cpp`'s `priority_only` is false whatever preempt
+            # says, so the tour is solved over the whole grid. Preempt goes out false as well
+            # so nothing is left latched on when the phase ends. Coverage still accrues from
+            # whatever the sweep happens to drive past; it is only the STEERING that waits.
+            self.pub_viewpoints.publish(PoseArray())
+            self.pub_preempt.publish(Bool(data=False))
+            self._publish_coverage_done(now)
+            self.pub_status.publish(String(data=json.dumps(self.model.status(now))))
+            self._write_report()
+            return
+
         requests = self.model.requests(self.robot, now)
 
         msg = PoseArray()
@@ -333,6 +395,10 @@ class TargetExplorer(Node):
             # the timeout is diagnosed by which of these two was still false.
             "tare_finished": self.tare_finished,
             "target_coverage_done": self._coverage_done,
+            # Which of the two exploration phases this run was in when the report was
+            # written. A sweep that covered nothing reads very differently if it spent the
+            # whole window in the global phase.
+            "phase": "global" if self._tare_phase else "target",
             "summary": self.model.summary(),
             "status": self.model.status(time.monotonic()),
         }

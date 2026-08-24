@@ -69,8 +69,11 @@ save_best_target_view_images:
   output_dir: /data/crops   # falls back to /home/docker/crops when /data is not writable
   save_annotated_copy: false            # also write a masks/boxes/labels overlay per image
   save_silhouette_copy: true           # also write a mask-outline + class-name copy per image
-  save_full_views: false         # mirror every image above under full/, uncropped, so the rest
+  save_full_views: true         # mirror every image above under full/, uncropped, so the rest
                                 # of the room is visible. Ignored when crop_to_roi is off.
+                                # Required by vqa.yaml's view_source: full / full_silhouette,
+                                # which is what category 3 reasons over -- a route is planned
+                                # across a whole room, and an ROI crop shows one corner of it.
   finalize_obj_map_wait_s: 5.0  # wait for map_node's obj_map.json this long, then label
                                 # with raw SAM track ids instead
   # Score = (mask px / frame px) x confidence, so real values sit near 1e-3, not near 1.

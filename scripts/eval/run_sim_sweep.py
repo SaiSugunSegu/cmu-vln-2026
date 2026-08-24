@@ -27,6 +27,7 @@ targets regardless of where the previous one left the robot.
 Usage:
   scripts/eval/run_sim_sweep.py --category 1 --scenes arabic_room chinese_room
   scripts/eval/run_sim_sweep.py --category 2 --scenes all --limit 2
+  scripts/eval/run_sim_sweep.py --category 3 --scenes arabic_room
 """
 from __future__ import annotations
 
@@ -123,27 +124,84 @@ def start_sim(display: str) -> None:
         f"> /tmp/challenge_sim.log 2>&1"], capture=True)
 
 
-def wait_for_sim(timeout_s: float) -> bool:
-    """Block until the AI module's domain actually sees odometry and sensor data.
+#: The three topics that together prove BOTH halves are alive: the base autonomy stack
+#: (vehicleSimulator) publishes odometry, the Unity simulator publishes the sensors.
+SIM_TOPICS = ("/state_estimation", "/registered_scan", "/camera/image")
 
-    Publisher count on /state_estimation, /registered_scan, and /camera/image: proves
-    that BOTH the base autonomy stack (vehicleSimulator) AND the Unity simulator
-    (Model.x86_64) are running and bridged into domain 0.
+#: eval_orchestrator's exit code for "the sim stopped feeding mid-question". Kept in step
+#: with smart_vlm.eval_orchestrator.EXIT_SENSORS_LOST -- this script runs on the HOST and
+#: cannot import from the container's package.
+EXIT_SENSORS_LOST = 3
+
+#: How long to wait for one message per topic. /registered_scan is 5 Hz and /camera/image
+#: 10 Hz, so this is ample; three of these back to back also serve as the poll interval.
+PROBE_S = 5.0
+
+
+def _has_data(topic: str) -> bool:
+    """Did a real message arrive on `topic`? Not 'does a publisher exist' -- see wait_for_sim.
+
+    `--field header.stamp` keeps the transfer tiny: /camera/image is a 1920x640 frame and we
+    only need to know that one arrived.
+    """
+    out = sh(["docker", "exec", AI_CONTAINER, "bash", "-lc",
+              f"source {AI_SRC}/install/setup.bash && "
+              f"ros2 topic echo --once --no-arr --timeout {PROBE_S:.0f} "
+              f"--field header.stamp {topic} >/dev/null 2>&1"],
+             check=False, capture=True)
+    return out.returncode == 0
+
+
+def wait_for_sim(timeout_s: float) -> list[str]:
+    """Block until the AI module's domain actually RECEIVES sensor data.
+
+    Returns the topics still silent when it gives up; an empty list means alive.
+
+    The old check counted PUBLISHERS, and a publisher count is not data. `stop_sim` kills the
+    sim with SIGKILL, and a killed Fast-DDS participant never announces its departure, so the
+    graph keeps listing the dead sim's publishers until the participant lease expires. The
+    check was therefore satisfied by the previous sim's ghost: across a 15-scene sweep it
+    returned true a uniform 10.8-12.2 s after every restart -- far too fast for Unity to load a
+    scene -- including for five scenes whose sensors never came up at all, whose nine questions
+    then scored 0 for an infrastructure failure rather than for anything the system did.
+
+    Waiting for a real message cannot be fooled that way: a process that is not running
+    publishes nothing.
     """
     deadline = time.monotonic() + timeout_s
-    probe = (
-        f"source {AI_SRC}/install/setup.bash && "
-        f"ros2 topic info /state_estimation 2>/dev/null | grep -q 'Publisher count: [1-9]' && "
-        f"ros2 topic info /registered_scan 2>/dev/null | grep -q 'Publisher count: [1-9]' && "
-        f"ros2 topic info /camera/image 2>/dev/null | grep -q 'Publisher count: [1-9]'"
-    )
-    while time.monotonic() < deadline:
-        out = sh(["docker", "exec", AI_CONTAINER, "bash", "-lc", probe],
-                 check=False, capture=True)
-        if out.returncode == 0:
-            return True
-        time.sleep(3)
-    return False
+    silent = list(SIM_TOPICS)
+    while True:
+        silent = [t for t in SIM_TOPICS if not _has_data(t)]
+        if not silent or time.monotonic() >= deadline:
+            return silent
+
+
+def bring_up_sim(scene: str, scene_dir: Path, display: str,
+                 timeout_s: float, attempts: int) -> list[str]:
+    """Start the sim for this scene, restarting it if it does not come alive.
+
+    Returns the topics still silent after the last attempt; empty means alive.
+
+    Restarting rather than skipping on the first failure, because the failure is transient:
+    in the sweep that exposed this, office_1 produced nothing for its first question and was
+    fully alive by its second, Unity having simply come up late. Skipping immediately throws
+    away questions a restart would have rescued.
+    """
+    silent: list[str] = list(SIM_TOPICS)
+    for attempt in range(1, max(1, attempts) + 1):
+        stop_sim()
+        if attempt == 1:
+            # Only once: a retry re-runs Unity against a slot that is already correct, so it
+            # costs a restart rather than another ~300 MB docker cp.
+            swap_scene(scene_dir)
+        start_sim(display)
+        silent = wait_for_sim(timeout_s)
+        if not silent:
+            if attempt > 1:
+                log(f"{scene}: alive on attempt {attempt}")
+            return []
+        log(f"{scene}: attempt {attempt}/{max(1, attempts)} — no data on {silent}", err=True)
+    return silent
 
 
 def run_orchestrator(args, scene: str, report: str, append: bool) -> int:
@@ -222,7 +280,7 @@ def resolve_scenes(args) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--category", type=int, default=1, choices=(1, 2))
+    ap.add_argument("--category", type=int, default=1, choices=(1, 2, 3))
     ap.add_argument("--scenes", nargs="*", default=["all"])
     # Beside data/bags and inside the container's /data mount, which is what makes
     # fetching possible. Override for a scene collection you already have elsewhere —
@@ -237,6 +295,9 @@ def main() -> int:
     ap.add_argument("--display", default="",
                     help="X display. Empty starts Xvfb :99 in iros2026_system "
                          "(headless EC2).")
+    ap.add_argument("--sim-attempts", type=int, default=3,
+                    help="how many times to start the sim for a scene before skipping it; "
+                         "the first try plus two restarts by default")
     ap.add_argument("--sim-timeout", type=float, default=180.0,
                     help="seconds to wait for the sim + bridge per scene")
     args = ap.parse_args()
@@ -265,15 +326,16 @@ def main() -> int:
 
             log(f"[{i}/{len(scenes)}] {scene}: swapping mesh and restarting the sim "
                 f"(DISPLAY={display})")
-            stop_sim()
-            swap_scene(scene_dir)
-            start_sim(display)
-
-            if not wait_for_sim(args.sim_timeout):
+            silent = bring_up_sim(scene, scene_dir, display,
+                                  args.sim_timeout, args.sim_attempts)
+            if silent:
                 # One dead sim must not cost the rest of the sweep, exactly as one bad
-                # question does not end a scene in eval_orchestrator.
-                log(f"{scene}: sim/bridge never came up within {args.sim_timeout:.0f}s "
-                    f"— skipping (see /tmp/challenge_sim.log in {SYS_CONTAINER})", err=True)
+                # question does not end a scene in eval_orchestrator. Skipping writes NO
+                # rows, which is the point: a question that never received a frame is an
+                # infrastructure failure, and scoring it 0 would understate the system.
+                log(f"{scene}: no sensor data after {args.sim_attempts} attempt(s) "
+                    f"(silent: {silent}) — skipping "
+                    f"(see /tmp/challenge_sim.log in {SYS_CONTAINER})", err=True)
                 failed.append(scene)
                 stop_sim()
                 continue
@@ -282,6 +344,31 @@ def main() -> int:
             rc = run_orchestrator(args, scene, container_report, append=ran_any)
             ran_any = True
             stop_sim()
+
+            # The pre-flight probe can pass and the sim still stop feeding once the question
+            # is running: on the sweep that exposed this, four scenes ran their whole window
+            # on odometry alone with zero camera frames. The orchestrator now notices and
+            # abandons the scene WITHOUT scoring it, so one restart is worth trying.
+            if rc == EXIT_SENSORS_LOST:
+                log(f"{scene}: sensors died mid-question — restarting the sim and "
+                    f"re-running the scene once", err=True)
+                silent = bring_up_sim(scene, scene_dir, display,
+                                      args.sim_timeout, args.sim_attempts)
+                if silent:
+                    log(f"{scene}: still no sensor data (silent: {silent}) — skipping, "
+                        f"no rows written", err=True)
+                    failed.append(f"{scene} (sensors)")
+                    stop_sim()
+                    continue
+                rc = run_orchestrator(args, scene, container_report, append=ran_any)
+                stop_sim()
+                if rc == EXIT_SENSORS_LOST:
+                    # Twice is not bad luck. Leave it out of the report entirely rather than
+                    # scoring an infrastructure failure as a system failure.
+                    log(f"{scene}: sensors died again — skipping, no rows written", err=True)
+                    failed.append(f"{scene} (sensors)")
+                    continue
+
             if rc != 0:
                 log(f"{scene}: orchestrator exited {rc}", err=True)
                 failed.append(scene)

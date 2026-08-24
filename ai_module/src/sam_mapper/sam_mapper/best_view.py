@@ -47,6 +47,35 @@ from sam_mapper.detections import PromptTable
 _UNSAFE_RUN_ID_CHARS = re.compile(r"[^a-zA-Z0-9._-]+")
 
 
+def write_image(path: str, image) -> bool:
+    """Encode to a sibling temp file, then rename it into place. Same return as cv2.imwrite.
+
+    `cv2.imwrite(path, ...)` publishes the NAME before the bytes: for as long as it takes to
+    encode 1.6 MB of PNG, that path exists and holds a valid header followed by nothing. A
+    reader waiting for the file to appear will take exactly that, and a route call built on it
+    was refused by two independent model hosts as undecodable.
+
+    `os.replace` is atomic within a filesystem, and the temp is a sibling so it always is one.
+    A reader therefore sees either the previous file or the whole new one, never a prefix.
+    """
+    # The temp MUST keep the real extension: cv2 picks its codec from it, and hands back a
+    # cv2.error for one it does not recognise. It is a dotfile so it cannot be mistaken for a
+    # crop, and a sibling so os.replace stays within the one filesystem.
+    head, name = os.path.split(path)
+    tmp = os.path.join(head, f".tmp_{os.getpid()}_{name}")
+    try:
+        if not cv2.imwrite(tmp, image):
+            return False
+        os.replace(tmp, path)
+        return True
+    except cv2.error:
+        return False
+    finally:
+        # Only survives a failed encode -- os.replace consumed it otherwise.
+        if os.path.exists(tmp):
+            os.remove(tmp)
+
+
 def sanitize_run_id(run_id: str, fallback: str = "run") -> str:
     """Reduce a caller-supplied run id to a safe relative path under the output dir.
 
@@ -335,6 +364,12 @@ class BestViewCollector:
         for stale in glob.glob(os.path.join(self.run_dir, "**", "best_rank*.png"),
                                recursive=True):
             os.remove(stale)
+        # A temp only outlives its write if the process was killed mid-encode, but it would
+        # then sit there for the rest of the sweep -- and being a dotfile it does not match
+        # the glob above.
+        for orphan in glob.glob(os.path.join(self.run_dir, "**", ".tmp_*_best_rank*.png"),
+                                recursive=True):
+            os.remove(orphan)
         # The manifest too, or the merge on flush would carry the previous attempt's
         # answer over onto this attempt's images.
         manifest = os.path.join(self.run_dir, "manifest.json")
@@ -613,7 +648,7 @@ class BestViewCollector:
                 continue
             # A list, not all(...): short-circuiting would skip the remaining geometries and
             # leave the rank half written. A rank counts only if every geometry landed.
-            ok = [cv2.imwrite(os.path.join(self.run_dir, geometry, name), image)
+            ok = [write_image(os.path.join(self.run_dir, geometry, name), image)
                   for geometry, image, _ in self._views(cand)]
             if not all(ok):
                 self.log(f"best-view collector: failed to write {name}")
@@ -787,7 +822,7 @@ class BestViewCollector:
                 for subdir, render in self._overlays.items():
                     overlay = render(image, labelled)
                     path = os.path.join(self.run_dir, geometry, subdir, name)
-                    if not cv2.imwrite(path, overlay):
+                    if not write_image(path, overlay):
                         self.log(f"best-view collector: failed to write {path}")
 
         # A previous pass may have left a rank the current selection no longer has.

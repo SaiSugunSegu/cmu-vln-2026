@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from smart_vlm.mission_clock import MissionBudget, MissionClock, Phase
+from smart_vlm.mission_clock import (CATEGORY_ANSWER_RESERVE_S, MissionBudget,
+                                     MissionClock, Phase, budget_for)
 
 BUDGET = MissionBudget(
     question_budget_s=600.0,
@@ -116,3 +117,86 @@ def test_budget_rejects_inverted_reserves():
 def test_budget_rejects_reserve_larger_than_budget():
     with pytest.raises(ValueError):
         MissionBudget(question_budget_s=60.0, answer_reserve_s=90.0, fallback_reserve_s=30.0)
+
+
+# -- category-aware budgets -------------------------------------------------
+# An instruction question is answered by DRIVING the route, not by publishing a message, so it
+# needs the answering reserve a model call does not. The category is only known once the
+# question arrives, which is after t0 and possibly after exploration has begun.
+
+
+def test_budget_for_category_3_raises_the_answer_reserve():
+    base = MissionBudget()
+    raised = budget_for(3, base)
+    assert raised.answer_reserve_s == CATEGORY_ANSWER_RESERVE_S[3]
+    assert raised.answer_reserve_s > base.answer_reserve_s
+    # Nothing else moves: the hard limit is the challenge's, not ours to spend.
+    assert raised.question_budget_s == base.question_budget_s
+    assert raised.fallback_reserve_s == base.fallback_reserve_s
+    assert raised.explore_timeout_s == base.explore_timeout_s
+
+
+def test_budget_for_other_categories_is_identity():
+    base = MissionBudget()
+    for category in (None, 1, 2):
+        assert budget_for(category, base) is base, "callers apply this unconditionally"
+
+
+def test_budget_for_is_identity_when_the_reserve_already_matches():
+    base = MissionBudget(answer_reserve_s=CATEGORY_ANSWER_RESERVE_S[3])
+    assert budget_for(3, base) is base
+
+
+def test_a_category_3_budget_still_validates():
+    raised = budget_for(3, MissionBudget())
+    assert raised.fallback_reserve_s < raised.answer_reserve_s < raised.question_budget_s
+
+
+def test_rebudget_preserves_both_anchors():
+    clock = MissionClock(MissionBudget(), t0=100.0)
+    clock.mark_exploring(160.0)
+    swapped = clock.rebudget(budget_for(3, clock.budget))
+    assert swapped.t0 == 100.0
+    assert swapped.exploring_started
+    assert swapped.exploring_elapsed(200.0) == clock.exploring_elapsed(200.0)
+
+
+def test_rebudget_pulls_the_answer_deadline_in():
+    clock = MissionClock(MissionBudget(), t0=100.0)
+    clock.mark_exploring(160.0)
+    swapped = clock.rebudget(budget_for(3, clock.budget))
+    assert swapped.answer_deadline < clock.answer_deadline
+    assert swapped.explore_deadline <= swapped.answer_deadline
+
+
+def test_a_prompt_exploration_is_unaffected_by_the_raised_reserve():
+    """The reserve is a backstop, not a shortening: the exploration CAP normally binds first.
+
+    With the shipped numbers a run that starts exploring on time finishes on
+    `explore_timeout_s`, well inside even the raised reserve — so raising it costs a healthy
+    run nothing at all.
+    """
+    clock = MissionClock(MissionBudget(), t0=100.0)
+    clock.mark_exploring(160.0)                      # 300 s cap ends at 460, reserve at 490
+    swapped = clock.rebudget(budget_for(3, clock.budget))
+    assert swapped.explore_deadline == clock.explore_deadline
+
+
+def test_a_slow_start_is_what_the_raised_reserve_actually_cuts():
+    """A run whose models loaded slowly is the case the reserve exists for.
+
+    Here the exploration window would run past the point the robot must start driving, and the
+    clamp to `answer_deadline` is what stops it — which is why the swap has to happen before
+    exploration ends rather than when the answer is due.
+    """
+    clock = MissionClock(MissionBudget(), t0=100.0)
+    clock.mark_exploring(400.0)                      # 300 s cap would end at 700, past the limit
+    swapped = clock.rebudget(budget_for(3, clock.budget))
+    assert swapped.explore_deadline < clock.explore_deadline
+    assert swapped.explore_deadline == swapped.answer_deadline
+
+
+def test_rebudget_before_any_data_leaves_the_clock_in_warmup():
+    clock = MissionClock(MissionBudget(), t0=0.0).rebudget(budget_for(3, MissionBudget()))
+    assert not clock.exploring_started
+    assert clock.phase_at(1.0) is Phase.WARMUP

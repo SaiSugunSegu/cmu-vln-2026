@@ -16,13 +16,15 @@ import time
 from pathlib import Path
 from typing import Optional
 
+from captioner.image_input import image_is_complete
 from captioner.paths import secure_path
 from captioner.prompts.object_extraction import get_object_extraction_prompt
 # Re-exported so anything reading a number out of a model reply shares one
 # implementation with the VQA server: two of them drifted apart before (one
 # stripped thousands separators, the other did not).
 from captioner.text_utils import extract_integer
-from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, VIEW_SOURCE
+from captioner.vlm_backends.constants import (SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S,
+                                              is_silhouette, view_dir)
 
 __all__ = [
     "ANSWER_SYSTEM",
@@ -58,22 +60,36 @@ def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Pa
     reasoners that each picked their own images. `crop` never looks at silhouette/, even
     once one exists; `silhouette` (the default) waits out `deadline` for sam_node's
     finalize pass before falling back to the plain crop, so a run with
-    save_silhouette_copy disabled still answers.
+    save_silhouette_copy disabled still answers. The `full*` variants name the uncropped
+    panorama under `full/`, and fall back the same way when save_full_views is off.
+
+    What it waits for is a COMPLETE image, not a created one. `cv2.imwrite` publishes the
+    path before the bytes, so `is_file()` goes true at the start of a 1.6 MB encode, and a
+    route call built on the prefix that gave back was refused by two model hosts as
+    undecodable. `best_view.write_image` now renames into place so that window cannot
+    open; this is the other half of that contract, and it also covers images written by
+    anything we did not change.
 
     `name` comes from a manifest on disk, so it is untrusted as far as path building
     goes; both candidates go through `secure_path` before any file check, which raises
     on a traversal attempt rather than silently skipping it.
     """
     plain = secure_path(run_dir / name)
-    if VIEW_SOURCE != "silhouette":
-        return (plain, False) if plain.is_file() else (None, False)
+    subdir = view_dir()
+    if not subdir:
+        return (plain, False) if image_is_complete(plain) else (None, False)
 
-    silhouette = secure_path(run_dir / "silhouette" / name)
+    wanted = secure_path(run_dir / subdir / name)
+    if not is_silhouette():
+        # `full` is written with the crop, not by the finalize pass, so there is nothing
+        # to wait for -- but it is absent entirely unless save_full_views is on.
+        return (wanted, False) if image_is_complete(wanted) else (
+            (plain, False) if image_is_complete(plain) else (None, False))
     while True:
-        if silhouette.is_file():
-            return silhouette, True
+        if image_is_complete(wanted):
+            return wanted, True
         if time.monotonic() >= deadline:
-            return (plain, False) if plain.is_file() else (None, False)
+            return (plain, False) if image_is_complete(plain) else (None, False)
         time.sleep(SILHOUETTE_POLL_S)
 
 
