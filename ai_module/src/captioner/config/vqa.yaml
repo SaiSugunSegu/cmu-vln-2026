@@ -30,14 +30,31 @@ model: "google/gemini-3.7-flash"
 # the same Gemini Flash until a cheaper slug is set.
 model_lite: ""
 
-# crop | silhouette — which image of a best-view crop the model sees. silhouette is the
-# mask-outline + label copy sam_node writes next to each crop (see sam_mapper's
-# save_silhouette_copy); crop is the plain, unannotated photo. Read by both category-1
-# (numerical_utils.select_context_views) and category-2 (cat2_utils.marked_views), live
-# reasoners and their offline benches alike.
-view_source: silhouette
+# WHICH IMAGES EVERY REASONER SENDS THE MODEL. One switch, read by category-1
+# (numerical_utils.select_context_views), category-2 (cat2_utils.marked_views) and
+# category-3 (instruction_reasoner), live reasoners and offline benches alike, and
+# recorded verbatim in every report row so a run says what it saw.
+#
+#   crop             <run>/                    the ROI crop, plain and unannotated
+#   silhouette       <run>/silhouette/         the ROI crop with mask outlines and
+#                                              "label [map id]" captions, drawn by
+#                                              sam_node's finalize pass
+#   full             <run>/full/               the whole 360 panorama, plain
+#   full_silhouette  <run>/full/silhouette/    the whole panorama, outlines + ids
+#
+# The full* values need sam_mapper's save_full_views: true (sam3_mecanum_sim.yaml);
+# with it off nothing is written under full/ and each reasoner falls back to the
+# cropped equivalent rather than sending nothing.
+#
+# NOTE this is ONE key for all three categories. full_silhouette is set for category 3:
+# a route is planned over a whole room, and an ROI crop shows one corner of it -- the
+# first cat-3 sim run sent 709x640 and 353x551 cuts of a 1920x640 frame and still had to
+# reason about where to drive. Categories 1 and 2 count and identify single objects, which
+# is what the tighter crop is good for, and they were measured on `silhouette`; if their
+# scores move, this line is the first thing to put back.
+view_source: full_silhouette
 
-# How long a view_source: silhouette run waits for sam_node to finish writing the
+# How long a silhouette run waits for sam_node to finish writing the
 # finalized copy before falling back to the plain crop, and how often it polls while
 # waiting. Both reasoners fire on the same /pipeline/explore_done that starts the
 # finalize pass, so arriving a few hundred ms early is normal, not a fault.

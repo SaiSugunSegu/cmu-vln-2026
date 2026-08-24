@@ -79,6 +79,15 @@ tare_planner_node:
     # kill switch for A/B runs, not the thing keeping the feature safe.
     kUseTargetViewPoints : true
     kTargetViewPointTimeout : 5.0
+    # How far the nearest CANDIDATE viewpoint may be from a requested target before the target
+    # is called unreachable. Left at the upstream 0.5 deliberately: a candidate is already
+    # collision-free, in line of sight and graph-connected, so a distant nearest one means the
+    # request itself was unreachable -- a viewing direction pointing into the wall behind the
+    # object -- and honouring it would send the robot somewhere useless. Raising this does not
+    # buy coverage: the "far" verdict that dominates the rejection counts comes from
+    # InLocalPlanningHorizon above, not from here, and that one is a distance statement the
+    # priority-cell path already handles. Rejection is not final either -- target_explorer
+    # retries the sector from further out.
     kTargetViewPointSnapMaxDist : 0.5
     # Deliberately small. Must-visit viewpoints have their covered points marked covered
     # before EnqueueViewpointCandidates scores anything, so every one of them shaves a little
@@ -102,13 +111,25 @@ tare_planner_node:
     # them equal and the blacklist lands on the same tick as the re-send, so the recovery
     # step never gets a chance to work and becomes dead code. The node clamps it if they
     # ever cross.
+    # 3/12, and the two move independently on purpose. The FIRST value is the recovery: at
+    # it, the node forces a planning round and re-sends the waypoint (PublishWaypoint
+    # re-extends the carrot from the robot's current pose), every tick, for free. Delaying
+    # that just leaves the robot standing still longer, so it stays at 3 s.
+    # The SECOND is the give-up: retire the viewpoint and blacklist the spot for the rest of
+    # the run. That one was too eager at 5 s -- negotiating a doorway legitimately takes
+    # longer than 3 s to make kStallProgressDist, so healthy squeezing was being written off.
+    # 39 stalls fired across a 15-scene sweep and 7 viewpoints were retired; one question
+    # stalled 7 times inside a 1.5 m radius, walled the spot off, covered 12 m and then
+    # declared the scene covered. 12 s buys nine seconds of continuous re-planning before
+    # anything is abandoned, at no cost in responsiveness.
     kUseWaypointStallWatchdog : true
     kWaypointStallTimeout : 3.0
-    kWaypointStallEscalateTimeout : 5.0
+    kWaypointStallEscalateTimeout : 12.0
     # Above odometry jitter: too small and a parked robot looks like it is creeping, and the
     # watchdog never fires at all.
     kStallProgressDist : 0.3
-    kStallBlacklistRadius : 0.5
+    # A doorway is about this wide; at 0.5 m one stall in it blacklisted the whole opening.
+    kStallBlacklistRadius : 0.3
     kMaxStallBlacklistNum : 32
     kDirectionChangeCounterThr : 6
     kDirectionNoChangeCounterThr : 5
@@ -117,7 +138,11 @@ tare_planner_node:
     # PlanningEnv
     kUseFrontier : true
     kFrontierClusterTolerance : 1.0
-    kFrontierClusterMinSize : 8
+    # 4, not 8: frontier points are clustered at kFrontierClusterTolerance and clusters
+    # smaller than this are DISCARDED, so at 0.2 m occupancy resolution a doorway-sized gap
+    # or a slot behind furniture never registers as unexplored space at all. Halving it is
+    # what lets TARE see narrow openings; the cost is a few noise clusters from lidar speckle.
+    kFrontierClusterMinSize : 4
     kUseCoverageBoundaryOnFrontier : true
     kUseCoverageBoundaryOnObjectSurface : false
 
@@ -160,7 +185,17 @@ tare_planner_node:
     kConnectivityHeightDiffThr : 0.25
     kGreedyViewPointSampleRange : 3
     kLocalPathOptimizationItrMax : 10
-    kViewPointCollisionMargin : 0.35
+    # 0.30, down from 0.35 (upstream 0.5). This inflates each viewpoint's claim over the
+    # collision grid, so anything closer than it to an obstacle point is refused a viewpoint:
+    # at 0.35 that also refused corridors under ~0.7 m, and 9% of all target viewpoint
+    # requests came back "in-reach but unstandable" -- doorways and wall-adjacent objects TARE
+    # could see but would not stand at.
+    # NOT 0.25, which is the robot's half-width exactly (local_planner.launch: vehicleWidth
+    # 0.5) and leaves nothing for localisation error or the 0.05 m collision-cloud voxel. At
+    # that value TARE places viewpoints the base autonomy's local planner -- which has its own
+    # clearance and is not ours to change -- may refuse to drive to, and every one of those now
+    # costs kWaypointStallEscalateTimeout (12 s) before it is abandoned.
+    kViewPointCollisionMargin : 0.30
     kViewPointCollisionMarginZPlus : 0.25
     kViewPointCollisionMarginZMinus : 0.25
     kCollisionGridZScale : 1.0
@@ -185,9 +220,14 @@ tare_planner_node:
     kGridWorldZNum : 121
     kGridWorldCellHeight : 3.0
     kGridWorldNearbyGridNum : 5
-    kMinAddPointNumSmall : 8
+    # 6, not 8: a viewpoint's score must EXCEED these for its cell to count as still worth
+    # visiting (grid_world.cpp:628,636); below both, the cell flips EXPLORING -> COVERED.
+    # Lowering keeps partially-seen corners in play instead of writing them off after one
+    # pass. kMinAddPointNumBig is left alone -- it drives COVERED -> EXPLORING, the opposite
+    # direction, and loosening that would churn cells the robot has genuinely finished.
+    kMinAddPointNumSmall : 6
     kMinAddPointNumBig : 16
-    kMinAddFrontierPointNum : 8
+    kMinAddFrontierPointNum : 6
     kCellExploringToCoveredThr : 1
     kCellCoveredToExploringThr: 10
     kCellExploringToAlmostCoveredThr: 10

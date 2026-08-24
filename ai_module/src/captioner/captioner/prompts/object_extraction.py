@@ -87,6 +87,27 @@ Output: ["chair", "window", "soccer ball", "couch", "tv", "tea table"]
 Input: "Go to the microwave on the kitchen counter, then to the folder on the cabinet closest to the whiteboard, and finally to the trash can near the cabinet."
 Output: ["microwave", "kitchen counter", "folder", "cabinet", "whiteboard", "trash can"]
 
+# Comment: "take the path near" and "pass by" name places to drive through, and their objects are
+# needed just as much as a destination's. "stairs" is a real structure a detector can find, unlike a
+# bare room word, so it is kept.
+Input: "Go near the fireplace, pass by the stairs, then stop at the sphere decoration on the cabinet."
+Output: ["fireplace", "stairs", "sphere decoration", "cabinet"]
+
+# Comment: "the two tables" names one class, so it appears once even though the gap has two sides.
+# "map wall decal" is a distinct object, not the wall itself, so it is kept whole.
+Input: "First, go near the potted plant on the shelf, then take the path between the two tables, and stop at the bench closest to the map wall decal."
+Output: ["potted plant", "shelf", "table", "bench", "map wall decal"]
+
+# Comment: "and finally, to X" is a destination like any other. "cabinet" is named in two steps and
+# appears once; "exit sign" is a real object and is kept.
+Input: "First, go to the trash can near the cabinet, then go to the folder on the cabinet closest to the whiteboard, and finally, to the door near the exit sign."
+Output: ["trash can", "cabinet", "folder", "whiteboard", "door", "exit sign"]
+
+# Comment: an object named only inside an "avoid" clause still has to be detected, or the instruction
+# cannot be honoured. A trailing "to Y" opens a further destination and Y is kept too.
+Input: "Take the path between the sofa and the coffee table to the kettle on the dining table, avoiding the path near the bookcase."
+Output: ["sofa", "coffee table", "kettle", "dining table", "bookcase"]
+
 --- Free-form navigation commands. The same rules apply to requests that are not questions. ---
 
 # Comment: The example below requires implicit reasoning about the referenced objects. You must decide when to perform that reasoning.

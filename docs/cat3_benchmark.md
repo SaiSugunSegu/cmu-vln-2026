@@ -274,14 +274,22 @@ deviation and excludes it from the pass count.
 
 ## Scope
 
-This is benchmark data plus its generator and verifier. Nothing in the runtime eval path is
-wired to it: `eval_orchestrator.py` still discovers `category_1` only, and `score.py` is
-untouched. [M5](M5_instruction_planner.md), the planner that would answer these questions, is
-not started — the point of landing the ground truth first is that it will not have to be
-built blind.
+This is benchmark data plus its generator and verifier — the thing a category-3 run is scored
+against, not the thing that answers it.
+
+The runtime is now wired to it: `eval_orchestrator.py` runs `category:=3`, recording
+`/state_estimation` for the whole question and grading the driven path with the same
+`score.py::score_instruction` this file's gate uses, and `just eval-cat3-sim` sweeps it against
+the live sim. The system under test is `instruction_reasoner`, which plans a route with one VLM
+call over the robot's own map — [cat3_vlm_contract.md](cat3_vlm_contract.md) is that contract.
+
+Nothing in that runtime path reads this directory, and nothing in it shares the clause parser
+that generated these files. That separation is deliberate: a system graded on ground truth its
+own parser produced would be grading its reading of the sentence against itself.
 
 ## Related
 
+- [cat3_vlm_contract.md](cat3_vlm_contract.md) — what the runtime asks the VLM, and what it does with the answer
 - [`scripts/bench/generate_category3_qa.py`](../scripts/bench/generate_category3_qa.py) — generator
 - [`scripts/eval/verify_category3.py`](../scripts/eval/verify_category3.py) — the audit
 - [`scripts/utils/geometry.py`](../scripts/utils/geometry.py), [`text_solver.py`](../scripts/utils/text_solver.py) — shared grounding, also used by category 2

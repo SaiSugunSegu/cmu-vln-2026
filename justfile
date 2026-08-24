@@ -455,6 +455,7 @@ eval-cat2 scene="all" limit="0" mode="hybrid" target_source="vlm" speed="0.1" re
 # starts and stops the sim itself.
 #   just eval-cat1-sim arabic_room 2
 #   just eval-cat2-sim "arabic_room chinese_room"
+#   just eval-cat3-sim arabic_room"
 [group('eval')]
 [doc('Orchestrated category-1 eval against the live sim (TARE explores; host-side)')]
 eval-cat1-sim scene="all" limit="0" target_source="vlm" report="/data/runs/challenge_report_sim_cat1.json":
@@ -468,6 +469,31 @@ eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="vlm" report="/d
     python3 scripts/eval/run_sim_sweep.py --category 2 --scenes {{scene}} \
       --limit {{limit}} --mode {{mode}} --target-source {{target_source}} \
       --report "{{report}}"
+
+# Category 3 scores the PATH, not a message: the orchestrator records /state_estimation for
+# the whole question and scores it against the instruction's ordered constraints out of 6
+# (README.md, "Question Types and Initial Scoring"). 2 questions per scene, 15 scenes.
+# A question ends when the robot stops at the end of its route, so these run longer than
+# cat1/cat2 -- budget ~10 min each, which is also the challenge's own per-question limit.
+# Ground truth and prediction on the room's own floor plan, so a score becomes a diagnosis:
+# wrong object, right object with a bad box, or nothing mapped at all. Runs on the HOST (PIL +
+# matplotlib live there, cv2 does not). Omit scene/qid to render every row in the report.
+#   just overlay                                   # every row of the cat-3 report
+#   just overlay data/runs/challenge_report_sim_cat2.json arabic_room Q01
+# Ground truth alone, with no run to compare against:
+#   python3 scripts/eval/plot_overlay.py --scene arabic_room --category 3 --qid Q05
+[group('eval')]
+[doc('Overlay GT vs predicted objects and route on the scene floor plan')]
+overlay report="data/runs/challenge_report_sim_cat3.json" scene="" qid="":
+    python3 scripts/eval/plot_overlay.py --report "{{report}}" \
+      {{ if scene != '' { '--scene ' + scene } else { '' } }} \
+      {{ if qid != '' { '--qid ' + qid } else { '' } }}
+
+[group('eval')]
+[doc('Orchestrated category-3 eval against the live sim (scores the driven path, /6)')]
+eval-cat3-sim scene="all" limit="0" target_source="vlm" report="/data/runs/challenge_report_sim_cat3.json":
+    python3 scripts/eval/run_sim_sweep.py --category 3 --scenes {{scene}} \
+      --limit {{limit}} --target-source {{target_source}} --report "{{report}}"
 
 # Phase 1 of the two-phase VLM comparison: eval-cat1 minus the counting call, so it
 # costs one cheap text-only extraction per question instead of a 3-image one.

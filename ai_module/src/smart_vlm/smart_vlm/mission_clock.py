@@ -10,10 +10,17 @@ unreachable with the default parameters.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 
-__all__ = ["Phase", "MissionBudget", "MissionClock"]
+__all__ = ["Phase", "MissionBudget", "MissionClock", "CATEGORY_ANSWER_RESERVE_S",
+           "budget_for"]
+
+#: Categories whose answering phase needs more than the default reserve, and how much.
+#: Category 3 is answered by DRIVING: the reasoner has to cross the room once the map is
+#: built, and the organizers' own demonstration routes run to 33 m. The default 90 s is a
+#: reserve for a model call, not for a journey.
+CATEGORY_ANSWER_RESERVE_S = {3: 210.0}
 
 
 class Phase(str, Enum):
@@ -55,6 +62,18 @@ class MissionBudget:
             )
 
 
+def budget_for(category: int | None, base: "MissionBudget") -> "MissionBudget":
+    """The same budget with whatever answering reserve this category needs.
+
+    A category the table does not mention is returned unchanged, so a caller can apply this
+    unconditionally without knowing which categories are special.
+    """
+    reserve = CATEGORY_ANSWER_RESERVE_S.get(category)
+    if reserve is None or reserve == base.answer_reserve_s:
+        return base
+    return replace(base, answer_reserve_s=reserve)
+
+
 class MissionClock:
     """One question's deadlines. Feed it a monotonic clock, never wall time.
 
@@ -68,6 +87,18 @@ class MissionClock:
         self.budget = budget
         self.t0 = t0
         self._t_exploring: float | None = None
+
+    def rebudget(self, budget: "MissionBudget") -> "MissionClock":
+        """A clock on a new budget, keeping both anchors.
+
+        The question's category is only known once the question arrives, which is after t0 and
+        possibly after exploration has started. Rebuilding the clock rather than mutating the
+        budget keeps `MissionBudget` frozen and keeps every deadline a pure function of the two
+        anchors, so a swapped budget cannot leave a stale deadline behind.
+        """
+        clock = MissionClock(budget, self.t0)
+        clock._t_exploring = self._t_exploring
+        return clock
 
     # -- anchors -----------------------------------------------------------
 

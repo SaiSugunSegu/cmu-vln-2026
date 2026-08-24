@@ -1019,6 +1019,17 @@ def default_params() -> dict:
         #: absences is already strong evidence; this only rides out a frame the mapper
         #: dropped for its own reasons.
         "goal_absence_limit": 5,
+        #: Sweep the room on TARE's own frontier exploration BEFORE letting targets steer it.
+        #: Target viewpoints pull the tour toward whatever is already found, which is worth a
+        #: lot once the room is known and costs coverage while it is not -- an object never
+        #: driven past is an object no amount of re-viewing will discover. False restores the
+        #: previous behaviour, where targets compete with the frontier from the first second.
+        "tare_explore_priority": True,
+        #: How long that global phase may run. It also ends the moment TARE reports finished,
+        #: so this is a CAP rather than a duration: on a small room TARE is usually done well
+        #: inside it, and on a large one this is what stops the global sweep eating the window
+        #: the targets need.
+        "tare_explore_max_time": 180.0,
         "n_sectors": 4,
         "inspect_radius_m": 1.0,
         "min_standoff_m": 0.8,
@@ -1087,6 +1098,13 @@ def validate_params(params: dict) -> None:
             "request is not refused, it is unheard")
     if params["min_standoff_m"] <= 0 or params["inspect_radius_m"] <= 0:
         raise ValueError("standoff and inspect radius must be positive")
+    if params.get("tare_explore_priority") and params.get("tare_explore_max_time", 0) <= 0:
+        raise ValueError(
+            "tare_explore_max_time must be positive when tare_explore_priority is on "
+            f"(got {params.get('tare_explore_max_time')}): the global phase ends on TARE's own "
+            "finished signal OR this cap, and a non-positive cap leaves only the first — which "
+            "TARE never raised at all in a measured 15-scene sweep, so the target phase would "
+            "never begin")
 
 
 def _dist(a, b) -> float:

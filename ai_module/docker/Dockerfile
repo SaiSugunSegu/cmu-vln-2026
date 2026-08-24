@@ -207,11 +207,11 @@ from sam_mapper.detections import PromptTable; \
 from sam_mapper.sam3_backend import Sam3Backend; \
 from captioner.paths import ALLOWED_ROOTS; \
 from captioner.text_utils import extract_integer; \
-from captioner.vlm_backends.schemas import CountAnswer, TargetList; \
+from captioner.vlm_backends.schemas import CountAnswer, RoutePlan, TargetList; \
 from captioner.vlm_backends.openai_backend import OpenAIBackend; \
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM; \
 from smart_vlm.cat2_utils import EXTRACT_SYSTEM as CAT2_EXTRACT; \
-from smart_vlm.cat3_utils import waypoints_from_map; \
+from smart_vlm.instruction_reasoner import ROUTE_SYSTEM; \
 import openai; \
 print('import check OK: transformers', transformers.__version__)\""
 

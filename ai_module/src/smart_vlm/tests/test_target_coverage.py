@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from smart_vlm.target_coverage import (BLOCKED, COVERED, OPEN, CoverageModel,
-                                       default_params)
+                                       default_params, validate_params)
 
 N_BINS = 20
 ROBOT = (0.0, 0.0, 0.75)
@@ -864,3 +864,78 @@ def test_an_unreachable_sector_gets_two_tries_before_it_is_written_off():
     third = next(r for r in m.requests(ROBOT, 2.0) if r[3] == sector_index)
     refuse(m, [third[0], third[1]])
     assert m.sector_states(goal)[sector_index] == BLOCKED
+
+
+# -- two-phase exploration -------------------------------------------------
+# Phase one hands the room to TARE's frontier exploration and withholds target viewpoints;
+# phase two is the rest of this file, unchanged. The gate itself lives on the ROS node, so it
+# is exercised unbound against a stand-in -- the same trick test_cat3_eval.py uses.
+
+
+def _phase_stub(on=True, limit=180.0, targets=("chair",)):
+    import types
+    return types.SimpleNamespace(
+        _p={"tare_explore_priority": on, "tare_explore_max_time": limit},
+        _tare_phase=on, _tare_phase_started=None, tare_finished=False,
+        model=types.SimpleNamespace(targets=set(targets)),
+        p=lambda n, _s=None: {"tare_explore_priority": on,
+                              "tare_explore_max_time": limit}[n],
+        get_logger=lambda: types.SimpleNamespace(info=lambda *_a, **_k: None),
+    )
+
+
+def _active(stub, now):
+    explorer = pytest.importorskip("smart_vlm.target_explorer")
+    return explorer.TargetExplorer._tare_phase_active(stub, now)
+
+
+def test_the_global_phase_is_skipped_when_the_flag_is_off():
+    """False is the old behaviour: targets compete with the frontier from the first second."""
+    assert _active(_phase_stub(on=False), 0.0) is False
+
+
+def test_the_global_phase_ends_on_its_cap():
+    stub = _phase_stub()
+    assert _active(stub, 0.0) is True
+    assert _active(stub, 179.0) is True
+    assert _active(stub, 180.0) is False
+
+
+def test_the_global_phase_never_restarts_once_it_has_ended():
+    """Latched. A late /exploration_finish or a clock wobble must not pull steering back off
+    the targets half way through the window they were given."""
+    stub = _phase_stub()
+    _active(stub, 0.0)
+    _active(stub, 180.0)
+    assert _active(stub, 181.0) is False
+    assert stub._tare_phase is False
+
+
+def test_tare_finishing_ends_the_global_phase_early():
+    stub = _phase_stub()
+    _active(stub, 0.0)
+    stub.tare_finished = True
+    assert _active(stub, 42.0) is False
+
+
+def test_the_clock_starts_when_the_targets_land_not_at_startup():
+    """This node is constructed while SAM loads weights. Anchoring the cap at construction
+    would spend the global phase before the scene was even released."""
+    stub = _phase_stub(targets=())
+    _active(stub, 0.0)
+    _active(stub, 500.0)
+    assert stub._tare_phase_started is None
+    stub.model.targets = {"chair"}
+    assert _active(stub, 500.0) is True
+    assert stub._tare_phase_started == 500.0
+    assert _active(stub, 679.0) is True          # cap is measured from arming
+    assert _active(stub, 680.0) is False
+
+
+def test_a_zero_cap_with_the_flag_on_is_rejected():
+    """TARE never raised its finish signal once in a measured 15-scene sweep, so with no cap
+    the target phase would never begin at all."""
+    params = dict(default_params())
+    params.update(max_viewpoints_cap=8, tare_explore_priority=True, tare_explore_max_time=0.0)
+    with pytest.raises(ValueError, match="tare_explore_max_time"):
+        validate_params(params)

@@ -15,7 +15,7 @@ from sam_mapper.annotate import (
     _mask_anchor,
     silhouette_frame,
 )
-from sam_mapper.best_view import BestViewCollector, BestViewConfig
+from sam_mapper.best_view import BestViewCollector, BestViewConfig, write_image
 from sam_mapper.challenge_marker import track_to_map_id
 from sam_mapper.detections import PromptTable
 
@@ -652,3 +652,67 @@ def test_a_rank_swap_rewrites_both_images(tmp_path):
     assert sorted(set(writes)) == ["best_rank1_cabinet+tv.png", "best_rank2_cabinet+tv.png"]
     # Rank 1 genuinely changed object, not just its seq.
     assert cv2.imread(_rank_png(collector, 1)).shape[:2] != rank1_before
+
+
+# -- atomic writes ---------------------------------------------------------
+# A best-view crop is 1.4-1.6 MB, and cv2.imwrite publishes the NAME before the bytes. Readers
+# (numerical_utils/cat2_utils._view_source) used to wait for the file to exist, so they took
+# the prefix of an in-progress encode: measured on a real 1920x640 write, a polling reader saw
+# an incomplete file 94% of the time. One of those prefixes reached a model host and was
+# refused as undecodable, costing a livingroom_1 question its plan.
+
+
+def _iend_terminated(path) -> bool:
+    """Whether the file on disk ends in a PNG IEND chunk -- i.e. the write finished."""
+    try:
+        data = open(path, "rb").read()
+    except OSError:
+        return False
+    return data.startswith(b"\x89PNG\r\n\x1a\n") and data[-8:-4] == b"IEND"
+
+
+def test_write_image_leaves_no_temp_behind(tmp_path):
+    path = str(tmp_path / "best_rank1_cabinet+tv.png")
+    assert write_image(path, np.zeros((64, 64, 3), dtype=np.uint8))
+    assert _iend_terminated(path)
+    assert [p.name for p in tmp_path.iterdir()] == ["best_rank1_cabinet+tv.png"]
+
+
+def test_write_image_reports_an_unwritable_extension_instead_of_raising(tmp_path):
+    """The temp has to keep the real extension -- cv2 picks its codec from it and raises
+    cv2.error on one it does not know. Callers here branch on a bool, so an exception would
+    take down the flush thread instead of logging a failed rank."""
+    assert write_image(str(tmp_path / "crop.bogus"), np.zeros((8, 8, 3), dtype=np.uint8)) is False
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_a_reader_polling_during_rewrites_never_sees_a_partial_file(tmp_path):
+    """The regression this whole change exists for. Noise, not zeros: an incompressible frame
+    takes real time to encode, which is what opens the window."""
+    path = str(tmp_path / "best_rank1_cabinet+tv.png")
+    rng = np.random.default_rng(0)
+    frame = lambda: rng.integers(0, 255, (480, 1280, 3), dtype=np.uint8)  # noqa: E731
+
+    write_image(path, frame())
+    seen, partial = 0, 0
+    stop = threading.Event()
+
+    def poll():
+        nonlocal seen, partial
+        while not stop.is_set():
+            if os.path.exists(path):
+                seen += 1
+                if not _iend_terminated(path):
+                    partial += 1
+
+    reader = threading.Thread(target=poll)
+    reader.start()
+    try:
+        for _ in range(8):
+            assert write_image(path, frame())
+    finally:
+        stop.set()
+        reader.join()
+
+    assert seen > 0, "the reader never observed the file; the race was not exercised"
+    assert partial == 0

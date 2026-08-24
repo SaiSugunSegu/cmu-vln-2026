@@ -23,6 +23,7 @@ letting a question go unanswered (Int32, Marker, or a Pose2D toward a mapped obj
 from __future__ import annotations
 
 import json
+import math
 import time
 from typing import Optional
 
@@ -41,13 +42,20 @@ from visualization_msgs.msg import Marker
 from sam_mapper.challenge_marker import payload_from_map_object
 from sam_mapper.ros_markers import create_selected_object_marker
 from smart_vlm.cat2_utils import naive_from_raw
-from smart_vlm.mission_clock import MissionBudget, MissionClock
+from smart_vlm.mission_clock import MissionBudget, MissionClock, Phase, budget_for
 from smart_vlm.question import QuestionType, classify, question_text
 
 # The only inputs allowed at test time (README 'System Outputs'). Names only: liveness
 # comes from count_publishers(), so we never pay to deserialize 10 Hz panoramas and
 # 5 Hz point clouds just to prove they are arriving. sam_node's own heartbeat already
 # reports /camera/image frame counts.
+#: Odometry noise floor: below this a "step" is jitter, not travel, and summing it would
+#: report a stationary robot slowly covering kilometres.
+TRAVEL_EPS_M = 0.02
+
+#: How long the robot may be stationary during exploration before the heartbeat says so.
+STALL_WARN_S = 20.0
+
 ALLOWED_TOPICS = (
     "/camera/image",
     "/registered_scan",
@@ -112,6 +120,12 @@ class SmartVLM(Node):
         #: than idling until T-30 for a value that cannot change. See _tick.
         self.explore_done_at = None
         self.odom_count = 0
+        #: Metres covered, and where that was last measured from. Distinct from odom_count:
+        #: a frozen robot still produces odometry at 200 Hz.
+        self.travelled_m = 0.0
+        self._travel_from: Optional[tuple[float, float]] = None
+        self.last_moved_t: Optional[float] = None
+        self._last_hb_m = 0.0
         self.last_odom_t: Optional[float] = None
         # The last 3D map map_node published, kept only so the object-reference fallback has
         # a real box to point at. Parsed on arrival rather than at T-30: the fallback runs
@@ -254,7 +268,28 @@ class SmartVLM(Node):
         self.question = question_text(msg.data)
         self.qtype = classify(msg.data)
         self.get_logger().info(f"QUESTION [{self.qtype.value}]: {self.question}")
+        self._rebudget_for_question()
         self._publish_status()
+
+    def _rebudget_for_question(self) -> None:
+        """Give an instruction question the answering time it needs, now that we know it is one.
+
+        Category 3 is answered by DRIVING the route, not by publishing a message, and the
+        organizers' own demonstrations run to 33 m. The default T-90 reserve is sized for a
+        model call. This runs before exploration ends, so `explore_deadline` — which is clamped
+        to `answer_deadline` — picks the change up on its own.
+        """
+        category = 3 if self.qtype is QuestionType.INSTRUCTION_FOLLOWING else None
+        budget = budget_for(category, self.clock.budget)
+        if budget is self.clock.budget:
+            return
+        self.clock = self.clock.rebudget(budget)
+        now = time.monotonic()
+        self.get_logger().info(
+            f"instruction question — answering reserve raised to "
+            f"T-{budget.answer_reserve_s:.0f}s; exploration now ends at "
+            f"T+{self.clock.explore_deadline - self.clock.t0:.0f}s "
+            f"({self.clock.explore_deadline - now:.0f}s from here)")
 
     # ---- answers we observe ---------------------------------------------
 
@@ -273,7 +308,12 @@ class SmartVLM(Node):
     def _on_instruction_status(self, msg: String) -> None:
         if self.fallback_published:
             return
-        if (msg.data or "").strip() == "answered":
+        # `execute` counts as well as `answered`. The reasoner publishes both, back to back,
+        # before it starts driving -- but if only the second were honoured and the first were
+        # ever missed, the T-30 fallback below would publish a naive waypoint mid-route and
+        # drag the robot off the pose the goal is scored on. A reasoner that is executing has
+        # an answer by definition, so treat either as one.
+        if (msg.data or "").strip() in ("answered", "execute"):
             self.answered = True
 
     def _on_obj_map(self, msg: String) -> None:
@@ -290,6 +330,21 @@ class SmartVLM(Node):
         now = time.monotonic()
         self.odom_count += 1
         self.last_odom_t = now
+        # How far the robot has actually gone. A measured 15-scene sweep spent a median 80%
+        # of its exploration window stationary -- one question never moved at all -- and
+        # nothing in the log said so, because odometry keeps arriving at full rate whether
+        # or not the robot is moving. Rate answers "is the sim alive"; this answers "are we
+        # exploring", which is the question the window length is being tuned against.
+        here = (_msg.pose.pose.position.x, _msg.pose.pose.position.y)
+        if self._travel_from is not None:
+            step = math.dist(here, self._travel_from)
+            if step >= TRAVEL_EPS_M:
+                self.travelled_m += step
+                self._travel_from = here
+                self.last_moved_t = now
+        else:
+            self._travel_from = here
+            self.last_moved_t = now
         if self.armed_published and not self.clock.exploring_started:
             self.clock.mark_exploring(now)
             # Greppable and symmetric with EXPLORATION END below. The window opens HERE, on
@@ -517,10 +572,19 @@ class SmartVLM(Node):
             self.get_logger().warn(f"NO PUBLISHER on: {dead}")
 
         odom_hz = self.odom_count / elapsed if elapsed > 0 else 0.0
+        moved = self.travelled_m - self._last_hb_m
+        self._last_hb_m = self.travelled_m
+        still = (now - self.last_moved_t) if self.last_moved_t else 0.0
         self.get_logger().info(
             f"{self.clock.phase_at(now).value} | t+{elapsed:.0f}s | "
-            f"odom {odom_hz:.0f} Hz | sam={self.sam_status} vqa={self.vqa_status} | "
-            f"answered={self.answered}")
+            f"odom {odom_hz:.0f} Hz | moved {moved:.1f}m (total {self.travelled_m:.1f}m) | "
+            f"sam={self.sam_status} vqa={self.vqa_status} | answered={self.answered}")
+        # Loud, because a silent stall is indistinguishable from slow progress in a log, and
+        # this is the failure that wasted 11 of 22 exploration windows.
+        if self.clock.phase_at(now) is Phase.EXPLORING and still >= STALL_WARN_S:
+            self.get_logger().warn(
+                f"NOT MOVING for {still:.0f}s — exploration is stalled "
+                f"({self.travelled_m:.1f}m covered so far)")
         self._publish_status()
 
     def _publish_status(self) -> None:

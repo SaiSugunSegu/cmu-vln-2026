@@ -94,6 +94,67 @@ def test_summary_counts_errors_separately_from_wrong_answers():
     assert summary["per_scene"]["b"]["accuracy"] == 0.0
 
 
+def test_accuracy_is_the_share_of_points_not_of_perfect_answers():
+    """Category 3 is out of 6 and `correct` is reserved for a flawless 6.0.
+
+    Counting only perfect rows reported accuracy 0.0 for a sweep that had earned 7 of its 12
+    points, which reads as total failure for a run doing better than half the job.
+    """
+    rows = [{"scene": "a", "category": 3, "correct": False, "score": 3.0,
+             "error": None, "time_taken_s": 1.0},
+            {"scene": "a", "category": 3, "correct": False, "score": 4.0,
+             "error": None, "time_taken_s": 1.0}]
+    summary = summarise(rows)
+    assert summary["accuracy"] == round(7 / 12, 4)
+    assert summary["total_score"] == 7.0
+    assert summary["max_score"] == 12.0
+
+
+def test_the_strict_count_survives_beside_the_points():
+    """Two fields, two meanings: how many were flawless, and how much did we score."""
+    rows = [{"scene": "a", "category": 3, "correct": False, "score": 5.0,
+             "error": None, "time_taken_s": 1.0},
+            {"scene": "a", "category": 3, "correct": True, "score": 6.0,
+             "error": None, "time_taken_s": 1.0}]
+    summary = summarise(rows)
+    assert summary["correct"] == 1
+    assert summary["accuracy"] == round(11 / 12, 4)
+
+
+def test_a_denominator_that_follows_the_category():
+    """/1, /2 and /6 -- a category-3 row must not be scored against a category-2 maximum."""
+    for category, maximum in ((1, 1.0), (2, 2.0), (3, 6.0)):
+        summary = summarise([{"scene": "a", "category": category, "correct": False,
+                              "score": maximum / 2, "error": None, "time_taken_s": 1.0}])
+        assert summary["max_score"] == maximum
+        assert summary["accuracy"] == 0.5
+
+
+def test_a_perfect_run_reads_the_same_either_way():
+    summary = summarise([{"scene": "a", "category": 3, "correct": True, "score": 6.0,
+                          "error": None, "time_taken_s": 1.0}])
+    assert summary["accuracy"] == 1.0 and summary["correct"] == 1
+
+
+def test_unscored_rows_still_count_the_strict_way():
+    """Category 1 records no score: its answer is right or wrong, so the two agree anyway."""
+    rows = [{"scene": "a", "correct": True, "time_taken_s": 1.0, "error": None},
+            {"scene": "a", "correct": False, "time_taken_s": 1.0, "error": None}]
+    assert summarise(rows)["accuracy"] == 0.5
+
+
+def test_per_scene_carries_the_points_the_fraction_is_made_of():
+    """So a scene that scored badly can be told from one that ran two questions."""
+    rows = [{"scene": "a", "category": 3, "correct": False, "score": 3.0,
+             "error": None, "time_taken_s": 1.0},
+            {"scene": "b", "category": 3, "correct": False, "score": 4.0,
+             "error": None, "time_taken_s": 1.0}]
+    per_scene = summarise(rows)["per_scene"]
+    assert per_scene["a"] == {"run": 1, "correct": 0, "accuracy": 0.5,
+                              "score": 3.0, "max_score": 6.0}
+    assert per_scene["b"]["accuracy"] == round(4 / 6, 4)
+
+
 def test_summary_of_nothing_does_not_divide_by_zero():
     assert summarise([])["accuracy"] == 0.0
     assert summarise([])["mean_time_s"] is None

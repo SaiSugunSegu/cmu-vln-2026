@@ -19,7 +19,9 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
-from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, VIEW_SOURCE
+from captioner.image_input import image_is_complete
+from captioner.vlm_backends.constants import (SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S,
+                                              is_silhouette, view_dir)
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM
 
 # ---------------------------------------------------------------- prompts
@@ -108,18 +110,31 @@ def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Pa
     config/vqa.yaml): `crop` never looks at silhouette/, even once one exists;
     `silhouette` (the default) waits out `deadline` for sam_node's finalize pass — the
     bare crop has neither the outlines nor the ids — before falling back to the plain
-    crop, so a run with save_silhouette_copy disabled still answers.
+    crop, so a run with save_silhouette_copy disabled still answers. The `full*` variants
+    name the uncropped panorama under `full/`, falling back the same way when
+    save_full_views is off.
+
+    A COMPLETE image, not merely a created one: `cv2.imwrite` publishes the path before
+    the bytes, so waiting on `is_file()` hands back the prefix of a 1.6 MB encode. See
+    `numerical_utils._view_source`, which this mirrors.
     """
     import time
 
-    silhouette, plain = run_dir / "silhouette" / name, run_dir / name
-    if VIEW_SOURCE != "silhouette":
-        return (plain, False) if plain.is_file() else (None, False)
+    plain = run_dir / name
+    subdir = view_dir()
+    if not subdir:
+        return (plain, False) if image_is_complete(plain) else (None, False)
+    wanted = run_dir / subdir / name
+    if not is_silhouette():
+        # `full` is written with the crop, not by the finalize pass: nothing to wait for,
+        # but absent entirely unless save_full_views is on.
+        return (wanted, False) if image_is_complete(wanted) else (
+            (plain, False) if image_is_complete(plain) else (None, False))
     while True:
-        if silhouette.is_file():
-            return silhouette, True
+        if image_is_complete(wanted):
+            return wanted, True
         if time.monotonic() >= deadline:
-            return (plain, False) if plain.is_file() else (None, False)
+            return (plain, False) if image_is_complete(plain) else (None, False)
         time.sleep(SILHOUETTE_POLL_S)
 
 
