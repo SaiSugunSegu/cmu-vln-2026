@@ -55,19 +55,10 @@ __all__ = [
     "load_obj_map",
     "same_class",
     "shortlist",
-    "unpad_legacy_extent",
 ]
 
 # Identity quaternion, which is what map_node writes unless publish_oriented_box is on.
 IDENTITY_QUAT = (0.0, 0.0, 0.0, 1.0)
-
-# Mirrors sam_mapper.object_mapper.SCHEMA_KEY, which this file cannot import: it runs on the
-# host, outside the container that holds ai_module. The two must change together.
-SCHEMA_KEY = "_schema"
-
-# Every config ships voxel_downsample.voxel_size 0.05, and a map written before SCHEMA_KEY
-# records no value to read, so un-padding a legacy cache has to assume the shipped one.
-LEGACY_VOXEL_SIZE = 0.05
 
 # One region, because a live map has no region annotation: IRef's regions come from the
 # dataset's floorplan, and nothing in the pipeline reconstructs them. Every helper in
@@ -147,21 +138,6 @@ def map_entry_to_obj(track_id: str, entry: dict[str, Any], labels: dict[str, str
     )
 
 
-def unpad_legacy_extent(extent: Sequence[float], voxel_size: float) -> list[float]:
-    """A legacy extent as the current mapper would have written it from the same voxels.
-
-    Maps written before the clamp added a whole `voxel_size` to every axis instead of using
-    it as a floor, so `legacy = (hi - lo) + voxel_size` and the current rule is
-    `max(hi - lo, voxel_size)`. The padding is symmetric, so the centre is unaffected and
-    only the extent has to be rebuilt.
-
-    This exists so a cache recorded under the old rule can be replayed under the new one
-    without re-running the mapper — hours of exploration per scene — and it is applied only
-    to maps carrying no schema marker, i.e. only to caches that predate it.
-    """
-    return [float(max(float(v) - voxel_size, voxel_size)) for v in extent]
-
-
 def load_obj_map(path: str | Path, prompts: Iterable[str] = ()) -> dict[str, Obj]:
     """Load a map written beside a question's crops, keyed by track id as a string.
 
@@ -170,17 +146,10 @@ def load_obj_map(path: str | Path, prompts: Iterable[str] = ()) -> dict[str, Obj
     """
     with open(path, "r", encoding="utf-8") as handle:
         raw = json.load(handle)
-    schema = (raw or {}).get(SCHEMA_KEY) or {}
-    legacy_voxel = None if schema.get("box_extent") == "voxel_floor" else LEGACY_VOXEL_SIZE
     labels = prompt_labels(prompts)
     out: dict[str, Obj] = {}
     for track_id, entry in (raw or {}).items():
-        if track_id == SCHEMA_KEY or not isinstance(entry, dict):
-            continue
-        if legacy_voxel is not None and (bbox := entry.get("bbox3d")) and bbox.get("extent"):
-            entry = {**entry, "bbox3d": {
-                **bbox, "extent": unpad_legacy_extent(bbox["extent"], legacy_voxel)}}
-        if obj := map_entry_to_obj(track_id, entry, labels):
+        if isinstance(entry, dict) and (obj := map_entry_to_obj(track_id, entry, labels)):
             out[str(track_id)] = obj
     return out
 

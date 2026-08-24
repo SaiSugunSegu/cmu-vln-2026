@@ -17,11 +17,14 @@ NAME = "best_rank1_chair.png"
 def wants_silhouette(monkeypatch):
     """Pin VIEW_SOURCE for the tests that are about the silhouette path.
 
-    It is a config default (vqa.yaml), and the shipped value is now `crop`, under which
-    `_view_source` never looks at silhouette/ at all — so a test that inherits it measures
-    the default rather than the branch it names.
+    It is a config default (vqa.yaml), and the shipped value is not always `silhouette`,
+    under which `_view_source` never looks at silhouette/ at all — so a test that inherits
+    it measures the default rather than the branch it names. `cat2_utils` reads the switch
+    only through `is_silhouette()`/`view_dir()`, so the module actually holding the name is
+    `captioner.vlm_backends.constants` — patching `smart_vlm.cat2_utils.VIEW_SOURCE` would
+    raise AttributeError, since cat2_utils never binds that name itself.
     """
-    monkeypatch.setattr("smart_vlm.cat2_utils.VIEW_SOURCE", "silhouette")
+    monkeypatch.setattr("captioner.vlm_backends.constants.VIEW_SOURCE", "silhouette")
 
 
 def _run_dir(tmp_path, obj_map=None, silhouette=False):

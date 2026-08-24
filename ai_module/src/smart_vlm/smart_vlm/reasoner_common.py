@@ -76,19 +76,6 @@ def extract_nouns(
     return targets, "heuristic", reply
 
 
-def map_objects_only(payload: dict | None) -> dict:
-    """A raw obj_map payload with the non-object entries dropped.
-
-    obj_map.json carries a `_schema` entry alongside the track ids (see
-    `sam_mapper.object_mapper.SCHEMA_KEY`). Stripping it here, at the two points a raw map
-    reaches a reasoner, keeps every consumer downstream able to treat the mapping as
-    "track id -> object" — otherwise `len(raw_map)` over-counts by one and a map holding
-    nothing but the marker reads as non-empty.
-    """
-    return {k: v for k, v in (payload or {}).items()
-            if isinstance(v, dict) and not str(k).startswith("_")}
-
-
 def read_obj_map(best_dir, log, wait_s: float = MAP_WAIT_S,
                  poll_s: float = MAP_POLL_S) -> dict:
     if not best_dir:
@@ -104,7 +91,7 @@ def read_obj_map(best_dir, log, wait_s: float = MAP_WAIT_S,
         if path.is_file():
             try:
                 with open(path, "r", encoding="utf-8") as handle:
-                    return map_objects_only(json.load(handle))
+                    return json.load(handle) or {}
             except json.JSONDecodeError:
                 pass
         time.sleep(poll_s)

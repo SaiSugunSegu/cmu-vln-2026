@@ -161,10 +161,6 @@ def load_pred(path: str) -> tuple[list[Box], dict]:
     report = json.load(open(path))
     boxes = []
     for oid, obj in report.get("objects", {}).items():
-        # `_schema` describes how the extents were computed and is not an object; see
-        # sam_mapper.object_mapper.SCHEMA_KEY.
-        if str(oid).startswith("_") or "bbox3d" not in obj:
-            continue
         bbox = obj["bbox3d"]
         center = np.asarray(bbox["center"], dtype=float)
         extent = np.asarray(bbox["extent"], dtype=float)

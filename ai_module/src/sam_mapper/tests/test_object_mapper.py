@@ -11,7 +11,7 @@ pytest.importorskip("open3d", reason="run in the container: just test sam_mapper
 
 from sam_mapper.cloud_image_fusion import CloudImageFusion  # noqa: E402
 from sam_mapper.mapping_config import MappingConfig  # noqa: E402
-from sam_mapper.object_mapper import SCHEMA_KEY, ObjMapper  # noqa: E402
+from sam_mapper.object_mapper import ObjMapper  # noqa: E402
 
 W, H = 1920, 640
 CAM_Z = 0.1
@@ -87,23 +87,10 @@ def test_serialize_emits_a_box_per_tracked_object():
     mp, fusion = mapper(), CloudImageFusion(platform="mecanum_sim")
     feed(mp, fusion, 8, [blob([3.0, 0.0, CAM_Z])], ids=[0], labels=["chair"])
     out = mp.serialize_map_to_dict()
-    objects = {k: v for k, v in out.items() if k != SCHEMA_KEY}
-    assert objects, "expected at least one serialised object"
-    entry = next(iter(objects.values()))
+    assert out, "expected at least one serialised object"
+    entry = next(iter(out.values()))
     assert entry["label"] == "chair"
     assert set(entry["bbox3d"]) == {"center", "extent", "rotation"}
-
-
-def test_serialize_records_how_the_extents_were_computed():
-    # Without this a reader cannot tell a clamped box from a legacy padded one, and every
-    # cached map predates the clamp. See objmap.load_obj_map.
-    mp, fusion = mapper(), CloudImageFusion(platform="mecanum_sim")
-    feed(mp, fusion, 8, [blob([3.0, 0.0, CAM_Z])], ids=[0], labels=["chair"])
-
-    schema = mp.serialize_map_to_dict()[SCHEMA_KEY]
-
-    assert schema["box_extent"] == "voxel_floor"
-    assert schema["voxel_size"] == pytest.approx(mp.voxel_size)
 
 
 # -- object identity ---------------------------------------------------------

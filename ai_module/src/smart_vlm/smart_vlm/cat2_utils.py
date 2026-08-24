@@ -12,6 +12,7 @@ copied into the image, so the import can fail in a way `captioner` never can: wh
 `SOLVER_AVAILABLE` goes false and selection degrades to class match plus largest volume
 instead of raising. A degraded answer scores something; an exception scores zero.
 """
+
 from __future__ import annotations
 
 import os
@@ -20,8 +21,7 @@ from pathlib import Path
 from typing import Any, Callable, Collection, NamedTuple, Optional, Sequence
 
 from captioner.image_input import image_is_complete
-from captioner.vlm_backends.constants import (SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S,
-                                              is_silhouette, view_dir)
+from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, is_silhouette, view_dir
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM
 
 # ---------------------------------------------------------------- prompts
@@ -163,9 +163,9 @@ class Selection(NamedTuple):
     """One answer, with enough of its provenance to explain a wrong one afterwards."""
 
     object_id: Optional[str]
-    source: str                 # solver | vlm | naive | none
+    source: str  # solver | vlm | naive | none
     reason: str
-    candidates: list[str]       # ranked ids the choice was made from
+    candidates: list[str]  # ranked ids the choice was made from
     trace: list[str]
     vlm_calls: int
 
@@ -196,21 +196,24 @@ if _ROOT is not None and str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 try:
-    import utils.objmap as objmap                                        # noqa: E402
-    from utils.geometry import Obj, relation_holds                       # noqa: E402
+    import utils.objmap as objmap  # noqa: E402
+    from utils.geometry import Obj, relation_holds  # noqa: E402
+
     SOLVER_AVAILABLE = True
 except ImportError:  # pragma: no cover - exercised only in an image without scripts/
-    objmap = None                                                       # type: ignore[assignment]
-    Obj = Any                                                           # type: ignore[misc,assignment]
-    relation_holds = None                                               # type: ignore[assignment]
+    objmap = None  # type: ignore[assignment]
+    Obj = Any  # type: ignore[misc,assignment]
+    relation_holds = None  # type: ignore[assignment]
     SOLVER_AVAILABLE = False
 
 
 def solver_status() -> str:
     if SOLVER_AVAILABLE:
         return f"spatial solver from {_ROOT}"
-    return ("spatial solver UNAVAILABLE (scripts/utils not importable) — selection will fall "
-            "back to class match + largest volume")
+    return (
+        "spatial solver UNAVAILABLE (scripts/utils not importable) — selection will fall "
+        "back to class match + largest volume"
+    )
 
 
 # ---------------------------------------------------------------- views
@@ -241,8 +244,11 @@ def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Pa
     if not is_silhouette():
         # `full` is written with the crop, not by the finalize pass: nothing to wait for,
         # but absent entirely unless save_full_views is on.
-        return (wanted, False) if image_is_complete(wanted) else (
-            (plain, False) if image_is_complete(plain) else (None, False))
+        return (
+            (wanted, False)
+            if image_is_complete(wanted)
+            else ((plain, False) if image_is_complete(plain) else (None, False))
+        )
     while True:
         if image_is_complete(wanted):
             return wanted, True
@@ -331,8 +337,7 @@ def marked_views(
             # The MAP id, not the track id: `_color_for` is a pure function of what it is
             # given, and the silhouette outlines this object by its map id too, so anything
             # else would box it in a colour that is not its own.
-            marks.append((bbox, map_id,
-                          "" if finalized else f"[{map_id}] {label}".strip()))
+            marks.append((bbox, map_id, "" if finalized else f"[{map_id}] {label}".strip()))
         if not marks:
             # No candidate is visible in this view. Showing it anyway invites the model to
             # pick from pixels that carry no id at all.
@@ -380,6 +385,7 @@ def naive_from_raw(raw_map: dict, question: str = "") -> tuple[Optional[str], st
     the right class beats the largest instance in the room. Labels are compared with their
     spaces removed because that is how map_node spells them ("potted plant" -> "pottedplant").
     """
+
     def volume_of(entry) -> float:
         extent = ((entry or {}).get("bbox3d") or {}).get("extent") or []
         if len(extent) != 3:
@@ -424,8 +430,7 @@ def answerable(candidates: Sequence[Any], anchors: Collection[str]) -> list[Any]
     return [o for o in candidates if str(o.id) not in anchors] or list(candidates)
 
 
-def naive_pick(question: str, objects: dict, *,
-               exclude: Collection[str] = ()) -> tuple[Optional[str], str]:
+def naive_pick(question: str, objects: dict, *, exclude: Collection[str] = ()) -> tuple[Optional[str], str]:
     """The uninformed answer: the biggest object whose class the question names.
 
     The floor every other mode is measured against. Largest volume rather than first-seen
@@ -455,8 +460,11 @@ def naive_pick(question: str, objects: dict, *,
     # Said plainly, because the old wording ("largest bowl in the map") named a class the
     # pool did not contain and made a fallback read like a match.
     best = max(pool, key=lambda o: float(o.volume))
-    return best.id, (f"no {head or 'match'} in the map; largest box that is not an anchor"
-                     if excluded else f"no {head or 'match'} in the map; largest box")
+    return best.id, (
+        f"no {head or 'match'} in the map; largest box that is not an anchor"
+        if excluded
+        else f"no {head or 'match'} in the map; largest box"
+    )
 
 
 def select_object(
@@ -495,7 +503,8 @@ def select_object(
     if not SOLVER_AVAILABLE:
         raise RuntimeError(
             "select_object needs scripts/utils on the path; callers must check "
-            "SOLVER_AVAILABLE and fall back to naive_from_raw")
+            "SOLVER_AVAILABLE and fall back to naive_from_raw"
+        )
     if mode == "naive":
         oid, why = naive_pick(question, objects)
         return Selection(oid, "naive", why, [oid] if oid else [], [solver_status()], 0)
@@ -517,21 +526,18 @@ def select_object(
     # the objects named to locate it.
     ranked: list = answerable(picked["candidates"], anchor_ids)
     if len(ranked) < len(picked["candidates"]):
-        trace.append(f"dropped {len(picked['candidates']) - len(ranked)} candidate(s) the "
-                     "question names as anchors")
+        trace.append(f"dropped {len(picked['candidates']) - len(ranked)} candidate(s) the " "question names as anchors")
 
     if not ranked:
         oid, why = naive_pick(question, objects, exclude=anchor_ids)
-        return Selection(oid, "naive", f"{picked['reason']}; {why}", [oid] if oid else [],
-                         trace, 0)
+        return Selection(oid, "naive", f"{picked['reason']}; {why}", [oid] if oid else [], trace, 0)
 
     ids = [o.id for o in ranked]
     solver_choice = ranked[0]
     decisive = picked["committed"] is not None and objmap.is_decisive(ranked, groups, relation)
 
     if mode == "solver" or ask is None:
-        return Selection(solver_choice.id, "solver", picked["reason"] or "top of the ranking",
-                         ids, trace, 0)
+        return Selection(solver_choice.id, "solver", picked["reason"] or "top of the ranking", ids, trace, 0)
     if mode == "hybrid" and decisive:
         trace.append("geometry is decisive — no model call")
         return Selection(solver_choice.id, "solver", picked["reason"], ids, trace, 0)
@@ -540,9 +546,15 @@ def select_object(
     # `vlm`: the point of the `vlm` mode is to measure a model that was not handed the
     # solver's ordering, so it must not inherit the relation filter either.
     shown = ranked if mode == "hybrid" else sorted(ranked, key=lambda o: o.id)
-    table = objmap.candidate_table(shown, groups, relation, limit=TABLE_LIMIT,
-                                   head=picked["head"], anchors=all_anchors,
-                                   unmatched_anchors=picked["anchors_unmatched"])
+    table = objmap.candidate_table(
+        shown,
+        groups,
+        relation,
+        limit=TABLE_LIMIT,
+        head=picked["head"],
+        anchors=all_anchors,
+        unmatched_anchors=picked["anchors_unmatched"],
+    )
     allowed = {o.id: o for o in shown[:TABLE_LIMIT]}
 
     images: list[Path] = []
@@ -559,8 +571,10 @@ def select_object(
     try:
         from captioner.vlm_backends.schemas import ObjectChoice
 
-        user = (f"Question: {question}\n\nObjects:\n{table}\n\n"
-                "Reply with the id of the one candidate the question points at.")
+        user = (
+            f"Question: {question}\n\nObjects:\n{table}\n\n"
+            "Reply with the id of the one candidate the question points at."
+        )
         result = ask(ANSWER_SYSTEM, user, images, ObjectChoice)
         calls += 1
         chosen = str(int(result.object_id))
@@ -569,28 +583,25 @@ def select_object(
             # Naming the anchor case separately because it is a different failure: not a
             # hallucinated id but the question's own landmark, whose id the fact rows and the
             # ANCHORS section both show. Prompted against and rejected here regardless.
-            what = ("an anchor, not a candidate" if chosen in anchor_ids
-                    else "not in the candidate list")
+            what = "an anchor, not a candidate" if chosen in anchor_ids else "not in the candidate list"
             trace.append(f"model answered {chosen!r}, {what} — keeping the geometry's pick")
-            return Selection(solver_choice.id, "solver",
-                             f"model chose an id that is {what}: {reason}", ids, trace, calls)
+            return Selection(
+                solver_choice.id, "solver", f"model chose an id that is {what}: {reason}", ids, trace, calls
+            )
         trace.append(f"model chose {chosen}: {reason}")
 
         # The solver verifies the model's pick, not the other way round: a relation the
         # geometry can check is not a matter of opinion, and a model that picks an object
         # failing the stated relation while another satisfies it has misread the tags.
-        if (relation and groups and relation_holds is not None
-                and relation not in ("closest", "farthest")):
+        if relation and groups and relation_holds is not None and relation not in ("closest", "farthest"):
             anchors = [a for group in groups for a in group]
             try:
                 holds = relation_holds(allowed[chosen], anchors, relation)
-                if not holds and (ok := [o for o in shown
-                                         if relation_holds(o, anchors, relation)]):
+                if not holds and (ok := [o for o in shown if relation_holds(o, anchors, relation)]):
                     trace.append(f"{chosen} fails {relation}; falling back to {ok[0].id}")
-                    return Selection(ok[0].id, "solver",
-                                     f"model pick failed {relation}", ids, trace, calls)
+                    return Selection(ok[0].id, "solver", f"model pick failed {relation}", ids, trace, calls)
             except ValueError:
-                pass    # a relation with no predicate (comparatives) — nothing to verify
+                pass  # a relation with no predicate (comparatives) — nothing to verify
 
         return Selection(chosen, "vlm", reason or "model choice", ids, trace, calls)
     except Exception as exc:  # noqa: BLE001 — a model failure must not lose the question
