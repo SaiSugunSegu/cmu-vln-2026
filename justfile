@@ -59,10 +59,11 @@ down:
     docker compose -f compose_gpu.yml down
 
 # Optional: pull a new checkpoint or warm SAM 3's cv-utils kernel in the running
-# container. Setup itself is `just up` (HF_TOKEN in .env bakes sam3 into the
-# image). A checkpoint you want in the Hub image has to land via just up.
-#   just hf-fetch                # all defaults (sam3 + clip)
-#   just hf-fetch --list         # names and repos
+# container. Setup itself is `just up` (HF_TOKEN in .env bakes only sam3 into the
+# image — Qwen3-VL stays out of the submission build; use vqa-up for it locally).
+# A checkpoint you want in the Hub image has to land via just up.
+#   just hf-fetch                 # all defaults (sam3 + qwen3vl + clip)
+#   just hf-fetch "qwen3vl sam3"  # a subset;  just hf-fetch --list  to see them
 [group('setup')]
 [doc('Refresh weights / SAM 3 kernels in the running container')]
 hf-fetch models="":
