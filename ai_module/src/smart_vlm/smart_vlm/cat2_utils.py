@@ -47,6 +47,18 @@ from smart_vlm.numerical_utils import EXTRACT_SYSTEM
 # None of it is guessable from the images alone: a model told none of it reads a mislabelled
 # candidate as the wrong class, a track id as a choosable answer, and an undetected landmark
 # as one that is not in the room.
+#
+# The clause rejecting a box thin on two axes comes from "the potted plant farthest from the
+# hookah" on the 40-question sim cache: the hookah went undetected, so the table carried two
+# bare centres and nothing that could order them, and the model answered with a 5cm x 5cm x
+# 83cm "pottedplant" — a stalk. It is stated as a rule rather than left to judgement because
+# it follows from the scorer: an answer is graded on box overlap, so a sliver scores zero even
+# when it sits on the right object. Costed over the same cache before it was added: 10 of the
+# 40 questions hold an object under 12cm on both of its smallest axes, such an object was the
+# best reachable answer in none of them, the model chose one only here, and the narrowest
+# answer in the corpus (a 0.19 x 0.09 x 0.36 wall lamp) clears the threshold with room to
+# spare. The one-axis carve-out is load-bearing rather than hedging — a picture or a carpet IS
+# flat, and those are the boxes the section above already says are inflated worst.
 ANSWER_SYSTEM = """\
 You choose which object a question points at, out of a robot's own map of one room.
 
@@ -95,6 +107,11 @@ A box in this list runs about 1.8 times the true volume of its object, and the t
 object — a picture, a carpet, a map — the worse it is. Use `size` only to tell a small
 object from a large one, and judge whether something is inside, on, or the same size as
 something else from the photographs.
+A box only a few centimetres across on two of its three axes is a different matter: that is
+a fragment of something — a stalk, an edge, a pole — and not the object it is named after.
+It cannot be the answer, because your box is graded on how much of the real object's space
+it covers and a sliver covers almost none of it. Thin on ONE axis is normal and is exactly
+the case above, so never rule out a picture, a carpet or a map for being flat.
 
 WHERE THE DETECTOR GOES WRONG
 The outlines come from a detector armed with a few words guessed from the question, and from
