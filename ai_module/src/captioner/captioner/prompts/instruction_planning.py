@@ -70,8 +70,8 @@ HOW TO REASON, IN ORDER
 
    Weigh the three sources in this order, and reason over them rather than accepting any of them blindly:
 
-   1. The image itself is the plainest truth. What the picture clearly shows is what is really there.
-   2. The silhouette outline and its "label [id]" tag come next. SAM 3 drew them and they are usually right, and they stay consistent across the views and with the object table - so agreement across two views is worth a lot.
+   1. The image itself is the plainest truth. What the picture clearly shows is what is really there - Reason Visual Spaciality from Image to Understand where objects really are (Intrested object and what's around it).
+   2. The silhouette outline and its "label [id]" tag come next. SAM 3 drew them and they are often right, and they often consistent across the views and with the object table -  - Reason Visually from Image to Understand If silhoutte (label [id]) really are what it looks in image.
    3. The object table's own row comes last. It is built from those same detections, so where it disagrees with what you can plainly see, it is the row that is wrong.
 
    So if the table calls row 3 a "table" and the outline tagged "table [3]" is plainly a stool, it is a stool - use it and say so in why. Where all three agree you are on firm ground; where they disagree, say in why which one you followed.
@@ -86,7 +86,7 @@ HOW TO REASON, IN ORDER
 
    About one named object in seven is never detected, and it is almost always a small thing resting on a larger one - a tray, a kettle, a cup, a remote, a figurine. You can still place it:
 
-   - find it in the images, and see which MAPPED object it sits on, in, or beside;
+   - find it in the images, and Potential Location  based on reasoning - First see in the Image and then see MAPPED object it sits on, in, or beside;
    - use that mapped object's centre as the waypoint and put ITS id in object_ids;
    - say in why that the target was not in the table and which object placed it.
 
@@ -104,16 +104,17 @@ EXAMPLES
 Object table:
   2  | lamp    | centre (-3.10,  1.40, 0.90) | size (0.30, 0.30, 0.60)
   5  | lamp    | centre ( 1.90, -2.05, 0.85) | size (0.28, 0.28, 0.55)
-  8  | picture | centre (-3.15,  1.85, 1.70) | size (0.06, 0.50, 0.45)
+  8  | picture | centre (-3.15,  1.45, 1.70) | size (0.06, 0.50, 0.45)
  11  | desk    | centre ( 2.60, -0.40, 0.35) | size (1.40, 0.70, 0.70)
  14  | bin     | centre ( 0.10,  2.90, 0.20) | size (0.30, 0.30, 0.40)
 Robot at (0.00, 0.00).
 
 Command: "Go near the lamp under the picture and stop at the desk farthest from the bin."
 
-# Comment: lamp 2 sits directly beneath picture 8 (same x and y, lower z), so it is the one meant;
-# lamp 5 is nowhere near it. The picture is a reference, not a waypoint. Of the desks only 11 exists,
-# and it is the farthest thing from bin 14 that the sentence could mean, so it is the goal.
+# Comment: lamp 2 and picture 8 overlap in x and y and the lamp is lower in z, so the lamp is under the
+# picture and is the one meant; lamp 5 is metres away. The picture is a reference, not a waypoint.
+# Desk 11 is the only desk, so "farthest from the bin" does not have to separate anything - it still
+# says which place is meant, and that place is the goal.
 Output:
 {"reason": "Two places: the lamp under the picture, then the desk farthest from the bin.",
  "waypoints": [
@@ -167,23 +168,26 @@ Output:
 
 Object table:
   1  | chair   | centre (-2.40,  1.90, 0.45) | size (0.50, 0.50, 0.90)
-  4  | tv      | centre ( 0.20, -3.40, 0.90) | size (1.20, 0.10, 0.70)
-  5  | table   | centre ( 0.30, -0.60, 0.30) | size (0.90, 0.60, 0.40)
+  4  | tv      | centre ( 0.20,  2.60, 0.90) | size (1.20, 0.10, 0.70)
+  5  | table   | centre ( 0.30,  0.40, 0.30) | size (0.90, 0.60, 0.40)
   8  | ball    | centre ( 3.20,  1.10, 0.15) | size (0.25, 0.25, 0.25)
  10 | couch   | centre ( 3.60,  1.70, 0.40) | size (2.10, 0.90, 0.80)
 Robot at (0.00, 0.00).
 
 Command: "First, go to the chair, then stop at the ball near the couch, avoiding the path between the TV and the table."
 
-# Comment: the avoid clause produces no waypoint of its own. The forbidden strip runs between tv 4 at
-# y -3.40 and table 5 at y -0.60, around x 0.25. The straight line from the chair to the ball would cut
-# through it, so an extra pass waypoint in open floor to the north keeps the route clear. That detour
-# point is at no object, so object_ids is empty.
+# Comment: the avoid clause produces no waypoint of its own. The forbidden strip is the gap between
+# tv 4 and table 5: around x 0.25, running from the table's north face at y 0.70 to the tv's south face
+# at y 2.55. Check the route against it before adding anything - the straight line from chair 1 to
+# ball 8 crosses x 0.25 at y 1.52, which is inside that gap, so it does have to be bent. One extra pass
+# waypoint north of the tv clears it. That detour point is at no object, so object_ids is empty.
+# Add a detour ONLY when the straight line really would cross; an unnecessary waypoint is an extra
+# place the route has to visit in order, and costs points it cannot earn back.
 Output:
-{"reason": "Two places, the chair then the ball, routed north of the forbidden strip between the TV and the table.",
+{"reason": "Two places: the chair, then the ball, routed north of the forbidden strip between the TV and the table.",
  "waypoints": [
    {"role": "pass", "x": -2.40, "y": 1.90, "object_ids": ["1"], "why": "the chair"},
-   {"role": "pass", "x": 0.30, "y": 2.60, "object_ids": [], "why": "open floor north of the forbidden strip between the TV and the table"},
+   {"role": "pass", "x": 0.25, "y": 3.20, "object_ids": [], "why": "open floor north of the TV, clear of the forbidden strip between the TV and the table, which the direct line would have crossed at y 1.52"},
    {"role": "goal", "x": 3.20, "y": 1.10, "object_ids": ["8"], "why": "the ball near the couch"}]}
 
 --- A command with only a gap and a finish. Still exactly one goal. ---
@@ -239,7 +243,7 @@ Command: "Go near the stool under the picture and stop at the table farthest fro
 # tagged box in the image is plainly a stool - the detector mislabelled it. Row 5 is a real table and
 # is the farther of the two from the picture.
 Output:
-{"reason": "The mislabelled row 3 is the stool under the picture; row 5 is the table farthest from it.",
+{"reason": "Two places: the stool under the picture, which is the mislabelled row 3, then the table farthest from it.",
  "waypoints": [
    {"role": "pass", "x": -3.76, "y": -1.88, "object_ids": ["3"], "why": "the stool under the picture - row 3 is labelled table but the image shows a stool"},
    {"role": "goal", "x": 2.52, "y": -0.74, "object_ids": ["5"], "why": "the table farthest from the picture"}]}

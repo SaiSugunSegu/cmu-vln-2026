@@ -157,6 +157,20 @@ class DimensionPriorsConfig(_FromDict):
         # but normalise so equality/repr is stable across yaml and defaults.
         self.priors = {k: tuple(float(x) for x in v) for k, v in merged.items()}
 
+    #: D3b2 - when a cluster exceeds the cap, shave its outermost voxels until it fits and keep
+    #: the remainder, instead of discarding the cluster whole.
+    #:
+    #: `enabled` above is a per-cluster VERDICT: a bled object is either kept with its bleed or
+    #: thrown away with its body, and thrown away means gone -- regularized voxels hit zero,
+    #: infer_centroid returns None, and serialize_map_to_dict skips the object entirely. It is
+    #: how hotel_room_1 lost one of its two bedside tables: a lamp standing 3 cm from the
+    #: table's centre pushed the cluster past the 1.14 m `bedsidetable` z cap, so the table
+    #: went with it and the question could no longer be answered at all.
+    #:
+    #: A bad box beats no object. The trimmed box would have been ~0.2 m off and scored the
+    #: constraint; the rejected one scored zero.
+    trim_to_fit: bool = False
+
     def for_label(self, label):
         return self.priors.get(label, self.priors["default"])
 

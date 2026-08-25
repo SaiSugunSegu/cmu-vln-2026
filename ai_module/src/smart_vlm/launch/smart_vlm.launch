@@ -94,8 +94,8 @@
        waypoint. Dial it up to trade closeness for the converter passing our point through
        untouched. max_snap_m is the honesty limit: past it the nearest floor is not the edge of
        the object the model meant, so the waypoint is published unchanged. -->
-  <arg name="snap_clearance_m"    default="0.75"/>
-  <arg name="max_snap_m"          default="3.0"/>
+  <arg name="snap_clearance_m"    default="0.1"/>
+  <arg name="max_snap_m"          default="1.0"/>
   <!-- The floor grid. The cell is the quantisation floor on how precisely we can aim; the span
        only sets how often the grid has to grow, and 40 m square costs 0.16 MB.
        The cell matches terrain analysis' own scanVoxelSize; finer marks holes, not a region. -->

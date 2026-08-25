@@ -54,7 +54,7 @@ __all__ = [
 #: The scoring circle. `scripts/eval/score.py::score_instruction` credits a constraint when the
 #: trajectory comes within `radius` of its centre, defaulting to this. Ground truth widens it
 #: for eight wall-mounted constraints; we cannot know which, so we always assume the tight one.
-GOAL_RADIUS_M = 1.5
+GOAL_RADIUS_M = 0.5
 
 #: A map row whose box is below this on EVERY axis is a track that never accumulated geometry
 #: -- map_node emits such a stub as a few-centimetre cube, and a live map carries one sitting at
@@ -112,7 +112,7 @@ OBSTACLE_CLEARANCE_M = 0.0
 #: How far the snap may move a waypoint. Beyond this the model's point is not "slightly inside
 #: the furniture", it is somewhere we have no traversable reading for, and moving it that far
 #: would aim at a different place than the one that was reasoned about.
-MAX_SNAP_M = 3.0
+MAX_SNAP_M = 1.0
 
 ROLES = ("pass", "goal")
 
