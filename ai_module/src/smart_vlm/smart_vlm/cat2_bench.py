@@ -42,7 +42,7 @@ from typing import Any, Optional
 
 from captioner.paths import secure_path
 from captioner.vlm_backends import make_backend
-from captioner.vlm_backends.constants import MODEL_NAME, VIEW_SOURCE, VLM_PROVIDER
+from captioner.vlm_backends.constants import MODEL_NAME, VIEW_SOURCE_OBJECT_REFERENCE, VLM_PROVIDER
 from smart_vlm.cat2_utils import (
     SOLVER_AVAILABLE,
     marked_views,
@@ -350,7 +350,7 @@ def cat2_extras(results: list[dict], args) -> dict[str, Any]:
         "mode": args.mode,
         "model": MODEL_NAME if args.mode in ("vlm", "hybrid") else None,
         "provider": VLM_PROVIDER if args.mode in ("vlm", "hybrid") else None,
-        "view_source": VIEW_SOURCE,
+        "view_source": VIEW_SOURCE_OBJECT_REFERENCE,
         "views": args.views,
         # The map contains the answer this often: the hard ceiling on everything below.
         "found_rate": round(len(found) / n, 4),
@@ -409,7 +409,7 @@ def main(argv: Optional[list[str]] = None) -> None:
     # Cloud only, and only when a mode actually asks a model: the local Qwen answers over
     # ROS topics, which is the graph this script exists to avoid.
     backend = make_backend("cloud", log=log) if args.mode in ("vlm", "hybrid") else None
-    log(f"{len(questions)} question(s), mode={args.mode}, view_source={VIEW_SOURCE}"
+    log(f"{len(questions)} question(s), mode={args.mode}, view_source={VIEW_SOURCE_OBJECT_REFERENCE}"
         + (f", backend {backend.name}" if backend else ""))
 
     report_path = Path(args.report)

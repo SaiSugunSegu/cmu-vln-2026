@@ -44,7 +44,7 @@ about at all.
 |---|---|---|
 | the command | `/challenge_question`, published at 1 Hz by the evaluation node | one sentence, once per system launch |
 | the object table | `obj_map.json`, written by `sam_mapper/map_node.py` beside the run's crops | id, label, 3D box centre and size in the map frame. Labels come from SAM and are sometimes wrong; boxes are usually right |
-| the images | the best-view frames `sam_node` saved, picked by `vqa.yaml`'s `view_source` | `full_silhouette` sends the whole 360 panorama with every mapped object outlined and tagged `[map id] label`, drawn by sam_node's own finalize pass so the tags and the table agree. Nothing is re-drawn by the reasoner |
+| the images | the best-view frames `sam_node` saved, picked by `vqa.yaml`'s `view_source_instruction_following` | `full_silhouette` sends the whole 360 panorama with every mapped object outlined and tagged `[map id] label`, drawn by sam_node's own finalize pass so the tags and the table agree. Nothing is re-drawn by the reasoner |
 | the robot position | `/state_estimation` | same map frame as the boxes |
 
 Nothing else is available, and nothing else is allowed: these all derive from the six topics
@@ -259,8 +259,9 @@ the current heading on arrival, and the README says to neglect heading this year
 ## Reading a failure afterwards
 
 `instruction_plan.json`, written beside the crops **before the robot moves** (the harness tears
-the pipeline down the moment the question ends), records the table sent, the `view_source` and
-the image paths, the raw reply, every correction `parse_route` applied, and the final route. A
+the pipeline down the moment the question ends), records the table sent, the
+`view_source_instruction_following` and the image paths, the raw reply, every correction
+`parse_route` applied, and the final route. A
 `drive` block is appended when the route finishes: per leg, where it was last `published` and
 how far that is from the model's point (`snap_m`), how many times it re-aimed (`snaps`), which
 test ended it (`arrived_at`: `goal`, `target`, or null when the tries ran out), the tries spent,

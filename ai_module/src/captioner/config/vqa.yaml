@@ -30,10 +30,12 @@ model: "google/gemini-3.7-flash"
 # the same Gemini Flash until a cheaper slug is set.
 model_lite: ""
 
-# WHICH IMAGES EVERY REASONER SENDS THE MODEL. One switch, read by category-1
-# (numerical_utils.select_context_views), category-2 (cat2_utils.marked_views) and
-# category-3 (instruction_reasoner), live reasoners and offline benches alike, and
-# recorded verbatim in every report row so a run says what it saw.
+# WHICH IMAGES EACH REASONER SENDS THE MODEL. Three independent keys, one per scored
+# category, each read by its own helper -- category-1 (numerical_utils.select_context_views),
+# category-2 (cat2_utils.marked_views) and category-3 (instruction_reasoner) -- by both the
+# live reasoners and their offline benches, and recorded verbatim in every report row so a
+# run says what it saw. Each key is validated on its own: an unset or unrecognised value
+# falls back to `silhouette` independently of what the other two are set to.
 #
 #   crop             <run>/                    the ROI crop, plain and unannotated
 #   silhouette       <run>/silhouette/         the ROI crop with mask outlines and
@@ -46,13 +48,14 @@ model_lite: ""
 # with it off nothing is written under full/ and each reasoner falls back to the
 # cropped equivalent rather than sending nothing.
 #
-# NOTE this is ONE key for all three categories. full_silhouette is set for category 3:
-# a route is planned over a whole room, and an ROI crop shows one corner of it -- the
-# first cat-3 sim run sent 709x640 and 353x551 cuts of a 1920x640 frame and still had to
-# reason about where to drive. Categories 1 and 2 count and identify single objects, which
-# is what the tighter crop is good for, and they were measured on `silhouette`; if their
-# scores move, this line is the first thing to put back.
-view_source: full_silhouette
+# Categories 1 and 2 count and identify single objects, which is what the tighter crop is
+# good for: category 1 ships on `silhouette`, category 2 on the plain `crop`. Category 3
+# wants `full_silhouette`: a route is planned over a whole room, and an ROI crop shows one
+# corner of it -- the first cat-3 sim run sent 709x640 and 353x551 cuts of a 1920x640 frame
+# and still had to reason about where to drive.
+view_source_numerical: silhouette
+view_source_object_reference: crop
+view_source_instruction_following: full_silhouette
 
 # How long a silhouette run waits for sam_node to finish writing the
 # finalized copy before falling back to the plain crop, and how often it polls while

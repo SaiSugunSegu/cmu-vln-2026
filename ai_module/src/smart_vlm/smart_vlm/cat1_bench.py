@@ -45,7 +45,7 @@ from typing import Optional
 
 from captioner.paths import secure_path
 from captioner.vlm_backends import VLMError, make_backend
-from captioner.vlm_backends.constants import MODEL_NAME, VIEW_SOURCE, VLM_PROVIDER
+from captioner.vlm_backends.constants import MODEL_NAME, VIEW_SOURCE_NUMERICAL, VLM_PROVIDER
 from captioner.vlm_backends.schemas import CountAnswer
 from smart_vlm.numerical_utils import ANSWER_SYSTEM, select_context_views
 from smart_vlm.report_utils import summarise, write_report
@@ -169,12 +169,12 @@ def main(argv: Optional[list[str]] = None) -> None:
     # script exists to avoid, so a backend flag here would have exactly one valid value.
     backend = make_backend("cloud", log=log)
     log(f"{len(rows)} cached question(s), {args.views} view(s) each, backend "
-        f"{backend.name}, view_source {VIEW_SOURCE}")
+        f"{backend.name}, view_source {VIEW_SOURCE_NUMERICAL}")
 
     report_path = Path(args.report)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     extra = {"backend": backend.name, "model": MODEL_NAME, "provider": VLM_PROVIDER,
-             "view_source": VIEW_SOURCE, "views": args.views, "cache": str(cache_path)}
+             "view_source": VIEW_SOURCE_NUMERICAL, "views": args.views, "cache": str(cache_path)}
 
     results: list[dict] = []
     interrupted = False

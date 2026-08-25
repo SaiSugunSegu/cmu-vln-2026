@@ -26,7 +26,7 @@ import rclpy
 from std_msgs.msg import Int32, String
 
 from captioner.paths import secure_path
-from captioner.vlm_backends.constants import VIEW_SOURCE
+from captioner.vlm_backends.constants import VIEW_SOURCE_NUMERICAL
 from captioner.vlm_backends.schemas import CountAnswer
 from smart_vlm.numerical_utils import ANSWER_SYSTEM, heuristic_targets, select_context_views
 from smart_vlm.question import QuestionType
@@ -56,7 +56,7 @@ class NumericalReasoner(ReasonerNode):
         self.get_logger().info(
             f"numerical_reasoner ready (backend={self.backend.name}, "
             f"extract_backend={self.extract_backend.name}, "
-            f"view_source={VIEW_SOURCE}, "
+            f"view_source={VIEW_SOURCE_NUMERICAL}, "
             f"max_context_views={self.max_context_views}"
             f"{', crops_only' if self.crops_only else ''}) — waiting for "
             "How many / Count questions")
@@ -120,7 +120,7 @@ class NumericalReasoner(ReasonerNode):
             manifest["context_views"] = [p.name for p in image_paths]
             manifest["backend"] = self.backend.name
             manifest["extract_backend"] = self.extract_backend.name
-            manifest["view_source"] = VIEW_SOURCE
+            manifest["view_source"] = VIEW_SOURCE_NUMERICAL
             manifest["crops_only"] = self.crops_only
             save_manifest(manifest_path, manifest)
 

@@ -40,8 +40,9 @@ from sensor_msgs_py.point_cloud2 import read_points_numpy
 from std_msgs.msg import Bool, Float32, String
 
 from captioner.paths import secure_path
+from captioner.vlm_backends import constants as vlm_constants
 from captioner.vlm_backends.constants import (SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S,
-                                              VIEW_SOURCE, is_silhouette, view_dir)
+                                              is_silhouette, view_dir)
 from captioner.ros_utils import wait_for_subscriber
 from captioner.prompts import get_route_plan_prompt
 from smart_vlm.cat3_utils import (
@@ -292,7 +293,7 @@ class InstructionReasoner(ReasonerNode):
         self._reset_to_idle("idle")
 
     def _views(self, run_dir: Path) -> list[Path]:
-        """The images this run sends the model, named by vqa.yaml's `view_source`.
+        """The images this run sends the model, named by vqa.yaml's `view_source_instruction_following`.
 
         Nothing is drawn here. sam_node already writes every overlay we want -- the silhouette
         copies carry mask outlines and `label [map id]` captions keyed to obj_map.json, in the
@@ -312,8 +313,9 @@ class InstructionReasoner(ReasonerNode):
             self.get_logger().warn(f"no best-view manifest ({exc}) — sending the table alone")
             return []
 
-        subdir = view_dir()
-        deadline = time.monotonic() + (SILHOUETTE_WAIT_S if is_silhouette() else 0.0)
+        source = vlm_constants.VIEW_SOURCE_INSTRUCTION_FOLLOWING
+        subdir = view_dir(source)
+        deadline = time.monotonic() + (SILHOUETTE_WAIT_S if is_silhouette(source) else 0.0)
         out: list[Path] = []
         for entry in selected[:self.max_views]:
             name = entry.get("file")
@@ -323,7 +325,7 @@ class InstructionReasoner(ReasonerNode):
             wanted = secure_path(run_dir / subdir / name) if subdir else plain
             # A silhouette is written by the finalize pass that /pipeline/explore_done also
             # starts, so arriving a few hundred ms early is normal rather than a fault.
-            while is_silhouette() and not wanted.is_file() and time.monotonic() < deadline:
+            while is_silhouette(source) and not wanted.is_file() and time.monotonic() < deadline:
                 time.sleep(SILHOUETTE_POLL_S)
             if wanted.is_file():
                 out.append(wanted)
@@ -331,7 +333,7 @@ class InstructionReasoner(ReasonerNode):
                 self.get_logger().warn(
                     f"{name}: no {subdir or 'crop'} copy — sending the plain crop instead")
                 out.append(plain)
-        self.get_logger().info(f"views ({VIEW_SOURCE}): {[p.name for p in out]}")
+        self.get_logger().info(f"views ({source}): {[p.name for p in out]}")
         return out
 
     def _plan(self, snap: dict, run_dir: Optional[Path],
@@ -368,7 +370,7 @@ class InstructionReasoner(ReasonerNode):
         return route, plan_payload(
             question, objects, route, table=table, images=[str(p) for p in images],
             reply=reply, trace=trace, source=source, robot_xy=here,
-            view_source=VIEW_SOURCE)
+            view_source=vlm_constants.VIEW_SOURCE_INSTRUCTION_FOLLOWING)
 
     def _record(self, run_dir: Path, payload: dict) -> None:
         """Write the plan and its rationale BEFORE the robot moves.

@@ -439,7 +439,7 @@ caption input="crops" output="captions" batch_size="8" quantization="int4" model
 # captioner/vlm_backends/constants.py.
 # views is how many best-view ranks it answers from at once (the VQA server caps at 4).
 # Which image of a best-view crop the model sees (silhouette, the mask-outline + label
-# copy, vs. the plain crop) is vqa.yaml's `view_source`.
+# copy, vs. the plain crop) is vqa.yaml's `view_source_numerical`.
 [group('cat1')]
 [doc('Rebuild smart_vlm/sam_mapper and launch the category-1 reasoner (blocks)')]
 cat1-reasoner views="3":
@@ -468,8 +468,8 @@ cat1-reasoner views="3":
 # `just bench-cat1` replays from -- and a second sweep with its own report= keeps its
 # own crops rather than overwriting the first one's question by question.
 # Which image of a best-view crop the model sees (silhouette vs. plain crop) is set once
-# in ai_module/src/captioner/config/vqa.yaml's `view_source`, the same switch category-2
-# and the offline benches read -- edit it there rather than per-invocation here. See
+# in ai_module/src/captioner/config/vqa.yaml's `view_source_numerical`, the same key the
+# offline bench reads -- edit it there rather than per-invocation here. See
 # captioner/vlm_backends/constants.py.
 [group('eval')]
 [doc('Orchestrated end-to-end category-1 eval; relaunches the pipeline per question')]
@@ -486,7 +486,8 @@ eval-cat1 scene="all" limit="0" target_source="vlm" speed="0.1" report="/data/ru
 # is not decisive), solver (no model call), vlm, naive. See cat2_utils.select_object.
 # A row records the score, not what was reachable: whether a zero is selection or perception
 # takes the run's obj_map.json against the answer's box. bench-cat2 carries that ceiling.
-# view_source is the same vqa.yaml setting category-1 reads -- see eval-cat1 above.
+# view_source_object_reference is category-2's own vqa.yaml setting, independent of
+# category-1's `view_source_numerical` -- see eval-cat1 above.
 [group('eval')]
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
 eval-cat2 scene="all" limit="0" mode="hybrid" target_source="vlm" speed="0.1" report="/data/runs/cat2_report.json":
@@ -549,8 +550,8 @@ eval-cat3-sim scene="all" limit="0" target_source="vlm" report="/data/runs/chall
 # Resumable: re-running keeps every question whose crops are already on disk, so an
 # interruption costs one question rather than the whole sweep. To force a full rebuild,
 # delete the cache= report first.
-# vqa.yaml's view_source only matters here insofar as it decides what lands under
-# crops/silhouette/ for bench-cat1 to later replay against; crops_only skips the
+# vqa.yaml's view_source_numerical only matters here insofar as it decides what lands
+# under crops/silhouette/ for bench-cat1 to later replay against; crops_only skips the
 # answering call either way.
 [group('eval')]
 [doc('Generate and save best-view crops per question, without answering (cache builder)')]
@@ -568,9 +569,9 @@ cache-cat1 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/ru
 # targets needs a full `just cache-cat1` of its own.
 # The cache paths still say `views`: they name crops already on disk from earlier sweeps,
 # and renaming the default would hide 14 scenes of them from the recipe that reads them.
-# vqa.yaml's view_source picks which of the crop's saved copies is replayed -- silhouette
-# (default) or the plain crop -- independent of which one the original cache-cat1 sweep
-# answered with, since crops_only never calls the model either way.
+# vqa.yaml's view_source_numerical picks which of the crop's saved copies is replayed --
+# silhouette (default) or the plain crop -- independent of which one the original
+# cache-cat1 sweep answered with, since crops_only never calls the model either way.
 [group('eval')]
 [doc('Benchmark a VLM against the cached best views (no SAM, no bag)')]
 bench-cat1 cache="/data/runs/views_cache.json" views="3" scene="all" limit="0" report="/data/runs/cat1_bench_report.json":

@@ -8,7 +8,9 @@ supervisor, and the eval harness all import these names — there is no ROS over
   provider                 gemini | anthropic | dashscope | openrouter | openai | <custom>
   base_url                 OpenAI-compatible URL (blank = the provider preset)
   model / model_lite
-  view_source              crop | silhouette | full | full_silhouette
+  view_source_numerical              crop | silhouette | full | full_silhouette
+  view_source_object_reference       crop | silhouette | full | full_silhouette
+  view_source_instruction_following  crop | silhouette | full | full_silhouette
   silhouette_wait_s / silhouette_poll_s
 
 `cloud` is a hosted OpenAI-compatible endpoint. `local` is the in-image Qwen server.
@@ -43,9 +45,11 @@ def local_vqa_launch_flag() -> str:
 
 # Which image of a best-view crop the model sees: `silhouette` is the mask-outline +
 # label copy sam_node writes next to each crop (see sam_mapper's `save_silhouette_copy`);
-# `crop` is the plain, unannotated photo. Read by both category-1
-# (`numerical_utils.select_context_views`) and category-2 (`cat2_utils.marked_views`),
-# live reasoners and their offline benches alike.
+# `crop` is the plain, unannotated photo. Each of the three scored categories has its own
+# key -- `view_source_numerical` (`numerical_utils.select_context_views`),
+# `view_source_object_reference` (`cat2_utils.marked_views`) and
+# `view_source_instruction_following` (`instruction_reasoner`) -- read by both the live
+# reasoners and their offline benches, and validated independently of one another below.
 #
 # The `full*` values send the WHOLE 360 panorama instead of the ROI crop cut out of it, which
 # is what category 3 wants: a route is planned over a room, and a crop shows a corner of one.
@@ -58,19 +62,26 @@ VIEW_DIRS = {
     "full": "full",
     "full_silhouette": "full/silhouette",
 }
-VIEW_SOURCE = str(_CONFIG.get("view_source", "silhouette")).strip().lower()
-if VIEW_SOURCE not in VIEW_DIRS:
-    VIEW_SOURCE = "silhouette"
 
 
-def view_dir(source: str | None = None) -> str:
+def _view_source(value) -> str:
+    name = str(value or "").strip().lower()
+    return name if name in VIEW_DIRS else "silhouette"
+
+
+VIEW_SOURCE_NUMERICAL = _view_source(_CONFIG.get("view_source_numerical"))
+VIEW_SOURCE_OBJECT_REFERENCE = _view_source(_CONFIG.get("view_source_object_reference"))
+VIEW_SOURCE_INSTRUCTION_FOLLOWING = _view_source(_CONFIG.get("view_source_instruction_following"))
+
+
+def view_dir(source: str) -> str:
     """The subdirectory of a run dir that `source` names. '' is the run dir itself."""
-    return VIEW_DIRS.get(source or VIEW_SOURCE, VIEW_DIRS["silhouette"])
+    return VIEW_DIRS.get(source, VIEW_DIRS["silhouette"])
 
 
-def is_silhouette(source: str | None = None) -> bool:
+def is_silhouette(source: str) -> bool:
     """True when the images are written by sam_node's finalize pass, so a caller must wait."""
-    return "silhouette" in (source or VIEW_SOURCE)
+    return "silhouette" in source
 
 # How long a silhouette run waits for sam_node to finish writing the
 # finalized copy before falling back to the plain crop, and how often it polls while

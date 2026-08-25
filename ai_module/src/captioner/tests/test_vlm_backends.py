@@ -312,14 +312,39 @@ def test_invalid_backends_default_to_cloud_independently(constants_with):
 
 
 def test_invalid_view_source_falls_back_to_silhouette(constants_with):
-    consts = constants_with({"view_source": "bogus"})
-    assert consts.VIEW_SOURCE == "silhouette"
+    consts = constants_with({
+        "view_source_numerical": "bogus",
+        "view_source_object_reference": "bogus",
+        "view_source_instruction_following": "bogus",
+    })
+    assert consts.VIEW_SOURCE_NUMERICAL == "silhouette"
+    assert consts.VIEW_SOURCE_OBJECT_REFERENCE == "silhouette"
+    assert consts.VIEW_SOURCE_INSTRUCTION_FOLLOWING == "silhouette"
+
+
+def test_missing_view_source_falls_back_to_silhouette(constants_with):
+    consts = constants_with({})
+    assert consts.VIEW_SOURCE_NUMERICAL == "silhouette"
+    assert consts.VIEW_SOURCE_OBJECT_REFERENCE == "silhouette"
+    assert consts.VIEW_SOURCE_INSTRUCTION_FOLLOWING == "silhouette"
 
 
 def test_valid_target_extract_backend_and_view_source_pass_through(constants_with):
-    consts = constants_with({"target_extract_backend": "local", "view_source": "crop"})
+    consts = constants_with({"target_extract_backend": "local", "view_source_numerical": "crop"})
     assert consts.TARGET_EXTRACT_BACKEND == "local"
-    assert consts.VIEW_SOURCE == "crop"
+    assert consts.VIEW_SOURCE_NUMERICAL == "crop"
+
+
+def test_view_source_keys_are_independent_per_category(constants_with):
+    """Each category's key is read and validated on its own -- no shared fallback."""
+    consts = constants_with({
+        "view_source_numerical": "crop",
+        "view_source_object_reference": "full",
+        "view_source_instruction_following": "full_silhouette",
+    })
+    assert consts.VIEW_SOURCE_NUMERICAL == "crop"
+    assert consts.VIEW_SOURCE_OBJECT_REFERENCE == "full"
+    assert consts.VIEW_SOURCE_INSTRUCTION_FOLLOWING == "full_silhouette"
 
 
 def test_resolve_config_path_defaults_to_the_bundled_file(monkeypatch):
