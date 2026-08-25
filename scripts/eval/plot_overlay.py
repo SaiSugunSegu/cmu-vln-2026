@@ -235,6 +235,26 @@ def _read_json(best_view_dir, name: str, report: Path | None = None) -> dict:
         return {}
 
 
+def load_grid(best_view_dir, report: Path | None = None) -> dict | None:
+    """The floor grid a question accumulated, or None if it was never recorded.
+
+    Resolved through `run_path` like every other run artifact, so a report moved between
+    sweeps finds its own crops instead of quietly drawing an empty room.
+    """
+    run = run_path(best_view_dir, report)
+    if run is None:
+        return None
+    npz = run / "traversable_area.npz"
+    if not npz.is_file():
+        return None
+    try:
+        with np.load(npz) as data:
+            return {"state": data["state"], "cell_m": float(data["cell_m"]),
+                    "corner": np.asarray(data["corner"], dtype=float)}
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def load_obj_map(best_view_dir, report: Path | None = None) -> dict:
     """The predicted map for a row."""
     return _read_json(best_view_dir, "obj_map.json", report)
@@ -620,6 +640,122 @@ def plot(scene: str, category: int, qid: str, row: dict | None, out: Path,
             f"anisotropy {frame.anisotropy:.1f}%]  {landmark_check(frame)}")
 
 
+# -- the floor the snap could see -------------------------------------------
+
+def plot_traversable(scene: str, category: int, qid: str, row: dict | None, out: Path,
+                     *, report: Path | None = None) -> str:
+    """Companion figure: the accumulated floor grid, on the same axes as the main overlay.
+
+    The main figure shows where the robot was aimed and where it went. It cannot show WHY a
+    waypoint was moved, because the reason is an absence -- floor that was never observed. On
+    hotel_room_1 Q04 the run recorded 4776 free cells, a healthy-looking number, while the
+    floor beside the target had never been seen at all; that hole is what a 2.82 m snap was
+    reaching around, and it is invisible in every other artifact.
+
+    UNKNOWN is left transparent rather than given a colour. Unobserved floor and floor known
+    to be blocked fail a snap for opposite reasons -- one says "go and look", the other says
+    "that is furniture" -- and drawing them alike would erase the only distinction this figure
+    exists to make.
+    """
+    frame = Frame(scene)
+    entry = load_question(scene, category, qid)
+    grid = load_grid((row or {}).get("best_view_dir"), report)
+    plan = load_plan((row or {}).get("best_view_dir"), report)
+
+    fig, ax = plt.subplots(figsize=(frame.width / 100 * 1.6, frame.height / 100 * 1.6), dpi=110)
+    ax.imshow(frame.image)
+    ax.set_xlim(0, frame.width)
+    ax.set_ylim(frame.height, 0)
+    ax.set_autoscale_on(False)
+    ax.axis("off")
+    missing: list[str] = []
+    free_cells = 0
+
+    if grid is None:
+        missing.append("no traversable_area.npz — this run predates the grid dump")
+    else:
+        state, cell, corner = grid["state"], grid["cell_m"], grid["corner"]
+        free_cells = int((state == 1).sum())
+        # Scattered squares rather than an imshow: the grid is world-axis-aligned while the
+        # backdrop is a photograph of the same room, and resampling one onto the other blurs
+        # exactly the seen/unseen boundary that matters here.
+        for value, colour, alpha, name in ((1, "#2a9d8f", 0.55, "floor seen FREE"),
+                                           (2, "#4a4a4a", 0.75, "seen OBSTACLE")):
+            cells = np.argwhere(state == value)
+            if not cells.size:
+                continue
+            u, v = frame(corner[0] + (cells[:, 0] + 0.5) * cell,
+                         corner[1] + (cells[:, 1] + 0.5) * cell)
+            ax.scatter(u, v, s=2.0, c=colour, marker="s", linewidths=0, alpha=alpha,
+                       label=name, zorder=3)
+
+    if row and row.get("trajectory"):
+        arr = np.asarray([(p[1], p[2]) for p in row["trajectory"]], float)
+        u, v = frame(arr[:, 0], arr[:, 1])
+        # The path is the explanation for every hole: a region is UNKNOWN because the robot
+        # never went there and never looked.
+        ax.plot(u, v, color=PRED, linewidth=1.4, alpha=0.9, zorder=5, label="driven path")
+
+    seen_label: set = set()
+    for leg in plan.get("drive") or []:
+        want, got = leg.get("waypoint"), leg.get("published")
+        if not (want and got):
+            continue
+        wu, wv = frame(want[0], want[1])
+        gu, gv = frame(got[0], got[1])
+        # Same three-point chain the main overlay uses, and the same colours: what the model
+        # asked for, what we aimed at, and the gap between them.
+        ax.annotate("", xy=(float(gu), float(gv)), xytext=(float(wu), float(wv)),
+                    arrowprops=dict(arrowstyle="-|>", color=SNAP, lw=2.0,
+                                    shrinkA=0, shrinkB=0), zorder=8)
+        lbl = None if "VLM waypoint" in seen_label else "VLM waypoint"
+        ax.plot(float(wu), float(wv), "o", color=WAYPOINT, markersize=9,
+                markeredgecolor="white", markeredgewidth=1.0, zorder=9, label=lbl)
+        lbl2 = None if "VLM waypoint" in seen_label else "published (snapped)"
+        ax.plot(float(gu), float(gv), "D", color=SNAP, markersize=7,
+                markeredgecolor="white", markeredgewidth=1.0, zorder=9, label=lbl2)
+        seen_label.add("VLM waypoint")
+        ax.text(float((wu + gu) / 2), float((wv + gv) / 2) - 9,
+                f"snap {float(leg.get('snap_m', 0.0)):.2f} m", fontsize=LABEL_PT, color=SNAP,
+                weight="bold", ha="center", zorder=9,
+                path_effects=[pe.withStroke(linewidth=2.5, foreground="white")])
+
+    gt = entry.get("gt") or {}
+    for i, cons in enumerate(list(gt.get("pass_near") or [])
+                             + ([gt["goal"]] if gt.get("goal") else []), 1):
+        u, v = frame(cons["center"][0], cons["center"][1])
+        lbl = None if "GT constraint radius" in seen_label else "GT constraint radius"
+        seen_label.add("GT constraint radius")
+        ax.add_patch(Circle((float(u), float(v)), cons.get("radius", 1.5) * frame.px_per_m_x,
+                            fill=False, edgecolor=GT, linewidth=1.4, linestyle=":", zorder=6,
+                            label=lbl))
+        ax.text(float(u), float(v), str(i), fontsize=NUMBER_PT, color=GT, weight="bold",
+                ha="center", va="center", zorder=9,
+                path_effects=[pe.withStroke(linewidth=3, foreground="white")])
+
+    ax.set_title(f"{scene}  {qid}   the floor the snap could see — {free_cells} free cells\n"
+                 f"{entry.get('question', '')}", fontsize=9, loc="left")
+    if missing:
+        ax.text(0.01, 0.01, "\n".join("• " + m for m in missing), transform=ax.transAxes,
+                fontsize=8, color="#7a0d0d", va="bottom",
+                bbox=dict(facecolor="white", alpha=0.85, edgecolor="#7a0d0d", pad=4))
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(handles, labels, loc="upper right", fontsize=7, framealpha=0.9,
+                  markerscale=0.6)
+
+    ax.set_xlim(0, frame.width)
+    ax.set_ylim(frame.height, 0)
+    for artist in (list(ax.patches) + list(ax.lines) + list(ax.texts)
+                   + list(ax.collections)):
+        artist.set_clip_path(ax.patch)
+        artist.set_clip_on(True)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out, bbox_inches="tight")
+    plt.close(fig)
+    return f"{out}  [{free_cells} free cells]"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -674,6 +810,13 @@ def main() -> int:
         try:
             print(plot(scene, category, qid, row, out,
                        show_published=args.show_published, report=args.report))
+            # Category 3 only: the floor grid is what the snap reads, and no other category
+            # has one. It is a second file rather than a panel because the two are read at
+            # different moments -- "what happened" first, "why was it aimed there" after.
+            if category == 3:
+                print(plot_traversable(scene, category, qid, row,
+                                       args.out_dir / f"{scene}_{qid}_traversable.png",
+                                       report=args.report))
         except SystemExit as exc:
             print(f"{scene} {qid}: {exc}", file=sys.stderr)
         except (OSError, KeyError, ValueError) as exc:

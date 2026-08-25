@@ -78,6 +78,17 @@ def summarise(results: list[dict]) -> dict[str, Any]:
             return 0.0
         return round(sum(float(r["score"]) for r in scored) / available, 4)
 
+    # A run whose robot drove outside its own building is a broken simulator, not an answer.
+    # Measured on one cat-3 sweep, 8 of 26 rows were in that state -- livingroom_4's floor
+    # spans 6.7 x 7.9 m while its trajectory spanned 24 x 27 m -- and every one scored near
+    # zero for reasons no planner could have avoided. Scoring them would understate the system;
+    # dropping them would hide that those scenes still need re-running. So: excluded from every
+    # score below, counted here, and left in `results` intact.
+    broken = [r for r in results if r.get("sim_escaped")]
+    # If a whole sweep escaped there is nothing to fall back to, and reporting zero out of
+    # nothing is less useful than reporting what it did.
+    gradable = [r for r in results if not r.get("sim_escaped")] or results
+
     scenes = sorted({r["scene"] for r in results})
     # Timings from failed rows are the duration of a timeout, not of an answer, so they
     # would drag the mean toward the phase budget rather than describe the model.
@@ -86,7 +97,7 @@ def summarise(results: list[dict]) -> dict[str, Any]:
     # it only partly: a right object with a loose box and a wrong object that happens to
     # overlap both count as neither hit nor miss. Rows that carry a `score` therefore also
     # get the mean of it, which is the number the challenge actually awards.
-    scored_rows = _scored(results)
+    scored_rows = _scored(gradable)
     scored = [float(r["score"]) for r in scored_rows]
     graded = {
         "mean_score": round(sum(scored) / len(scored), 4),
@@ -97,18 +108,22 @@ def summarise(results: list[dict]) -> dict[str, Any]:
     # eval_orchestrator.plan_quality). Reported beside the real total because the gap between
     # them is the question worth asking: a planning problem and a driving problem look
     # identical in `total_score` alone.
-    planned = [float(r["plan_score"]) for r in results
+    planned = [float(r["plan_score"]) for r in gradable
                if isinstance(r.get("plan_score"), (int, float))]
     if planned:
         graded["total_plan_score"] = round(sum(planned), 2)
         graded["total_drive_loss"] = round(
-            sum(float(r.get("drive_loss") or 0.0) for r in results
+            sum(float(r.get("drive_loss") or 0.0) for r in gradable
                 if isinstance(r.get("plan_score"), (int, float))), 2)
     return {
         "total_run": len(results),
         "correct": sum(1 for r in results if r["correct"]),
-        "accuracy": accuracy(results),
+        "accuracy": accuracy(gradable),
         "errors": sum(1 for r in results if r.get("error")),
+        # Reported, never scored: these scenes need re-running, and everything above excludes
+        # them. A zero here is the only state in which the score line can be taken at face
+        # value without checking which scenes ran.
+        "sim_escaped": len(broken),
         "mean_time_s": round(sum(timed) / len(timed), 2) if timed else None,
         **graded,
         "per_scene": {
@@ -123,7 +138,10 @@ def summarise(results: list[dict]) -> dict[str, Any]:
                    if _scored(rows) else {}),
             }
             for scene in scenes
-            for rows in [[r for r in results if r["scene"] == scene]]
+            # `run` counts every row so a scene cannot silently shrink; the scores beside it
+            # are computed over the gradable ones only, same rule as the totals above.
+            for rows in [[r for r in gradable if r["scene"] == scene]
+                         or [r for r in results if r["scene"] == scene]]
         },
     }
 

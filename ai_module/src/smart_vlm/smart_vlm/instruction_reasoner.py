@@ -28,9 +28,11 @@ import json
 import math
 import threading
 import time
+from functools import partial
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import rclpy
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from geometry_msgs.msg import Pose2D
@@ -81,7 +83,26 @@ DRIVE_HZ = 2.0
 
 #: The terrain analysis reading we are allowed at test time. The challenge withdrew the
 #: traversable area this year, so this 20 m cloud is the only view of the floor we get.
-TERRAIN_TOPIC = "/terrain_map_ext"
+#: Both terrain clouds, folded into one grid. The 20 m one is the reach; the 5 m one is the
+#: quality. terrain_analysis runs `scanVoxelSize` 0.05 against ext's 0.10 and, crucially,
+#: `noDecayDis = 1.75` -- its near field does NOT decay, while ext runs `noDecayDis = 0.0` and
+#: is a rolling four-second window. So the near cloud is the strongest evidence we ever get for
+#: floor the robot actually drove past, and it was going unused. Last-write-wins in
+#: TraversableArea.add already prefers whichever arrived most recently, which is the right rule
+#: when the two disagree: the closer reading is built from denser support.
+TERRAIN_TOPICS = ("/terrain_map_ext", "/terrain_map")
+
+#: How much one message from each source is worth when cells vote on being floor
+#: (`TraversableArea.add`). /terrain_map is the better witness over the ground the two share:
+#: `scanVoxelSize` 0.05 against ext's 0.10, and `noDecayDis = 1.75`, so its near field is a
+#: real map rather than ext's four-second rolling window. Weighting it higher means ground the
+#: robot actually drove past is not talked out of being floor by grazing returns from 15 m.
+TERRAIN_WEIGHTS = {"/terrain_map": 2, "/terrain_map_ext": 1}
+
+#: Readings further than this from the robot are discarded. /terrain_map_ext is 20 m wide by
+#: construction, so anything past it is bad data rather than distant floor -- and bad floor is
+#: worse than none, because the snap will aim at it. See TraversableArea.add.
+TERRAIN_MAX_RANGE_M = 21.0
 
 #: Splits that cloud into floor and obstacle. This is the base autonomy's own
 #: `obstacleHeightThre`, so our idea of an obstacle matches the converter's.
@@ -98,11 +119,18 @@ TERRAIN_CELL_M = 0.10
 #: only decides how often that happens -- a 40 m square costs 0.64 MB and covers every scene.
 TERRAIN_HALF_SPAN_M = 20.0
 
-#: Terrain is folded in at this rate. The cloud is 20 m wide and the robot moves under 1 m/s, so
-#: consecutive clouds overlap almost entirely and 1 Hz loses nothing. It is a plain time gate
-#: rather than the travel gate this used to be: scattering into a grid costs well under a
-#: millisecond, so there is no longer anything to throttle away from.
-TERRAIN_HZ = 1.0
+#: Terrain fold rate cap. 0 means take every cloud, which is the default and the point.
+#:
+#: This was 1.0, on the reasoning that "the cloud is 20 m wide and the robot moves under 1 m/s,
+#: so consecutive clouds overlap almost entirely". That holds for a robot driving in a straight
+#: line across open floor. It does not hold for one turning: each cloud is a different line of
+#: sight, ext decays everything after 4 s, and a dropped cloud is floor that is never seen
+#: again. Measured on hotel_room_1 Q04 the robot ended 2.89 m from its own target with the
+#: floor there still UNKNOWN, which is what a 2.82 m snap was reaching around.
+#:
+#: Scattering costs 0.11 ms per 10k points and touches only this message's cells, so there is
+#: nothing to throttle away from. Kept as a knob purely so the claim stays testable.
+TERRAIN_HZ = 0.0
 
 #: How far the robot must travel before a leg re-chooses where to aim. The floor near a distant
 #: waypoint usually does not exist when the leg starts -- terrain analysis runs `decayTime = 4.0`
@@ -185,8 +213,11 @@ class InstructionReasoner(ReasonerNode):
         # folding a cloud in costs tens of milliseconds, and `self._cb` is mutually exclusive,
         # so sharing it would stall the odometry the drive loop steers by.
         self._terrain_cb = MutuallyExclusiveCallbackGroup()
-        self.create_subscription(
-            PointCloud2, TERRAIN_TOPIC, self._on_terrain, 1, callback_group=self._terrain_cb)
+        for topic in TERRAIN_TOPICS:
+            self.create_subscription(
+                PointCloud2, topic,
+                partial(self._on_terrain, weight=TERRAIN_WEIGHTS.get(topic, 1)),
+                1, callback_group=self._terrain_cb)
         self.pub_waypoint = self.create_publisher(Pose2D, "/way_point_with_heading", 10)
         self.pub_start = self.create_publisher(Bool, "/start_exploration", self._qos)
         self.get_logger().info(
@@ -212,7 +243,7 @@ class InstructionReasoner(ReasonerNode):
         with self._lock:
             return self._odom_xy
 
-    def _on_terrain(self, msg: PointCloud2) -> None:
+    def _on_terrain(self, msg: PointCloud2, weight: int = 1) -> None:
         """Fold one terrain cloud into the traversable area.
 
         Terrain analysis reports height above the local ground plane as `intensity`, and the
@@ -224,7 +255,7 @@ class InstructionReasoner(ReasonerNode):
         it happens to be standing.
         """
         now = time.monotonic()
-        if now - self._terrain_at < 1.0 / TERRAIN_HZ:
+        if TERRAIN_HZ > 0.0 and now - self._terrain_at < 1.0 / TERRAIN_HZ:
             return
         self._terrain_at = now
 
@@ -239,8 +270,10 @@ class InstructionReasoner(ReasonerNode):
         # Scattering into the grid is sub-millisecond and touches only the cells this message
         # covers, so unlike the accumulate-and-deduplicate it replaced there is nothing here
         # worth doing outside the lock.
+        here = self._here()
         with self._lock:
-            self._area.add(points[:, :2], points[:, 2] >= OBSTACLE_HEIGHT_M)
+            self._area.add(points[:, :2], points[:, 2] >= OBSTACLE_HEIGHT_M,
+                           origin=here, max_range_m=TERRAIN_MAX_RANGE_M, weight=weight)
 
     def _snap(self, wp: Waypoint) -> tuple[tuple[float, float], float]:
         """Where to actually publish for `wp`, and how far that is from what the model asked.
@@ -416,12 +449,33 @@ class InstructionReasoner(ReasonerNode):
             self.get_logger().warn(f"could not re-read {path.name} to record the drive: {exc}")
             return
         payload["drive"] = log
+        with self._lock:
+            payload["traversable"] = self._area.counts()
         try:
             with open(path, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
                 handle.write("\n")
         except OSError as exc:
             self.get_logger().warn(f"could not record the drive: {exc}")
+        self._record_traversable(run_dir)
+
+    def _record_traversable(self, run_dir: Path) -> None:
+        """Dump the floor grid beside the plan, so the snap can be looked at afterwards.
+
+        `free_cells` alone cannot answer the question that matters. hotel_room_1 Q04 recorded
+        4776 of them -- a healthy-looking number -- while the floor beside its target had never
+        been observed at all, which is what made the snap reach 2.82 m. The difference between
+        "blocked" and "never seen" is invisible in a count and obvious in a picture, and they
+        want opposite fixes: one is furniture, the other is unexplored.
+
+        Compressed uint8: a 40 m grid at 0.10 m is tens of kilobytes.
+        """
+        with self._lock:
+            snap = self._area.snapshot()
+        try:
+            np.savez_compressed(run_dir / "traversable_area.npz", **snap)
+        except OSError as exc:
+            self.get_logger().warn(f"could not record the traversable area: {exc}")
 
     # ---- driving ---------------------------------------------------------
 

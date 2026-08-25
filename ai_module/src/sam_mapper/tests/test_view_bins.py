@@ -9,6 +9,8 @@ alone — it feeds infer_centroid's diversity weighting.
 
 Pure numpy/scipy — no GPU, no ROS. Run with `just test sam_mapper`.
 """
+import math
+
 import numpy as np
 import pytest
 
@@ -18,7 +20,7 @@ import pytest
 pytest.importorskip("open3d", reason="run in the container: just test sam_mapper")
 
 from sam_mapper.mapping_config import MappingConfig      # noqa: E402
-from sam_mapper.single_object import SingleObject        # noqa: E402
+from sam_mapper.single_object import SingleObject, _fits_prior  # noqa: E402
 
 N_BINS = 20
 IDENTITY = np.eye(3)
@@ -206,3 +208,82 @@ def test_the_gate_is_off_by_default():
     before = obj.vote_stat.voxels.shape[0]
     assert obj.merge(bled_point(obj), IDENTITY, np.array([1.0, 0.0, 0.75]), "sofa", 1.0) == 0
     assert obj.vote_stat.voxels.shape[0] > before      # the bled point joins, ungated
+
+
+# -- D3b2: trim a bled cluster instead of discarding it ----------------------
+
+def trimming():
+    """A config with the trim ON. It ships OFF pending the replay A/B, so cases that exercise
+    it have to ask, exactly like `gated()` above."""
+    return MappingConfig.from_dict({"dimension_priors": {"trim_to_fit": True}})
+
+
+def table_with_lamp(config):
+    """hotel_room_1's failure, reproduced: a bedside table with a lamp standing on it.
+
+    The lamp sits 3 cm from the table's centre and reaches past the 1.14 m `bedsidetable` z
+    cap, so the two are one DBSCAN cluster whose box cannot fit the class. Untrimmed, the
+    whole cluster is refused and the table stops existing.
+    """
+    rng = np.random.default_rng(0)
+    body = rng.normal(scale=0.12, size=(400, 3)) + np.array([3.53, -3.70, 0.33])
+    lamp = np.column_stack([rng.normal(3.55, 0.05, 80), rng.normal(-3.72, 0.05, 80),
+                            rng.uniform(0.70, 1.35, 80)])
+    voxels = np.vstack([body, lamp])
+    return SingleObject(class_id="bedsidetable", obj_id=1, voxels=voxels, voxel_size=0.05,
+                        odom_R=IDENTITY, odom_t=np.array([0.0, 0.0, 0.75]), mask=None,
+                        stamp=0.0, num_angle_bin=N_BINS, config=config)
+
+
+def test_a_bled_cluster_is_kept_after_trimming():
+    """The object must survive. A box 0.2 m too big scores the constraint; an absent object
+    cannot be answered about at all."""
+    obj = table_with_lamp(trimming())
+    obj.regularize_shape(percentile=0.8)
+    assert obj.vote_stat.regularized_voxel_mask.any(), "the object vanished"
+    assert obj.regularize_rejections["trimmed_voxels"] > 0
+    assert obj.infer_centroid(diversity_percentile=0.8) is not None
+
+
+def test_the_trimmed_box_actually_fits_the_prior():
+    """Trimming that stops short of the cap would keep the object and still fail D3."""
+    obj = table_with_lamp(trimming())
+    obj.regularize_shape(percentile=0.8)
+    kept = obj.vote_stat.voxels[obj.vote_stat.regularized_voxel_mask]
+    extent = kept.max(axis=0) - kept.min(axis=0)
+    prior = MappingConfig().dimension_priors.for_label("bedsidetable")
+    assert _fits_prior(extent, prior), f"{extent} still exceeds {prior}"
+
+
+def test_the_trim_keeps_the_body_not_the_bleed():
+    """Furthest-first is the whole ordering. If it shed the table and kept the lamp the
+    centroid would move metres and the object would be worse than useless."""
+    obj = table_with_lamp(trimming())
+    obj.regularize_shape(percentile=0.8)
+    centre = obj.infer_centroid(diversity_percentile=0.8)
+    assert math.dist(centre[:2], (3.53, -3.70)) < 0.25
+
+
+def test_off_is_the_old_behaviour():
+    """The A/B is only honest if `off` is genuinely the code that shipped before."""
+    obj = table_with_lamp(MappingConfig())
+    assert obj.config.dimension_priors.trim_to_fit is False
+    obj.regularize_shape(percentile=0.8)
+    assert obj.regularize_rejections["exceeds_prior"] > 0
+    assert obj.regularize_rejections["trimmed_voxels"] == 0
+
+
+def test_a_cluster_that_is_all_bleed_is_still_refused():
+    """"Nothing here" has to stay reachable, or the trim would launder noise into objects.
+    A thin tall column is nothing a bedside table could ever be."""
+    rng = np.random.default_rng(1)
+    voxels = np.column_stack([rng.normal(0.0, 0.02, 60), rng.normal(0.0, 0.02, 60),
+                              rng.uniform(0.0, 3.0, 60)])
+    obj = SingleObject(class_id="bedsidetable", obj_id=2, voxels=voxels, voxel_size=0.05,
+                       odom_R=IDENTITY, odom_t=np.array([2.0, 0.0, 0.75]), mask=None,
+                       stamp=0.0, num_angle_bin=N_BINS, config=trimming())
+    obj.regularize_shape(percentile=0.8)
+    kept = obj.vote_stat.voxels[obj.vote_stat.regularized_voxel_mask]
+    if len(kept):
+        extent = kept.max(axis=0) - kept.min(axis=0)
+        assert _fits_prior(extent, MappingConfig().dimension_priors.for_label("bedsidetable"))

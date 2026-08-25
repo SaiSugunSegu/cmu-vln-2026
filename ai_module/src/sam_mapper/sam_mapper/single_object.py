@@ -291,7 +291,7 @@ One tracked 3D instance — a voxel-voted point cluster plus its class/id/lifecy
         self.valid_indices_regularized = None
         self.clustering_labels = None
         self.regularize_rejections = {"weight": 0, "hull_failed": 0, "exceeds_prior": 0,
-                                      "accepted": 0}
+                                      "accepted": 0, "trimmed_voxels": 0, "trim_failed": 0}
 
         self.req_clustering = True
         self.req_shape_regularization = True
@@ -419,6 +419,64 @@ One tracked 3D instance — a voxel-voted point cluster plus its class/id/lifecy
             self.clustering_labels = np.array(pcd.cluster_dbscan(eps=eps, min_points=min_points, print_progress=False))
             self.req_clustering = False
 
+    def _trim_to_prior(self, valid_mask, cluster_mask, dim_prior):
+        """Shave a cluster's outermost voxels until it fits its class cap. D3b2.
+
+        Returns `(kept_mask, n_trimmed)`, or `(None, n)` when nothing survives.
+
+        The alternative -- what this replaces -- is discarding the cluster whole, and whole
+        means the object can disappear: regularized voxels reach zero, `infer_centroid` returns
+        None, and `serialize_map_to_dict` skips it. hotel_room_1 lost one of its two bedside
+        tables exactly so, because a lamp standing 3 cm from the table's centre pushed the
+        cluster past the 1.14 m `bedsidetable` z cap. A box 0.2 m too big scores the
+        constraint; an absent object cannot be answered about at all.
+
+        Voxels are dropped furthest-first from the body already accepted -- bleed is what
+        reaches away from the object, so distance from its trusted core is the ordering that
+        sheds bleed before geometry. Before there is a trusted core the cluster anchors on
+        itself, which still sheds its own outliers.
+
+        Binary search over the kept prefix rather than dropping one voxel at a time: each test
+        is a convex hull, and a linear walk would be thousands of them per cluster. The search
+        is sound because the predicate is monotone -- adding voxels to a box can only grow it,
+        never shrink it.
+        """
+        voxels = self.vote_stat.voxels
+        order_src = np.flatnonzero(cluster_mask)
+        if order_src.size == 0:
+            return None, 0
+        anchored = valid_mask if valid_mask.any() else cluster_mask
+        weights = np.sum(self.vote_stat.observation_angles[anchored], axis=1)
+        body = voxels[anchored]
+        centre = (np.average(body, axis=0, weights=weights)
+                  if float(np.sum(weights)) > 0.0 else body.mean(axis=0))
+        order = order_src[np.argsort(np.linalg.norm(voxels[order_src] - centre, axis=1))]
+
+        def fits(k):
+            trial = valid_mask.copy()
+            trial[order[:k]] = True
+            if not trial.any():
+                return False
+            _, extent, _ = get_bbox_3d_oriented(voxels[trial])
+            return extent is not None and _fits_prior(extent, dim_prior)
+
+        # A single voxel fits any positive cap, so with no accepted body yet the floor is 1.
+        low = 0 if valid_mask.any() else 1
+        high = order.size
+        if not fits(low):
+            return None, order.size
+        while high - low > 1:
+            mid = (low + high) // 2
+            if fits(mid):
+                low = mid
+            else:
+                high = mid
+        if low == 0:
+            return None, order.size
+        kept = np.zeros_like(cluster_mask)
+        kept[order[:low]] = True
+        return kept, int(order.size - low)
+
     def regularize_shape(self, percentile=None):
         """
 
@@ -460,8 +518,21 @@ Cluster voxels (DBSCAN), then keep clusters — largest observation-weight first
                 self.regularize_rejections["hull_failed"] += 1
                 continue
             if priors_cfg.enabled and not _fits_prior(extent, dim_prior):
+                # Counted whether or not the trim rescues it: this stays the measure of how
+                # often bleed pushes a cluster past its cap.
                 self.regularize_rejections["exceeds_prior"] += 1
-                continue
+                if not priors_cfg.trim_to_fit:
+                    continue
+                kept, trimmed = self._trim_to_prior(
+                    valid_mask, cluster_masks[weight_index], dim_prior)
+                # "Nothing here" has to stay reachable: a cluster that is all bleed should
+                # still be refused, and the weight floor is the same one the loop opens with.
+                if kept is None or (np.sum(self.vote_stat.observation_angles[kept])
+                                    < self.config.cluster_weight_min):
+                    self.regularize_rejections["trim_failed"] += 1
+                    continue
+                self.regularize_rejections["trimmed_voxels"] += trimmed
+                attempt = np.logical_or(valid_mask, kept)
             self.regularize_rejections["accepted"] += 1
             valid_mask = attempt
             if percentile is not None:

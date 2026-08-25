@@ -664,7 +664,57 @@ def load_scorer():
     return _SCORE_MODULE
 
 
-def grade_instruction(node: EvalOrchestratorNode, entry: dict, elapsed: float) -> dict:
+#: How far outside the scene's own floor the robot may stray before the run is called broken.
+#: Generous -- the floor list is the furniture author's, not a collision hull, and a metre of
+#: overhang is ordinary. Two metres is not.
+ESCAPE_MARGIN_M = 2.0
+
+
+def scene_floor_bbox(scene: str, benchmark_dir: Path) -> Optional[tuple]:
+    """(x0, y0, x1, y1) of the scene's own floor slabs, or None if unreadable.
+
+    From `data/scenes/<scene>/object_list.txt`, which is the environment author's ground truth
+    rather than anything the run produced -- the point is to check the run against something
+    it cannot influence.
+    """
+    path = benchmark_dir.parent / "scenes" / scene / "object_list.txt"
+    xs: list[float] = []
+    ys: list[float] = []
+    try:
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                parts = line.split('"')
+                if len(parts) < 2 or parts[1].strip().lower() not in ("floor", "floors"):
+                    continue
+                v = parts[0].split()
+                x, y, length, width = float(v[1]), float(v[2]), float(v[4]), float(v[5])
+                xs += [x - length / 2.0, x + length / 2.0]
+                ys += [y - width / 2.0, y + width / 2.0]
+    except (OSError, ValueError, IndexError):
+        return None
+    return (min(xs), min(ys), max(xs), max(ys)) if xs else None
+
+
+def escaped_the_scene(trajectory: list, bbox: Optional[tuple]) -> bool:
+    """Did the robot end up somewhere the room does not extend to?
+
+    A run that drives outside its own building is not a planner result. Measured on the cat-3
+    sweep: livingroom_4's floor spans 6.7 x 7.9 m and its trajectory spans 24 x 27 m; loft and
+    home_building_1 the same. Terrain analysis dutifully calls the void floor, so the snap grid
+    fills with thousands of square metres of fiction and every number from the question is
+    meaningless. Flagged rather than deleted -- a flag says "re-run this scene", a deletion
+    hides that it needs re-running.
+    """
+    if not trajectory or bbox is None:
+        return False
+    x0, y0, x1, y1 = bbox
+    return any(not (x0 - ESCAPE_MARGIN_M <= p[1] <= x1 + ESCAPE_MARGIN_M
+                    and y0 - ESCAPE_MARGIN_M <= p[2] <= y1 + ESCAPE_MARGIN_M)
+               for p in trajectory)
+
+
+def grade_instruction(node: EvalOrchestratorNode, entry: dict, elapsed: float,
+                      scene: str = "") -> dict:
     """Category 3: score the path the robot actually drove.
 
     README.md, "Question Types and Initial Scoring": *"The score will be calculated based on
@@ -693,6 +743,10 @@ def grade_instruction(node: EvalOrchestratorNode, entry: dict, elapsed: float) -
         # "Exceeding the time limit for a certain question incurs a penalty on the initial
         # score" — the penalty is unspecified, so flag the row and leave the score alone.
         "over_time": elapsed > QUESTION_TIME_LIMIT_S,
+        # Same treatment: recorded, never applied to the score. A broken sim is not a bad
+        # answer, and averaging it in understates what the system actually does.
+        "sim_escaped": escaped_the_scene(
+            node.trajectory, scene_floor_bbox(scene, node.benchmark_dir)),
     }
     if not node.trajectory:
         return row
@@ -785,7 +839,8 @@ def plan_quality(node: EvalOrchestratorNode, gt: dict, score: float) -> dict:
     return out
 
 
-def grade(node: EvalOrchestratorNode, entry: dict, elapsed: float = 0.0) -> dict:
+def grade(node: EvalOrchestratorNode, entry: dict, elapsed: float = 0.0,
+          scene: str = "") -> dict:
     """The answer-shaped half of a result row: what came back, and what it was worth.
 
     Category 1 is equality against an integer. Category 2 is twice the axis-aligned 3D IoU
@@ -796,7 +851,7 @@ def grade(node: EvalOrchestratorNode, entry: dict, elapsed: float = 0.0) -> dict
     grade_instruction.
     """
     if node.category == 3:
-        return grade_instruction(node, entry, elapsed)
+        return grade_instruction(node, entry, elapsed, scene)
     if node.category == 1:
         gt = int(entry["answer"])
         return {"gt": gt, "predicted": node.predicted, "correct": node.predicted == gt}
@@ -926,7 +981,7 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         teardown(node, proc)
 
     elapsed = time.monotonic() - t_start
-    outcome = grade(node, entry, elapsed)
+    outcome = grade(node, entry, elapsed, scene)
     reason, n_views = answer_rationale(node.best_view_dir, node.category)
     scale = {2: "/2", 3: "/6"}.get(node.category)
     log(f"result: predicted={outcome['predicted']} gt={gt_answer} "
