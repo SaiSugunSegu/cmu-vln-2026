@@ -32,10 +32,16 @@ class CountAnswer(BaseModel):
     """The count itself, read off several views of one room at once.
 
     `reason` is not decoration: asking for it before the number is what makes the
-    model enumerate what it sees rather than guess a plausible total.
+    model enumerate what it sees rather than guess a plausible total. It asks for the
+    objects and their positions because that is the procedure `ANSWER_SYSTEM` sets out
+    — the position of each one is what merges two views into a union instead of a
+    maximum, and "one short sentence" here used to contradict the instruction to walk
+    the views. Still a few clauses and not paragraphs: the local backend truncates a
+    reply at `qwen_ros_backend.MAX_NEW_TOKENS`, which would take the count with it.
     """
 
-    reason: str = Field(description="One short sentence explaining the count")
+    reason: str = Field(
+        description="The objects counted and where each one sits, in a few clauses")
     count: int = Field(description="Number of matching objects, 0 or more")
 
 
