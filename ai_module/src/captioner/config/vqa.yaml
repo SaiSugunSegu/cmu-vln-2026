@@ -49,11 +49,11 @@ model_lite: ""
 # cropped equivalent rather than sending nothing.
 #
 # Categories 1 and 2 count and identify single objects, which is what the tighter crop is
-# good for: category 1 ships on `silhouette`, category 2 on the plain `crop`. Category 3
+# good for: category 1 ships on `full_silhouette`, category 2 on the plain `crop`. Category 3
 # wants `full_silhouette`: a route is planned over a whole room, and an ROI crop shows one
 # corner of it -- the first cat-3 sim run sent 709x640 and 353x551 cuts of a 1920x640 frame
 # and still had to reason about where to drive.
-view_source_numerical: silhouette
+view_source_numerical: full_silhouette
 view_source_object_reference: crop
 view_source_instruction_following: full_silhouette
 
