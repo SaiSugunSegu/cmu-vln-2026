@@ -482,15 +482,16 @@ eval-cat1 scene="all" limit="0" target_source="vlm" speed="0.1" report="/data/ru
 # formula -- so a question scores partial credit rather than pass/fail. 122 questions at
 # roughly 3 minutes each is about 6 hours, so use a scene + limit as the dev loop:
 #   just eval-cat2 chinese_room 2
-# mode= is how the reasoner chooses: hybrid (ships: solver, model only where the geometry
-# is not decisive), solver (no model call), vlm, naive. See cat2_utils.select_object.
+# mode= is how the reasoner chooses: vlm (ships: model chooses from the candidate table
+# and marked views), hybrid (solver, model only where the geometry is not decisive),
+# solver (no model call), naive. See cat2_utils.select_object.
 # A row records the score, not what was reachable: whether a zero is selection or perception
 # takes the run's obj_map.json against the answer's box. bench-cat2 carries that ceiling.
 # view_source_object_reference is category-2's own vqa.yaml setting, independent of
 # category-1's `view_source_numerical` -- see eval-cat1 above.
 [group('eval')]
 [doc('Orchestrated end-to-end category-2 eval; relaunches the pipeline per question')]
-eval-cat2 scene="all" limit="0" mode="hybrid" target_source="vlm" speed="0.1" report="/data/runs/cat2_report.json":
+eval-cat2 scene="all" limit="0" mode="vlm" target_source="vlm" speed="0.1" report="/data/runs/cat2_report.json":
     docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm eval_orchestrator --ros-args -p category:=2 -p scene:={{scene}} -p question_limit:={{limit}} -p cat2_mode:={{mode}} -p target_source:={{target_source}} -p speed:={{speed}} -p report_file:={{report}}"
 
 # The same two sweeps against the LIVE SIM instead of bags, with TARE driving. Unlike
@@ -511,7 +512,7 @@ eval-cat1-sim scene="all" limit="0" target_source="vlm" report="/data/runs/chall
 
 [group('eval')]
 [doc('Orchestrated category-2 eval against the live sim (TARE explores; host-side)')]
-eval-cat2-sim scene="all" limit="0" mode="hybrid" target_source="vlm" report="/data/runs/challenge_report_sim_cat2.json":
+eval-cat2-sim scene="all" limit="0" mode="vlm" target_source="vlm" report="/data/runs/challenge_report_sim_cat2.json":
     python3 scripts/eval/run_sim_sweep.py --category 2 --scenes {{scene}} \
       --limit {{limit}} --mode {{mode}} --target-source {{target_source}} \
       --report "{{report}}"
@@ -590,7 +591,8 @@ cache-cat2 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/ru
 # Phase 2 for category 2, the same shape as bench-cat1: replay the selection step over
 # those cached maps and crops. Seconds per mode for solver and naive, which ask no model,
 # so this is the loop a change to selection is measured in.
-#   just bench-cat2 hybrid    # what ships: solver, model only where the geometry is not decisive
+#   just bench-cat2 vlm       # what ships: model chooses from the candidate table and marked views
+#   just bench-cat2 hybrid    # solver, model only where the geometry is not decisive
 #   just bench-cat2 solver    # no model call at all
 #   just bench-cat2 naive     # the floor: largest instance of the named class
 # Every row carries ceiling_score -- twice the best IoU reachable against the cached boxes --
@@ -598,7 +600,7 @@ cache-cat2 scene="all" limit="0" speed="0.1" target_source="vlm" cache="/data/ru
 # when A/B-ing two modes, or the second run overwrites the first.
 [group('eval')]
 [doc('Score category-2 object selection over the cached maps (no SAM, no bag)')]
-bench-cat2 mode="hybrid" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json":
+bench-cat2 mode="vlm" scene="all" limit="0" cache="/data/runs/cat2_cache.json" report="/data/runs/cat2_bench_report.json":
     docker exec -it iros2026_odyssey bash -lc "source {{ai_src}}/install/setup.bash && ros2 run smart_vlm cat2_bench --mode {{mode}} --scene {{scene}} --limit {{limit}} --cache {{cache}} --report {{report}}"
 
 # Text-only extract call the live reasoners use to arm SAM, scored against each

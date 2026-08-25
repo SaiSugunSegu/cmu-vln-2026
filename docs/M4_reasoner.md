@@ -23,9 +23,11 @@ Answer when: (a) target grounded with confidence ≥ τ AND margin over 2nd cand
 
 ## Object reference: the shipped path
 
-`object_reference_reasoner` answers category 2 in **hybrid** mode (`cat2_mode`, default
-`hybrid`): the benchmark's own predicates rank the map's objects, and a model is asked only
-when the geometry is not decisive by `MIN_MARGIN`. Roughly 0.4 model calls per question.
+`object_reference_reasoner` answers category 2 in **vlm** mode by default (`cat2_mode`,
+default `vlm`): the model chooses from the candidate table and marked views. **hybrid** mode
+is also available: the benchmark's own predicates rank the map's objects, and a model is
+asked only when the geometry is not decisive by `MIN_MARGIN`, for roughly 0.4 model calls
+per question.
 
 The reason to keep the model on a leash rather than off or always-on is measured, not
 stylistic: over the chinese_room cache, solver-only scored 1.62/20 and model-on-every-question

@@ -289,8 +289,8 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0, help="questions per scene; 0 = all")
     ap.add_argument("--question-id", default="",
                     help="run only this question id (e.g. Q01)")
-    ap.add_argument("--target-source", default="gt")
-    ap.add_argument("--mode", default="hybrid", help="cat2 selection mode")
+    ap.add_argument("--target-source", default="vlm")
+    ap.add_argument("--mode", default="vlm", help="cat2 selection mode")
     ap.add_argument("--report", default="")
     ap.add_argument("--display", default="",
                     help="X display. Empty starts Xvfb :99 in iros2026_system "

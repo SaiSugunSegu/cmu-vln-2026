@@ -200,7 +200,7 @@ class EvalOrchestratorNode(Node):
         self.question_limit = int(self._param("question_limit", 0))
         # Pin one benchmark id (e.g. Q01). When set, question_limit is ignored.
         self.question_id = str(self._param("question_id", "")).strip()
-        self.target_source = str(self._param("target_source", "gt"))
+        self.target_source = str(self._param("target_source", "vlm"))
         # A real double, like every other numeric param here. ROS matches override types
         # against the declared one, so pass it with a decimal point: speed:=2.0, not 2.
         self.speed = float(self._param("speed", 1.0))
@@ -211,7 +211,7 @@ class EvalOrchestratorNode(Node):
         # it exists to record where each question's crops went.
         self.crops_only = bool(self._param("crops_only", False))
         # How the object-reference reasoner chooses (category 2 only); see cat2_utils.
-        self.cat2_mode = str(self._param("cat2_mode", "hybrid"))
+        self.cat2_mode = str(self._param("cat2_mode", "vlm"))
         # Skip questions the report beside these crops already covers. A sweep of every
         # scene runs for hours, so an interruption in hour five must not mean starting
         # over. Off by default: a scored run has to answer every question itself.
