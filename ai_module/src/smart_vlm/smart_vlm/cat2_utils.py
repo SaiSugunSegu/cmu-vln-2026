@@ -463,7 +463,7 @@ def select_object(
     question: str,
     objects: dict,
     *,
-    mode: str = "hybrid",
+    mode: str = "vlm",
     ask: Optional[Callable[..., Any]] = None,
     views_for: Optional[Callable[[list[str], dict[str, str]], list[Path]]] = None,
     log: Callable[[str], None] = print,
@@ -477,11 +477,13 @@ def select_object(
       vlm     the model choosing from a candidate table and the marked views.
       hybrid  solver when the geometry is decisive, model when it is not.
 
-    `hybrid` is the one worth running: the corpus is dominated by comparatives and `between`,
-    which are arithmetic the solver does exactly, and the cases it cannot settle — a margin
-    under the benchmark's own `MIN_MARGIN`, an anchor it could not resolve, a predicate no
-    candidate satisfies — are precisely the ones where appearance decides. Spending a call
-    only there keeps the cost proportional to the difficulty rather than the corpus size.
+    `vlm` is the default: every question gets a model call, which is what the submission
+    is scored on. `hybrid` is the cheaper alternative worth knowing about: the corpus is
+    dominated by comparatives and `between`, which are arithmetic the solver does exactly,
+    and the cases it cannot settle — a margin under the benchmark's own `MIN_MARGIN`, an
+    anchor it could not resolve, a predicate no candidate satisfies — are precisely the ones
+    where appearance decides. Spending a call only there keeps the cost proportional to the
+    difficulty rather than the corpus size.
 
     `ask(system, user, images, schema)` is however the caller reaches a model. Any failure it
     raises is caught: a model that errors leaves the solver's answer standing rather than

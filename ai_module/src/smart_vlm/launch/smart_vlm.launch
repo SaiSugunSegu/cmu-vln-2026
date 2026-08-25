@@ -124,9 +124,10 @@
        Target extraction still runs, so SAM is armed exactly as on a scored run. -->
   <arg name="crops_only" default="false"/>
   <!-- How the object-reference reasoner chooses among the 3D map's candidates:
+       vlm (the model chooses from the candidate table and marked views) |
        hybrid (geometry, with a model call only where the geometry is not decisive) |
-       solver | vlm | naive. See smart_vlm/cat2_utils.py. -->
-  <arg name="cat2_mode" default="hybrid"/>
+       solver | naive. See smart_vlm/cat2_utils.py. -->
+  <arg name="cat2_mode" default="vlm"/>
 
   <!-- 0. Qwen VQA server (local backend only) — before SAM, so the two model loads
           overlap instead of queueing. Deliberately absent on the cloud path: it would

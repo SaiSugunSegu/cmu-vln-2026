@@ -59,11 +59,11 @@ class ObjectReferenceReasoner(ReasonerNode):
         super().__init__("object_reference_reasoner", extra_params={
             "crops_only": False,
             "max_context_views": 3,
-            "mode": "hybrid",
+            "mode": "vlm",
         })
         self.crops_only = bool(self.get_parameter("crops_only").value)
         self.max_context_views = max(1, int(self.get_parameter("max_context_views").value))
-        self.mode = str(self.get_parameter("mode").value).strip().lower() or "hybrid"
+        self.mode = str(self.get_parameter("mode").value).strip().lower() or "vlm"
         self.pub_answer = self.create_publisher(Marker, "/selected_object_marker", 10)
         if not SOLVER_AVAILABLE:
             self.get_logger().error(solver_status())

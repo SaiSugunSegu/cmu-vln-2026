@@ -12,14 +12,14 @@ difference in score is therefore a difference in reasoning.
         -p report_file:=/data/runs/cat2_cache.json -p resume:=true
 
     # then, per mode, as often as you like
-    ros2 run smart_vlm cat2_bench --mode hybrid --report /data/runs/cat2_hybrid.json
+    ros2 run smart_vlm cat2_bench --mode vlm --report /data/runs/cat2_vlm.json
 
 Four modes, and the gap between them is the whole point:
 
     naive   largest instance of the class the question names. The floor.
     solver  the benchmark's own spatial predicates over the map. No model call.
-    vlm     a model choosing from the candidate table and the marked crops.
-    hybrid  solver where the geometry is decisive, model where it is not. What ships.
+    vlm     a model choosing from the candidate table and the marked crops. What ships.
+    hybrid  solver where the geometry is decisive, model where it is not.
 
 Every row also carries `ceiling_score` — twice the best IoU any selector could reach against
 these boxes, which needs no selection to compute — so one report already separates the three
@@ -66,7 +66,7 @@ def log(message: str, *, err: bool = False) -> None:
 def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Replay category-2 object selection over cached maps and crops.")
-    parser.add_argument("--mode", default="hybrid", choices=MODES,
+    parser.add_argument("--mode", default="vlm", choices=MODES,
                         help="selection policy (default: %(default)s)")
     parser.add_argument("--cache", default="/data/runs/cat2_cache.json",
                         help="report from an earlier category-2 sweep; supplies each "

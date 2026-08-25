@@ -32,7 +32,7 @@
   <arg name="sam_config"        default="sam3_mecanum_sim.yaml"/>
   <arg name="run_id"            default=""/>
   <arg name="crops_only"        default="false"/>
-  <arg name="cat2_mode"         default="hybrid"/>
+  <arg name="cat2_mode"         default="vlm"/>
 
   <!-- 1. The AI module, exactly as submitted. vqa.yaml picks cloud vs local. -->
   <include file="$(find-pkg-share smart_vlm)/launch/smart_vlm.launch">
