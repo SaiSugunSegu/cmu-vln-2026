@@ -49,9 +49,11 @@ Where inference runs is `vlm_backend` in config/vqa.yaml (imported as VLM_BACKEN
 report records that value so a local sweep and a cloud sweep stay comparable.
 
 Which image of a best-view crop the reasoner is shown (crop | silhouette, default
-silhouette) is set once in `config/vqa.yaml`'s `view_source`, not per-invocation here —
-see captioner/vlm_backends/constants.py. `eval-cat1`, `eval-cat2`, `cache-cat1`,
-`cache-cat2` and the sim sweeps all read the same value that way.
+silhouette) is set once in `config/vqa.yaml`, one key per category
+(`view_source_numerical` / `view_source_object_reference` / `view_source_instruction_following`),
+not per-invocation here — see captioner/vlm_backends/constants.py. `eval-cat1`,
+`eval-cat2`, `cache-cat1`, `cache-cat2` and the sim sweeps all read the same category-scoped
+value that way.
 
 Crops are saved under `<crops root>/<run_id>/<scene>/<question id>-<question>` and every
 row records the `best_view_dir` they went to, which turns the report into a cache index:
@@ -83,9 +85,20 @@ from std_msgs.msg import Int32, String
 from visualization_msgs.msg import Marker
 
 from captioner.ros_utils import shutdown_guard
-from captioner.vlm_backends.constants import VIEW_SOURCE, VLM_BACKEND
+from captioner.vlm_backends.constants import (VIEW_SOURCE_INSTRUCTION_FOLLOWING,
+                                              VIEW_SOURCE_NUMERICAL,
+                                              VIEW_SOURCE_OBJECT_REFERENCE, VLM_BACKEND)
 from smart_vlm.cat3_utils import synthetic_trajectory
 from smart_vlm.report_utils import iou3d, previous_results, summarise, write_report
+
+#: Each scored category reads its own vqa.yaml view_source key (see
+#: captioner.vlm_backends.constants); this node handles all three generically via
+#: `node.category`, so a report row picks whichever one applies.
+VIEW_SOURCE_BY_CATEGORY = {
+    1: VIEW_SOURCE_NUMERICAL,
+    2: VIEW_SOURCE_OBJECT_REFERENCE,
+    3: VIEW_SOURCE_INSTRUCTION_FOLLOWING,
+}
 
 LATCHED = QoSProfile(
     depth=1,
@@ -1004,7 +1017,7 @@ def run_question(node: EvalOrchestratorNode, scene: str, entry: dict) -> dict:
         "scene_source": node.scene_source,
         "target_source": node.target_source,
         "vlm_backend": node.resolved_backend,
-        "view_source": VIEW_SOURCE,
+        "view_source": VIEW_SOURCE_BY_CATEGORY[node.category],
         "prompts": node.armed_prompts,
         "best_view_dir": node.best_view_dir,
         # Why the model answered as it did, and over how many views. A bare number tells
@@ -1073,7 +1086,8 @@ def run_orchestration(node: EvalOrchestratorNode) -> int:
     # So a cache report cannot be mistaken for a scored one: with crops_only every
     # prediction is a placeholder, and the accuracy beside it means nothing.
     extra = {"crops_only": node.crops_only, "category": node.category,
-             "scene_source": node.scene_source, "view_source": VIEW_SOURCE}
+             "scene_source": node.scene_source,
+             "view_source": VIEW_SOURCE_BY_CATEGORY[node.category]}
     if node.category == 2:
         extra["cat2_mode"] = node.cat2_mode
 

@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Callable, Collection, NamedTuple, Optional, Sequence
 
 from captioner.image_input import image_is_complete
+from captioner.vlm_backends import constants as vlm_constants
 from captioner.vlm_backends.constants import SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S, is_silhouette, view_dir
 from smart_vlm.numerical_utils import EXTRACT_SYSTEM
 
@@ -211,8 +212,9 @@ def solver_status() -> str:
 def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Path], bool]:
     """(path to draw on, whether it is a finalized silhouette).
 
-    Gated by VIEW_SOURCE (see captioner.vlm_backends.constants, backed by
-    config/vqa.yaml): `crop` never looks at silhouette/, even once one exists;
+    Gated by `view_source_object_reference` (see captioner.vlm_backends.constants,
+    backed by config/vqa.yaml) -- category 2's own switch, independent of what category 1
+    or 3 are set to. `crop` never looks at silhouette/, even once one exists;
     `silhouette` (the default) waits out `deadline` for sam_node's finalize pass — the
     bare crop has neither the outlines nor the ids — before falling back to the plain
     crop, so a run with save_silhouette_copy disabled still answers. The `full*` variants
@@ -225,12 +227,13 @@ def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Pa
     """
     import time
 
+    source = vlm_constants.VIEW_SOURCE_OBJECT_REFERENCE
     plain = run_dir / name
-    subdir = view_dir()
+    subdir = view_dir(source)
     if not subdir:
         return (plain, False) if image_is_complete(plain) else (None, False)
     wanted = run_dir / subdir / name
-    if not is_silhouette():
+    if not is_silhouette(source):
         # `full` is written with the crop, not by the finalize pass: nothing to wait for,
         # but absent entirely unless save_full_views is on.
         return (
@@ -273,10 +276,10 @@ def marked_views(
     text — two tabs for one object is worse than one. The `[id] label` tab is drawn only on
     the bare-crop fallback, which carries no ids at all.
 
-    `wait_s` bounds how long a VIEW_SOURCE="silhouette" caller waits for sam_node to
-    finish the finalize pass, shared across every requested rank; omit it for the live
-    reasoner's default (SILHOUETTE_WAIT_S), or pass 0 for an offline replay against a
-    cache nothing is still writing to.
+    `wait_s` bounds how long a silhouette-valued caller waits for sam_node to finish the
+    finalize pass, shared across every requested rank; omit it for the live reasoner's
+    default (SILHOUETTE_WAIT_S), or pass 0 for an offline replay against a cache nothing
+    is still writing to.
     """
     import json
     import time

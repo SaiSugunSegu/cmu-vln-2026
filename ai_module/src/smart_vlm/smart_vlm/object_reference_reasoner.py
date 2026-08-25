@@ -28,7 +28,7 @@ from visualization_msgs.msg import Marker
 
 from captioner.paths import secure_path
 from captioner.ros_utils import wait_for_subscriber
-from captioner.vlm_backends.constants import VIEW_SOURCE
+from captioner.vlm_backends.constants import VIEW_SOURCE_OBJECT_REFERENCE
 from sam_mapper.challenge_marker import payload_from_map_object
 from sam_mapper.ros_markers import create_selected_object_marker
 from smart_vlm.cat2_utils import (
@@ -70,7 +70,7 @@ class ObjectReferenceReasoner(ReasonerNode):
         self.get_logger().info(
             f"object_reference_reasoner ready (backend={self.backend.name}, "
             f"extract_backend={self.extract_backend.name}, mode={self.mode}, "
-            f"view_source={VIEW_SOURCE}, "
+            f"view_source={VIEW_SOURCE_OBJECT_REFERENCE}, "
             f"max_context_views={self.max_context_views}"
             f"{', crops_only' if self.crops_only else ''}) — waiting for Find / The questions")
 
@@ -127,7 +127,7 @@ class ObjectReferenceReasoner(ReasonerNode):
                 "mode": self.mode,
                 "backend": self.backend.name,
                 "extract_backend": self.extract_backend.name,
-                "view_source": VIEW_SOURCE,
+                "view_source": VIEW_SOURCE_OBJECT_REFERENCE,
                 "crops_only": self.crops_only,
                 "n_map_objects": len(raw_map),
             })

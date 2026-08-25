@@ -23,6 +23,7 @@ from captioner.prompts.object_extraction import get_object_extraction_prompt
 # implementation with the VQA server: two of them drifted apart before (one
 # stripped thousands separators, the other did not).
 from captioner.text_utils import extract_integer
+from captioner.vlm_backends import constants as vlm_constants
 from captioner.vlm_backends.constants import (SILHOUETTE_POLL_S, SILHOUETTE_WAIT_S,
                                               is_silhouette, view_dir)
 
@@ -82,7 +83,7 @@ EXTRACT_SYSTEM = get_object_extraction_prompt()
 # they name, which is a count of 2 against a gt of 4 read off pixels that are not there. It
 # is the one case where the tags are better evidence than the image.
 #
-# READING THE DRAWING is written to survive VIEW_SOURCE being `crop` (what vqa.yaml ships)
+# READING THE DRAWING is written to survive view_source_numerical being `crop` (what vqa.yaml ships)
 # as well as `silhouette` (what the 8/11 replay used): cat-1 has no equivalent of
 # cat2_utils.marked_views, so select_context_views hands over whatever the switch names,
 # annotated or bare. One prompt has to read both, so the drawing is described as something
@@ -213,12 +214,11 @@ Give your reason first — what you counted and where each one sits — then the
 def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Path], bool]:
     """(path to answer from, whether it is a finalized silhouette) for one crop filename.
 
-    Mirrors `cat2_utils._view_source`: one VIEW_SOURCE switch (see
-    captioner.vlm_backends.constants, backed by config/vqa.yaml) governs both categories,
-    so a change to it moves every eval script instead of drifting between the two
-    reasoners that each picked their own images. `crop` never looks at silhouette/, even
-    once one exists; `silhouette` (the default) waits out `deadline` for sam_node's
-    finalize pass before falling back to the plain crop, so a run with
+    Mirrors `cat2_utils._view_source`, but reads `view_source_numerical` (see
+    captioner.vlm_backends.constants, backed by config/vqa.yaml) -- category 1's own
+    switch, independent of what category 2 or 3 are set to. `crop` never looks at
+    silhouette/, even once one exists; `silhouette` (the default) waits out `deadline`
+    for sam_node's finalize pass before falling back to the plain crop, so a run with
     save_silhouette_copy disabled still answers. The `full*` variants name the uncropped
     panorama under `full/`, and fall back the same way when save_full_views is off.
 
@@ -233,13 +233,14 @@ def _view_source(run_dir: Path, name: str, deadline: float) -> tuple[Optional[Pa
     goes; both candidates go through `secure_path` before any file check, which raises
     on a traversal attempt rather than silently skipping it.
     """
+    source = vlm_constants.VIEW_SOURCE_NUMERICAL
     plain = secure_path(run_dir / name)
-    subdir = view_dir()
+    subdir = view_dir(source)
     if not subdir:
         return (plain, False) if image_is_complete(plain) else (None, False)
 
     wanted = secure_path(run_dir / subdir / name)
-    if not is_silhouette():
+    if not is_silhouette(source):
         # `full` is written with the crop, not by the finalize pass, so there is nothing
         # to wait for -- but it is absent entirely unless save_full_views is on.
         return (wanted, False) if image_is_complete(wanted) else (
@@ -266,12 +267,12 @@ def select_context_views(
     building goes, and a rank whose image is missing is skipped rather than fatal.
 
     Whether this is the raw crop or its finalized silhouette copy is governed by
-    VIEW_SOURCE (see captioner.vlm_backends.constants, backed by config/vqa.yaml) — the
-    same switch category-2 reads, not a flag threaded through every eval script. `wait_s`
-    bounds how long a VIEW_SOURCE="silhouette" call waits for sam_node to finish drawing
-    it, shared across every requested rank; omit it for the live reasoner's default
-    (SILHOUETTE_WAIT_S), or pass 0 for an offline replay (`cat1_bench`) against a cache
-    nothing is still writing to.
+    view_source_numerical (see captioner.vlm_backends.constants, backed by
+    config/vqa.yaml) — category 1's own switch, not a flag threaded through every eval
+    script and independent of what category 2 or 3 read. `wait_s` bounds how long a
+    silhouette-valued call waits for sam_node to finish drawing it, shared across every
+    requested rank; omit it for the live reasoner's default (SILHOUETTE_WAIT_S), or pass 0
+    for an offline replay (`cat1_bench`) against a cache nothing is still writing to.
     """
     budget = SILHOUETTE_WAIT_S if wait_s is None else max(0.0, wait_s)
     deadline = time.monotonic() + budget
