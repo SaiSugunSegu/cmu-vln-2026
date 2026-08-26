@@ -1,3 +1,244 @@
+# CMU-VLN Challenge 2026 — Team Odyssey
+
+Thank you for hosting the **CMU Vision-Language-Navigation Challenge** at **IROS 2026**, and
+for providing the **simulator and base autonomy system**, the **15 Unity scenes** with their
+**questions**, and the **VLA-3D dataset**. Being handed a working system let us spend our time
+on the actual problem instead of on plumbing. We are grateful for the effort behind it.
+
+Our submission is two pieces:
+
+- **This repository** — our AI module lives under [`ai_module/`](ai_module/).
+- **A Docker image** — <https://hub.docker.com/r/anshulpaigwar/cmu_vln_odyssey>, latest tag
+  **`odyssey_submission_v3`**. This is the artifact to evaluate.
+
+## Instructions for evaluation
+
+Your side is unchanged: the simulator, the scene, and the question on `/challenge_question`.
+Our module starts **no scene source of its own** — it consumes the six allowed
+[System Outputs](#system-outputs) and answers on the three [System Inputs](#system-inputs).
+Only the AI container changes.
+
+Below: **one scene (`arabic_room`), three questions, one per category**. **No `just`, no
+`.env`, no checkout of this repo is required** — the image is self-contained.
+
+### 1 · Prerequisites
+
+- **NVIDIA GPU + NVIDIA Container Toolkit** — same as the provided simulator image.
+- **amd64 only.** ~14 GB to download, ~37 GB on disk.
+- **Outbound internet to `openrouter.ai:443`** — our reasoners call a cloud VLM. Per challenge
+  FAQ #3, the **API key is already baked into the image**; you supply nothing but egress.
+- `huggingface.co:443` optional — SAM 3 weights are baked in.
+
+### 2 · Pull and start our container
+
+```bash
+docker pull anshulpaigwar/cmu_vln_odyssey:odyssey_submission_v3
+
+docker run -dit --name iros2026_odyssey \
+  --network host --ipc host --gpus all \
+  -e NVIDIA_VISIBLE_DEVICES=all \
+  -e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics \
+  anshulpaigwar/cmu_vln_odyssey:odyssey_submission_v3 bash
+```
+
+> **Note — the container name changed.** The reference setup names the AI container
+> **`iros2026_ai_module`**; ours is **`iros2026_odyssey`**. Same role, new name, and every
+> `docker exec` below uses it. `iros2026_system` is unchanged. If your tooling hard-codes the
+> old name, pass `--name iros2026_ai_module` instead — nothing in the image depends on it.
+
+Three flags are load-bearing:
+
+- **`--ipc host`** — Fast-DDS moves payloads over shared memory. With a private `/dev/shm` we
+  discover the topics but **receive no messages**.
+- **`-e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics`** — the base image ships
+  `graphics` only; without `compute`, CUDA is unusable.
+- **`--network host`** — ROS 2 discovery with the system container.
+
+Not needed: no bind mounts, no `ROS_DOMAIN_ID` (leave the default `0`), no `--privileged`, no
+`DISPLAY`. Weights and keys are in the image, and our container renders nothing.
+
+### 3 · Start the simulator — your own steps, unchanged
+
+Put the test scene in the mesh slot, then launch as in [docker/README.md](docker/README.md):
+
+```bash
+docker exec -it iros2026_system bash
+/home/docker/autonomy_stack_mecanum_wheel_platform/system_simulation.sh
+```
+
+The scene **is** the simulator binary
+(`.../vehicle_simulator/mesh/unity/environment/Model.x86_64`), so load it before you start.
+
+Headless machines need VirtualGL, or Unity falls back to Mesa `llvmpipe` and the sensor topics
+crawl:
+
+```bash
+cd /home/docker/autonomy_stack_mecanum_wheel_platform
+vglrun -d egl ./system_simulation.sh        # ./system_simulation_noviz.sh to skip RVIZ
+```
+
+### 4 · Check the six allowed topics reach our container
+
+```bash
+for t in /camera/image /registered_scan /sensor_scan /terrain_map /terrain_map_ext /state_estimation; do
+  docker exec iros2026_odyssey bash -lc \
+    "source /home/docker/ai_module/install/setup.bash &&
+     ros2 topic echo --once --no-arr --timeout 5 --field header.stamp $t >/dev/null 2>&1" \
+    && echo "OK    $t" || echo "DEAD  $t"
+done
+```
+
+It waits for a real **message**, not a publisher count — a dead simulator's publishers linger
+in the ROS graph until the Fast-DDS lease expires.
+
+**Do not start the module until all six say `OK`.** Against a half-alive simulator it explores
+blind and burns the full 10 minutes.
+
+### 5 · Run one question
+
+One loop per question; nothing carries over between them.
+
+**1. Start the module.** The 10-minute clock starts here — model loading counts against it.
+
+```bash
+docker exec -it iros2026_odyssey bash -lc \
+  'source /home/docker/ai_module/install/setup.bash &&
+   ros2 launch dummy_vlm dummy_vlm.launch'
+```
+
+We kept the official entry-point name. It brings up SAM 3 detection, the 3D instance mapper, a
+supervisor, the three category reasoners, and TARE exploration.
+
+**2. Publish the question** at 1 Hz on `/challenge_question`, once the launch logs
+`pipeline ready after <N>s`. Your `challenge_evaluation_node` already does this; by hand:
+
+```bash
+docker exec -it iros2026_system bash -lc \
+  'source /opt/ros/jazzy/setup.bash &&
+   ros2 topic pub -r 1 /challenge_question std_msgs/msg/String \
+     "{data: '\''How many sofas are below a window?'\''}"'
+```
+
+**3. Read the answer** on that category's topic — see below.
+
+**4. Reset.** Ctrl-C the launch, then replace our container:
+
+```bash
+docker rm -f iros2026_odyssey 2>/dev/null
+# then re-run the `docker run` from step 2
+```
+
+Please leave **`iros2026_system`** alone — removing it destroys the scene in its mesh slot.
+
+### 6 · The three questions, and what a good answer looks like
+
+Questions are verbatim from [questions/questions.json](questions/questions.json); ground truth
+is in `questions/arabic_room/`. The outputs below are real runs of our module on this scene.
+
+#### Q1 · Numerical — `How many sofas are below a window?`
+
+```bash
+docker exec -it iros2026_system bash -lc \
+  'source /opt/ros/jazzy/setup.bash && ros2 topic echo /numerical_response'
+```
+
+```
+data: 2
+---
+```
+
+Ground truth is **2**.
+
+#### Q2 · Object reference — `Find the pillow closest to the book on the stool.`
+
+```bash
+docker exec -it iros2026_system bash -lc \
+  'source /opt/ros/jazzy/setup.bash && ros2 topic echo /selected_object_marker --no-arr'
+```
+
+```
+header:
+  stamp:
+    sec: 1787672095
+    nanosec: 191004776
+  frame_id: map
+ns: selected_object
+id: 5
+type: 1
+action: 0
+pose:
+  position:
+    x: 7.787350416183472
+    y: -3.586321711540222
+    z: 0.6016877591609955
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+scale:
+  x: 0.7492127418518066
+  y: 1.0316832065582275
+  z: 1.1157515645027165
+```
+
+A `CUBE` marker (`type: 1`) in the `map` frame. `pose.position` is the box centre — also the
+waypoint the robot receives — and `scale` is the box size.
+
+#### Q3 · Instruction following — `Go near the stool under the picture and stop at the small table farthest from the columns.`
+
+```bash
+docker exec -it iros2026_system bash -lc \
+  'source /opt/ros/jazzy/setup.bash && ros2 topic echo /way_point_with_heading'
+```
+
+```
+x: 6.582867437730606
+y: -1.6424218873893832
+theta: -0.2923857333775341
+---
+x: 7.413051953039105
+y: -1.590046903673526
+theta: -0.2527279540241647
+---
+x: 8.112378519104539
+y: -1.8026240480744218
+theta: -0.2709660949720393
+---
+x: 9.045625928844446
+y: -1.4519070085519543
+theta: -0.13402604810318264
+---
+x: 9.81515204074945
+y: -1.5277153436816011
+theta: -0.11614201994517712
+```
+
+A dense ordered waypoint sequence (~1 m spacing) so the base planner cannot shortcut past a
+constraint. TARE also writes this topic during the frontier sweep, so early messages are
+exploration; the graded route starts after it.
+
+### 7 · Timing and fallbacks
+
+- Model load is ~1–2 min of the 600 s budget. We explore until **T-90 s**, then answer.
+- A bare `data: 1` on `/numerical_response` near **T-30 s** is our last-resort guess, not a
+  computed answer — it means we ran out of time.
+- Live progress:
+  ```bash
+  docker exec -it iros2026_odyssey bash -lc \
+    'source /home/docker/ai_module/install/setup.bash && ros2 topic echo /smart_vlm/status'
+  ```
+
+### 8 · If something goes wrong
+
+- **All six topics `DEAD`** — the simulator never came up. Restart it before launching us.
+- **`/state_estimation` alive, sensors dead** — base autonomy is up but Unity is not
+  rendering. Check `DISPLAY` and the `vglrun -d egl` prefix from step 3.
+- **Nothing on the answer topic by ~9.5 min** — we are over budget.
+- **No answer, no outbound traffic** — check egress to `openrouter.ai:443`.
+
+---
+
 ## CMU-VLN-Challenge Architecture
 
 ```
